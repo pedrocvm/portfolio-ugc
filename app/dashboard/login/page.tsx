@@ -15,7 +15,6 @@ export default async function LoginPage() {
   return (
     <div className="login">
       <div className="loginBox">
-        <span className="eyeb">Área privada</span>
         <h1>Entrar</h1>
         <p className="sub">O site continua a mostrar o que já está publicado.</p>
         <LoginForm />

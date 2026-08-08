@@ -14,7 +14,6 @@ export default function Soon({
         <span className="dashState">Em breve</span>
       </div>
       <div className="soonBox">
-        <span className="eyeb">A caminho</span>
         <h2>Ainda não está pronto.</h2>
         <p>{intro}</p>
         <ul className="soonList">

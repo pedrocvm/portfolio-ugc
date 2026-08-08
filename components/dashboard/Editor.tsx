@@ -6,6 +6,7 @@ import { discardDraft, publishDraft, saveDraft } from '@/app/dashboard/actions';
 import type { Content } from '@/lib/content';
 import { SECTIONS } from '@/lib/schema';
 import { Fields } from './Fields';
+import PreviewFrame from './PreviewFrame';
 import { setIn } from './paths';
 
 type State = { tone: 'idle' | 'dirty' | 'ok' | 'bad'; text: string };
@@ -16,6 +17,7 @@ export default function Editor({ initial }: { initial: Content }) {
   const [content, setContent] = useState(initial);
   const [dirty, setDirty] = useState(false);
   const [state, setState] = useState<State>(CLEAN);
+  const [preview, setPreview] = useState(false);
   const [pending, start] = useTransition();
   const router = useRouter();
   const sticky = useRef<HTMLDivElement>(null);
@@ -124,19 +126,48 @@ export default function Editor({ initial }: { initial: Content }) {
       </nav>
       </div>
 
-      {SECTIONS.map((s) => (
-        <section className="sec" id={`s-${s.id}`} key={s.id}>
-          <div className="secHead">
-            <span className="eyeb">Secção</span>
-            <h2>{s.title}</h2>
-            <p>{s.note}</p>
-          </div>
-          <Fields
-            fields={s.fields}
-            ctx={{ root: content, base: '', onChange: change }}
+      <button
+        type="button"
+        className="pvFab"
+        onClick={() => setPreview(true)}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path
+            d="M2.4 12S6 5.4 12 5.4 21.6 12 21.6 12 18 18.6 12 18.6 2.4 12 2.4 12Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
           />
-        </section>
-      ))}
+          <circle
+            cx="12"
+            cy="12"
+            r="3.1"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          />
+        </svg>
+        Ver o site
+      </button>
+
+      {preview ? (
+        <PreviewFrame dirty={dirty} onClose={() => setPreview(false)} />
+      ) : null}
+
+      <div>
+        {SECTIONS.map((s) => (
+          <section className="sec" id={`s-${s.id}`} key={s.id}>
+            <div className="secHead">
+              <h2>{s.title}</h2>
+              <p className="said">{s.note}</p>
+            </div>
+            <Fields
+              fields={s.fields}
+              ctx={{ root: content, base: '', onChange: change }}
+            />
+          </section>
+        ))}
+      </div>
     </>
   );
 }

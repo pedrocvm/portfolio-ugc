@@ -81,7 +81,6 @@ export default function Library({
       </div>
 
       <div className="libAdd">
-        <span className="eyeb">Adicionar</span>
         <div className="libAddRow">
           <div className="seg">
             {(['video', 'photo'] as MediaKind[]).map((k) => (

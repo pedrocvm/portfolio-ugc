@@ -38,7 +38,7 @@ export default function LibraryPicker({
       <button className="pickScrim" type="button" aria-label="Fechar" onClick={onClose} />
       <div className="pickBox">
         <div className="pickHead">
-          <span className="eyeb">Biblioteca</span>
+          <h2 className="pickTitle">Biblioteca</h2>
           <button type="button" className="icoBtn" aria-label="Fechar" onClick={onClose}>
             ✕
           </button>

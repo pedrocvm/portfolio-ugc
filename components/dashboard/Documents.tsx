@@ -173,7 +173,6 @@ export default function Documents({
       ) : (
         <div className="docSplit">
           <div className="docForm noPrint">
-            <span className="eyeb">Dados</span>
             <Fields
               fields={spec.fields}
               ctx={{ root: data, base: '', onChange: change }}

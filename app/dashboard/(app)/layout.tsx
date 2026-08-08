@@ -20,20 +20,19 @@ export default async function AppLayout({
   const { hero } = await getDraft();
 
   return (
-    <div className="dashGrid">
-      <aside className="dashAside">
-        <Link className="dashBrand" href="/">
+    <>
+      <header className="masthead">
+        <Link className="mastName" href="/">
           <Logo first={hero.firstName} last={hero.lastName} />
-          <span className="dashRole">Área privada</span>
         </Link>
         <Menu />
         <form action={signOut}>
-          <button className="dashOut" type="submit">
+          <button className="mastOut" type="submit">
             Sair
           </button>
         </form>
-      </aside>
-      <main className="dashMain">{children}</main>
-    </div>
+      </header>
+      <main className="sheet">{children}</main>
+    </>
   );
 }

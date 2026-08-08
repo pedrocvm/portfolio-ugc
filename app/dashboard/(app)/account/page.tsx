@@ -13,7 +13,6 @@ export default async function AccountPage() {
         <span className="dashState">{user.email}</span>
       </div>
       <div className="acctBox">
-        <span className="eyeb">Segurança</span>
         <h2>Mudar a palavra-passe</h2>
         <p>
           Precisas da palavra-passe atual para confirmar que és tu. A sessão
