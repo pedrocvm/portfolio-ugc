@@ -22,16 +22,19 @@
   --tinta2: #564f47;
   --tinta3: #6b6259;
 
-  /* cor com função: a interação é toda cobalto, os estados têm hue própria */
-  --cobalto: #2c4ea8;
-  --cobalto2: #1f3a80;
-  --cobaltoLeve: #e8ecf7;
-  --jade: #4f7a4a;
-  --jadeLeve: #e9f0e6;
-  --ambar: #a8701a;
-  --ambarLeve: #f8eeda;
-  --cinabrio: #b33a24;
-  --cinabrioLeve: #fae9e4;
+  /* Sem cor de fora. A diferenciação vem do valor, não da matiz: a escada
+     vai do mais claro ao mais escuro à medida que o negócio avança, e só o
+     desfecho ganha matiz própria, com o jade que já é dela. */
+  --t1: #b3a595;
+  --t2: #8d7a68;
+  --t3: #6d5a4c;
+  --t4: #4d3d34;
+  --jade: #6a8760;
+  --jadeLeve: #eceee7;
+  --alerta: #8c3f2f;
+  --alertaLeve: #f4ebe7;
+  --realce: #4d3d34;
+  --realceLeve: #ece5dc;
 
   --z-sticky: 10;
   --z-fab: 20;
@@ -49,7 +52,7 @@
   --ink2: var(--tinta2);
   --rule: var(--areia2);
   --rule2: var(--pedra);
-  --accent: var(--cobalto);
+  --accent: var(--realce);
   --graphite: var(--ferro);
   --paper: var(--papel);
 
@@ -183,7 +186,12 @@
    escreve: é daqui que vem o contraste, sem tema escuro. */
 .shell {
   display: grid;
-  grid-template-columns: 1fr;
+  /* minmax(0, 1fr) e não 1fr: o auto implícito do 1fr deixa a coluna crescer
+     até ao conteúdo mínimo e rebenta a largura do ecrã no telemóvel */
+  grid-template-columns: minmax(0, 1fr);
+  /* sem isto o sobrante dos 100dvh reparte-se pelas duas linhas e a barra do
+     topo estica para 127px no telemóvel */
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 100dvh;
 }
 .side {
@@ -272,7 +280,7 @@
 }
 @media (min-width: 960px) {
   .shell {
-    grid-template-columns: 264px 1fr;
+    grid-template-columns: 264px minmax(0, 1fr);
   }
   .side {
     position: sticky;
@@ -350,16 +358,16 @@
   border-radius: 7px;
 }
 .dashState[data-tone='dirty'] {
-  background: var(--ambarLeve);
-  color: var(--ambar);
+  background: var(--realceLeve);
+  color: var(--t3);
 }
 .dashState[data-tone='ok'] {
   background: var(--jadeLeve);
   color: var(--jade);
 }
 .dashState[data-tone='bad'] {
-  background: var(--cinabrioLeve);
-  color: var(--cinabrio);
+  background: var(--alertaLeve);
+  color: var(--alerta);
 }
 
 /* ── botões: texto com filete, não caixinhas ───────────────────────── */
@@ -457,7 +465,7 @@
 /* ── índice na margem ──────────────────────────────────────────────── */
 .withIndex {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0 56px;
   align-items: start;
 }
@@ -530,6 +538,17 @@
 .flds {
   display: grid;
   gap: 30px 44px;
+}
+/* Itens de grid nascem com min-width: auto, por isso qualquer texto sem
+   quebra lá dentro estica a coluna toda. Sem isto, o resumo de um cartão de
+   lista alarga a página inteira no telemóvel. */
+.flds > *,
+.list > *,
+.cardHead,
+.cardBody,
+.media,
+.mediaBody {
+  min-width: 0;
 }
 @media (min-width: 760px) {
   .flds.two {
@@ -860,7 +879,7 @@
   font-size: 16px;
 }
 .loginErr {
-  color: var(--cinabrio);
+  color: var(--alerta);
 }
 .okMsg {
   color: var(--jade);
@@ -1057,25 +1076,28 @@
   color: var(--tinta2);
   white-space: nowrap;
 }
+.pill[data-stage='abordada'] {
+  color: var(--t2);
+}
 .pill[data-stage='respondeu'] {
-  background: var(--ambarLeve);
-  color: var(--ambar);
+  background: #f0e9e0;
+  color: var(--t3);
 }
 .pill[data-stage='proposta'] {
-  background: var(--cobaltoLeve);
-  color: var(--cobalto2);
+  background: #e7ded2;
+  color: var(--t4);
 }
 .pill[data-stage='negociacao'] {
-  background: #efe6f6;
-  color: #6b3f86;
+  background: var(--t4);
+  color: var(--papel);
 }
 .pill[data-stage='fechada'] {
   background: var(--jadeLeve);
   color: var(--jade);
 }
 .pill[data-stage='perdida'] {
-  background: var(--cinabrioLeve);
-  color: var(--cinabrio);
+  background: var(--alertaLeve);
+  color: var(--alerta);
 }
 
 /* ── funil ─────────────────────────────────────────────────────────── */
@@ -1104,20 +1126,24 @@
   padding-bottom: 9px;
   border-bottom: 2px solid var(--rule2);
 }
+/* o filete escurece à medida que a conversa avança */
+.fnCol[data-stage='abordada'] .fnHead {
+  border-bottom-color: var(--t1);
+}
 .fnCol[data-stage='respondeu'] .fnHead {
-  border-bottom-color: var(--ambar);
+  border-bottom-color: var(--t2);
 }
 .fnCol[data-stage='proposta'] .fnHead {
-  border-bottom-color: var(--cobalto);
+  border-bottom-color: var(--t3);
 }
 .fnCol[data-stage='negociacao'] .fnHead {
-  border-bottom-color: #7a4b96;
+  border-bottom-color: var(--t4);
 }
 .fnCol[data-stage='fechada'] .fnHead {
   border-bottom-color: var(--jade);
 }
 .fnCol[data-stage='perdida'] .fnHead {
-  border-bottom-color: var(--cinabrio);
+  border-bottom-color: var(--alerta);
 }
 .fnName {
   flex: 1;
@@ -1159,7 +1185,7 @@
   color: var(--ink2);
 }
 .fnDias[data-alerta] {
-  color: var(--cinabrio);
+  color: var(--alerta);
   font-weight: 600;
 }
 .fnMove {
@@ -1253,7 +1279,7 @@
   margin: 0 0 30px;
   padding: 14px 18px;
   border-radius: 10px;
-  background: var(--cinabrioLeve);
+  background: var(--alertaLeve);
   font-family: var(--serif);
   font-style: italic;
   font-size: 17px;
@@ -1685,7 +1711,7 @@
   cursor: grabbing;
 }
 .card[data-over] {
-  box-shadow: inset 0 2px 0 var(--cobalto);
+  box-shadow: inset 0 2px 0 var(--realce);
 }
 .mvUp,
 .mvDown {
@@ -1710,11 +1736,11 @@
   background: rgba(239, 231, 218, 0.5);
 }
 .fnCol[data-over] {
-  background: var(--cobaltoLeve);
-  box-shadow: inset 0 0 0 1px var(--cobalto);
+  background: var(--realceLeve);
+  box-shadow: inset 0 0 0 1px var(--realce);
 }
 .funnel[data-dragging] .fnVazio {
-  color: var(--cobalto2);
+  color: var(--t4);
 }
 .fnCard {
   cursor: grab;
@@ -1803,8 +1829,8 @@
   cursor: pointer;
 }
 .cmdList button[data-at] {
-  background: var(--cobaltoLeve);
-  color: var(--cobalto2);
+  background: var(--realceLeve);
+  color: var(--t4);
 }
 .cmdGroup {
   margin-left: auto;
@@ -1814,7 +1840,7 @@
   color: var(--tinta3);
 }
 .cmdList button[data-at] .cmdGroup {
-  color: var(--cobalto);
+  color: var(--realce);
 }
 .cmdVazio {
   margin: 6px 0 10px;
@@ -1824,38 +1850,38 @@
   color: var(--tinta2);
 }
 
-/* ── foco e interação em cobalto ───────────────────────────────────── */
+/* ── foco e interação em umbra ─────────────────────────────────────── */
 .dash :focus-visible {
-  outline: 2px solid var(--cobalto);
+  outline: 2px solid var(--realce);
   outline-offset: 3px;
 }
 .dash input:focus,
 .dash textarea:focus,
 .dash select:focus {
-  border-color: var(--cobalto);
-  box-shadow: 0 0 0 3px var(--cobaltoLeve);
+  border-color: var(--realce);
+  box-shadow: 0 0 0 3px var(--realceLeve);
 }
 .btn:hover:not(:disabled) {
-  color: var(--cobalto);
+  color: var(--realce);
 }
 .btn.solid:hover:not(:disabled) {
-  background: var(--cobalto);
+  background: var(--realce);
 }
 .index a:hover,
 .secIndex a:hover,
 .chip:hover {
-  color: var(--cobalto);
+  color: var(--realce);
 }
 .chip.on {
-  color: var(--cobalto2);
-  border-bottom-color: var(--cobalto);
+  color: var(--t4);
+  border-bottom-color: var(--realce);
 }
 .wire::before {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--cobalto) 40%,
-    var(--cobalto) 60%,
+    var(--realce) 40%,
+    var(--realce) 60%,
     transparent
   );
 }
@@ -1881,4 +1907,386 @@
     transparent 70%
   );
   transition: opacity 0.3s var(--quart);
+}
+
+/* ═══ TELEMÓVEL ══════════════════════════════════════════════════════
+   Pensado para iPhone: áreas seguras respeitadas, alvos de toque com os
+   44px que a Apple pede, campos a 16px ou mais para o Safari não dar zoom
+   ao focar, e a navegação onde o polegar chega. */
+
+.dash {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.tabbar {
+  display: none;
+}
+.sheet-more {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .side {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: max(8px, env(safe-area-inset-top)) 18px 8px;
+  }
+  /* o nome passa a uma linha: duas linhas de manuscrito comiam um terço do
+     ecrã antes de o conteúdo começar */
+  .side .logoName {
+    font-size: 23px;
+    line-height: 1;
+  }
+  .side .logoName .logoLine {
+    display: inline-block;
+    margin-bottom: 0;
+    padding: 0;
+  }
+  .side .logoName .l2 {
+    margin-left: 0.16em;
+  }
+  .side .rail,
+  .side > form {
+    display: none;
+  }
+
+  /* barra inferior fixa, acima do indicador de home */
+  .tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-fab);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    background: rgba(248, 245, 240, 0.86);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-top: 1px solid var(--areia2);
+  }
+  .tabbar a,
+  .tabbar button {
+    display: grid;
+    place-items: center;
+    min-height: 46px;
+    padding: 4px 2px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    font-family: var(--disp);
+    font-variation-settings: var(--narrow);
+    font-weight: 500;
+    font-size: 13.5px;
+    color: var(--tinta2);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s var(--quart);
+  }
+  .tabbar [aria-current='page'] {
+    color: var(--realce);
+  }
+  .tabbar a:active,
+  .tabbar button:active {
+    background: var(--areia);
+  }
+
+  /* folha do "Mais": sobe de baixo, como no iOS */
+  .sheet-more {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    display: block;
+  }
+  .moreBox {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 84dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 10px 18px calc(24px + env(safe-area-inset-bottom));
+    border-radius: 18px 18px 0 0;
+    background: var(--papel);
+    animation: sheetUp 0.42s var(--exp) both;
+  }
+  [data-closing] .moreBox {
+    animation: sheetDown 0.24s var(--quart) both;
+  }
+  .moreGrab {
+    display: block;
+    width: 38px;
+    height: 4px;
+    margin: 4px auto 18px;
+    border-radius: 999px;
+    background: var(--areia2);
+  }
+  .moreGroup {
+    display: grid;
+    margin-bottom: 18px;
+  }
+  .moreLabel {
+    font-family: var(--disp);
+    font-variation-settings: var(--narrow);
+    font-weight: 500;
+    font-size: 13.5px;
+    color: var(--tinta3);
+    margin-bottom: 4px;
+  }
+  .moreGroup a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    border-bottom: 1px solid var(--areia);
+    font-size: 17px;
+    text-decoration: none;
+  }
+  .moreGroup a[aria-current='page'] {
+    color: var(--realce);
+  }
+  .moreGroup a[data-soon] {
+    color: var(--tinta3);
+  }
+  .moreGroup a[data-soon]::after {
+    content: 'em breve';
+    margin-left: auto;
+    font-family: var(--disp);
+    font-variation-settings: var(--narrow);
+    font-size: 13.5px;
+  }
+  .moreOut .sideOut {
+    min-height: 48px;
+    color: var(--alerta);
+    font-size: 16px;
+  }
+
+  /* o conteúdo não pode ficar por baixo da barra nem do indicador */
+  .sheet {
+    padding: 0 18px calc(96px + env(safe-area-inset-bottom));
+  }
+  .dashBar {
+    padding: 16px 0 12px;
+    gap: 8px 14px;
+  }
+  .dashBar h1 {
+    font-size: clamp(30px, 9vw, 40px);
+    width: 100%;
+  }
+
+  /* alvos de toque: 44px é o mínimo da Apple */
+  .icoBtn {
+    width: 44px;
+    height: 44px;
+  }
+  .btn {
+    min-height: 44px;
+    padding: 10px 0 11px;
+  }
+  .btn.solid {
+    padding: 13px 22px 14px;
+  }
+  .seg button {
+    min-height: 44px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .libFilter {
+    gap: 0 18px;
+  }
+  .tbl .acts .icoBtn {
+    margin-left: 0;
+  }
+
+  /* o Safari amplia o ecrã se o campo tiver menos de 16px */
+  .dash input[type='text'],
+  .dash input[type='password'],
+  .dash input[type='date'],
+  .dash textarea,
+  .dash select,
+  .libCardFoot select,
+  .cmdBox input {
+    font-size: 16px;
+  }
+
+  /* tabelas viram cartões: rolar uma tabela de lado no telemóvel é castigo */
+  .tblWrap {
+    overflow: visible;
+    border: 0;
+  }
+  .tbl,
+  .tbl tbody,
+  .tbl tr,
+  .tbl td {
+    display: block;
+    width: 100%;
+  }
+  .tbl thead {
+    display: none;
+  }
+  .tbl tr {
+    padding: 6px 0 14px;
+    border-bottom: 1px solid var(--areia2);
+  }
+  .tbl td {
+    padding: 7px 0;
+    border: 0;
+    display: grid;
+    grid-template-columns: 34% 1fr;
+    gap: 12px;
+    align-items: baseline;
+  }
+  .tbl td::before {
+    content: attr(data-l);
+    font-family: var(--disp);
+    font-variation-settings: var(--narrow);
+    font-weight: 500;
+    font-size: 13.5px;
+    color: var(--tinta3);
+  }
+  .tbl td:first-child {
+    grid-template-columns: 1fr;
+    padding-top: 12px;
+  }
+  .tbl td:first-child::before {
+    display: none;
+  }
+  /* a célula é uma grelha de duas colunas: o subtexto tem de ficar na coluna
+     do valor, senão alinha por baixo do rótulo */
+  .tbl .sub {
+    grid-column: 2;
+    margin-top: 2px;
+  }
+  .tbl .acts {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+  .tbl .acts::before {
+    display: none;
+  }
+
+  /* modais como folhas */
+  .pvBox,
+  .pickBox,
+  .cmdBox {
+    width: 100%;
+    max-height: 90dvh;
+    border-radius: 16px 16px 0 0;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  .pv,
+  .pick {
+    padding: 0;
+    place-items: end center;
+  }
+  .cmd {
+    padding: 0;
+    place-items: end center;
+  }
+  .pvBox,
+  .pickBox,
+  .cmdBox {
+    animation: sheetUp 0.42s var(--exp) both;
+  }
+  [data-closing] .pvBox,
+  [data-closing] .pickBox,
+  [data-closing] .cmdBox {
+    animation: sheetDown 0.22s var(--quart) both;
+  }
+
+  /* o botão flutuante sobe acima da barra */
+  .pvFab {
+    right: 16px;
+    bottom: calc(74px + env(safe-area-inset-bottom));
+    padding: 12px 18px 13px;
+  }
+
+  .withIndex {
+    gap: 0;
+  }
+  .fnCol {
+    scroll-snap-align: center;
+  }
+  .funnel {
+    grid-auto-columns: minmax(84vw, 1fr);
+    margin-left: -18px;
+    margin-right: -18px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .docSplit {
+    gap: 24px;
+  }
+  .doc {
+    padding: 30px 24px 34px;
+  }
+  .libAddRow {
+    gap: 12px;
+  }
+  .libAddRow input[type='text'] {
+    min-width: 100%;
+  }
+  .libGrid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+  /* sem rato não há hover: o que estava escondido fica sempre à vista */
+  .grip,
+  .mvUp,
+  .mvDown,
+  .fnMove {
+    opacity: 1;
+  }
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes sheetDown {
+  to {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+/* ── cartão fantasma do arrasto ────────────────────────────────────── */
+.fnGhost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  gap: 5px;
+  padding: 14px 12px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 18px 40px -12px rgba(25, 23, 20, 0.4);
+  pointer-events: none;
+  font-size: 15px;
+  transform: translate3d(-999px, -999px, 0);
+}
+.funnel[data-dragging] .fnCard {
+  cursor: grabbing;
+}
+.funnel[data-dragging] {
+  touch-action: none;
+  /* o encaixe puxa de volta cada empurrão do scroll automático: enquanto se
+     arrasta, o tabuleiro tem de correr livre */
+  scroll-snap-type: none;
 }

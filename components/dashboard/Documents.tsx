@@ -145,10 +145,10 @@ export default function Documents({
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id}>
-                    <td>
+                    <td data-l={spec.one}>
                       <strong>{r.title}</strong>
                     </td>
-                    <td>{r.updated_at.slice(0, 10)}</td>
+                    <td data-l="Atualizado">{r.updated_at.slice(0, 10)}</td>
                     <td className="acts">
                       <button
                         type="button"

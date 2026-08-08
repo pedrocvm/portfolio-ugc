@@ -17,7 +17,13 @@ export default function PreviewFrame({
   dirty: boolean;
   onClose: () => void;
 }) {
-  const [size, setSize] = useState(SIZES[0]);
+  const [size, setSize] = useState(
+    () =>
+      (typeof window !== 'undefined' &&
+        window.matchMedia('(max-width: 900px)').matches &&
+        SIZES[2]) ||
+      SIZES[0],
+  );
   const [nonce, setNonce] = useState(0);
   const { closing, close } = useExit(onClose);
 

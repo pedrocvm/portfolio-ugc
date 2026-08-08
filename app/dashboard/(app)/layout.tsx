@@ -4,6 +4,7 @@ import { signOut } from '@/app/dashboard/actions';
 import Command from '@/components/dashboard/Command';
 import Logo from '@/components/dashboard/Logo';
 import Menu from '@/components/dashboard/Menu';
+import MobileNav from '@/components/dashboard/MobileNav';
 import { requireEditor } from '@/lib/auth';
 import { getDraft } from '@/lib/content-store';
 
@@ -35,6 +36,15 @@ export default async function AppLayout({
           </form>
         </aside>
         <main className="sheet">{children}</main>
+        <MobileNav
+          onSignOut={
+            <form action={signOut}>
+              <button className="sideOut" type="submit">
+                Sair
+              </button>
+            </form>
+          }
+        />
         <Command />
       </div>
     </>

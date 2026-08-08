@@ -76,23 +76,23 @@ export default function Brands({ brands }: { brands: Brand[] }) {
             <tbody>
               {brands.map((b) => (
                 <tr key={b.id}>
-                  <td>
+                  <td data-l="Marca">
                     <strong>{b.name}</strong>
                     {b.instagram ? (
                       <span className="sub">{b.instagram}</span>
                     ) : null}
                   </td>
-                  <td>
+                  <td data-l="Contacto">
                     {b.contact || '—'}
                     <span className="sub">{channelLabel(b.channel)}</span>
                   </td>
-                  <td>{b.approached_on ?? '—'}</td>
-                  <td>
+                  <td data-l="Abordada">{b.approached_on ?? '—'}</td>
+                  <td data-l="Etapa">
                     <span className="pill" data-stage={b.stage}>
                       {stageLabel(b.stage)}
                     </span>
                   </td>
-                  <td>{b.next_step || '—'}</td>
+                  <td data-l="Próximo passo">{b.next_step || '—'}</td>
                   <td className="acts">
                     <button
                       type="button"
