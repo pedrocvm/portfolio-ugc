@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PLANS, WHATSAPP } from '@/lib/site';
+import { PLANS, wa } from '@/lib/site';
 
 type Mode = 'avulso' | 'mensal';
 
@@ -9,7 +9,13 @@ export default function Plans() {
   const [mode, setMode] = useState<Mode>('avulso');
 
   return (
-    <section id="pacotes" className="chap dark" aria-label="Pacotes">
+    <section
+      id="pacotes"
+      className="chap dark"
+      data-bg="#2e2c2a"
+      data-mode="dark"
+      aria-label="Pacotes"
+    >
       <div className="wrap">
         <div className="chapHead">
           <span className="mono cn">04</span>
@@ -40,6 +46,12 @@ export default function Plans() {
             ))}
           </div>
 
+          <p className="modeHint">
+            {mode === 'avulso'
+              ? 'Para um teste pontual ou uma campanha com data marcada.'
+              : 'Para quem precisa de conteúdo novo todos os meses, com preço por vídeo mais baixo.'}
+          </p>
+
           <ul className="planGrid">
             {PLANS.map((p) => {
               const t = p[mode];
@@ -64,7 +76,11 @@ export default function Plans() {
                   </ul>
                   <a
                     className="cta-btn"
-                    href={WHATSAPP}
+                    href={wa(
+                      `Olá Carol, quero o pacote ${p.name} ${
+                        mode === 'avulso' ? 'avulso' : 'mensal'
+                      } — ${t.qty}, ${t.price}€${t.suffix}. Podes dizer-me os próximos passos?`,
+                    )}
                     target="_blank"
                     rel="noopener"
                   >
@@ -100,9 +116,7 @@ export default function Plans() {
             </div>
           </div>
 
-          <p className="lanc mono">
-            Valores de lançamento · atualizados em [mês/ano]
-          </p>
+          <p className="lanc mono">Valores de lançamento</p>
         </div>
       </div>
     </section>

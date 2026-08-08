@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { IMAGES, NICHES, TAKES } from '@/lib/site';
+import { IMAGES, NICHES, PHOTOS, TAKES } from '@/lib/site';
 import { useReel } from './useReel';
+import Pic from './Pic';
 
+const POOL = [...TAKES.map((t) => t.img), ...PHOTOS];
 const PER_NICHE = 8;
 
 export default function Meet() {
@@ -21,17 +23,32 @@ export default function Meet() {
       if (e.key === 'Escape') setNiche(null);
       if (e.key === 'ArrowRight') page(1);
       if (e.key === 'ArrowLeft') page(-1);
+      if (e.key !== 'Tab') return;
+      const f = sheet.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled])',
+      );
+      if (!f?.length) return;
+      const first = f[0];
+      const last = f[f.length - 1];
+      const at = document.activeElement;
+      if (e.shiftKey && (at === first || at === sheet.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && at === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
     document.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = '';
       document.removeEventListener('keydown', onKey);
+      opener.current?.focus();
     };
   }, [niche, page, update]);
 
   function close() {
     setNiche(null);
-    opener.current?.focus();
   }
 
   return (
@@ -44,17 +61,17 @@ export default function Meet() {
         aria-label="Apresentação"
       >
         <div className="bgimg" data-par="" aria-hidden="true">
-          <img src={TAKES[0].img} alt="" />
+          <Pic src={TAKES[0].img} alt="" />
           <i className="ov" />
         </div>
         <div className="wrap">
           <div className="grid">
             <figure className="shot">
               <div className="fm main">
-                <img src={IMAGES.meetMain} alt="Retrato de Carol Queiroz" />
+                <Pic src={IMAGES.meetMain} alt="Retrato de Carol Queiroz" />
               </div>
               <div className="fm sub">
-                <img src={IMAGES.meetSub} alt="" aria-hidden="true" />
+                <Pic src={IMAGES.meetSub} alt="" ariaHidden />
               </div>
             </figure>
             <div className="txt">
@@ -78,7 +95,7 @@ export default function Meet() {
                       }}
                     >
                       <span>{n}</span>
-                      <span className="qt">Ver vídeos</span>
+                      <span className="qt">Ver registos</span>
                     </button>
                   </li>
                 ))}
@@ -92,7 +109,12 @@ export default function Meet() {
         </div>
       </section>
 
-      <div id="shelf" className={niche ? 'on' : undefined} aria-hidden={!niche}>
+      <div
+        id="shelf"
+        className={niche ? 'on' : undefined}
+        aria-hidden={!niche}
+        inert={!niche}
+      >
         <div className="scrim" onClick={close} />
         <div
           className="sheet"
@@ -138,23 +160,21 @@ export default function Meet() {
           </div>
           <ul className="reel" ref={reelRef}>
             {Array.from({ length: PER_NICHE }, (_, i) => {
-              const src =
-                TAKES[(i + (niche?.length ?? 0)) % TAKES.length].img;
+              const off = NICHES.indexOf(niche ?? '');
+              const src = POOL[(i + (off < 0 ? 0 : off * 3)) % POOL.length];
               return (
                 <li key={i}>
-                  <img src={src} alt="" />
+                  <Pic src={src} alt="" />
                   <span className="idx mono">
                     {String(i + 1).padStart(2, '0')}
                   </span>
-                  <span className="play" aria-hidden="true" />
-                  <span className="cap mono">Em breve</span>
                 </li>
               );
             })}
           </ul>
           <p className="foot mono">
-            <span>Vídeos ilustrativos · a substituir pelos trabalhos reais</span>
-            <span>{String(PER_NICHE).padStart(2, '0')} vídeos</span>
+            <span>Sessões próprias</span>
+            <span>{String(PER_NICHE).padStart(2, '0')} registos</span>
           </p>
         </div>
       </div>

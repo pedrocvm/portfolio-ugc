@@ -1,5 +1,11 @@
-export const WHATSAPP =
-  'https://wa.me/351913896987?text=Ol%C3%A1%20Carol%2C%20vi%20o%20teu%20portf%C3%B3lio.%20Sou%20da%20%5Bmarca%5D%2C%20vendemos%20%5Bproduto%5D.%20Estou%20a%20pensar%20em%20%5Btipo%20de%20v%C3%ADdeo%5D%2C%20para%20%5Bcanal%5D.%20Prazo%3A%20%5Bquando%5D.';
+const PHONE = '351913896987';
+
+export const wa = (text: string) =>
+  `https://wa.me/${PHONE}?text=${encodeURIComponent(text)}`;
+
+export const WHATSAPP = wa(
+  'Olá Carol, vi o teu portfólio e gostaria de saber mais sobre o teu trabalho.',
+);
 
 export const INSTAGRAM = 'https://instagram.com/carolxqueiroz';
 
@@ -31,16 +37,33 @@ export const PHOTOS = [
   '/img/img-10.jpg',
   '/img/img-11.jpg',
   '/img/img-12.jpg',
-  '/img/img-13.jpg',
 ];
 
 export const IMAGES = {
   heroWide: '/img/img-01.jpg',
+  heroWideAvif: '/img/img-01.avif',
+  heroWideWebp: '/img/img-01.webp',
   heroPortrait: '/img/img-02.jpg',
+  heroPortraitAvif: '/img/img-02.avif',
+  heroPortraitWebp: '/img/img-02.webp',
   meetMain: '/img/img-03.jpg',
   meetSub: '/img/img-04.jpg',
-  formats: '/img/img-05.jpg',
+  formats: '/img/img-13.jpg',
+  formatsAvif: '/img/img-13.avif',
+  formatsWebp: '/img/img-13.webp',
+  formatsSm: '/img/img-13-sm.jpg',
+  formatsSmAvif: '/img/img-13-sm.avif',
+  formatsSmWebp: '/img/img-13-sm.webp',
   footer: '/img/img-14.jpg',
+};
+
+export const VIDEOS = {
+  hero: '/videos/hero-loop.mp4',
+  heroSm: '/videos/hero-loop-sm.mp4',
+  formats: '/videos/hero-2-loop.mp4',
+  formatsSm: '/videos/hero-2-loop-sm.mp4',
+  footer: '/videos/footer-loop.mp4',
+  footerSm: '/videos/footer-loop-sm.mp4',
 };
 
 export type Plan = {

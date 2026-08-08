@@ -2,6 +2,7 @@
 
 import { PHOTOS } from '@/lib/site';
 import { useReel } from './useReel';
+import Pic from './Pic';
 
 export default function Photos() {
   const { reelRef, atStart, atEnd, page } = useReel();
@@ -42,10 +43,9 @@ export default function Photos() {
         <ul className="reel" id="fotosReel" ref={reelRef}>
           {PHOTOS.map((src, i) => (
             <li key={src}>
-              <img
+              <Pic
                 src={src}
                 alt={`Foto UGC ${String(i + 1).padStart(2, '0')}`}
-                loading="lazy"
               />
               <span className="idx mono">
                 {String(i + 1).padStart(2, '0')}
@@ -54,7 +54,7 @@ export default function Photos() {
           ))}
         </ul>
         <p className="reelFoot mono">
-          <span>Sessões próprias · a substituir pelos trabalhos reais</span>
+          <span>Sessões próprias</span>
           <span>Lisboa</span>
         </p>
       </div>

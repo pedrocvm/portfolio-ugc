@@ -8,27 +8,35 @@ export default function Nav() {
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
+    if (!open) return;
+    document.body.style.overflow = 'hidden';
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = '';
+      document.removeEventListener('keydown', onKey);
+      document.getElementById('navBtn')?.focus();
     };
   }, [open]);
 
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
-    const scenes = Array.from(document.querySelectorAll<HTMLElement>('.scene'));
+    const scenes = Array.from(document.querySelectorAll<HTMLElement>('.scene, .chap.dark'));
     const links = NAV_LINKS.map((l) => ({
       el: nav.querySelector<HTMLAnchorElement>(`a[href="${l.href}"]`),
       sec: document.querySelector<HTMLElement>(l.href),
     }));
 
     function sceneAt(y: number) {
+      let inside = false;
       let pick = scenes[0];
       for (const s of scenes) {
         const r = s.getBoundingClientRect();
-        if (r.top <= y && r.bottom > y) return s;
-        if (r.top <= y) pick = s;
+        if (r.top <= y && (r.bottom > y || !inside)) pick = s;
+        if (r.top <= y && r.bottom > y) inside = true;
       }
       return pick;
     }
@@ -60,7 +68,12 @@ export default function Nav() {
 
   return (
     <>
-      <nav id="nav" ref={navRef} aria-label="Navegação principal">
+      <nav
+        id="nav"
+        ref={navRef}
+        data-open={open}
+        aria-label="Navegação principal"
+      >
         <a className="brand mono" href="#hero">
           Carol Queiroz
         </a>
@@ -97,6 +110,7 @@ export default function Nav() {
         id="navPanel"
         className={open ? 'on' : undefined}
         aria-hidden={!open}
+        inert={!open}
       >
         {NAV_LINKS.map((l) => (
           <a key={l.href} href={l.href} onClick={() => setOpen(false)}>

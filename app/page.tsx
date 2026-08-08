@@ -10,12 +10,14 @@ import Faq from '@/components/Faq';
 import SiteFooter from '@/components/SiteFooter';
 import ToTop from '@/components/ToTop';
 import Chrome from '@/components/Chrome';
+import Particles from '@/components/Particles';
 import Motion from '@/components/Motion';
 
 export default function Page() {
   return (
     <>
       <Chrome />
+      <Particles />
       <Nav />
       <ToTop />
       <Hero />

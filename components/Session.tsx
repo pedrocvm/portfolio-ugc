@@ -1,4 +1,5 @@
 import { TAKES } from '@/lib/site';
+import Pic from './Pic';
 
 export default function Session() {
   return (
@@ -12,7 +13,7 @@ export default function Session() {
       <div className="pinwrap">
         <div className="ambient" aria-hidden="true">
           {TAKES.map((t) => (
-            <img key={t.n} src={t.img} alt="" />
+            <Pic key={t.n} src={t.img} alt="" />
           ))}
           <i className="ov" />
         </div>
@@ -27,12 +28,9 @@ export default function Session() {
           <div className="frame" id="frame">
             {TAKES.map((t, i) => (
               <div className={'takeV' + (i === 0 ? ' on' : '')} key={t.n}>
-                <img src={t.img} alt="" />
+                <Pic src={t.img} alt="" />
                 <span className="tg1 mono">
                   Tomada {t.n} · {t.niche}
-                </span>
-                <span className="tg2 mono">
-                  Imagem ilustrativa · vídeo por carregar
                 </span>
               </div>
             ))}
@@ -45,7 +43,6 @@ export default function Session() {
           </span>
           <span>06</span>
         </div>
-        <p className="autoral mono">Conteúdo autoral de demonstração</p>
       </div>
     </section>
   );

@@ -1,4 +1,5 @@
-import { IMAGES, INSTAGRAM, WHATSAPP } from '@/lib/site';
+import { IMAGES, INSTAGRAM, VIDEOS, WHATSAPP } from '@/lib/site';
+import Pic from './Pic';
 
 export default function SiteFooter() {
   return (
@@ -11,10 +12,17 @@ export default function SiteFooter() {
       <div className="wrap">
         <div className="fimGrid">
           <figure className="fimShot">
-            <img
-              src={IMAGES.footer}
-              alt="Retrato de Carol Queiroz ao fim da tarde"
+            <video
+              data-src={VIDEOS.footer}
+          data-src-sm={VIDEOS.footerSm}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="none"
+              tabIndex={-1}
             />
+            <Pic src={IMAGES.footer} alt="Retrato de Carol Queiroz ao fim da tarde" />
             <figcaption className="mono">
               Fig. 03 · Carol Queiroz<i />
               Lisboa
@@ -47,7 +55,7 @@ export default function SiteFooter() {
         </div>
         <div className="fimBar mono">
           <span>Carol Queiroz · UGC Creator</span>
-          <span>Lisboa · © 2026</span>
+          <span>Portugal · © 2026</span>
         </div>
       </div>
     </footer>

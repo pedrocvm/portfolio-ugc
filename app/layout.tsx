@@ -13,12 +13,14 @@ const archivo = Archivo({
   axes: ['wdth'],
   variable: '--font-disp',
   display: 'swap',
+  preload: false,
 });
 const sans = Instrument_Sans({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-sans',
   display: 'swap',
+  preload: false,
 });
 const serif = Instrument_Serif({
   subsets: ['latin'],
@@ -26,10 +28,11 @@ const serif = Instrument_Serif({
   style: 'italic',
   variable: '--font-serif',
   display: 'swap',
+  preload: false,
 });
 const mono = Space_Mono({
   subsets: ['latin'],
-  weight: ['400', '700'],
+  weight: '400',
   variable: '--font-mono',
   display: 'swap',
 });
@@ -72,10 +75,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-PT" suppressHydrationWarning>
-      <body className={fontVars} data-mode="dark">
-        {children}
-      </body>
+    <html lang="pt-PT" className={fontVars} suppressHydrationWarning>
+      <body data-mode="dark">{children}</body>
     </html>
   );
 }
