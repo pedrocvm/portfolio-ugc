@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Segmented from './Segmented';
 import { useExit } from './useExit';
 
 const SIZES = [
@@ -43,16 +44,14 @@ export default function PreviewFrame({
       <div className="pvBox">
         <div className="pvBar">
           <h2 className="pvTitle">Rascunho, ainda fora do ar</h2>
-          {SIZES.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={'btn tiny' + (s.id === size.id ? ' solid' : '')}
-              onClick={() => setSize(s)}
-            >
-              {s.label}
-            </button>
-          ))}
+          <Segmented
+            label="Tamanho do ecrã"
+            value={size.id}
+            onChange={(id) =>
+              setSize(SIZES.find((s) => s.id === id) ?? SIZES[0])
+            }
+            options={SIZES.map((s) => ({ id: s.id, label: s.label }))}
+          />
           <button
             type="button"
             className="btn tiny quiet"

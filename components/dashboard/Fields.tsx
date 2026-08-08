@@ -191,6 +191,13 @@ function One({ f, ctx }: { f: Field; ctx: Ctx }) {
             title={`${f.title} ${String(i + 1).padStart(2, '0')}`}
             summary={summarise(it)}
             onMove={(dir) => move(i, dir)}
+            onDrop={(from) => {
+              if (from === i) return;
+              const next = [...items];
+              const [moved] = next.splice(from, 1);
+              next.splice(i, 0, moved);
+              write(next);
+            }}
             onRemove={() => write(items.filter((_, k) => k !== i))}
           >
             <Fields
@@ -233,6 +240,7 @@ function Card({
   summary,
   onMove,
   onRemove,
+  onDrop,
   children,
 }: {
   index: number;
@@ -241,12 +249,39 @@ function Card({
   summary: string;
   onMove: (dir: number) => void;
   onRemove: () => void;
+  onDrop: (from: number) => void;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [over, setOver] = useState(false);
   return (
-    <div className="card">
-      <div className="cardHead">
+    <div
+      className="card"
+      data-over={over || undefined}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        const from = Number(e.dataTransfer.getData('text/plain'));
+        if (!Number.isNaN(from)) onDrop(from);
+      }}
+    >
+      <div
+        className="cardHead"
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData('text/plain', String(index));
+          e.dataTransfer.effectAllowed = 'move';
+        }}
+      >
+        <span className="grip" aria-hidden="true">
+          <i />
+          <i />
+        </span>
         <button
           type="button"
           className="icoBtn"
@@ -260,7 +295,7 @@ function Card({
         <span className="t">{summary}</span>
         <button
           type="button"
-          className="icoBtn"
+          className="icoBtn mvUp"
           aria-label="Subir"
           disabled={index === 0}
           onClick={() => onMove(-1)}
@@ -269,7 +304,7 @@ function Card({
         </button>
         <button
           type="button"
-          className="icoBtn"
+          className="icoBtn mvDown"
           aria-label="Descer"
           disabled={index === total - 1}
           onClick={() => onMove(1)}

@@ -3,31 +3,58 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export const MENU = [
-  { href: '/dashboard', label: 'Site' },
-  { href: '/dashboard/library', label: 'Biblioteca' },
-  { href: '/dashboard/brands', label: 'Marcas' },
-  { href: '/dashboard/funnel', label: 'Funil' },
-  { href: '/dashboard/proposals', label: 'Propostas' },
-  { href: '/dashboard/contracts', label: 'Contratos' },
-  { href: '/dashboard/clients', label: 'Clientes', soon: true },
-  { href: '/dashboard/account', label: 'Conta' },
-];
+export const GROUPS = [
+  {
+    group: 'O site',
+    items: [
+      { href: '/dashboard', label: 'Conteúdo' },
+      { href: '/dashboard/library', label: 'Biblioteca' },
+    ],
+  },
+  {
+    group: 'Negócio',
+    items: [
+      { href: '/dashboard/brands', label: 'Marcas' },
+      { href: '/dashboard/funnel', label: 'Funil' },
+      { href: '/dashboard/proposals', label: 'Propostas' },
+      { href: '/dashboard/contracts', label: 'Contratos' },
+      { href: '/dashboard/clients', label: 'Clientes', soon: true },
+    ],
+  },
+  {
+    group: 'Conta',
+    items: [{ href: '/dashboard/account', label: 'A minha conta' }],
+  },
+] as const;
+
+export const MENU = GROUPS.flatMap((g) =>
+  g.items.map((i) => ({ ...i, group: g.group, soon: 'soon' in i && i.soon })),
+);
 
 export default function Menu() {
   const path = usePathname();
+  let n = 0;
+
   return (
     <nav className="rail" aria-label="Áreas">
-      {MENU.map((m, i) => (
-        <Link
-          key={m.href}
-          href={m.href}
-          style={{ '--r': i } as React.CSSProperties}
-          aria-current={path === m.href ? 'page' : undefined}
-          data-soon={m.soon || undefined}
-        >
-          {m.label}
-        </Link>
+      {GROUPS.map((g) => (
+        <div className="railGroup" key={g.group}>
+          <span className="railLabel">{g.group}</span>
+          {g.items.map((m) => {
+            const soon = 'soon' in m && m.soon;
+            return (
+              <Link
+                key={m.href}
+                href={m.href}
+                aria-current={path === m.href ? 'page' : undefined}
+                data-soon={soon || undefined}
+                style={{ '--r': n++ } as React.CSSProperties}
+              >
+                {m.label}
+              </Link>
+            );
+          })}
+        </div>
       ))}
     </nav>
   );

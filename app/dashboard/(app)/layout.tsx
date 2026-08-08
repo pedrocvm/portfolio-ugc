@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { signOut } from '@/app/dashboard/actions';
+import Command from '@/components/dashboard/Command';
 import Logo from '@/components/dashboard/Logo';
 import Menu from '@/components/dashboard/Menu';
 import { requireEditor } from '@/lib/auth';
@@ -34,6 +35,7 @@ export default async function AppLayout({
           </form>
         </aside>
         <main className="sheet">{children}</main>
+        <Command />
       </div>
     </>
   );

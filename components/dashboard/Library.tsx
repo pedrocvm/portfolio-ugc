@@ -10,6 +10,7 @@ import {
 } from '@/app/dashboard/library-actions';
 import { KIND_LABEL, type MediaItem, type MediaKind } from '@/lib/library';
 import { useUpload } from './MediaField';
+import Segmented from './Segmented';
 
 const TODOS = '__todos__';
 const SEM_NICHO = '__sem__';
@@ -84,18 +85,15 @@ export default function Library({
 
       <div className="libAdd">
         <div className="libAddRow">
-          <div className="seg">
-            {(['video', 'photo'] as MediaKind[]).map((k) => (
-              <button
-                key={k}
-                type="button"
-                className={'btn tiny' + (kind === k ? ' solid' : '')}
-                onClick={() => setKind(k)}
-              >
-                {KIND_LABEL[k]}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            label="Tipo de ficheiro"
+            value={kind}
+            onChange={setKind}
+            options={[
+              { id: 'video', label: 'Vídeos' },
+              { id: 'photo', label: 'Fotos' },
+            ]}
+          />
           <select
             value={niche}
             onChange={(e) => setNiche(e.target.value)}
