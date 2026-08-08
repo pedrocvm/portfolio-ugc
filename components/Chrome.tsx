@@ -1,6 +1,10 @@
-import { WHATSAPP } from '@/lib/site';
-
-export default function Chrome() {
+export default function Chrome({
+  label,
+  whatsapp,
+}: {
+  label: string;
+  whatsapp: string;
+}) {
   return (
     <>
       <div id="bg" />
@@ -11,11 +15,11 @@ export default function Chrome() {
       <a
         id="chip"
         className="mono"
-        href={WHATSAPP}
+        href={whatsapp}
         target="_blank"
         rel="noopener"
       >
-        Pedir vídeo →
+        {label}
       </a>
     </>
   );

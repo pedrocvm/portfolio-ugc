@@ -1,14 +1,20 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { IMAGES, NICHES, PHOTOS, TAKES } from '@/lib/site';
+import type { Content } from '@/lib/content';
 import { useReel } from './useReel';
+import { isVideo } from '@/lib/media';
 import Pic from './Pic';
 
-const POOL = [...TAKES.map((t) => t.img), ...PHOTOS];
 const PER_NICHE = 8;
 
-export default function Meet() {
+export default function Meet({
+  c,
+  pool,
+}: {
+  c: Content['meet'];
+  pool: string[];
+}) {
   const [niche, setNiche] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -51,6 +57,18 @@ export default function Meet() {
     setNiche(null);
   }
 
+  /* os registos do nicho vêm da biblioteca; enquanto ela não os escolher, a
+     gaveta continua a mostrar uma seleção automática das fotos do site */
+  const chosen = c.niches.find((n) => n.name === niche);
+  const shelf = chosen?.reel.length
+    ? chosen.reel.map((r) => r.src).filter(Boolean)
+    : pool.length
+      ? Array.from({ length: PER_NICHE }, (_, i) => {
+          const off = c.niches.findIndex((n) => n.name === niche);
+          return pool[(i + (off < 0 ? 0 : off * 3)) % pool.length];
+        })
+      : [];
+
   return (
     <>
       <section
@@ -61,49 +79,42 @@ export default function Meet() {
         aria-label="Apresentação"
       >
         <div className="bgimg" data-par="" aria-hidden="true">
-          <Pic src={TAKES[0].img} alt="" />
+          {pool[0] ? <Pic src={pool[0]} alt="" /> : null}
           <i className="ov" />
         </div>
         <div className="wrap">
           <div className="grid">
             <figure className="shot">
               <div className="fm main">
-                <Pic src={IMAGES.meetMain} alt="Retrato de Carol Queiroz" />
+                <Pic src={c.imageMain} alt={c.imageMainAlt} />
               </div>
               <div className="fm sub">
-                <Pic src={IMAGES.meetSub} alt="" ariaHidden />
+                <Pic src={c.imageSub} alt="" ariaHidden />
               </div>
             </figure>
             <div className="txt">
-              <p className="mono eyebrow">Antes da sessão</p>
+              <p className="mono eyebrow">{c.eyebrow}</p>
               <h2 className="disp">
-                Prazer, <em className="serif-it">Carol.</em>
+                {c.titleLead} <em className="serif-it">{c.titleEm}</em>
               </h2>
-              <p className="bio">
-                Falo para a câmera como falo com quem conheço. Gravo, escrevo e
-                edito os meus próprios vídeos, em português, para marcas que
-                querem ver o produto na vida real antes de o vender.
-              </p>
+              <p className="bio">{c.bio}</p>
               <ul className="nichos">
-                {NICHES.map((n) => (
-                  <li key={n}>
+                {c.niches.map((n) => (
+                  <li key={n.name}>
                     <button
                       type="button"
                       onClick={(e) => {
                         opener.current = e.currentTarget;
-                        setNiche(n);
+                        setNiche(n.name);
                       }}
                     >
-                      <span>{n}</span>
+                      <span>{n.name}</span>
                       <span className="qt">Ver registos</span>
                     </button>
                   </li>
                 ))}
               </ul>
-              <p className="nota">
-                “No vídeo do sérum decidi abrir com a textura no dorso da mão,
-                porque é o que eu verificaria antes de comprar.”
-              </p>
+              <p className="nota">{c.note}</p>
             </div>
           </div>
         </div>
@@ -126,7 +137,7 @@ export default function Meet() {
         >
           <div className="head">
             <div>
-              <p className="mono eyebrow">Nicho</p>
+              <p className="mono eyebrow">{c.shelfEyebrow}</p>
               <h2 id="shelfTitle">{niche ?? ''}</h2>
             </div>
             <div className="ctrls">
@@ -159,22 +170,22 @@ export default function Meet() {
             </div>
           </div>
           <ul className="reel" ref={reelRef}>
-            {Array.from({ length: PER_NICHE }, (_, i) => {
-              const off = NICHES.indexOf(niche ?? '');
-              const src = POOL[(i + (off < 0 ? 0 : off * 3)) % POOL.length];
-              return (
-                <li key={i}>
+            {shelf.map((src, i) => (
+              <li key={i}>
+                {isVideo(src) ? (
+                  <video src={src} muted loop playsInline preload="metadata" />
+                ) : (
                   <Pic src={src} alt="" />
-                  <span className="idx mono">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                </li>
-              );
-            })}
+                )}
+                <span className="idx mono">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+              </li>
+            ))}
           </ul>
           <p className="foot mono">
-            <span>Sessões próprias</span>
-            <span>{String(PER_NICHE).padStart(2, '0')} registos</span>
+            <span>{c.shelfFoot}</span>
+            <span>{String(shelf.length).padStart(2, '0')} registos</span>
           </p>
         </div>
       </div>

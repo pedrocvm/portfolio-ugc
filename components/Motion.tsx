@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { TAKES } from '@/lib/site';
 
 export default function Motion() {
   useEffect(() => {
@@ -187,6 +186,7 @@ function run(gsap: any, ScrollTrigger: any) {
       document.querySelectorAll<HTMLElement>('#sessao .ambient img'),
     );
     ambImgs[0]?.classList.add('on');
+    const total = String(takeEls.length).padStart(2, '0');
     const bignum = document.getElementById('bignum');
     const counter = document.getElementById('counter');
     const fichaTxt = document.getElementById('fichaTxt');
@@ -214,10 +214,11 @@ function run(gsap: any, ScrollTrigger: any) {
         { opacity: 0, scale: goingDown ? 1.04 : 0.94 },
         { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' },
       );
-      if (bignum) bignum.textContent = TAKES[i].n;
+      const n = takeEls[i].dataset.n ?? '';
+      if (bignum) bignum.textContent = n;
       ambImgs.forEach((im, k) => im.classList.toggle('on', k === i));
-      if (counter) counter.textContent = `${TAKES[i].n} / 06`;
-      if (fichaTxt) fichaTxt.textContent = TAKES[i].niche;
+      if (counter) counter.textContent = `${n} / ${total}`;
+      if (fichaTxt) fichaTxt.textContent = takeEls[i].dataset.niche ?? '';
     }
 
     ScrollTrigger.create({
@@ -228,8 +229,12 @@ function run(gsap: any, ScrollTrigger: any) {
       scrub: 0.5,
       onUpdate(self: { progress: number }) {
         if (progFill) progFill.style.width = `${self.progress * 100}%`;
+        if (!takeEls.length) return;
         setTake(
-          Math.min(TAKES.length - 1, Math.floor(self.progress * TAKES.length)),
+          Math.min(
+            takeEls.length - 1,
+            Math.floor(self.progress * takeEls.length),
+          ),
         );
       },
     });

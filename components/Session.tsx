@@ -1,47 +1,55 @@
-import { TAKES } from '@/lib/site';
+import type { Content } from '@/lib/content';
 import Pic from './Pic';
 
-export default function Session() {
+export default function Session({ c }: { c: Content['session'] }) {
+  const total = String(c.takes.length).padStart(2, '0');
   return (
     <section
       id="sessao"
       className="scene on-dark"
       data-bg="#2e2c2a"
       data-mode="dark"
-      aria-label="As seis tomadas"
+      aria-label="As tomadas da sessão"
     >
       <div className="pinwrap">
         <div className="ambient" aria-hidden="true">
-          {TAKES.map((t) => (
-            <Pic key={t.n} src={t.img} alt="" />
+          {c.takes.map((t, i) => (
+            <Pic key={i} src={t.img} alt="" />
           ))}
           <i className="ov" />
         </div>
         <div className="head mono">
-          <span>A sessão</span>
-          <span id="counter">01 / 06</span>
+          <span>{c.label}</span>
+          <span id="counter">
+            {c.takes[0]?.n ?? '01'} / {total}
+          </span>
         </div>
         <div className="stagewrap">
           <div className="bignum" id="bignum" aria-hidden="true">
-            01
+            {c.takes[0]?.n ?? '01'}
           </div>
           <div className="frame" id="frame">
-            {TAKES.map((t, i) => (
-              <div className={'takeV' + (i === 0 ? ' on' : '')} key={t.n}>
+            {c.takes.map((t, i) => (
+              <div
+                className={'takeV' + (i === 0 ? ' on' : '')}
+                key={i}
+                data-n={t.n}
+                data-niche={t.niche}
+              >
                 <Pic src={t.img} alt="" />
                 <span className="tg1 mono">
-                  Tomada {t.n} · {t.niche}
+                  {c.takeLabel} {t.n} · {t.niche}
                 </span>
               </div>
             ))}
           </div>
         </div>
         <div className="ficha mono">
-          <span id="fichaTxt">Casa &amp; Decor</span>
+          <span id="fichaTxt">{c.takes[0]?.niche ?? ''}</span>
           <span className="prog" aria-hidden="true">
             <i id="progFill" />
           </span>
-          <span>06</span>
+          <span>{total}</span>
         </div>
       </div>
     </section>

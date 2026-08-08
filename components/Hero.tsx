@@ -1,6 +1,26 @@
-import { IMAGES, VIDEOS } from '@/lib/site';
+import type { Content } from '@/lib/content';
+import { derive, hasDerivatives } from '@/lib/media';
 
-export default function Hero() {
+function Letters({ word, offset }: { word: string; offset: number }) {
+  return (
+    <>
+      {[...word].map((c, i) => (
+        <span
+          className="ch"
+          key={i}
+          aria-hidden="true"
+          style={{ '--i': i + offset } as React.CSSProperties}
+        >
+          {c}
+        </span>
+      ))}
+    </>
+  );
+}
+
+export default function Hero({ c }: { c: Content['hero'] }) {
+  const wide = hasDerivatives(c.imageWide);
+  const portrait = hasDerivatives(c.imagePortrait);
   return (
     <header
       id="hero"
@@ -10,8 +30,8 @@ export default function Hero() {
     >
       <div className="bgimg" data-par="" aria-hidden="true">
         <video
-          data-src={VIDEOS.hero}
-          data-src-sm={VIDEOS.heroSm}
+          data-src={c.video.src}
+          data-src-sm={c.video.srcSm || c.video.src}
           autoPlay
           muted
           loop
@@ -20,21 +40,29 @@ export default function Hero() {
           tabIndex={-1}
         />
         <picture>
-          <source
-            media="(min-width:820px)"
-            srcSet={IMAGES.heroWideAvif}
-            type="image/avif"
-          />
-          <source
-            media="(min-width:820px)"
-            srcSet={IMAGES.heroWideWebp}
-            type="image/webp"
-          />
-          <source media="(min-width:820px)" srcSet={IMAGES.heroWide} />
-          <source srcSet={IMAGES.heroPortraitAvif} type="image/avif" />
-          <source srcSet={IMAGES.heroPortraitWebp} type="image/webp" />
+          {wide && (
+            <source
+              media="(min-width:820px)"
+              srcSet={derive(c.imageWide, 'avif')}
+              type="image/avif"
+            />
+          )}
+          {wide && (
+            <source
+              media="(min-width:820px)"
+              srcSet={derive(c.imageWide, 'webp')}
+              type="image/webp"
+            />
+          )}
+          <source media="(min-width:820px)" srcSet={c.imageWide} />
+          {portrait && (
+            <source srcSet={derive(c.imagePortrait, 'avif')} type="image/avif" />
+          )}
+          {portrait && (
+            <source srcSet={derive(c.imagePortrait, 'webp')} type="image/webp" />
+          )}
           <img
-            src={IMAGES.heroPortrait}
+            src={c.imagePortrait}
             alt=""
             fetchPriority="high"
             decoding="async"
@@ -43,41 +71,24 @@ export default function Hero() {
         <i className="ov" />
       </div>
       <div className="top mono">
-        <span style={{ whiteSpace: 'nowrap' }}>Portfólio · 2026</span>
+        <span style={{ whiteSpace: 'nowrap' }}>{c.top}</span>
       </div>
       <div className="stage">
         <div className="titleBox">
           <p className="kicker mono">
-            UGC Creator · Portugal<i />
+            {c.kicker}
+            <i />
           </p>
           <h1 className="disp name hl">
             <span className="line">
-              <span className="l1" aria-label="Carolina">
-                {[...'Carolina'].map((c, i) => (
-                  <span
-                    className="ch"
-                    key={i}
-                    aria-hidden="true"
-                    style={{ '--i': i } as React.CSSProperties}
-                  >
-                    {c}
-                  </span>
-                ))}
+              <span className="l1" aria-label={c.firstName}>
+                <Letters word={c.firstName} offset={0} />
               </span>
               <i className="nib" aria-hidden="true" />
             </span>
             <span className="line">
-              <span className="l2" aria-label="Queiroz">
-                {[...'Queiroz'].map((c, i) => (
-                  <span
-                    className="ch"
-                    key={i}
-                    aria-hidden="true"
-                    style={{ '--i': i + 8 } as React.CSSProperties}
-                  >
-                    {c}
-                  </span>
-                ))}
+              <span className="l2" aria-label={c.lastName}>
+                <Letters word={c.lastName} offset={c.firstName.length} />
               </span>
               <i className="nib" aria-hidden="true" />
             </span>
@@ -86,7 +97,7 @@ export default function Hero() {
       </div>
       <div className="foot mono">
         <span className="scrollcue">
-          Rolar
+          {c.scroll}
           <i />
         </span>
       </div>

@@ -1,7 +1,15 @@
-import { IMAGES, INSTAGRAM, VIDEOS, WHATSAPP } from '@/lib/site';
+import type { Content } from '@/lib/content';
 import Pic from './Pic';
 
-export default function SiteFooter() {
+export default function SiteFooter({
+  c,
+  contact,
+  whatsapp,
+}: {
+  c: Content['footer'];
+  contact: Content['contact'];
+  whatsapp: string;
+}) {
   return (
     <footer
       id="fim"
@@ -13,8 +21,8 @@ export default function SiteFooter() {
         <div className="fimGrid">
           <figure className="fimShot">
             <video
-              data-src={VIDEOS.footer}
-          data-src-sm={VIDEOS.footerSm}
+              data-src={c.video.src}
+              data-src-sm={c.video.srcSm || c.video.src}
               autoPlay
               muted
               loop
@@ -22,40 +30,38 @@ export default function SiteFooter() {
               preload="none"
               tabIndex={-1}
             />
-            <Pic src={IMAGES.footer} alt="Retrato de Carol Queiroz ao fim da tarde" />
+            <Pic src={c.image} alt={c.imageAlt} />
             <figcaption className="mono">
-              Fig. 03 · Carol Queiroz<i />
-              Lisboa
+              {c.caption}
+              <i />
+              {c.captionSub}
             </figcaption>
           </figure>
           <div>
-            <p className="mono ey">Fim da sessão</p>
+            <p className="mono ey">{c.eyebrow}</p>
             <h2 className="disp">
-              Diz-me o que precisas de <em className="script">gravar.</em>
+              {c.titleLead} <em className="script">{c.titleEm}</em>
             </h2>
-            <p className="lead">
-              Não precisas de trazer briefing nem guião. Ajuda se me disseres a
-              marca, o produto, o tipo de vídeo, quantos e para onde vão.
-            </p>
+            <p className="lead">{c.lead}</p>
             <a
               className="cta-btn"
-              href={WHATSAPP}
+              href={whatsapp}
               target="_blank"
               rel="noopener"
             >
-              Contar o que precisas gravar
+              {c.cta}
             </a>
             <p className="ig">
-              Ou manda mensagem no Instagram,{' '}
-              <a href={INSTAGRAM} target="_blank" rel="noopener">
-                @carolxqueiroz
+              {c.igPrefix}{' '}
+              <a href={contact.instagram} target="_blank" rel="noopener">
+                {contact.instagramHandle}
               </a>
             </p>
           </div>
         </div>
         <div className="fimBar mono">
-          <span>Carol Queiroz · UGC Creator</span>
-          <span>Portugal · © 2026</span>
+          <span>{c.barLeft}</span>
+          <span>{c.barRight}</span>
         </div>
       </div>
     </footer>

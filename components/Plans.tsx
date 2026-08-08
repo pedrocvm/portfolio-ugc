@@ -1,11 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { PLANS, wa } from '@/lib/site';
+import { wa, type Content } from '@/lib/content';
 
 type Mode = 'avulso' | 'mensal';
 
-export default function Plans() {
+export default function Plans({
+  c,
+  phone,
+}: {
+  c: Content['plans'];
+  phone: string;
+}) {
   const [mode, setMode] = useState<Mode>('avulso');
 
   return (
@@ -18,12 +24,12 @@ export default function Plans() {
     >
       <div className="wrap">
         <div className="chapHead">
-          <span className="mono cn">04</span>
-          <span className="mono eyebrow">Pacotes</span>
+          <span className="mono cn">{c.num}</span>
+          <span className="mono eyebrow">{c.eyebrow}</span>
           <i />
         </div>
         <h2 className="disp">
-          Quanto <em className="serif-it">custa.</em>
+          {c.titleLead} <em className="serif-it">{c.titleEm}</em>
         </h2>
         <div className="price">
           <div
@@ -47,19 +53,14 @@ export default function Plans() {
           </div>
 
           <p className="modeHint">
-            {mode === 'avulso'
-              ? 'Para um teste pontual ou uma campanha com data marcada.'
-              : 'Para quem precisa de conteúdo novo todos os meses, com preço por vídeo mais baixo.'}
+            {mode === 'avulso' ? c.hintAvulso : c.hintMensal}
           </p>
 
           <ul className="planGrid">
-            {PLANS.map((p) => {
+            {c.items.map((p, i) => {
               const t = p[mode];
               return (
-                <li
-                  key={p.name}
-                  className={'plan' + (p.best ? ' best' : '')}
-                >
+                <li key={i} className={'plan' + (p.best ? ' best' : '')}>
                   {p.best && <span className="badge mono">Recomendado</span>}
                   <h3 className="pname">{p.name}</h3>
                   <p className="pqty">{t.qty}</p>
@@ -70,13 +71,14 @@ export default function Plans() {
                   </p>
                   <p className="pu mono">{t.unit}</p>
                   <ul className="feat">
-                    {p.feat.map((f) => (
-                      <li key={f}>{f}</li>
+                    {p.feat.map((f, k) => (
+                      <li key={k}>{f}</li>
                     ))}
                   </ul>
                   <a
                     className="cta-btn"
                     href={wa(
+                      phone,
                       `Olá Carol, quero o pacote ${p.name} ${
                         mode === 'avulso' ? 'avulso' : 'mensal'
                       } — ${t.qty}, ${t.price}€${t.suffix}. Podes dizer-me os próximos passos?`,
@@ -93,30 +95,21 @@ export default function Plans() {
 
           <div className="extras">
             <div>
-              <span className="mono eyebrow">Incluído em todos</span>
-              <p className="inc">
-                Roteiro meu, gravação, edição, legendas, revisão e uso orgânico.
-                Entrega em 7 dias úteis depois de o produto chegar.
-              </p>
+              <span className="mono eyebrow">{c.includedTitle}</span>
+              <p className="inc">{c.includedText}</p>
             </div>
             <div className="addons">
-              <span className="mono eyebrow">Add-ons</span>
-              <div className="row">
-                <span className="mono">Direitos para Ads · 6 meses</span>
-                <span className="val">+75€</span>
-              </div>
-              <div className="row">
-                <span className="mono">Abertura extra</span>
-                <span className="val">25€</span>
-              </div>
-              <div className="row">
-                <span className="mono">Revisão extra</span>
-                <span className="val">25€</span>
-              </div>
+              <span className="mono eyebrow">{c.addonsTitle}</span>
+              {c.addons.map((a, i) => (
+                <div className="row" key={i}>
+                  <span className="mono">{a.label}</span>
+                  <span className="val">{a.value}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <p className="lanc mono">Valores de lançamento</p>
+          <p className="lanc mono">{c.note}</p>
         </div>
       </div>
     </section>

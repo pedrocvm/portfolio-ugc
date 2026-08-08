@@ -1,23 +1,23 @@
 'use client';
 
-import { PHOTOS } from '@/lib/site';
+import type { Content } from '@/lib/content';
 import { useReel } from './useReel';
 import Pic from './Pic';
 
-export default function Photos() {
+export default function Photos({ c }: { c: Content['photos'] }) {
   const { reelRef, atStart, atEnd, page } = useReel();
 
   return (
     <section id="fotos" className="chap" aria-label="Fotos UGC">
       <div className="wrap">
         <div className="chapHead">
-          <span className="mono cn">02</span>
-          <span className="mono eyebrow">Registos</span>
+          <span className="mono cn">{c.num}</span>
+          <span className="mono eyebrow">{c.eyebrow}</span>
           <i />
         </div>
         <div className="reelHead">
           <h2 className="disp">
-            Fotos <em className="serif-it">UGC.</em>
+            {c.titleLead} <em className="serif-it">{c.titleEm}</em>
           </h2>
           <div className="ctrls">
             <button
@@ -41,11 +41,11 @@ export default function Photos() {
           </div>
         </div>
         <ul className="reel" id="fotosReel" ref={reelRef}>
-          {PHOTOS.map((src, i) => (
-            <li key={src}>
+          {c.items.map((p, i) => (
+            <li key={i}>
               <Pic
-                src={src}
-                alt={`Foto UGC ${String(i + 1).padStart(2, '0')}`}
+                src={p.src}
+                alt={p.alt || `Foto UGC ${String(i + 1).padStart(2, '0')}`}
               />
               <span className="idx mono">
                 {String(i + 1).padStart(2, '0')}
@@ -54,8 +54,8 @@ export default function Photos() {
           ))}
         </ul>
         <p className="reelFoot mono">
-          <span>Sessões próprias</span>
-          <span>Lisboa</span>
+          <span>{c.footLeft}</span>
+          <span>{c.footRight}</span>
         </p>
       </div>
     </section>

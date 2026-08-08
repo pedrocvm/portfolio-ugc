@@ -6,6 +6,7 @@ import {
   Space_Mono,
   Tangerine,
 } from 'next/font/google';
+import { getPublished } from '@/lib/content-store';
 import './globals.css';
 
 const archivo = Archivo({
@@ -47,20 +48,21 @@ const fontVars = [archivo, sans, serif, mono, script]
   .map((f) => f.variable)
   .join(' ');
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://portfolio-ugc.vercel.app'),
-  title: 'Carol Queiroz — UGC Creator · Sessão privada',
-  description:
-    'Vídeos UGC em português para marcas de casa e decor, cabelo, skincare, tecnologia e serviços. A partir de 150€.',
-  openGraph: {
-    title: 'Carol Queiroz — UGC Creator',
-    description:
-      'Vídeos UGC em português para marcas. A partir de 150€, entrega em 7 dias úteis.',
-    locale: 'pt_PT',
-    type: 'website',
-    images: ['/img/img-01.jpg'],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { meta } = await getPublished();
+  return {
+    metadataBase: new URL('https://portfolio-ugc.vercel.app'),
+    title: meta.title,
+    description: meta.description,
+    openGraph: {
+      title: meta.ogTitle,
+      description: meta.ogDescription,
+      locale: 'pt_PT',
+      type: 'website',
+      images: [meta.ogImage],
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: 'device-width',

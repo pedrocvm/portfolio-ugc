@@ -1,33 +1,27 @@
-const STEPS = [
-  ['01', 'Contas-me o produto, o objetivo e onde vai o vídeo.'],
-  ['02', 'Proponho o formato, a abordagem e o que preciso de receber.'],
-  ['03', 'Validamos o conceito antes de gravar.'],
-  ['04', 'Gravo e edito, e envias comentários sobre a primeira versão.'],
-  ['05', 'Entrego o ficheiro final no formato combinado.'],
-];
+import type { Content } from '@/lib/content';
 
-export default function Process() {
+export default function Process({ c }: { c: Content['process'] }) {
   return (
     <section id="processo" className="chap band" aria-label="Como funciona">
       <div className="wrap">
         <div className="chapHead">
-          <span className="mono cn">03</span>
-          <span className="mono eyebrow">Processo</span>
+          <span className="mono cn">{c.num}</span>
+          <span className="mono eyebrow">{c.eyebrow}</span>
           <i />
         </div>
         <div className="chapGrid split">
           <h2 className="disp">
-            Como <em className="serif-it">funciona.</em>
+            {c.titleLead} <em className="serif-it">{c.titleEm}</em>
           </h2>
           <div className="tline">
             <span className="rail" aria-hidden="true" />
             <span className="fill" aria-hidden="true" />
             <ol className="tsteps">
-              {STEPS.map(([n, text]) => (
-                <li key={n}>
+              {c.steps.map((s, i) => (
+                <li key={i}>
                   <span className="node" aria-hidden="true" />
-                  <span className="n mono">{n}</span>
-                  <p>{text}</p>
+                  <span className="n mono">{s.n}</span>
+                  <p>{s.text}</p>
                 </li>
               ))}
             </ol>
