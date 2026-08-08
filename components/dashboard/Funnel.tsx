@@ -48,7 +48,7 @@ export default function Funnel({ brands }: { brands: Brand[] }) {
             return (
               <section className="fnCol" key={s.id} data-stage={s.id}>
                 <header className="fnHead">
-                  <span className="mono">{s.label}</span>
+                  <span className="fnName">{s.label}</span>
                   <span className="fnCount">{col.length}</span>
                 </header>
                 {col.length === 0 ? (

@@ -5,7 +5,7 @@ export default function DocumentView({ doc }: { doc: Rendered }) {
     <article className="doc">
       <header className="docHead">
         <h2>{doc.heading}</h2>
-        <p className="mono">{doc.subheading}</p>
+        <p className="docMeta">{doc.subheading}</p>
       </header>
       {doc.sections.map((sec, i) => (
         <section className="docSec" key={i}>
@@ -21,7 +21,7 @@ export default function DocumentView({ doc }: { doc: Rendered }) {
               </ul>
             ) : (
               <p className="docPair" key={k}>
-                <span className="mono">{b.label}</span>
+                <span className="docLabel">{b.label}</span>
                 <span>{b.value}</span>
               </p>
             ),
@@ -35,7 +35,7 @@ export default function DocumentView({ doc }: { doc: Rendered }) {
             {doc.signature.slice(1).map((quem, i) => (
               <div key={i}>
                 <span className="rule" />
-                <span className="mono">{quem}</span>
+                <span className="docWho">{quem}</span>
               </div>
             ))}
           </div>
