@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Busy from './Busy';
 import { removeBrand, saveBrand } from '@/app/dashboard/brand-actions';
 import {
   CHANNELS,
@@ -29,6 +30,7 @@ export default function Brands({ brands }: { brands: Brand[] }) {
 
   return (
     <>
+      <Busy on={pending} />
       <div className="dashBar">
         <h1>Marcas</h1>
         <span className="dashState">

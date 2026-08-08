@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useExit } from './useExit';
 import { listMedia } from '@/app/dashboard/library-actions';
 import type { MediaItem } from '@/lib/library';
 import { isVideo } from '@/lib/media';
@@ -15,15 +16,16 @@ export default function LibraryPicker({
   onClose: () => void;
 }) {
   const [items, setItems] = useState<MediaItem[] | null>(null);
+  const { closing, close } = useExit(onClose);
 
   useEffect(() => {
     listMedia().then(setItems);
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') close();
     }
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [close]);
 
   const shown = (items ?? []).filter((i) =>
     accept === 'media'
@@ -34,12 +36,12 @@ export default function LibraryPicker({
   );
 
   return (
-    <div className="pick" role="dialog" aria-modal="true" aria-label="Biblioteca">
-      <button className="pickScrim" type="button" aria-label="Fechar" onClick={onClose} />
+    <div className="pick" data-closing={closing || undefined} role="dialog" aria-modal="true" aria-label="Biblioteca">
+      <button className="pickScrim" type="button" aria-label="Fechar" onClick={close} />
       <div className="pickBox">
         <div className="pickHead">
           <h2 className="pickTitle">Biblioteca</h2>
-          <button type="button" className="icoBtn" aria-label="Fechar" onClick={onClose}>
+          <button type="button" className="icoBtn" aria-label="Fechar" onClick={close}>
             ✕
           </button>
         </div>
@@ -52,8 +54,11 @@ export default function LibraryPicker({
           </p>
         ) : (
           <ul className="pickGrid">
-            {shown.map((it) => (
-              <li key={it.id}>
+            {shown.map((it, i) => (
+              <li
+                key={it.id}
+                style={{ '--g': Math.min(i, 12) } as React.CSSProperties}
+              >
                 <button type="button" onClick={() => onPick(it.url)}>
                   <span className="libThumb">
                     {isVideo(it.url) ? (

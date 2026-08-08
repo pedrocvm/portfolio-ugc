@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Busy from './Busy';
 import {
   createDoc,
   removeDoc,
@@ -74,6 +75,7 @@ export default function Documents({
 
   return (
     <>
+      <Busy on={pending} />
       <div className="dashBar noPrint">
         <h1>{spec.label}</h1>
         <span className="dashState" data-tone={dirty ? 'dirty' : undefined}>

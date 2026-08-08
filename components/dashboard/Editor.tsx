@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Busy from './Busy';
 import { discardDraft, publishDraft, saveDraft } from '@/app/dashboard/actions';
 import type { Content } from '@/lib/content';
 import { SECTIONS } from '@/lib/schema';
@@ -18,9 +19,28 @@ export default function Editor({ initial }: { initial: Content }) {
   const [dirty, setDirty] = useState(false);
   const [state, setState] = useState<State>(CLEAN);
   const [preview, setPreview] = useState(false);
+  const [here, setHere] = useState(SECTIONS[0].id);
   const [pending, start] = useTransition();
   const router = useRouter();
   const sticky = useRef<HTMLDivElement>(null);
+
+  /* o índice da margem marca a secção em vista */
+  useEffect(() => {
+    const alvos = SECTIONS.map((s) => document.getElementById(`s-${s.id}`)).filter(
+      (el): el is HTMLElement => !!el,
+    );
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visivel = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visivel) setHere(visivel.target.id.replace('s-', ''));
+      },
+      { rootMargin: '-25% 0px -60% 0px' },
+    );
+    alvos.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   /* a barra pode passar a duas linhas conforme a largura: as âncoras das
      secções têm de parar debaixo dela, não atrás */
@@ -84,6 +104,7 @@ export default function Editor({ initial }: { initial: Content }) {
 
   return (
     <>
+      <Busy on={pending} />
       <div className="dashSticky" ref={sticky}>
       <div className="dashBar">
         <h1>Conteúdo do site</h1>
@@ -117,13 +138,6 @@ export default function Editor({ initial }: { initial: Content }) {
         </button>
       </div>
 
-      <nav className="secNav" aria-label="Secções">
-        {SECTIONS.map((s) => (
-          <a key={s.id} href={`#s-${s.id}`}>
-            {s.title}
-          </a>
-        ))}
-      </nav>
       </div>
 
       <button
@@ -154,19 +168,32 @@ export default function Editor({ initial }: { initial: Content }) {
         <PreviewFrame dirty={dirty} onClose={() => setPreview(false)} />
       ) : null}
 
-      <div>
-        {SECTIONS.map((s) => (
-          <section className="sec" id={`s-${s.id}`} key={s.id}>
-            <div className="secHead">
-              <h2>{s.title}</h2>
-              <p className="said">{s.note}</p>
-            </div>
-            <Fields
-              fields={s.fields}
-              ctx={{ root: content, base: '', onChange: change }}
-            />
-          </section>
-        ))}
+      <div className="withIndex">
+        <div>
+          {SECTIONS.map((s) => (
+            <section className="sec" id={`s-${s.id}`} key={s.id}>
+              <div className="secHead">
+                <h2>{s.title}</h2>
+                <p className="said">{s.note}</p>
+              </div>
+              <Fields
+                fields={s.fields}
+                ctx={{ root: content, base: '', onChange: change }}
+              />
+            </section>
+          ))}
+        </div>
+        <nav className="secIndex" aria-label="Secções">
+          {SECTIONS.map((s) => (
+            <a
+              key={s.id}
+              href={`#s-${s.id}`}
+              aria-current={here === s.id ? 'true' : undefined}
+            >
+              {s.title}
+            </a>
+          ))}
+        </nav>
       </div>
     </>
   );

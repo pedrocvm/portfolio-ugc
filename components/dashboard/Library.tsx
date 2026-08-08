@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Busy from './Busy';
 import {
   addMedia,
   removeMedia,
@@ -73,6 +74,7 @@ export default function Library({
 
   return (
     <>
+      <Busy on={pending} />
       <div className="dashBar">
         <h1>Biblioteca</h1>
         <span className="dashState">
@@ -162,8 +164,12 @@ export default function Library({
         </p>
       ) : (
         <ul className="libGrid">
-          {shown.map((it) => (
-            <li key={it.id} className="libCard">
+          {shown.map((it, i) => (
+            <li
+              key={it.id}
+              className="libCard"
+              style={{ '--g': Math.min(i, 12) } as React.CSSProperties}
+            >
               <div className="libThumb">
                 {it.kind === 'photo' ? (
                   <img src={it.url} alt="" loading="lazy" />

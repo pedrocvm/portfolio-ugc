@@ -21,18 +21,20 @@ export default async function AppLayout({
 
   return (
     <>
-      <header className="masthead">
-        <Link className="mastName" href="/">
-          <Logo first={hero.firstName} last={hero.lastName} />
-        </Link>
-        <Menu />
-        <form action={signOut}>
-          <button className="mastOut" type="submit">
-            Sair
-          </button>
-        </form>
-      </header>
-      <main className="sheet">{children}</main>
+      <div className="shell">
+        <aside className="side">
+          <Link className="sideName" href="/">
+            <Logo first={hero.firstName} last={hero.lastName} />
+          </Link>
+          <Menu />
+          <form action={signOut}>
+            <button className="sideOut" type="submit">
+              Sair
+            </button>
+          </form>
+        </aside>
+        <main className="sheet">{children}</main>
+      </div>
     </>
   );
 }

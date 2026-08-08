@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useExit } from './useExit';
 
 const SIZES = [
   { id: 'desktop', label: 'Computador', width: '100%' },
@@ -17,10 +18,11 @@ export default function PreviewFrame({
 }) {
   const [size, setSize] = useState(SIZES[0]);
   const [nonce, setNonce] = useState(0);
+  const { closing, close } = useExit(onClose);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') close();
     }
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -28,15 +30,15 @@ export default function PreviewFrame({
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [onClose]);
+  }, [close]);
 
   return (
-    <div className="pv" role="dialog" aria-modal="true" aria-label="Pré-visualização">
+    <div className="pv" data-closing={closing || undefined} role="dialog" aria-modal="true" aria-label="Pré-visualização">
       <button
         className="pickScrim"
         type="button"
         aria-label="Fechar"
-        onClick={onClose}
+        onClick={close}
       />
       <div className="pvBox">
         <div className="pvBar">
@@ -62,7 +64,7 @@ export default function PreviewFrame({
             type="button"
             className="icoBtn"
             aria-label="Fechar"
-            onClick={onClose}
+            onClick={close}
           >
             ✕
           </button>

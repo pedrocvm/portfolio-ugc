@@ -286,7 +286,9 @@ function Card({
           ✕
         </button>
       </div>
-      {open ? <div className="cardBody">{children}</div> : null}
+      <div className="cardWrap" data-open={open || undefined}>
+        <div className="cardBody">{children}</div>
+      </div>
     </div>
   );
 }

@@ -17,11 +17,12 @@ export const MENU = [
 export default function Menu() {
   const path = usePathname();
   return (
-    <nav className="index" aria-label="Áreas">
-      {MENU.map((m) => (
+    <nav className="rail" aria-label="Áreas">
+      {MENU.map((m, i) => (
         <Link
           key={m.href}
           href={m.href}
+          style={{ '--r': i } as React.CSSProperties}
           aria-current={path === m.href ? 'page' : undefined}
           data-soon={m.soon || undefined}
         >
