@@ -1957,7 +1957,8 @@
     display: none;
   }
 
-  /* barra inferior fixa, acima do indicador de home */
+  /* Barra inferior ao jeito do iOS: ícone em cima, rótulo pequeno em baixo,
+     fundo translúcido com desfoque e um filete de cabelo por cima. */
   .tabbar {
     position: fixed;
     left: 0;
@@ -1967,36 +1968,54 @@
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
-    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-    background: rgba(248, 245, 240, 0.86);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    backdrop-filter: saturate(180%) blur(20px);
-    border-top: 1px solid var(--areia2);
+    padding: 7px 4px calc(6px + env(safe-area-inset-bottom));
+    background: rgba(248, 245, 240, 0.82);
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    backdrop-filter: saturate(180%) blur(22px);
+    box-shadow: inset 0 0.5px 0 rgba(25, 23, 20, 0.16);
   }
   .tabbar a,
   .tabbar button {
     display: grid;
-    place-items: center;
-    min-height: 46px;
-    padding: 4px 2px;
+    justify-items: center;
+    align-content: center;
+    gap: 3px;
+    min-height: 48px;
+    padding: 0 2px;
     border: 0;
-    border-radius: 10px;
     background: none;
-    font-family: var(--disp);
-    font-variation-settings: var(--narrow);
-    font-weight: 500;
-    font-size: 13.5px;
-    color: var(--tinta2);
+    font-family: var(--sans);
+    font-size: 10.5px;
+    color: var(--tinta3);
     text-decoration: none;
     cursor: pointer;
-    transition: color 0.2s var(--quart);
+    transition: color 0.22s var(--quart);
+  }
+  .tabbar svg {
+    width: 25px;
+    height: 25px;
+    display: block;
+    fill: currentColor;
+    fill-opacity: 0;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition:
+      transform 0.34s var(--exp),
+      fill-opacity 0.28s var(--quart);
   }
   .tabbar [aria-current='page'] {
-    color: var(--realce);
+    color: var(--tinta);
   }
-  .tabbar a:active,
-  .tabbar button:active {
-    background: var(--areia);
+  /* o separador ativo enche-se, como os símbolos preenchidos do iOS */
+  .tabbar [aria-current='page'] svg {
+    fill-opacity: 0.13;
+    transform: translateY(-1px) scale(1.05);
+  }
+  .tabbar a:active svg,
+  .tabbar button:active svg {
+    transform: scale(0.9);
   }
 
   /* folha do "Mais": sobe de baixo, como no iOS */
@@ -2031,42 +2050,81 @@
     background: var(--areia2);
   }
   .moreGroup {
-    display: grid;
-    margin-bottom: 18px;
+    margin-bottom: 22px;
   }
   .moreLabel {
+    display: block;
+    margin: 0 0 7px 14px;
     font-family: var(--disp);
     font-variation-settings: var(--narrow);
     font-weight: 500;
-    font-size: 13.5px;
+    font-size: 13px;
     color: var(--tinta3);
-    margin-bottom: 4px;
   }
-  .moreGroup a {
+  /* grupo em caixa arredondada com separadores recolhidos, como nas
+     Definições do iPhone */
+  .moreList {
+    display: grid;
+    border-radius: 14px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .moreList a {
     display: flex;
     align-items: center;
-    min-height: 48px;
-    border-bottom: 1px solid var(--areia);
+    min-height: 50px;
+    padding: 0 16px;
     font-size: 17px;
     text-decoration: none;
+    box-shadow: inset 0 0.5px 0 var(--areia);
   }
-  .moreGroup a[aria-current='page'] {
-    color: var(--realce);
+  .moreList a:first-child {
+    box-shadow: none;
   }
-  .moreGroup a[data-soon] {
+  .moreList a:active {
+    background: var(--areia);
+  }
+  .moreList a[aria-current='page'] {
+    color: var(--tinta);
+    font-weight: 600;
+  }
+  .moreList a[aria-current='page']::after {
+    content: '';
+    width: 7px;
+    height: 7px;
+    margin-left: auto;
+    border-radius: 999px;
+    background: var(--tinta);
+  }
+  .moreList a[data-soon] {
     color: var(--tinta3);
   }
-  .moreGroup a[data-soon]::after {
+  .moreList a[data-soon]::after {
     content: 'em breve';
     margin-left: auto;
     font-family: var(--disp);
     font-variation-settings: var(--narrow);
     font-size: 13.5px;
   }
+  .moreOut {
+    display: grid;
+    border-radius: 14px;
+    background: #fff;
+    overflow: hidden;
+  }
   .moreOut .sideOut {
-    min-height: 48px;
+    width: 100%;
+    min-height: 50px;
+    margin: 0;
+    padding: 0 16px;
+    text-align: center;
     color: var(--alerta);
-    font-size: 16px;
+    font-family: var(--sans);
+    font-size: 17px;
+    border: 0;
+  }
+  .moreOut .sideOut:active {
+    background: var(--areia);
   }
 
   /* o conteúdo não pode ficar por baixo da barra nem do indicador */
