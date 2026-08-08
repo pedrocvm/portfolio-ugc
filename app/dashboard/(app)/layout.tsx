@@ -4,6 +4,7 @@ import { signOut } from '@/app/dashboard/actions';
 import Logo from '@/components/dashboard/Logo';
 import Menu from '@/components/dashboard/Menu';
 import { requireEditor } from '@/lib/auth';
+import { getDraft } from '@/lib/content-store';
 
 export const metadata: Metadata = {
   title: 'Área privada',
@@ -16,14 +17,14 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   await requireEditor();
+  const { hero } = await getDraft();
 
   return (
     <div className="dashGrid">
       <aside className="dashAside">
         <Link className="dashBrand" href="/">
-          <Logo />
-          Carol Queiroz
-          <span>Área privada</span>
+          <Logo first={hero.firstName} last={hero.lastName} />
+          <span className="dashRole">Área privada</span>
         </Link>
         <Menu />
         <form action={signOut}>
