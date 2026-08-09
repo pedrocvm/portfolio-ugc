@@ -1203,10 +1203,14 @@
       color: var(--sandLight);
       opacity: 0;
       transform: scale(0.96);
+      /* invisível não chega: empilhadas, as tomadas apagadas ficavam por cima
+         da que está à vista e comiam o clique nos controlos do vídeo */
+      pointer-events: none;
     }
     #sessao .takeV.on {
       opacity: 1;
       transform: none;
+      pointer-events: auto;
     }
     #sessao .takeV img,
     #sessao .takeV video {
@@ -2053,6 +2057,7 @@
     .no-motion #sessao .takeV {
       position: relative;
       opacity: 1;
+      pointer-events: auto;
       transform: none;
       margin: 0 auto 18px;
       aspect-ratio: 9/16;

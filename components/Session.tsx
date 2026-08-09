@@ -42,7 +42,14 @@ export default function Session({ c }: { c: Content['session'] }) {
                 data-niche={t.niche}
               >
                 {isVideo(t.img) ? (
-                  <video src={t.img} muted loop playsInline preload="metadata" />
+                  <video
+                    src={t.img}
+                    controls
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                  />
                 ) : (
                   <Pic src={t.img} alt="" />
                 )}
