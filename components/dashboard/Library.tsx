@@ -177,7 +177,7 @@ export default function Library({
                 {it.kind === 'photo' ? (
                   <img src={it.url} alt="" loading="lazy" />
                 ) : (
-                  <video src={it.url} muted playsInline preload="metadata" />
+                  <video src={it.url} controls playsInline preload="metadata" />
                 )}
               </div>
               <input

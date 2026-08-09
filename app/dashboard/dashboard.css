@@ -659,10 +659,12 @@
   gap: 18px;
   align-items: flex-start;
 }
+/* 140 é o mínimo a que o Chrome ainda desenha o botão de reprodução: abaixo
+   disso o controlador colapsa no menu de três pontos e não serve para nada. */
 .mediaThumb {
   flex: none;
-  width: 96px;
-  height: 120px;
+  width: 140px;
+  height: 175px;
   border-radius: 12px;
   background: var(--rule);
   overflow: hidden;

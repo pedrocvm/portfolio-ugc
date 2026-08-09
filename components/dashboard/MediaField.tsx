@@ -117,7 +117,7 @@ export default function MediaField({
           {!value ? (
             <span className="none">Vazio</span>
           ) : kind === 'video' || (kind === 'media' && isVideo(value)) ? (
-            <video src={value} muted playsInline preload="metadata" />
+            <video src={value} controls playsInline preload="metadata" />
           ) : (
             <img src={value} alt="" />
           )}
