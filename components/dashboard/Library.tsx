@@ -28,7 +28,7 @@ export default function Library({
   const [niche, setNiche] = useState('');
   const [title, setTitle] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
-  const { upload, busy, error } = useUpload();
+  const { upload, busy, note, error } = useUpload();
   const [pending, start] = useTransition();
   const router = useRouter();
 
@@ -82,7 +82,7 @@ export default function Library({
         <span className="dashState">
           {pending || busy ? <Spinner label="A carregar" /> : null}
           {pending || busy
-            ? 'A processar'
+            ? (note ?? 'A processar')
             : `${shown.length} ${KIND_LABEL[kind].toLowerCase()}s`}
         </span>
       </div>
@@ -118,7 +118,7 @@ export default function Library({
           />
           <label className="btn tiny">
             {busy ? <Spinner label="A carregar" /> : null}
-            {busy ? 'A carregar' : 'Carregar ficheiro'}
+            {busy ? note : 'Carregar ficheiro'}
             <input
               type="file"
               accept={kind === 'video' ? 'video/*' : 'image/*'}

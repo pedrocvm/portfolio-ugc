@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { getIn, setIn } from '../components/dashboard/paths.ts';
+import { fit } from './compress.ts';
 import { DEFAULT_CONTENT } from './content.ts';
 import { hashParts, isPwnedIn } from './hibp.ts';
 import { merge } from './merge.ts';
@@ -80,4 +81,23 @@ test('merge aceita listas cujo valor de origem é vazio', () => {
   });
   assert.deepEqual(out.meet.niches[0].reel, reel);
   assert.equal(out.meet.niches[0].name, 'Skincare');
+});
+
+test('fit encolhe o 4K vertical até 1080 de lado curto', () => {
+  assert.deepEqual(fit(2160, 3840), [1080, 1920]);
+});
+
+test('fit não amplia o que já é pequeno', () => {
+  assert.deepEqual(fit(720, 1280), [720, 1280]);
+});
+
+test('fit devolve sempre lados pares', () => {
+  const [w, h] = fit(1439, 2559);
+  assert.equal(w % 2, 0);
+  assert.equal(h % 2, 0);
+});
+
+test('fit respeita o lado longo no formato horizontal', () => {
+  const [w, h] = fit(3840, 2160);
+  assert.ok(w <= 1920 && h <= 1080);
 });

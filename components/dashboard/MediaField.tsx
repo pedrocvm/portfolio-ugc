@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import { compressVideo } from '@/lib/compress';
 import { isVideo } from '@/lib/media';
 import { supabaseBrowser } from '@/lib/supabase/browser';
 import LibraryPicker from './LibraryPicker';
@@ -15,28 +16,56 @@ const slug = (name: string) =>
 /** ponytail: o teto de 50 MB é o do plano gratuito do Supabase, igual para
  *  todos os buckets. Se o projeto passar a Pro, sobe aqui e nas definições de
  *  Storage. Sem esta guarda o pedido só volta com 413 e uma frase em inglês. */
-const MAX_BYTES = 50 * 1024 * 1024;
+const MAX_UPLOAD = 50 * 1024 * 1024;
+/** O que ela pode escolher: acima disto o browser engasga-se a descodificar. */
+const MAX_PICK = 100 * 1024 * 1024;
+/** Abaixo disto o vídeo já serve para a web e comprimir só custa tempo a ela. */
+const COMPRESS_OVER = 20 * 1024 * 1024;
 const mb = (n: number) => Math.round(n / 1024 / 1024);
 
 export function useUpload() {
   const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function upload(file: File) {
-    if (file.size > MAX_BYTES) {
+  async function upload(input: File) {
+    if (input.size > MAX_PICK) {
       setError(
-        `O ficheiro tem ${mb(file.size)} MB e o limite é ${mb(MAX_BYTES)} MB. Comprime o vídeo e tenta de novo.`,
+        `O ficheiro tem ${mb(input.size)} MB e o limite é ${mb(MAX_PICK)} MB.`,
       );
       return null;
     }
     setBusy(true);
     setError(null);
+    setNote('A carregar');
+
+    let file = input;
+    if (input.type.startsWith('video/') && input.size > COMPRESS_OVER) {
+      setNote('A comprimir 0%');
+      file = await compressVideo(input, (r) =>
+        setNote(`A comprimir ${Math.round(r * 100)}%`),
+      );
+      setNote('A carregar');
+    }
+
+    if (file.size > MAX_UPLOAD) {
+      setBusy(false);
+      setNote(null);
+      setError(
+        file === input
+          ? `O ficheiro tem ${mb(file.size)} MB e o limite é ${mb(MAX_UPLOAD)} MB.`
+          : `Mesmo comprimido o ficheiro fica com ${mb(file.size)} MB e o limite é ${mb(MAX_UPLOAD)} MB. Corta o vídeo e tenta de novo.`,
+      );
+      return null;
+    }
+
     const supabase = supabaseBrowser();
     const path = `${Date.now()}-${slug(file.name)}`;
     const { error: err } = await supabase.storage
       .from('media')
       .upload(path, file, { cacheControl: '31536000', upsert: false });
     setBusy(false);
+    setNote(null);
     if (err) {
       setError(`Não foi possível carregar o ficheiro. ${err.message}`);
       return null;
@@ -45,7 +74,7 @@ export function useUpload() {
     return { url: publicUrl, path };
   }
 
-  return { upload, busy, error };
+  return { upload, busy, note, error };
 }
 
 const ACCEPT = {
@@ -71,7 +100,7 @@ export default function MediaField({
 }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [picking, setPicking] = useState(false);
-  const { upload, busy, error } = useUpload();
+  const { upload, busy, note, error } = useUpload();
   const closePicker = useCallback(() => setPicking(false), []);
 
   async function pick(file: File | undefined) {
@@ -101,7 +130,7 @@ export default function MediaField({
               disabled={busy}
               onClick={() => input.current?.click()}
             >
-              {busy ? 'A carregar…' : 'Escolher ficheiro'}
+              {busy ? `${note}…` : 'Escolher ficheiro'}
             </button>
             <button
               type="button"
