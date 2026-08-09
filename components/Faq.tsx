@@ -30,10 +30,7 @@ export default function Faq({ c }: { c: Content['faq'] }) {
                   {it.q}
                   <span className="chev">+</span>
                 </button>
-                <div
-                  className="a"
-                  style={{ maxHeight: open === i ? '18rem' : 0 }}
-                >
+                <div className="a" data-open={open === i || undefined}>
                   <p>{it.a}</p>
                 </div>
               </div>

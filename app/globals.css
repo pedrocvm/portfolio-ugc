@@ -756,6 +756,18 @@
       outline-offset: 5px;
     }
 
+    /* Os textos longos vêm da área privada com as quebras de linha que ela
+       escreveu, e é assim que têm de sair. */
+    #meet .bio,
+    #meet .nota,
+    .tline p,
+    .modeHint,
+    .price .inc,
+    .faq .a p,
+    #fim .lead {
+      white-space: pre-line;
+    }
+
     /* CENA 01 */
     #hero {
       position: relative;
@@ -1533,13 +1545,20 @@
     }
     .faq .a {
       overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.3s ease;
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s ease;
       color: var(--umber);
     }
+    .faq .a[data-open] {
+      grid-template-rows: 1fr;
+    }
     .faq .a p {
-      padding: 0 0 18px;
+      min-height: 0;
       max-width: 56ch;
+    }
+    .faq .a[data-open] p {
+      padding-bottom: 18px;
     }
 
     .price {

@@ -1351,6 +1351,7 @@
 .doc p {
   margin: 0 0 10px;
   max-width: 68ch;
+  white-space: pre-line;
 }
 .doc ul {
   margin: 6px 0 12px;
