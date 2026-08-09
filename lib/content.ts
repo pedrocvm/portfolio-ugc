@@ -2,7 +2,7 @@
  *  altera os valores deste objeto, nunca a estrutura. */
 
 export type Video = { src: string; srcSm: string };
-export type Take = { n: string; niche: string; img: string };
+export type Take = { label: string; n: string; niche: string; img: string };
 export type Photo = { src: string; alt: string };
 export type Niche = { name: string; reel: { src: string }[] };
 export type Format = { name: string; note: string };
@@ -56,7 +56,7 @@ export type Content = {
     shelfEyebrow: string;
     shelfFoot: string;
   };
-  session: { label: string; takes: Take[]; takeLabel: string };
+  session: { label: string; takes: Take[] };
   formats: {
     num: string;
     eyebrow: string;
@@ -185,14 +185,13 @@ export const DEFAULT_CONTENT: Content = {
   },
   session: {
     label: 'A sessão',
-    takeLabel: 'Tomada',
     takes: [
-      { n: '01', niche: 'Casa & Decor', img: '/img/img-15.jpg' },
-      { n: '02', niche: 'Casa & Decor', img: '/img/img-16.jpg' },
-      { n: '03', niche: 'Cabelo', img: '/img/img-17.jpg' },
-      { n: '04', niche: 'Tech', img: '/img/img-18.jpg' },
-      { n: '05', niche: 'Skincare', img: '/img/img-19.jpg' },
-      { n: '06', niche: 'Serviços', img: '/img/img-20.jpg' },
+      { label: 'Tomada 01', n: '01', niche: 'Casa & Decor', img: '/img/img-15.jpg' },
+      { label: 'Tomada 02', n: '02', niche: 'Casa & Decor', img: '/img/img-16.jpg' },
+      { label: 'Tomada 03', n: '03', niche: 'Cabelo', img: '/img/img-17.jpg' },
+      { label: 'Tomada 04', n: '04', niche: 'Tech', img: '/img/img-18.jpg' },
+      { label: 'Tomada 05', n: '05', niche: 'Skincare', img: '/img/img-19.jpg' },
+      { label: 'Tomada 06', n: '06', niche: 'Serviços', img: '/img/img-20.jpg' },
     ],
   },
   formats: {

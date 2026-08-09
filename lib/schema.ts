@@ -108,15 +108,26 @@ export const SECTIONS: Section[] = [
     note: 'As tomadas que passam enquanto se rola a página.',
     fields: [
       { k: 'text', path: 'session.label', label: 'Etiqueta' },
-      { k: 'text', path: 'session.takeLabel', label: 'Palavra antes do número' },
       {
         k: 'list',
         path: 'session.takes',
-        label: 'Tomadas',
-        title: 'Tomada',
-        blank: { n: '', niche: '', img: '' },
+        label: 'Vídeos em destaque',
+        title: 'Vídeo',
+        hint: 'São sempre seis, e cada um tem a sua legenda própria.',
+        blank: { label: '', n: '', niche: '', img: '' },
         item: [
-          { k: 'text', path: 'n', label: 'Número' },
+          {
+            k: 'text',
+            path: 'label',
+            label: 'Legenda deste vídeo',
+            hint: 'Escreve o que quiseres. Aparece antes do nicho.',
+          },
+          {
+            k: 'text',
+            path: 'n',
+            label: 'Número',
+            hint: 'Sai em grande ao lado e no contador.',
+          },
           { k: 'text', path: 'niche', label: 'Nicho' },
           { k: 'image', path: 'img', label: 'Imagem' },
         ],

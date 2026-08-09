@@ -38,7 +38,7 @@ export default function Session({ c }: { c: Content['session'] }) {
               >
                 <Pic src={t.img} alt="" />
                 <span className="tg1 mono">
-                  {c.takeLabel} {t.n} · {t.niche}
+                  {[t.label, t.niche].filter(Boolean).join(' · ')}
                 </span>
               </div>
             ))}
