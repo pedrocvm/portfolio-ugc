@@ -12,7 +12,13 @@ export function useExit(onDone: () => void, ms = 220) {
   useEffect(() => {
     if (!closing) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const t = setTimeout(onDone, reduce ? 0 : ms);
+    const t = setTimeout(() => {
+      // Repõe o estado antes de avisar quem nos usa: sem isto o `closing` ficava
+      // preso a true e a próxima abertura já nascia a fechar (animação ao contrário
+      // e a folha a desaparecer sozinha).
+      setClosing(false);
+      onDone();
+    }, reduce ? 0 : ms);
     return () => clearTimeout(t);
   }, [closing, onDone, ms]);
 
