@@ -10,10 +10,15 @@ import { SECTIONS } from '@/lib/schema';
 import { Fields } from './Fields';
 import PreviewFrame from './PreviewFrame';
 import { setIn } from './paths';
+import { usePersistentDraft } from './useDraft';
 
 type State = { tone: 'idle' | 'dirty' | 'ok' | 'bad'; text: string };
 
 const CLEAN: State = { tone: 'idle', text: 'Sem alterações por guardar' };
+const DIRTY: State = { tone: 'dirty', text: 'Alterações por guardar' };
+
+/** Onde fica o rascunho por gravar enquanto ela não carrega em Guardar. */
+const DRAFT_KEY = 'ugc:draft:content';
 
 export default function Editor({ initial }: { initial: Content }) {
   const [content, setContent] = useState(initial);
@@ -24,6 +29,32 @@ export default function Editor({ initial }: { initial: Content }) {
   const [pending, start] = useTransition();
   const router = useRouter();
   const sticky = useRef<HTMLDivElement>(null);
+
+  /* o ponto de partida: o que está gravado no servidor. Acompanha o que ela
+     guarda, para que uma cópia local só seja reposta se ainda bater certo com
+     o servidor — e para não se perder o que ela escreveu depois de gravar.
+     Quando o servidor troca de base (ex.: "Repor" descarta o rascunho), o
+     próximo render vê o novo `initial` e acompanha-o. */
+  const [baseline, setBaseline] = useState(initial);
+  const [seenInitial, setSeenInitial] = useState(initial);
+  if (initial !== seenInitial) {
+    setSeenInitial(initial);
+    setBaseline(initial);
+  }
+
+  /* o que ela escreveu e ainda não gravou sobrevive a um F5 ou a fechar o
+     browser: guardamos no aparelho e repomos ao voltar */
+  usePersistentDraft<Content>({
+    key: DRAFT_KEY,
+    base: baseline,
+    value: content,
+    dirty,
+    onRestore: (draft) => {
+      setContent(draft);
+      setDirty(true);
+      setState(DIRTY);
+    },
+  });
 
   /* o título grande encolhe assim que se rola, como as barras de navegação
      do iOS: a sentinela no topo da folha diz quando isso acontece */
@@ -106,13 +137,16 @@ export default function Editor({ initial }: { initial: Content }) {
   function change(path: string, value: unknown) {
     setContent((c) => setIn(c, path, value));
     setDirty(true);
-    setState({ tone: 'dirty', text: 'Alterações por guardar' });
+    setState(DIRTY);
   }
 
   function save() {
     start(async () => {
       const r = await saveDraft(content);
       if (r.error) return setState({ tone: 'bad', text: r.error });
+      /* o servidor passa a ter este conteúdo: é o novo ponto de partida, senão
+         o que ela escrever a seguir não seria reconhecido ao voltar */
+      setBaseline(content);
       setDirty(false);
       setState({ tone: 'ok', text: 'Guardado. Ainda não está no site.' });
       /* sem router.refresh aqui: o rascunho já está no cliente, e esperar pela
