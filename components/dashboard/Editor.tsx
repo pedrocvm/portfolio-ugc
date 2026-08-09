@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Busy from './Busy';
+import Spinner from './Spinner';
 import { discardDraft, publishDraft, saveDraft } from '@/app/dashboard/actions';
 import type { Content } from '@/lib/content';
 import { SECTIONS } from '@/lib/schema';
@@ -23,6 +24,42 @@ export default function Editor({ initial }: { initial: Content }) {
   const [pending, start] = useTransition();
   const router = useRouter();
   const sticky = useRef<HTMLDivElement>(null);
+
+  /* o título grande encolhe assim que se rola, como as barras de navegação
+     do iOS: a sentinela no topo da folha diz quando isso acontece */
+  useEffect(() => {
+    const marca = document.querySelector('.topMark');
+    const barra = sticky.current;
+    if (!marca || !barra) return;
+    const io = new IntersectionObserver(
+      ([e]) => barra.toggleAttribute('data-stuck', !e.isIntersecting),
+      { threshold: 1 },
+    );
+    io.observe(marca);
+    return () => io.disconnect();
+  }, []);
+
+  /* o cabeçalho de cada secção encosta ao topo enquanto essa secção está em
+     vista; a sentinela diz quando isso acontece, para o cabeçalho encolher */
+  useEffect(() => {
+    const cabecas = Array.from(
+      document.querySelectorAll<HTMLElement>('.secHead'),
+    );
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const cabeca = (e.target as HTMLElement).nextElementSibling;
+          cabeca?.toggleAttribute('data-stuck', !e.isIntersecting);
+        }
+      },
+      { rootMargin: `-${parseInt(getComputedStyle(document.documentElement).getPropertyValue('--stickyH')) || 132}px 0px 0px 0px`, threshold: 0 },
+    );
+    for (const c of cabecas) {
+      const s = c.previousElementSibling;
+      if (s?.classList.contains('secMark')) io.observe(s);
+    }
+    return () => io.disconnect();
+  }, []);
 
   /* o índice da margem marca a secção em vista */
   useEffect(() => {
@@ -48,9 +85,11 @@ export default function Editor({ initial }: { initial: Content }) {
     const el = sticky.current;
     if (!el) return;
     const ro = new ResizeObserver(([e]) => {
+      /* exatamente a altura da barra: qualquer folga deixa o conteúdo
+         aparecer entre a barra e o cabeçalho da secção */
       document.documentElement.style.setProperty(
         '--stickyH',
-        `${Math.round(e.contentRect.height) + 14}px`,
+        `${Math.round(e.contentRect.height)}px`,
       );
     });
     ro.observe(el);
@@ -76,7 +115,8 @@ export default function Editor({ initial }: { initial: Content }) {
       if (r.error) return setState({ tone: 'bad', text: r.error });
       setDirty(false);
       setState({ tone: 'ok', text: 'Guardado. Ainda não está no site.' });
-      router.refresh();
+      /* sem router.refresh aqui: o rascunho já está no cliente, e esperar pela
+         página inteira deixava o estado preso em "a processar" */
     });
   }
 
@@ -104,12 +144,14 @@ export default function Editor({ initial }: { initial: Content }) {
 
   return (
     <>
+      <i className="topMark" aria-hidden="true" />
       <Busy on={pending} />
       <div className="dashSticky" ref={sticky}>
       <div className="dashBar">
         <h1>Conteúdo do site</h1>
-        <span className="dashState" data-tone={state.tone}>
-          {pending ? 'A processar…' : state.text}
+        <span className="dashState" data-tone={pending ? undefined : state.tone}>
+          {pending ? <Spinner label="A guardar" /> : null}
+          {pending ? 'A processar' : state.text}
         </span>
         <button
           type="button"
@@ -172,6 +214,7 @@ export default function Editor({ initial }: { initial: Content }) {
         <div>
           {SECTIONS.map((s) => (
             <section className="sec" id={`s-${s.id}`} key={s.id}>
+              <i className="secMark" aria-hidden="true" />
               <div className="secHead">
                 <h2>{s.title}</h2>
                 <p className="said">{s.note}</p>

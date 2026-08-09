@@ -11,6 +11,7 @@ import {
 import { KIND_LABEL, type MediaItem, type MediaKind } from '@/lib/library';
 import { useUpload } from './MediaField';
 import Segmented from './Segmented';
+import Spinner from './Spinner';
 
 const TODOS = '__todos__';
 const SEM_NICHO = '__sem__';
@@ -79,7 +80,10 @@ export default function Library({
       <div className="dashBar">
         <h1>Biblioteca</h1>
         <span className="dashState">
-          {pending || busy ? 'A processar…' : `${shown.length} ${KIND_LABEL[kind].toLowerCase()}s`}
+          {pending || busy ? <Spinner label="A carregar" /> : null}
+          {pending || busy
+            ? 'A processar'
+            : `${shown.length} ${KIND_LABEL[kind].toLowerCase()}s`}
         </span>
       </div>
 
@@ -113,7 +117,8 @@ export default function Library({
             onChange={(e) => setTitle(e.target.value)}
           />
           <label className="btn tiny">
-            {busy ? 'A carregar…' : 'Carregar ficheiro'}
+            {busy ? <Spinner label="A carregar" /> : null}
+            {busy ? 'A carregar' : 'Carregar ficheiro'}
             <input
               type="file"
               accept={kind === 'video' ? 'video/*' : 'image/*'}

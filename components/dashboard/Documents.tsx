@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Busy from './Busy';
+import Spinner from './Spinner';
 import {
   createDoc,
   removeDoc,
@@ -79,8 +80,9 @@ export default function Documents({
       <div className="dashBar noPrint">
         <h1>{spec.label}</h1>
         <span className="dashState" data-tone={dirty ? 'dirty' : undefined}>
+          {pending ? <Spinner label="A guardar" /> : null}
           {pending
-            ? 'A processar…'
+            ? 'A processar'
             : msg ?? (dirty ? 'Alterações por guardar' : `${rows.length} guardados`)}
         </span>
         {openId ? (

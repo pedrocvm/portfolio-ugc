@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Busy from './Busy';
+import Spinner from './Spinner';
 import { removeBrand, saveBrand } from '@/app/dashboard/brand-actions';
 import {
   CHANNELS,
@@ -34,7 +35,8 @@ export default function Brands({ brands }: { brands: Brand[] }) {
       <div className="dashBar">
         <h1>Marcas</h1>
         <span className="dashState">
-          {pending ? 'A processar…' : `${brands.length} registadas`}
+          {pending ? <Spinner label="A processar" /> : null}
+          {pending ? 'A processar' : `${brands.length} registadas`}
         </span>
         <button
           type="button"

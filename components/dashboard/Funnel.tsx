@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { moveBrand } from '@/app/dashboard/brand-actions';
 import { CLOSED, STAGES, type Brand, type Stage } from '@/lib/brands';
 import Busy from './Busy';
+import Spinner from './Spinner';
 import { useBoardDrag } from './useBoardDrag';
 
 const DAY = 86400000;
@@ -46,7 +47,10 @@ export default function Funnel({ brands }: { brands: Brand[] }) {
       <Busy on={pending} />
       <div className="dashBar">
         <h1>Funil de vendas</h1>
-        <span className="dashState">{abertas.length} conversas abertas</span>
+        <span className="dashState">
+          {pending ? <Spinner label="A mover" /> : null}
+          {pending ? 'A mover' : `${abertas.length} conversas abertas`}
+        </span>
       </div>
 
       {brands.length === 0 ? (

@@ -281,6 +281,9 @@
 @media (min-width: 960px) {
   .shell {
     grid-template-columns: 264px minmax(0, 1fr);
+    /* no desktop são duas colunas numa linha só: manter duas linhas deixava
+       uma linha vazia a ocupar o resto do ecrã */
+    grid-template-rows: minmax(0, 1fr);
   }
   .side {
     position: sticky;
@@ -522,7 +525,7 @@
 .sec {
   padding: 46px 0 52px;
   border-top: 1px solid var(--rule);
-  scroll-margin-top: var(--stickyH, 140px);
+  scroll-margin-top: calc(var(--stickyH, 140px) + 16px);
 }
 .sec:first-of-type {
   border-top: 0;
@@ -1929,9 +1932,9 @@
 
 @media (max-width: 899px) {
   .side {
-    position: sticky;
-    top: 0;
-    z-index: var(--z-sticky);
+    /* no telemóvel deixa de ser fixa: só a barra de ações fica colada ao topo,
+       senão as duas disputavam o mesmo topo e sobrepunham-se */
+    position: static;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -2002,20 +2005,21 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     transition:
-      transform 0.34s var(--exp),
-      fill-opacity 0.28s var(--quart);
+      fill-opacity 0.28s var(--quart),
+      opacity 0.12s linear;
   }
+  /* O separador ativo troca de contorno para preenchido e escurece, e não se
+     mexe um pixel: mover o ícone fazia a linha tremer a cada troca. */
   .tabbar [aria-current='page'] {
     color: var(--tinta);
   }
-  /* o separador ativo enche-se, como os símbolos preenchidos do iOS */
   .tabbar [aria-current='page'] svg {
-    fill-opacity: 0.13;
-    transform: translateY(-1px) scale(1.05);
+    fill-opacity: 0.16;
+    stroke-width: 1.7;
   }
   .tabbar a:active svg,
   .tabbar button:active svg {
-    transform: scale(0.9);
+    opacity: 0.45;
   }
 
   /* folha do "Mais": sobe de baixo, como no iOS */
@@ -2347,4 +2351,193 @@
   /* o encaixe puxa de volta cada empurrão do scroll automático: enquanto se
      arrasta, o tabuleiro tem de correr livre */
   scroll-snap-type: none;
+}
+
+/* ── arco de espera ────────────────────────────────────────────────── */
+.spin {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 8px;
+}
+.spin svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  animation: spinTurn 1.15s linear infinite;
+}
+.spinTrack {
+  stroke: currentColor;
+  opacity: 0.18;
+}
+.spinArc {
+  stroke: currentColor;
+  stroke-dasharray: 57;
+  stroke-dashoffset: 44;
+  animation: spinPull 1.5s var(--quart) infinite;
+}
+@keyframes spinTurn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spinPull {
+  0% {
+    stroke-dashoffset: 52;
+  }
+  50% {
+    stroke-dashoffset: 20;
+  }
+  100% {
+    stroke-dashoffset: 52;
+    transform: rotate(220deg);
+  }
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.routeLoad {
+  display: grid;
+  place-items: center;
+  min-height: 46dvh;
+  color: var(--tinta2);
+  animation: fade 0.4s var(--quart) 0.12s both;
+}
+.routeLoad .spin {
+  width: 26px;
+  height: 26px;
+  margin: 0;
+}
+
+/* ── cabeçalho de secção fixo ──────────────────────────────────────── */
+.secMark {
+  display: block;
+  height: 1px;
+  margin-bottom: -1px;
+}
+.secHead {
+  position: sticky;
+  top: var(--stickyH, 132px);
+  z-index: 3;
+  padding: 6px 0 14px;
+  margin-bottom: 22px;
+  background: var(--papel);
+  transition:
+    padding 0.4s var(--exp),
+    box-shadow 0.4s var(--quart);
+}
+.secHead h2 {
+  transition:
+    font-size 0.4s var(--exp),
+    letter-spacing 0.4s var(--exp);
+}
+.secHead .said {
+  max-height: 4em;
+  overflow: hidden;
+  opacity: 1;
+  transition:
+    max-height 0.42s var(--exp),
+    opacity 0.28s var(--quart),
+    margin 0.42s var(--exp);
+}
+/* encostado ao topo: encolhe, guarda a nota e deixa um filete */
+.secHead[data-stuck] {
+  padding-bottom: 10px;
+  box-shadow: 0 1px 0 var(--areia2);
+}
+.secHead[data-stuck] h2 {
+  font-size: 20px;
+  letter-spacing: -0.012em;
+}
+.secHead[data-stuck] .said {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin svg,
+  .spinArc {
+    animation-duration: 2.4s;
+  }
+  .secHead,
+  .secHead h2,
+  .secHead .said {
+    transition: none;
+  }
+}
+
+/* ── título grande que encolhe ao rolar ────────────────────────────── */
+.topMark {
+  display: block;
+  height: 1px;
+  margin-bottom: -1px;
+}
+.dashSticky .dashBar {
+  transition:
+    padding 0.4s var(--exp),
+    gap 0.4s var(--exp);
+}
+.dashSticky h1 {
+  transition:
+    font-size 0.4s var(--exp),
+    letter-spacing 0.4s var(--exp);
+}
+.dashSticky[data-stuck] .dashBar {
+  padding-top: 14px;
+  padding-bottom: 12px;
+}
+.dashSticky[data-stuck] h1 {
+  font-size: clamp(22px, 2.4vw, 26px);
+  letter-spacing: -0.016em;
+}
+.dashSticky[data-stuck]::after {
+  height: 12px;
+}
+
+@media (max-width: 899px) {
+  /* no telemóvel o espaço é curto: ao rolar fica só o título pequeno e as
+     ações, e o estado passa para o fio de trabalho */
+  .dashSticky[data-stuck] .dashBar {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .dashSticky[data-stuck] h1 {
+    font-size: 19px;
+    width: auto;
+  }
+  .dashSticky[data-stuck] .dashState,
+  /* encolhida, a barra fica com o essencial numa linha: guardar e publicar */
+  .dashSticky[data-stuck] .btn.quiet {
+    display: none;
+  }
+  .dashSticky[data-stuck] .dashBar {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .dashSticky[data-stuck] .btn.solid {
+    padding: 9px 15px 10px;
+    white-space: nowrap;
+  }
+  .dashSticky[data-stuck] .btn {
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashSticky .dashBar,
+  .dashSticky h1 {
+    transition: none;
+  }
 }
