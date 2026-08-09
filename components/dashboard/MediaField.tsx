@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import { addMedia } from '@/app/dashboard/library-actions';
 import { compressVideo } from '@/lib/compress';
 import { isVideo } from '@/lib/media';
 import { supabaseBrowser } from '@/lib/supabase/browser';
@@ -100,13 +101,26 @@ export default function MediaField({
 }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [picking, setPicking] = useState(false);
+  const [warn, setWarn] = useState<string | null>(null);
   const { upload, busy, note, error } = useUpload();
   const closePicker = useCallback(() => setPicking(false), []);
 
   async function pick(file: File | undefined) {
     if (!file) return;
+    setWarn(null);
     const up = await upload(file);
-    if (up) onChange(up.url);
+    if (!up) return;
+    onChange(up.url);
+    /* Tudo o que sobe fica na Biblioteca, venha do ecrã Biblioteca ou daqui.
+       Sem isto o ficheiro só existia dentro deste campo. */
+    const r = await addMedia({
+      kind: isVideo(up.url) ? 'video' : 'photo',
+      url: up.url,
+      storagePath: up.path,
+      niche: '',
+      title: file.name,
+    });
+    if (r.error) setWarn('O ficheiro entrou, mas não foi para a Biblioteca.');
   }
 
   return (
@@ -164,7 +178,9 @@ export default function MediaField({
             placeholder="Endereço do ficheiro"
             onChange={(e) => onChange(e.target.value)}
           />
-          {error ? <p className="loginErr">{error}</p> : null}
+          {error ?? warn ? (
+            <p className="loginErr">{error ?? warn}</p>
+          ) : null}
           {hint ? <p className="hint">{hint}</p> : null}
         </div>
       </div>

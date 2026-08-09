@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Field } from '@/lib/schema';
+import { isVideo } from '@/lib/media';
 import MediaField from './MediaField';
 import { getIn, join, setIn } from './paths';
 
@@ -190,6 +191,7 @@ function One({ f, ctx }: { f: Field; ctx: Ctx }) {
             total={items.length}
             title={`${f.title} ${String(i + 1).padStart(2, '0')}`}
             summary={summarise(it)}
+            thumb={thumbOf(it)}
             onMove={(dir) => move(i, dir)}
             onDrop={(from) => {
               if (from === i) return;
@@ -223,6 +225,20 @@ function One({ f, ctx }: { f: Field; ctx: Ctx }) {
   );
 }
 
+/** Sem isto, sete fotos são sete linhas iguais e ela não sabe qual está a
+ *  apagar. O primeiro endereço de média do item serve de retrato. */
+function thumbOf(item: unknown): string {
+  if (!item || typeof item !== 'object') return '';
+  for (const v of Object.values(item as Record<string, unknown>)) {
+    if (typeof v === 'string' && /^(\/|https?:\/\/)/.test(v)) return v;
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      const src = (v as { src?: unknown }).src;
+      if (typeof src === 'string' && src) return src;
+    }
+  }
+  return '';
+}
+
 function summarise(item: unknown) {
   if (!item || typeof item !== 'object') return '';
   for (const v of Object.values(item as Record<string, unknown>)) {
@@ -238,6 +254,7 @@ function Card({
   total,
   title,
   summary,
+  thumb,
   onMove,
   onRemove,
   onDrop,
@@ -247,6 +264,7 @@ function Card({
   total: number;
   title: string;
   summary: string;
+  thumb: string;
   onMove: (dir: number) => void;
   onRemove: () => void;
   onDrop: (from: number) => void;
@@ -291,6 +309,15 @@ function Card({
         >
           {open ? '−' : '+'}
         </button>
+        {thumb ? (
+          <span className="cardPic" aria-hidden="true">
+            {isVideo(thumb) ? (
+              <video src={thumb} muted playsInline preload="metadata" />
+            ) : (
+              <img src={thumb} alt="" loading="lazy" />
+            )}
+          </span>
+        ) : null}
         <span className="n">{title}</span>
         <span className="t">{summary}</span>
         <button
