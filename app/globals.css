@@ -1129,7 +1129,8 @@
       overflow: hidden;
       pointer-events: none;
     }
-    #sessao .ambient img {
+    #sessao .ambient img,
+    #sessao .ambient video {
       position: absolute;
       inset: 0;
       width: 100%;
@@ -1140,7 +1141,8 @@
       opacity: 0;
       transition: opacity 0.5s;
     }
-    #sessao .ambient img.on {
+    #sessao .ambient img.on,
+    #sessao .ambient video.on {
       opacity: 0.34;
     }
     #sessao .ambient .ov {
@@ -1206,7 +1208,8 @@
       opacity: 1;
       transform: none;
     }
-    #sessao .takeV img {
+    #sessao .takeV img,
+    #sessao .takeV video {
       position: absolute;
       inset: 0;
       width: 100%;

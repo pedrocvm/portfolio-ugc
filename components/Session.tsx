@@ -1,4 +1,5 @@
 import type { Content } from '@/lib/content';
+import { isVideo } from '@/lib/media';
 import Pic from './Pic';
 
 export default function Session({ c }: { c: Content['session'] }) {
@@ -13,9 +14,13 @@ export default function Session({ c }: { c: Content['session'] }) {
     >
       <div className="pinwrap">
         <div className="ambient" aria-hidden="true">
-          {c.takes.map((t, i) => (
-            <Pic key={i} src={t.img} alt="" />
-          ))}
+          {c.takes.map((t, i) =>
+            isVideo(t.img) ? (
+              <video key={i} src={t.img} muted playsInline preload="metadata" />
+            ) : (
+              <Pic key={i} src={t.img} alt="" />
+            ),
+          )}
           <i className="ov" />
         </div>
         <div className="head mono">
@@ -36,7 +41,11 @@ export default function Session({ c }: { c: Content['session'] }) {
                 data-n={t.n}
                 data-niche={t.niche}
               >
-                <Pic src={t.img} alt="" />
+                {isVideo(t.img) ? (
+                  <video src={t.img} muted loop playsInline preload="metadata" />
+                ) : (
+                  <Pic src={t.img} alt="" />
+                )}
                 <span className="tg1 mono">
                   {[t.label, t.niche].filter(Boolean).join(' · ')}
                 </span>

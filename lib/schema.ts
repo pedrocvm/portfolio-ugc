@@ -129,7 +129,12 @@ export const SECTIONS: Section[] = [
             hint: 'Sai em grande ao lado e no contador.',
           },
           { k: 'text', path: 'niche', label: 'Nicho' },
-          { k: 'image', path: 'img', label: 'Imagem' },
+          {
+            k: 'media',
+            path: 'img',
+            label: 'Vídeo ou imagem',
+            hint: 'Um vídeo passa em contínuo enquanto a tomada está à vista.',
+          },
         ],
       },
     ],

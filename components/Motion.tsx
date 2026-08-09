@@ -183,9 +183,15 @@ function run(gsap: any, ScrollTrigger: any) {
       document.querySelectorAll<HTMLElement>('#frame .takeV'),
     );
     const ambImgs = Array.from(
-      document.querySelectorAll<HTMLElement>('#sessao .ambient img'),
+      document.querySelectorAll<HTMLElement>(
+        '#sessao .ambient img, #sessao .ambient video',
+      ),
     );
     ambImgs[0]?.classList.add('on');
+    /* uma tomada pode ser vídeo: só corre a que está à vista, senão são seis
+       streams a decodificar ao mesmo tempo. */
+    const takeVideo = (el?: HTMLElement) =>
+      el?.querySelector<HTMLVideoElement>('video') ?? null;
     const total = String(takeEls.length).padStart(2, '0');
     const bignum = document.getElementById('bignum');
     const counter = document.getElementById('counter');
@@ -214,12 +220,16 @@ function run(gsap: any, ScrollTrigger: any) {
         { opacity: 0, scale: goingDown ? 1.04 : 0.94 },
         { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' },
       );
+      takeVideo(takeEls[prev])?.pause();
+      void takeVideo(takeEls[i])?.play().catch(() => {});
       const n = takeEls[i].dataset.n ?? '';
       if (bignum) bignum.textContent = n;
       ambImgs.forEach((im, k) => im.classList.toggle('on', k === i));
       if (counter) counter.textContent = `${n} / ${total}`;
       if (fichaTxt) fichaTxt.textContent = takeEls[i].dataset.niche ?? '';
     }
+
+    void takeVideo(takeEls[0])?.play().catch(() => {});
 
     ScrollTrigger.create({
       trigger: '#sessao',
