@@ -1024,6 +1024,49 @@
   object-fit: cover;
   display: block;
 }
+/* a miniatura de vídeo é um botão: mantém o desenho e ganha o sinal de que
+   abre alguma coisa */
+.libThumb.play,
+.mediaThumb.play {
+  position: relative;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  display: block;
+}
+.libThumb.play::after,
+.mediaThumb.play::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgba(28, 26, 24, 0.62) center / 10px 12px no-repeat
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath d='M0 0l10 6-10 6z' fill='%23fff'/%3E%3C/svg%3E");
+  transition: transform 0.2s var(--quart);
+}
+.libThumb.play:hover::after,
+.mediaThumb.play:hover::after {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+/* a caixa acompanha o vídeo: a maior parte é vertical e numa largura fixa
+   ficava entre duas tarjas pretas */
+.pickBox.viewBox {
+  width: auto;
+  max-width: min(880px, 100%);
+  min-width: min(340px, 100%);
+}
+.viewBox video {
+  display: block;
+  max-width: 100%;
+  max-height: 66dvh;
+  margin: 0 auto;
+  border-radius: 12px;
+  background: #000;
+}
 .libCardFoot {
   display: flex;
   align-items: flex-end;

@@ -6,6 +6,7 @@ import { compressVideo } from '@/lib/compress';
 import { isVideo } from '@/lib/media';
 import { supabaseBrowser } from '@/lib/supabase/browser';
 import LibraryPicker from './LibraryPicker';
+import Viewer from './Viewer';
 
 const slug = (name: string) =>
   name
@@ -102,6 +103,7 @@ export default function MediaField({
   const input = useRef<HTMLInputElement>(null);
   const [picking, setPicking] = useState(false);
   const [warn, setWarn] = useState<string | null>(null);
+  const [viewing, setViewing] = useState(false);
   const { upload, busy, note, error } = useUpload();
   const closePicker = useCallback(() => setPicking(false), []);
 
@@ -127,15 +129,24 @@ export default function MediaField({
     <div className="fld wide">
       <span className="lb">{label}</span>
       <div className="media">
-        <div className="mediaThumb">
-          {!value ? (
-            <span className="none">Vazio</span>
-          ) : kind === 'video' || (kind === 'media' && isVideo(value)) ? (
-            <video src={value} controls playsInline preload="metadata" />
-          ) : (
-            <img src={value} alt="" />
-          )}
-        </div>
+        {value && (kind === 'video' || (kind === 'media' && isVideo(value))) ? (
+          <button
+            type="button"
+            className="mediaThumb play"
+            aria-label={`Ver ${label}`}
+            onClick={() => setViewing(true)}
+          >
+            <video src={value} muted playsInline preload="metadata" />
+          </button>
+        ) : (
+          <div className="mediaThumb">
+            {!value ? (
+              <span className="none">Vazio</span>
+            ) : (
+              <img src={value} alt="" />
+            )}
+          </div>
+        )}
         <div className="mediaBody">
           <div className="mediaRow">
             <button
@@ -184,6 +195,13 @@ export default function MediaField({
           {hint ? <p className="hint">{hint}</p> : null}
         </div>
       </div>
+      {viewing ? (
+        <Viewer
+          src={value}
+          title={label}
+          onClose={() => setViewing(false)}
+        />
+      ) : null}
       {picking ? (
         <LibraryPicker
           accept={kind}

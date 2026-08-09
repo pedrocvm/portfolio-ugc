@@ -12,6 +12,7 @@ import { KIND_LABEL, type MediaItem, type MediaKind } from '@/lib/library';
 import { useUpload } from './MediaField';
 import Segmented from './Segmented';
 import Spinner from './Spinner';
+import Viewer from './Viewer';
 
 const TODOS = '__todos__';
 const SEM_NICHO = '__sem__';
@@ -28,6 +29,7 @@ export default function Library({
   const [niche, setNiche] = useState('');
   const [title, setTitle] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
+  const [ver, setVer] = useState<MediaItem | null>(null);
   const { upload, busy, note, error } = useUpload();
   const [pending, start] = useTransition();
   const router = useRouter();
@@ -173,13 +175,20 @@ export default function Library({
               className="libCard"
               style={{ '--g': Math.min(i, 12) } as React.CSSProperties}
             >
-              <div className="libThumb">
-                {it.kind === 'photo' ? (
+              {it.kind === 'photo' ? (
+                <div className="libThumb">
                   <img src={it.url} alt="" loading="lazy" />
-                ) : (
-                  <video src={it.url} controls playsInline preload="metadata" />
-                )}
-              </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="libThumb play"
+                  aria-label={`Ver ${it.title || 'vídeo'}`}
+                  onClick={() => setVer(it)}
+                >
+                  <video src={it.url} muted playsInline preload="metadata" />
+                </button>
+              )}
               <input
                 type="text"
                 defaultValue={it.title}
@@ -216,6 +225,14 @@ export default function Library({
           ))}
         </ul>
       )}
+
+      {ver ? (
+        <Viewer
+          src={ver.url}
+          title={ver.title || 'Vídeo'}
+          onClose={() => setVer(null)}
+        />
+      ) : null}
     </>
   );
 }
