@@ -21,6 +21,7 @@ export default function Process({ c }: { c: Content['process'] }) {
                 <li key={i}>
                   <span className="node" aria-hidden="true" />
                   <span className="n mono">{s.n}</span>
+                  {s.title ? <h3 className="tt">{s.title}</h3> : null}
                   <p>{s.text}</p>
                 </li>
               ))}

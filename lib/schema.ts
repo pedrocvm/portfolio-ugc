@@ -193,10 +193,16 @@ export const SECTIONS: Section[] = [
         path: 'process.steps',
         label: 'Passos',
         title: 'Passo',
-        blank: { n: '', text: '' },
+        blank: { n: '', title: '', text: '' },
         item: [
           { k: 'text', path: 'n', label: 'Número' },
-          { k: 'area', path: 'text', label: 'Texto' },
+          { k: 'text', path: 'title', label: 'Título' },
+          {
+            k: 'area',
+            path: 'text',
+            label: 'Descrição',
+            hint: 'Sai por baixo do título, em letra mais leve.',
+          },
         ],
       },
     ],

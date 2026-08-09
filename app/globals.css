@@ -1491,10 +1491,23 @@
       opacity: 0.5;
       transition: opacity 0.5s;
     }
-    .tline p {
-      font-size: 18px;
-      max-width: 44ch;
+    .tline .tt {
+      font-family: var(--disp);
+      font-size: 21px;
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--graphite);
+      margin-bottom: 7px;
       opacity: 0.45;
+      transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    /* a descrição fica mais leve e mais quente que o título: lidas ao lado uma
+       da outra, percebe-se logo qual é qual */
+    .tline p {
+      font-size: 17px;
+      max-width: 44ch;
+      color: var(--umber);
+      opacity: 0.4;
       transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
     .tline li.on .node {
@@ -1503,10 +1516,14 @@
       box-shadow: 0 0 0 6px rgba(77, 61, 52, 0.09);
     }
     .tline li.on .n,
-    .tline li.on p,
+    .tline li.on .tt,
     .tline li:hover .n,
-    .tline li:hover p {
+    .tline li:hover .tt {
       opacity: 1;
+    }
+    .tline li.on p,
+    .tline li:hover p {
+      opacity: 0.82;
     }
     .tline li:hover .node {
       border-color: var(--umber);
@@ -1515,8 +1532,11 @@
       display: none;
     }
     .no-motion .tline .n,
-    .no-motion .tline p {
+    .no-motion .tline .tt {
       opacity: 1;
+    }
+    .no-motion .tline p {
+      opacity: 0.82;
     }
 
     .faq {

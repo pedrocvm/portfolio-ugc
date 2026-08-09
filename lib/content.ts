@@ -6,7 +6,7 @@ export type Take = { label: string; n: string; niche: string; img: string };
 export type Photo = { src: string; alt: string };
 export type Niche = { name: string; reel: { src: string }[] };
 export type Format = { name: string; note: string };
-export type Step = { n: string; text: string };
+export type Step = { n: string; title: string; text: string };
 export type FaqItem = { q: string; a: string };
 export type Addon = { label: string; value: string };
 export type Tier = { price: string; suffix: string; qty: string; unit: string };
@@ -236,17 +236,27 @@ export const DEFAULT_CONTENT: Content = {
     titleLead: 'Como',
     titleEm: 'funciona.',
     steps: [
-      { n: '01', text: 'Contas-me o produto, o objetivo e onde vai o vídeo.' },
+      {
+        n: '01',
+        title: 'Briefing',
+        text: 'Contas-me o produto, o objetivo e onde vai o vídeo.',
+      },
       {
         n: '02',
+        title: 'Proposta',
         text: 'Proponho o formato, a abordagem e o que preciso de receber.',
       },
-      { n: '03', text: 'Validamos o conceito antes de gravar.' },
+      { n: '03', title: 'Conceito', text: 'Validamos o conceito antes de gravar.' },
       {
         n: '04',
+        title: 'Gravação',
         text: 'Gravo e edito, e envias comentários sobre a primeira versão.',
       },
-      { n: '05', text: 'Entrego o ficheiro final no formato combinado.' },
+      {
+        n: '05',
+        title: 'Entrega',
+        text: 'Entrego o ficheiro final no formato combinado.',
+      },
     ],
   },
   plans: {
