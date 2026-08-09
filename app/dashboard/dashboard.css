@@ -988,7 +988,7 @@
   padding: 0;
   display: grid;
   gap: 30px 22px;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 }
 .libCard {
   display: grid;
@@ -1239,7 +1239,7 @@
   padding: 0;
   display: grid;
   gap: 24px 18px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 }
 .pickGrid button {
   display: grid;
@@ -2303,7 +2303,7 @@
     min-width: 100%;
   }
   .libGrid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
   /* sem rato não há hover: o que estava escondido fica sempre à vista */
   .grip,
