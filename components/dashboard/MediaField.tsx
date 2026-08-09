@@ -12,11 +12,23 @@ const slug = (name: string) =>
     .replace(/[^a-zA-Z0-9.]+/g, '-')
     .toLowerCase();
 
+/** ponytail: o teto de 50 MB é o do plano gratuito do Supabase, igual para
+ *  todos os buckets. Se o projeto passar a Pro, sobe aqui e nas definições de
+ *  Storage. Sem esta guarda o pedido só volta com 413 e uma frase em inglês. */
+const MAX_BYTES = 50 * 1024 * 1024;
+const mb = (n: number) => Math.round(n / 1024 / 1024);
+
 export function useUpload() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function upload(file: File) {
+    if (file.size > MAX_BYTES) {
+      setError(
+        `O ficheiro tem ${mb(file.size)} MB e o limite é ${mb(MAX_BYTES)} MB. Comprime o vídeo e tenta de novo.`,
+      );
+      return null;
+    }
     setBusy(true);
     setError(null);
     const supabase = supabaseBrowser();
@@ -26,7 +38,7 @@ export function useUpload() {
       .upload(path, file, { cacheControl: '31536000', upsert: false });
     setBusy(false);
     if (err) {
-      setError('Não foi possível carregar o ficheiro.');
+      setError(`Não foi possível carregar o ficheiro. ${err.message}`);
       return null;
     }
     const { publicUrl } = supabase.storage.from('media').getPublicUrl(path).data;
