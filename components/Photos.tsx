@@ -1,11 +1,19 @@
 'use client';
 
+import { useCallback, useState } from 'react';
 import type { Content } from '@/lib/content';
 import { useReel } from './useReel';
+import Lightbox from './Lightbox';
 import Pic from './Pic';
+
+const nome = (i: number) => `Foto UGC ${String(i + 1).padStart(2, '0')}`;
 
 export default function Photos({ c }: { c: Content['photos'] }) {
   const { reelRef, atStart, atEnd, page } = useReel();
+  const [aberta, setAberta] = useState<number | null>(null);
+  /* identidade estável: sem isto o efeito do visor corre a cada render e
+     perde o botão a que tem de devolver o foco */
+  const fechar = useCallback(() => setAberta(null), []);
 
   return (
     <section id="fotos" className="chap" aria-label="Fotos UGC">
@@ -40,16 +48,16 @@ export default function Photos({ c }: { c: Content['photos'] }) {
             </button>
           </div>
         </div>
-        <ul className="reel" id="fotosReel" ref={reelRef}>
+        <ul className="pgrid" id="fotosReel" ref={reelRef}>
           {c.items.map((p, i) => (
             <li key={i}>
-              <Pic
-                src={p.src}
-                alt={p.alt || `Foto UGC ${String(i + 1).padStart(2, '0')}`}
-              />
-              <span className="idx mono">
-                {String(i + 1).padStart(2, '0')}
-              </span>
+              <button
+                type="button"
+                aria-label={`Ver ${p.alt || nome(i)}`}
+                onClick={() => setAberta(i)}
+              >
+                <Pic src={p.src} alt={p.alt || nome(i)} />
+              </button>
             </li>
           ))}
         </ul>
@@ -58,6 +66,14 @@ export default function Photos({ c }: { c: Content['photos'] }) {
           <span>{c.footRight}</span>
         </p>
       </div>
+
+      {aberta !== null && c.items[aberta] ? (
+        <Lightbox
+          src={c.items[aberta].src}
+          alt={c.items[aberta].alt || nome(aberta)}
+          onClose={fechar}
+        />
+      ) : null}
     </section>
   );
 }
