@@ -891,7 +891,6 @@
     #meet .bio,
     #meet .nota,
     .tline p,
-    .modeHint,
     .price .inc,
     .faq .a p,
     #fim .lead {
@@ -1737,50 +1736,6 @@
     .price {
       max-width: none;
     }
-    .switch {
-      position: relative;
-      display: inline-flex;
-      padding: 4px;
-      margin-bottom: 18px;
-      border-radius: 999px;
-      border: 1px solid rgba(221, 210, 195, 0.22);
-    }
-    .switch .knob {
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      width: calc(50% - 4px);
-      height: calc(100% - 8px);
-      border-radius: 999px;
-      background: var(--paper);
-      transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-    .switch[data-mode='mensal'] .knob {
-      transform: translateX(100%);
-    }
-    .switch button {
-      position: relative;
-      z-index: 1;
-      min-width: 118px;
-      min-height: 40px;
-      padding: 0 20px;
-      border-radius: 999px;
-      color: var(--sandLight);
-      transition: color 0.4s;
-    }
-    .switch button.on {
-      color: var(--graphite);
-    }
-    .switch button:focus-visible {
-      outline: 2px solid var(--paper);
-      outline-offset: 3px;
-    }
-    .modeHint {
-      max-width: 46ch;
-      margin-bottom: 40px;
-      font-size: 15px;
-      color: var(--sandLight);
-    }
     .planGrid {
       list-style: none;
       display: grid;
@@ -2175,14 +2130,33 @@
     }
     @media (min-width: 860px) {
       .planGrid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
       }
       .plan {
-        min-height: 480px;
+        min-height: 440px;
       }
       .extras {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: min(6vw, 72px);
+      }
+    }
+    @media (min-width: 1180px) {
+      .planGrid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      /* com quatro colunas não há largura para o nome e a etiqueta lado a
+         lado: a etiqueta sobe para cima do nome */
+      .plan .pname {
+        max-width: 100%;
+      }
+      .plan.best {
+        padding-top: 62px;
+      }
+      .plan .badge {
+        top: 24px;
+        left: 28px;
+        right: auto;
       }
     }
     @media (min-width: 900px) {

@@ -9,12 +9,13 @@ export type Format = { name: string; note: string };
 export type Step = { n: string; title: string; text: string };
 export type FaqItem = { q: string; a: string };
 export type Addon = { label: string; value: string };
-export type Tier = { price: string; suffix: string; qty: string; unit: string };
 export type Plan = {
   name: string;
   best: boolean;
-  avulso: Tier;
-  mensal: Tier;
+  price: string;
+  suffix: string;
+  qty: string;
+  unit: string;
   feat: string[];
 };
 
@@ -88,8 +89,6 @@ export type Content = {
     eyebrow: string;
     titleLead: string;
     titleEm: string;
-    hintAvulso: string;
-    hintMensal: string;
     showPrices: boolean;
     items: Plan[];
     includedTitle: string;
@@ -182,7 +181,7 @@ export const DEFAULT_CONTENT: Content = {
     imageMainAlt: 'Retrato de Carol Queiroz',
     imageSub: '/img/img-04.jpg',
     shelfEyebrow: 'Nicho',
-    shelfFoot: 'Sessões próprias',
+    shelfFoot: '',
   },
   session: {
     label: 'A sessão',
@@ -228,8 +227,8 @@ export const DEFAULT_CONTENT: Content = {
       { src: '/img/img-11.jpg', alt: '' },
       { src: '/img/img-12.jpg', alt: '' },
     ],
-    footLeft: 'Sessões próprias',
-    footRight: 'Lisboa',
+    footLeft: '',
+    footRight: '',
   },
   process: {
     num: '03',
@@ -266,25 +265,14 @@ export const DEFAULT_CONTENT: Content = {
     eyebrow: 'Pacotes',
     titleLead: 'Quanto',
     titleEm: 'custa.',
-    hintAvulso: 'Para um teste pontual ou uma campanha com data marcada.',
-    hintMensal:
-      'Para quem precisa de conteúdo novo todos os meses, com preço por vídeo mais baixo.',
     items: [
       {
         name: 'Tester',
         best: false,
-        avulso: {
-          price: '150',
-          suffix: '',
-          qty: '1 vídeo',
-          unit: '150€ por vídeo',
-        },
-        mensal: {
-          price: '270',
-          suffix: '/mês',
-          qty: '2 vídeos por mês',
-          unit: '135€ por vídeo',
-        },
+        price: '150',
+        suffix: '',
+        qty: '1 vídeo',
+        unit: '150€ por vídeo',
         feat: [
           '1 formato à escolha',
           'Roteiro, gravação e edição',
@@ -297,18 +285,10 @@ export const DEFAULT_CONTENT: Content = {
       {
         name: 'Essential',
         best: true,
-        avulso: {
-          price: '405',
-          suffix: '',
-          qty: '3 vídeos',
-          unit: '135€ por vídeo',
-        },
-        mensal: {
-          price: '500',
-          suffix: '/mês',
-          qty: '4 vídeos por mês',
-          unit: '125€ por vídeo',
-        },
+        price: '405',
+        suffix: '',
+        qty: '3 vídeos',
+        unit: '135€ por vídeo',
         feat: [
           'Formatos à escolha',
           'Roteiro, gravação e edição',
@@ -322,18 +302,10 @@ export const DEFAULT_CONTENT: Content = {
       {
         name: 'Premium',
         best: false,
-        avulso: {
-          price: '625',
-          suffix: '',
-          qty: '5 vídeos',
-          unit: '125€ por vídeo',
-        },
-        mensal: {
-          price: '920',
-          suffix: '/mês',
-          qty: '8 vídeos por mês',
-          unit: '115€ por vídeo',
-        },
+        price: '625',
+        suffix: '',
+        qty: '5 vídeos',
+        unit: '125€ por vídeo',
         feat: [
           'Formatos à escolha',
           'Roteiro, gravação e edição',
@@ -343,6 +315,22 @@ export const DEFAULT_CONTENT: Content = {
           'Direitos para Ads · 6 meses incluídos',
           'Prioridade de agenda',
           'Entrega em 7 dias úteis',
+        ],
+      },
+      {
+        name: 'Mensal',
+        best: false,
+        price: '500',
+        suffix: '/mês',
+        qty: '4 vídeos por mês',
+        unit: '125€ por vídeo',
+        feat: [
+          'Formatos à escolha',
+          'Roteiro, gravação e edição',
+          'Legendas incluídas',
+          '1 revisão por vídeo',
+          'Uso orgânico',
+          'Conteúdo novo todos os meses',
         ],
       },
     ],
@@ -407,8 +395,8 @@ export const DEFAULT_CONTENT: Content = {
       src: '/videos/footer-loop.mp4',
       srcSm: '/videos/footer-loop-sm.mp4',
     },
-    caption: 'Fig. 03 · Carol Queiroz',
-    captionSub: 'Lisboa',
+    caption: '',
+    captionSub: '',
     barLeft: 'Carol Queiroz · UGC Creator',
     barRight: 'Portugal · © 2026',
   },
