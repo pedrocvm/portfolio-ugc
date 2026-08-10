@@ -97,7 +97,6 @@ export const SECTIONS: Section[] = [
         label: 'Descrição do retrato',
         hint: 'Lida por leitores de ecrã e por motores de busca.',
       },
-      { k: 'image', path: 'meet.imageSub', label: 'Retrato secundário' },
       { k: 'text', path: 'meet.shelfEyebrow', label: 'Etiqueta da gaveta' },
       { k: 'text', path: 'meet.shelfFoot', label: 'Rodapé da gaveta' },
     ],

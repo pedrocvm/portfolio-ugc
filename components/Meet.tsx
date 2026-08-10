@@ -88,9 +88,6 @@ export default function Meet({
               <div className="fm main">
                 <Pic src={c.imageMain} alt={c.imageMainAlt} />
               </div>
-              <div className="fm sub">
-                <Pic src={c.imageSub} alt="" ariaHidden />
-              </div>
             </figure>
             <div className="txt">
               <p className="mono eyebrow">{c.eyebrow}</p>

@@ -99,6 +99,7 @@ function run(gsap: any, ScrollTrigger: any) {
       if (!pick || pick === bgCurrent) return;
       bgCurrent = pick;
       document.body.dataset.mode = pick.dataset.mode ?? 'light';
+      document.body.dataset.scene = pick.id;
       gsap.to(bg, {
         backgroundColor: pick.dataset.bg,
         duration: 0.8,
@@ -150,15 +151,6 @@ function run(gsap: any, ScrollTrigger: any) {
       y: 48,
       opacity: 0,
       duration: 0.8,
-      ease: 'power2.out',
-      scrollTrigger: { trigger: '#meet .shot', start: 'top 80%' },
-    });
-    gsap.from('#meet .fm.sub', {
-      y: 28,
-      scale: 0.92,
-      opacity: 0,
-      duration: 0.7,
-      delay: 0.15,
       ease: 'power2.out',
       scrollTrigger: { trigger: '#meet .shot', start: 'top 80%' },
     });

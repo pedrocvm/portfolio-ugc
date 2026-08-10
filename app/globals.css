@@ -1141,17 +1141,6 @@
       aspect-ratio: 4/5;
       border-radius: 16px;
     }
-    #meet .fm.sub {
-      position: absolute;
-      width: 38%;
-      right: 14px;
-      bottom: -44px;
-      aspect-ratio: 3/4;
-      border-radius: 10px;
-      box-shadow:
-        0 0 0 6px var(--paper),
-        0 22px 48px rgba(46, 44, 42, 0.22);
-    }
     #meet figcaption {
       display: flex;
       align-items: center;
@@ -1237,12 +1226,6 @@
       #meet .fm.main {
         aspect-ratio: 5/7;
         max-height: 78svh;
-      }
-      #meet .fm.sub {
-        width: 42%;
-        max-width: 212px;
-        right: -70px;
-        bottom: -58px;
       }
       #meet .bio {
         font-size: 20px;

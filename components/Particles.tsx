@@ -80,6 +80,7 @@ export default function Particles() {
        o stop espera pela transicao de opacidade do CSS para nao congelar o fade */
     let stopAt = 0;
     function running() {
+      if (document.body.dataset.scene === 'hero') return false;
       return !document.hidden && (document.body.dataset.mode === 'dark' || Date.now() < stopAt);
     }
     function sync() {
@@ -94,7 +95,7 @@ export default function Particles() {
     }
 
     const mo = new MutationObserver(onMode);
-    mo.observe(document.body, { attributes: true, attributeFilter: ['data-mode'] });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['data-mode', 'data-scene'] });
 
     resize();
     sync();
