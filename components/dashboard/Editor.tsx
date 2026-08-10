@@ -24,6 +24,7 @@ export default function Editor({ initial }: { initial: Content }) {
   const [pending, start] = useTransition();
   const router = useRouter();
   const sticky = useRef<HTMLDivElement>(null);
+  const tocadas = useRef(new Set<string>());
 
   /* o título grande encolhe assim que se rola, como as barras de navegação
      do iOS: a sentinela no topo da folha diz quando isso acontece */
@@ -104,15 +105,22 @@ export default function Editor({ initial }: { initial: Content }) {
   }, [dirty]);
 
   function change(path: string, value: unknown) {
+    tocadas.current.add(path.split('.')[0]);
     setContent((c) => setIn(c, path, value));
     setDirty(true);
     setState({ tone: 'dirty', text: 'Alterações por guardar' });
   }
 
   function save() {
+    /* só as secções mexidas seguem: o que esta janela não tocou fica como
+       está na base, mesmo que aqui esteja desatualizado */
+    const patch = Object.fromEntries(
+      [...tocadas.current].map((k) => [k, (content as Record<string, unknown>)[k]]),
+    );
     start(async () => {
-      const r = await saveDraft(content);
+      const r = await saveDraft(patch);
       if (r.error) return setState({ tone: 'bad', text: r.error });
+      tocadas.current.clear();
       setDirty(false);
       setState({ tone: 'ok', text: 'Guardado. Ainda não está no site.' });
       /* sem router.refresh aqui: o rascunho já está no cliente, e esperar pela
@@ -136,6 +144,7 @@ export default function Editor({ initial }: { initial: Content }) {
     start(async () => {
       const r = await discardDraft();
       if (r.error) return setState({ tone: 'bad', text: r.error });
+      tocadas.current.clear();
       setDirty(false);
       setState(CLEAN);
       router.refresh();
@@ -207,7 +216,11 @@ export default function Editor({ initial }: { initial: Content }) {
       </button>
 
       {preview ? (
-        <PreviewFrame dirty={dirty} onClose={() => setPreview(false)} />
+        <PreviewFrame
+          content={content}
+          dirty={dirty}
+          onClose={() => setPreview(false)}
+        />
       ) : null}
 
       <div className="withIndex">

@@ -16,7 +16,7 @@ export default function Session({ c }: { c: Content['session'] }) {
         <div className="ambient" aria-hidden="true">
           {c.takes.map((t, i) =>
             isVideo(t.img) ? (
-              <video key={i} src={t.img} muted playsInline preload="metadata" />
+              <video key={i} src={t.img} muted playsInline preload="none" />
             ) : (
               <Pic key={i} src={t.img} alt="" />
             ),
@@ -48,7 +48,7 @@ export default function Session({ c }: { c: Content['session'] }) {
                     muted
                     loop
                     playsInline
-                    preload="metadata"
+                    preload={i === 0 ? 'metadata' : 'none'}
                   />
                 ) : (
                   <Pic src={t.img} alt="" />

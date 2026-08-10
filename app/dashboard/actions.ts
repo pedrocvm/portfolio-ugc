@@ -3,7 +3,7 @@
 import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { DEFAULT_CONTENT, type Content } from '@/lib/content';
-import { CONTENT_TAG } from '@/lib/content-store';
+import { CONTENT_TAG, getDraft } from '@/lib/content-store';
 import { merge } from '@/lib/merge';
 import { EDITOR_EMAIL, EDITOR_USERNAME, requireEditor } from '@/lib/auth';
 import { MIN_PASSWORD, isPwned } from '@/lib/hibp';
@@ -42,9 +42,16 @@ async function write(key: 'draft' | 'published', data: Content) {
   return error?.message;
 }
 
-export async function saveDraft(input: unknown): Promise<Result> {
+/** Guarda só as secções tocadas, por cima do rascunho que está na base: o
+ *  resto do site não depende do que esta janela tinha em memória. */
+export async function saveDraft(patch: Record<string, unknown>): Promise<Result> {
   await requireEditor();
-  const error = await write('draft', merge(DEFAULT_CONTENT, input));
+  const current = await getDraft().catch(() => null);
+  if (!current) {
+    return { error: 'Não foi possível guardar: o rascunho atual não pôde ser lido. Volta a tentar.' };
+  }
+
+  const error = await write('draft', merge(DEFAULT_CONTENT, { ...current, ...patch }));
   if (error) return { error: `Não foi possível guardar: ${error}` };
   revalidatePath('/preview');
   return { ok: true };
@@ -52,14 +59,13 @@ export async function saveDraft(input: unknown): Promise<Result> {
 
 export async function publishDraft(): Promise<Result> {
   await requireEditor();
-  const supabase = await supabaseServer();
-  const { data } = await supabase
-    .from('site_content')
-    .select('data')
-    .eq('key', 'draft')
-    .maybeSingle();
+  const draft = await getDraft().catch(() => null);
+  /* publicar o modelo de origem porque a leitura falhou apagava o site */
+  if (!draft) {
+    return { error: 'Não foi possível publicar: o rascunho não pôde ser lido. Volta a tentar.' };
+  }
 
-  const error = await write('published', merge(DEFAULT_CONTENT, data?.data));
+  const error = await write('published', draft);
   if (error) return { error: `Não foi possível publicar: ${error}` };
   updateTag(CONTENT_TAG);
   revalidatePath('/');
@@ -70,13 +76,16 @@ export async function publishDraft(): Promise<Result> {
 export async function discardDraft(): Promise<Result> {
   await requireEditor();
   const supabase = await supabaseServer();
-  const { data } = await supabase
+  const { data, error: falha } = await supabase
     .from('site_content')
     .select('data')
     .eq('key', 'published')
     .maybeSingle();
+  if (falha || !data) {
+    return { error: 'Não foi possível repor: não consegui ler o que está publicado.' };
+  }
 
-  const error = await write('draft', merge(DEFAULT_CONTENT, data?.data));
+  const error = await write('draft', merge(DEFAULT_CONTENT, data.data));
   if (error) return { error: `Não foi possível repor: ${error}` };
   revalidatePath('/preview');
   return { ok: true };

@@ -2471,6 +2471,8 @@
 .routeLoad {
   display: grid;
   place-items: center;
+  gap: 16px;
+  text-align: center;
   min-height: 46dvh;
   color: var(--tinta2);
   animation: fade 0.4s var(--quart) 0.12s both;

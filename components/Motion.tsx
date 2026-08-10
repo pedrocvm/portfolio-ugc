@@ -260,7 +260,7 @@ function run(gsap: any, ScrollTrigger: any) {
         scrollTrigger: { trigger: el, start: 'top 90%' },
       });
     });
-    gsap.from('#fotosReel li', {
+    gsap.from('#fotosReel button', {
       x: 30,
       opacity: 0,
       duration: 0.7,

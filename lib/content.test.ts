@@ -101,3 +101,19 @@ test('fit respeita o lado longo no formato horizontal', () => {
   const [w, h] = fit(3840, 2160);
   assert.ok(w <= 1920 && h <= 1080);
 });
+
+test('guardar uma secção não mexe no resto do rascunho', () => {
+  /* o que a base tem: vídeos carregados pela editora numa sessão anterior */
+  const guardado = merge(DEFAULT_CONTENT, {
+    session: {
+      takes: [{ label: 'Casa&Decor', n: '01', niche: 'SWEEK', img: 'https://x/v.mp4' }],
+    },
+  });
+  /* o que esta janela mexeu: só o processo */
+  const patch = { process: { ...DEFAULT_CONTENT.process, num: '09' } };
+
+  const out = merge(DEFAULT_CONTENT, { ...guardado, ...patch });
+
+  assert.equal(out.process.num, '09');
+  assert.deepEqual(out.session.takes, guardado.session.takes);
+});

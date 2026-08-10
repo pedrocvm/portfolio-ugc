@@ -629,17 +629,13 @@
         --g: 14px;
       }
     }
-    /* Fotos UGC: três linhas fixas, as colunas é que correm. Uma passagem
-       lateral vale a largura toda, por isso mudam as quatro de uma vez. */
+    /* Fotos UGC: grelhas de 3x3 lado a lado; uma passagem lateral vira a
+       página inteira. */
     .pgrid {
-      --n: 2;
       --g: 12px;
       list-style: none;
-      display: grid;
-      grid-auto-flow: column;
-      grid-template-rows: repeat(3, auto);
-      grid-auto-columns: calc((100% - (var(--n) - 1) * var(--g)) / var(--n));
-      gap: var(--g);
+      display: flex;
+      max-width: 820px;
       overflow-x: auto;
       overflow-y: hidden;
       scroll-snap-type: x mandatory;
@@ -650,8 +646,12 @@
     .pgrid::-webkit-scrollbar {
       display: none;
     }
-    .pgrid li {
+    .pgrid > li {
+      flex: 0 0 100%;
       scroll-snap-align: start;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--g);
     }
     .pgrid button {
       position: relative;
@@ -753,14 +753,8 @@
     .lboxX:hover {
       background: rgba(18, 16, 15, 0.82);
     }
-    @media (min-width: 620px) {
-      .pgrid {
-        --n: 3;
-      }
-    }
     @media (min-width: 1080px) {
       .pgrid {
-        --n: 4;
         --g: 14px;
       }
     }
