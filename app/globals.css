@@ -1304,7 +1304,11 @@
     #sessao .frame {
       position: relative;
       z-index: 2;
-      width: min(64vw, 300px);
+      /* o retrato também é limitado pela altura livre entre a etiqueta do topo
+         e a ficha: numa janela baixa era a barra de controlos do vídeo que
+         ficava fora do ecrã, e não havia forma de lhe chegar */
+      --altoMax: calc((89svh - 127px) * 9 / 16);
+      width: min(64vw, 300px, var(--altoMax));
       aspect-ratio: 9/16;
     }
     #sessao .takeV {
@@ -1340,6 +1344,27 @@
       background: rgba(46, 44, 42, 0.82);
       padding: 7px 10px;
       border-radius: 6px;
+    }
+    /* o painel de som dos controlos nativos desaparece num vídeo estreito como
+       este; este botão fica sempre à mão */
+    #sessao #takeSound {
+      position: absolute;
+      z-index: 3;
+      /* acima da barra de controlos nativa, longe da etiqueta do topo */
+      bottom: 52px;
+      right: 12px;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 6px;
+      background: rgba(46, 44, 42, 0.82);
+      color: var(--sandLight);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+    #sessao #takeSound:hover,
+    #sessao #takeSound:focus-visible {
+      background: rgba(46, 44, 42, 0.95);
     }
     #sessao .takeV .tg2 {
       position: absolute;
@@ -2152,7 +2177,7 @@
         gap: min(8vw, 92px);
       }
       #sessao .frame {
-        width: min(24vw, 340px);
+        width: min(24vw, 340px, var(--altoMax));
       }
       #sessao .bignum {
         left: 4vw;

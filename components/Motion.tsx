@@ -213,6 +213,7 @@ function run(gsap: any, ScrollTrigger: any) {
         { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' },
       );
       takeVideo(takeEls[prev])?.pause();
+      aplicaSom(takeVideo(takeEls[i]));
       void takeVideo(takeEls[i])?.play().catch(() => {});
       const n = takeEls[i].dataset.n ?? '';
       if (bignum) bignum.textContent = n;
@@ -222,6 +223,20 @@ function run(gsap: any, ScrollTrigger: any) {
     }
 
     void takeVideo(takeEls[0])?.play().catch(() => {});
+
+    /* o som fica desligado para o arranque automático passar, e a escolha de o
+       ligar segue com o visitante de tomada para tomada */
+    const botaoSom = document.getElementById('takeSound');
+    let comSom = false;
+    function aplicaSom(v: HTMLVideoElement | null) {
+      if (v) v.muted = !comSom;
+    }
+    botaoSom?.addEventListener('click', () => {
+      comSom = !comSom;
+      botaoSom.setAttribute('aria-pressed', String(comSom));
+      botaoSom.textContent = comSom ? 'Desligar som' : 'Ligar som';
+      aplicaSom(takeVideo(takeEls[current]));
+    });
 
     ScrollTrigger.create({
       trigger: '#sessao',

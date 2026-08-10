@@ -58,6 +58,11 @@ export default function Session({ c }: { c: Content['session'] }) {
                 </span>
               </div>
             ))}
+            {c.takes.some((t) => isVideo(t.img)) ? (
+              <button id="takeSound" className="mono" type="button" aria-pressed="false">
+                Ligar som
+              </button>
+            ) : null}
           </div>
         </div>
         <div className="ficha mono">
