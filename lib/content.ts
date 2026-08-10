@@ -90,6 +90,7 @@ export type Content = {
     titleEm: string;
     hintAvulso: string;
     hintMensal: string;
+    showPrices: boolean;
     items: Plan[];
     includedTitle: string;
     includedText: string;
@@ -261,6 +262,7 @@ export const DEFAULT_CONTENT: Content = {
   },
   plans: {
     num: '04',
+    showPrices: false,
     eyebrow: 'Pacotes',
     titleLead: 'Quanto',
     titleEm: 'custa.',

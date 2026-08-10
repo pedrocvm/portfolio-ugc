@@ -61,13 +61,16 @@ export async function compressVideo(
     const ctx = canvas.getContext('2d');
     if (!ctx) return file;
 
-    const stream = canvas.captureStream(FPS);
-    /* a imagem vem do canvas e o som do próprio elemento: sem esta faixa o
-       vídeo subia mudo, e mudo ficava para sempre */
+    /* a imagem vem do canvas e o som do próprio elemento. Sem captureStream
+       (Safari) não há como levar a faixa de som: sobe o original, que um
+       ficheiro pesado ainda se resolve e um vídeo mudo não. */
     const comSom = video as HTMLVideoElement & {
       captureStream?: () => MediaStream;
     };
-    comSom.captureStream?.().getAudioTracks().forEach((t) => stream.addTrack(t));
+    if (!comSom.captureStream) return file;
+
+    const stream = canvas.captureStream(FPS);
+    comSom.captureStream().getAudioTracks().forEach((t) => stream.addTrack(t));
     const rec = new MediaRecorder(stream, {
       mimeType: type,
       videoBitsPerSecond: BITRATE,

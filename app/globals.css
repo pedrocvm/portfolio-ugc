@@ -1466,10 +1466,10 @@
     #formatos .bgimg .ov {
       background: linear-gradient(
         to top,
-        rgba(18, 16, 15, 0.9) 0%,
-        rgba(18, 16, 15, 0.7) 38%,
-        rgba(18, 16, 15, 0.6) 66%,
-        rgba(18, 16, 15, 0.82) 100%
+        rgba(18, 16, 15, 0.94) 0%,
+        rgba(18, 16, 15, 0.78) 38%,
+        rgba(18, 16, 15, 0.7) 66%,
+        rgba(18, 16, 15, 0.88) 100%
       );
     }
     #formatos .chapHead .cn,
@@ -1502,17 +1502,17 @@
         background:
           linear-gradient(
             to left,
-            rgba(18, 16, 15, 0.06) 0%,
-            rgba(18, 16, 15, 0.2) 26%,
-            rgba(18, 16, 15, 0.62) 52%,
-            rgba(18, 16, 15, 0.86) 78%,
-            rgba(18, 16, 15, 0.9) 100%
+            rgba(18, 16, 15, 0.16) 0%,
+            rgba(18, 16, 15, 0.3) 26%,
+            rgba(18, 16, 15, 0.7) 52%,
+            rgba(18, 16, 15, 0.9) 78%,
+            rgba(18, 16, 15, 0.93) 100%
           ),
           linear-gradient(
             to top,
-            rgba(18, 16, 15, 0.6) 0%,
-            rgba(18, 16, 15, 0.12) 46%,
-            rgba(18, 16, 15, 0.55) 100%
+            rgba(18, 16, 15, 0.66) 0%,
+            rgba(18, 16, 15, 0.24) 46%,
+            rgba(18, 16, 15, 0.62) 100%
           );
       }
     }
@@ -1927,6 +1927,22 @@
       max-width: 40ch;
       color: var(--sandLight);
     }
+    /* os add-ons passavam despercebidos ao lado do texto do que está incluído:
+       ganham caixa própria para se lerem como uma oferta e não como rodapé */
+    .addons {
+      padding: 26px 28px 8px;
+      border: 1px solid var(--sandLight);
+      border-radius: 16px;
+      background: rgba(221, 210, 195, 0.06);
+    }
+    .addonsTitle {
+      margin: 0 0 4px;
+      font-family: var(--disp);
+      font-variation-settings: 'wdth' 106;
+      font-weight: 530;
+      font-size: clamp(22px, 2.2vw, 28px);
+      letter-spacing: -0.02em;
+    }
     .addons .row {
       display: flex;
       justify-content: space-between;
@@ -1936,7 +1952,7 @@
       border-top: 1px solid var(--sandLight);
     }
     .addons .row:last-of-type {
-      border-bottom: 1px solid var(--sandLight);
+      border-bottom: 0;
     }
     .addons .val {
       font-family: var(--disp);
@@ -1997,6 +2013,9 @@
     .chap.dark .why,
     .chap.dark .lanc {
       color: var(--sandLight);
+    }
+    .chap.dark .addons {
+      border-color: rgba(221, 210, 195, 0.3);
     }
     .chap.dark .chapHead i,
     .chap.dark .addons .row,

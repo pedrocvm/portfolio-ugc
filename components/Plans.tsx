@@ -64,12 +64,16 @@ export default function Plans({
                   {p.best && <span className="badge mono">Recomendado</span>}
                   <h3 className="pname">{p.name}</h3>
                   <p className="pqty">{t.qty}</p>
-                  <p className="pprice">
-                    <span className="v">{t.price}</span>
-                    <span className="cur">€</span>
-                    <span className="suf">{t.suffix}</span>
-                  </p>
-                  <p className="pu mono">{t.unit}</p>
+                  {c.showPrices ? (
+                    <>
+                      <p className="pprice">
+                        <span className="v">{t.price}</span>
+                        <span className="cur">€</span>
+                        <span className="suf">{t.suffix}</span>
+                      </p>
+                      <p className="pu mono">{t.unit}</p>
+                    </>
+                  ) : null}
                   <ul className="feat">
                     {p.feat.map((f, k) => (
                       <li key={k}>{f}</li>
@@ -81,7 +85,9 @@ export default function Plans({
                       phone,
                       `Olá Carol, quero o pacote ${p.name} ${
                         mode === 'avulso' ? 'avulso' : 'mensal'
-                      } — ${t.qty}, ${t.price}€${t.suffix}. Podes dizer-me os próximos passos?`,
+                      } — ${t.qty}${
+                        c.showPrices ? `, ${t.price}€${t.suffix}` : ''
+                      }. Podes dizer-me os próximos passos?`,
                     )}
                     target="_blank"
                     rel="noopener"
@@ -99,11 +105,11 @@ export default function Plans({
               <p className="inc">{c.includedText}</p>
             </div>
             <div className="addons">
-              <span className="mono eyebrow">{c.addonsTitle}</span>
+              <h3 className="addonsTitle">{c.addonsTitle}</h3>
               {c.addons.map((a, i) => (
                 <div className="row" key={i}>
                   <span className="mono">{a.label}</span>
-                  <span className="val">{a.value}</span>
+                  {c.showPrices ? <span className="val">{a.value}</span> : null}
                 </div>
               ))}
             </div>

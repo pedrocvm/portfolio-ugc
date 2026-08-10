@@ -212,6 +212,12 @@ export const SECTIONS: Section[] = [
     note: 'Preços, o que está incluído e os extras.',
     fields: [
       ...chapter('plans', 'pacotes'),
+      {
+        k: 'bool',
+        path: 'plans.showPrices',
+        label: 'Mostrar os preços no site',
+        hint: 'Desligado, os pacotes e os add-ons aparecem sem valores. Os preços continuam guardados aqui para quando quiseres voltar a mostrá-los.',
+      },
       { k: 'area', path: 'plans.hintAvulso', label: 'Explicação · avulso' },
       { k: 'area', path: 'plans.hintMensal', label: 'Explicação · mensal' },
       {
