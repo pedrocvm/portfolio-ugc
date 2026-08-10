@@ -1481,7 +1481,7 @@
     }
     .fmt {
       list-style: none;
-      max-width: 560px;
+      max-width: min(100%, 820px);
     }
     #formatos .fmt li {
       border-bottom-color: rgba(221, 210, 195, 0.22);
@@ -1517,11 +1517,19 @@
       }
     }
     .fmt li {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
+      display: grid;
+      gap: 6px;
       padding: 16px 0;
       border-bottom: 1px solid var(--sandLight);
+    }
+    /* duas colunas fixas: a descrição de cada formato começa toda no mesmo
+       sítio, em vez de acompanhar o comprimento do nome */
+    @media (min-width: 620px) {
+      .fmt li {
+        grid-template-columns: minmax(0, 210px) minmax(0, 1fr);
+        gap: 56px;
+        align-items: baseline;
+      }
     }
     .fmt li:last-child {
       border-bottom: 0;

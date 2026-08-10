@@ -7,8 +7,14 @@ const MAX_LONG = 1920;
 const BITRATE = 2_500_000;
 const FPS = 30;
 
-/** mp4 primeiro: é o que o iPhone grava e o que toca em todo o lado. */
-const TYPES = ['video/mp4;codecs=avc1', 'video/webm;codecs=vp9', 'video/webm'];
+/** mp4 com AAC primeiro: é o que o iPhone grava e o que toca em todo o lado.
+ *  mp4 com Opus toca no Chrome mas não no Safari, por isso não entra aqui. */
+const TYPES = [
+  'video/mp4;codecs=avc1,mp4a.40.2',
+  'video/mp4;codecs=avc1',
+  'video/webm;codecs=vp9,opus',
+  'video/webm',
+];
 
 const pickType = () =>
   typeof MediaRecorder === 'undefined'
@@ -56,6 +62,12 @@ export async function compressVideo(
     if (!ctx) return file;
 
     const stream = canvas.captureStream(FPS);
+    /* a imagem vem do canvas e o som do próprio elemento: sem esta faixa o
+       vídeo subia mudo, e mudo ficava para sempre */
+    const comSom = video as HTMLVideoElement & {
+      captureStream?: () => MediaStream;
+    };
+    comSom.captureStream?.().getAudioTracks().forEach((t) => stream.addTrack(t));
     const rec = new MediaRecorder(stream, {
       mimeType: type,
       videoBitsPerSecond: BITRATE,
@@ -68,9 +80,6 @@ export async function compressVideo(
       rec.onstop = () => ok();
     });
 
-    /* ponytail: o som fica de fora porque todos os <video> do site tocam em
-       mudo. Se algum dia tocar com som, é preciso juntar a faixa de áudio de
-       videoEl.captureStream() ao stream do canvas. */
     rec.start();
     await video.play();
 
