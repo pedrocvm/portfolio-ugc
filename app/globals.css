@@ -1307,7 +1307,7 @@
       /* o retrato também é limitado pela altura livre entre a etiqueta do topo
          e a ficha: numa janela baixa era a barra de controlos do vídeo que
          ficava fora do ecrã, e não havia forma de lhe chegar */
-      --altoMax: calc((89svh - 127px) * 9 / 16);
+      --altoMax: calc((89svh - 150px) * 9 / 16);
       width: min(64vw, 300px, var(--altoMax));
       aspect-ratio: 9/16;
     }
