@@ -1736,11 +1736,14 @@
     .price {
       max-width: none;
     }
+    /* as colunas seguem a largura disponível e o número de pacotes: três
+       pacotes enchem a linha, quatro também, sem regra por breakpoint */
     .planGrid {
       list-style: none;
       display: grid;
-      gap: 14px;
-      grid-template-columns: 1fr;
+      gap: 22px 14px;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+      margin-top: 13px;
     }
     .plan {
       position: relative;
@@ -1763,10 +1766,13 @@
       background: rgba(247, 243, 238, 0.085);
       border-color: rgba(221, 210, 195, 0.38);
     }
+    /* a cavalo na moldura de cima: fica fora do fluxo, por isso não empurra o
+       conteúdo, e alinhada à esquerda nunca passa da largura do cartão */
     .plan .badge {
       position: absolute;
-      top: 26px;
-      right: 24px;
+      top: -13px;
+      left: 24px;
+      max-width: calc(100% - 48px);
       display: inline-flex;
       align-items: center;
       gap: 9px;
@@ -2129,9 +2135,6 @@
       }
     }
     @media (min-width: 860px) {
-      .planGrid {
-        grid-template-columns: repeat(2, 1fr);
-      }
       .plan {
         min-height: 440px;
       }
@@ -2141,22 +2144,8 @@
       }
     }
     @media (min-width: 1180px) {
-      .planGrid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-      }
-      /* com quatro colunas não há largura para o nome e a etiqueta lado a
-         lado: a etiqueta sobe para cima do nome */
       .plan .pname {
         max-width: 100%;
-      }
-      .plan.best {
-        padding-top: 62px;
-      }
-      .plan .badge {
-        top: 24px;
-        left: 28px;
-        right: auto;
       }
     }
     @media (min-width: 900px) {
