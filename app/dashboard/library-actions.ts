@@ -1,8 +1,9 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { requireEditor } from '@/lib/auth';
 import type { MediaItem } from '@/lib/library';
+import { MEDIA_TAG } from '@/lib/content-store';
 import { supabaseServer } from '@/lib/supabase/server';
 import type { Result } from './actions';
 
@@ -35,6 +36,7 @@ export async function addMedia(item: {
   });
   if (error) return { error: 'Não foi possível guardar na biblioteca.' };
   revalidatePath('/dashboard/library');
+  updateTag(MEDIA_TAG);
   return { ok: true };
 }
 
@@ -47,6 +49,7 @@ export async function updateMedia(
   const { error } = await supabase.from('media_item').update(patch).eq('id', id);
   if (error) return { error: 'Não foi possível guardar a alteração.' };
   revalidatePath('/dashboard/library');
+  updateTag(MEDIA_TAG);
   return { ok: true };
 }
 
@@ -67,5 +70,6 @@ export async function removeMedia(id: string): Promise<Result> {
     await supabase.storage.from('media').remove([data.storage_path]);
   }
   revalidatePath('/dashboard/library');
+  updateTag(MEDIA_TAG);
   return { ok: true };
 }

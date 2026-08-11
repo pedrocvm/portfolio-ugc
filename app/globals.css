@@ -2044,18 +2044,6 @@
         display: none;
       }
     }
-    #fim .fimShot figcaption {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 16px;
-      color: var(--stone);
-    }
-    #fim .fimShot figcaption i {
-      flex: 1;
-      height: 1px;
-      background: rgba(221, 210, 195, 0.24);
-    }
     #fim .ey {
       color: var(--sandLight);
     }

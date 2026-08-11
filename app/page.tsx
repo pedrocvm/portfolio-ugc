@@ -1,6 +1,7 @@
 import Site from '@/components/Site';
-import { getPublished } from '@/lib/content-store';
+import { getNicheMedia, getPublished } from '@/lib/content-store';
 
 export default async function Page() {
-  return <Site c={await getPublished()} />;
+  const [c, media] = await Promise.all([getPublished(), getNicheMedia()]);
+  return <Site c={c} media={media} />;
 }

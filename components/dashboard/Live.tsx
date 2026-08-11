@@ -6,7 +6,13 @@ import type { Content } from '@/lib/content';
 
 /** A janela do editor manda o que está no formulário; assim a pré-visualização
  *  mostra o que ainda não foi guardado. */
-export default function Live({ initial }: { initial: Content }) {
+export default function Live({
+  initial,
+  media,
+}: {
+  initial: Content;
+  media: Record<string, string[]>;
+}) {
   const [content, setContent] = useState(initial);
 
   useEffect(() => {
@@ -19,5 +25,5 @@ export default function Live({ initial }: { initial: Content }) {
     return () => window.removeEventListener('message', onMessage);
   }, []);
 
-  return <Site c={content} />;
+  return <Site c={content} media={media} />;
 }

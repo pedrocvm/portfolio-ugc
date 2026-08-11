@@ -114,8 +114,6 @@ export type Content = {
     image: string;
     imageAlt: string;
     video: Video;
-    caption: string;
-    captionSub: string;
     barLeft: string;
     barRight: string;
   };
@@ -395,8 +393,6 @@ export const DEFAULT_CONTENT: Content = {
       src: '/videos/footer-loop.mp4',
       srcSm: '/videos/footer-loop-sm.mp4',
     },
-    caption: '',
-    captionSub: '',
     barLeft: 'Carol Queiroz · UGC Creator',
     barRight: 'Portugal · © 2026',
   },

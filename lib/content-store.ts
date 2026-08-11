@@ -6,6 +6,7 @@ import { SUPABASE_KEY, SUPABASE_URL } from './supabase/config';
 import { supabaseServer } from './supabase/server';
 
 export const CONTENT_TAG = 'site-content';
+export const MEDIA_TAG = 'library-media';
 
 const anon = () => createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -36,3 +37,23 @@ export async function getDraft(): Promise<Content> {
   if (!draft) throw new Error('Não foi possível ler o rascunho.');
   return draft;
 }
+
+/** As media da biblioteca agrupadas por nicho. As que estão sem nicho ficam de
+ *  fora: o RLS nem sequer as devolve a quem não é a editora. */
+export const getNicheMedia = unstable_cache(
+  async (): Promise<Record<string, string[]>> => {
+    const { data, error } = await anon()
+      .from('media_item')
+      .select('url, niche')
+      .neq('niche', '')
+      .order('created_at', { ascending: false });
+    if (error || !data) return {};
+    const out: Record<string, string[]> = {};
+    for (const m of data as { url: string; niche: string }[]) {
+      (out[m.niche] ??= []).push(m.url);
+    }
+    return out;
+  },
+  ['library-niche-media'],
+  { tags: [MEDIA_TAG] },
+);

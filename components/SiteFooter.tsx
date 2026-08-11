@@ -31,11 +31,6 @@ export default function SiteFooter({
               tabIndex={-1}
             />
             <Pic src={c.image} alt={c.imageAlt} />
-            <figcaption className="mono">
-              {c.caption}
-              <i />
-              {c.captionSub}
-            </figcaption>
           </figure>
           <div>
             <p className="mono ey">{c.eyebrow}</p>

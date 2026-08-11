@@ -14,7 +14,13 @@ import Chrome from './Chrome';
 import Particles from './Particles';
 import Motion from './Motion';
 
-export default function Site({ c }: { c: Content }) {
+export default function Site({
+  c,
+  media,
+}: {
+  c: Content;
+  media: Record<string, string[]>;
+}) {
   const whatsapp = wa(c.contact.phone, c.contact.whatsappMessage);
   const pool = [
     ...c.session.takes.map((t) => t.img),
@@ -28,7 +34,7 @@ export default function Site({ c }: { c: Content }) {
       <Nav c={c.nav} whatsapp={whatsapp} />
       <ToTop />
       <Hero c={c.hero} />
-      <Meet c={c.meet} pool={pool} />
+      <Meet c={c.meet} pool={pool} media={media} />
       <Session c={c.session} />
       <main
         id="guiao"

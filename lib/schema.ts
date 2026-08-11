@@ -296,8 +296,6 @@ export const SECTIONS: Section[] = [
       { k: 'image', path: 'footer.image', label: 'Retrato' },
       { k: 'text', path: 'footer.imageAlt', label: 'Descrição do retrato' },
       { k: 'video', path: 'footer.video', label: 'Vídeo do retrato' },
-      { k: 'text', path: 'footer.caption', label: 'Legenda' },
-      { k: 'text', path: 'footer.captionSub', label: 'Legenda · segunda linha' },
       { k: 'text', path: 'footer.barLeft', label: 'Barra final · esquerda' },
       { k: 'text', path: 'footer.barRight', label: 'Barra final · direita' },
     ],

@@ -17,4 +17,9 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      # o build avalia lib/supabase/config.ts, que exige as variáveis. Aqui não
+      # se fala com a base: os valores só têm de existir e ser válidos.
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ci.invalid
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder

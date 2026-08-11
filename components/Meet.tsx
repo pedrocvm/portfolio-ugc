@@ -9,9 +9,11 @@ import Pic from './Pic';
 export default function Meet({
   c,
   pool,
+  media,
 }: {
   c: Content['meet'];
   pool: string[];
+  media: Record<string, string[]>;
 }) {
   const [niche, setNiche] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
@@ -55,10 +57,11 @@ export default function Meet({
     setNiche(null);
   }
 
-  /* só os registos escolhidos para este nicho. A seleção automática que estava
-     aqui enchia as gavetas nichadas com media sem nicho nenhum */
+  /* a escolha à mão manda; sem ela, entram as media da biblioteca marcadas com
+     este nicho. As que estão sem nicho nunca aparecem aqui */
   const chosen = c.niches.find((n) => n.name === niche);
-  const shelf = chosen?.reel.map((r) => r.src).filter(Boolean) ?? [];
+  const escolhidos = chosen?.reel.map((r) => r.src).filter(Boolean) ?? [];
+  const shelf = escolhidos.length ? escolhidos : (media[niche ?? ''] ?? []);
 
   return (
     <>
