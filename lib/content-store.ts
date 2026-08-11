@@ -8,6 +8,12 @@ import { supabaseServer } from './supabase/server';
 export const CONTENT_TAG = 'site-content';
 export const MEDIA_TAG = 'library-media';
 
+/** Publicar e mexer na biblioteca invalidam logo pela etiqueta; isto é para o
+ *  outro caso: uma leitura que falhou guarda um resultado vazio, e sem prazo
+ *  esse vazio ficava no site até alguém voltar a publicar. Cinco minutos é o
+ *  tempo máximo que um engano desses sobrevive. */
+const REPESCAGEM = 300;
+
 const anon = () => createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /** null quando não veio linha nenhuma. Sem sessão de editora o RLS devolve
@@ -26,7 +32,7 @@ async function read(key: 'draft' | 'published'): Promise<Content | null> {
 const publicado = unstable_cache(
   async () => (await read('published')) ?? DEFAULT_CONTENT,
   ['site-content-published'],
-  { tags: [CONTENT_TAG] },
+  { tags: [CONTENT_TAG], revalidate: REPESCAGEM },
 );
 
 /** O site público serve a versão publicada em cache; publicar invalida a tag.
@@ -61,5 +67,5 @@ export const getNicheMedia = unstable_cache(
     return out;
   },
   ['library-niche-media'],
-  { tags: [MEDIA_TAG] },
+  { tags: [MEDIA_TAG], revalidate: REPESCAGEM },
 );
