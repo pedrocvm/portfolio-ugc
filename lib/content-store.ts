@@ -23,12 +23,18 @@ async function read(key: 'draft' | 'published'): Promise<Content | null> {
   return merge(DEFAULT_CONTENT, data.data);
 }
 
-/** O site público serve a versão publicada em cache; publicar invalida a tag. */
-export const getPublished = unstable_cache(
+const publicado = unstable_cache(
   async () => (await read('published')) ?? DEFAULT_CONTENT,
   ['site-content-published'],
   { tags: [CONTENT_TAG] },
 );
+
+/** O site público serve a versão publicada em cache; publicar invalida a tag.
+ *  O merge repete-se à saída da cache porque a cache sobrevive ao deploy: sem
+ *  isto, um campo novo do modelo só existiria depois de alguém voltar a
+ *  publicar, e até lá chegaria ao site como indefinido. */
+export const getPublished = async (): Promise<Content> =>
+  merge(DEFAULT_CONTENT, await publicado());
 
 /** Aqui não há queda para o modelo de origem: o editor gravaria esse modelo
  *  por cima do trabalho real na primeira vez que guardasse. */
