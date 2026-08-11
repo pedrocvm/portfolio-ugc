@@ -9,7 +9,7 @@ export const GROUPS = [
     items: [
       { href: '/dashboard', label: 'Conteúdo' },
       { href: '/dashboard/library', label: 'Biblioteca' },
-      { href: '/dashboard/links', label: 'Ligações' },
+      { href: '/dashboard/links', label: 'Links' },
     ],
   },
   {

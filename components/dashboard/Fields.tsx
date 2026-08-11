@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Field } from '@/lib/schema';
-import { isVideo } from '@/lib/media';
+import { isMedia, isVideo } from '@/lib/media';
 import MediaField from './MediaField';
 import { getIn, join, setIn } from './paths';
 
@@ -230,7 +230,7 @@ function One({ f, ctx }: { f: Field; ctx: Ctx }) {
 function thumbOf(item: unknown): string {
   if (!item || typeof item !== 'object') return '';
   for (const v of Object.values(item as Record<string, unknown>)) {
-    if (typeof v === 'string' && /^(\/|https?:\/\/)/.test(v)) return v;
+    if (typeof v === 'string' && isMedia(v)) return v;
     if (v && typeof v === 'object' && !Array.isArray(v)) {
       const src = (v as { src?: unknown }).src;
       if (typeof src === 'string' && src) return src;

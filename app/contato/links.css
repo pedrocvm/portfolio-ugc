@@ -1,23 +1,24 @@
-/* A página que abre a partir da bio. Mesma gramática do portfólio — tipo
-   grande, filetes finos, muito escuro e um foco de luz — mas encolhida à
-   coluna que um polegar percorre de uma vez. A abertura é toda em CSS: o
-   primeiro fotograma não espera pelo JavaScript. */
+/* A página que abre a partir da bio. Mesma gramática do portfólio — a letra
+   manuscrita no nome, filetes finos, muito escuro e um foco de luz — encolhida
+   à coluna que um polegar percorre de uma vez. A abertura é toda em CSS: o
+   primeiro fotograma não espera pelo JavaScript, e as keyframes `write` e
+   `nib` são as mesmas que assinam a abertura do site. */
 
 .lk {
   --lx: 50;
-  --ly: 22;
+  --ly: 18;
   position: relative;
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 56px 22px 40px;
+  padding: 52px 24px 44px;
   overflow: clip;
   color: var(--paper);
   background: var(--graphite);
 }
 
-/* o foco de luz: uma camada quente que o ponteiro arrasta, outra fria e
-   parada por baixo para o fundo não ficar chapado */
+/* o foco de luz: uma camada quente que o ponteiro arrasta, outras duas
+   paradas por baixo para o fundo nunca ficar chapado */
 .lkFundo {
   position: fixed;
   inset: 0;
@@ -25,18 +26,18 @@
   pointer-events: none;
   background:
     radial-gradient(
-      42vmax 38vmax at calc(var(--lx) * 1%) calc(var(--ly) * 1%),
-      rgba(169, 152, 135, 0.26),
-      rgba(169, 152, 135, 0) 68%
+      40vmax 34vmax at calc(var(--lx) * 1%) calc(var(--ly) * 1%),
+      rgba(169, 152, 135, 0.24),
+      rgba(169, 152, 135, 0) 66%
     ),
     radial-gradient(
-      58vmax 46vmax at 82% 108%,
-      rgba(143, 168, 134, 0.16),
+      54vmax 44vmax at 84% 112%,
+      rgba(143, 168, 134, 0.14),
       rgba(143, 168, 134, 0) 70%
     ),
     radial-gradient(
-      70vmax 60vmax at 12% -12%,
-      rgba(77, 61, 52, 0.55),
+      72vmax 62vmax at 10% -14%,
+      rgba(77, 61, 52, 0.5),
       rgba(46, 44, 42, 0) 72%
     );
 }
@@ -49,7 +50,7 @@
   pointer-events: none;
   background: var(--graphite);
   clip-path: inset(0 0 0 0);
-  animation: lkCortina 1.5s cubic-bezier(0.76, 0, 0.24, 1) 0.08s forwards;
+  animation: lkCortina 1.4s cubic-bezier(0.76, 0, 0.24, 1) 0.08s forwards;
 }
 @keyframes lkCortina {
   to {
@@ -62,10 +63,10 @@
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 545px;
+  max-width: 520px;
   display: flex;
   flex-direction: column;
-  gap: 38px;
+  gap: 42px;
 }
 
 /* ── cabeça ─────────────────────────────────────────────────────────── */
@@ -79,18 +80,17 @@
 
 .lkRetratoBox {
   position: relative;
-  width: 168px;
-  height: 168px;
+  width: 172px;
+  height: 172px;
   display: grid;
   place-items: center;
-  margin-bottom: 26px;
 }
 
 .lkHalo {
   position: absolute;
-  inset: -46px;
+  inset: -44px;
   opacity: 0;
-  animation: lkHalo 2.4s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
+  animation: lkHalo 2.4s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
 }
 @keyframes lkHalo {
   from {
@@ -104,14 +104,14 @@
 }
 
 .lkRetrato {
-  width: 138px;
-  height: 138px;
+  width: 142px;
+  height: 142px;
   border-radius: 50%;
   overflow: hidden;
   box-shadow:
-    0 0 0 1px rgba(221, 210, 195, 0.22),
-    0 26px 60px rgba(20, 18, 17, 0.55);
-  animation: lkRetrato 1.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s backwards;
+    0 0 0 1px rgba(221, 210, 195, 0.24),
+    0 30px 66px rgba(20, 18, 17, 0.6);
+  animation: lkRetrato 1.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
 }
 .lkRetrato img {
   width: 100%;
@@ -132,8 +132,9 @@
 }
 
 .lkKicker {
+  margin-top: 22px;
   color: var(--stone);
-  animation: lkKicker 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s backwards;
+  animation: lkKicker 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.55s backwards;
 }
 @keyframes lkKicker {
   from {
@@ -146,50 +147,74 @@
   }
 }
 
+/* o nome é escrito à mão, como na abertura do site: a mesma letra, o mesmo
+   corte a descobrir cada traço e o mesmo brilho a correr à frente da ponta */
 .lkNome {
-  margin-top: 12px;
-  font-size: clamp(38px, 12vw, 62px);
-  line-height: 1;
+  margin-top: 18px;
+  font-family: var(--script);
+  font-weight: 400;
+  font-size: clamp(62px, 20vw, 104px);
+  line-height: 0.78;
+  letter-spacing: 0;
+  color: var(--sandLight);
 }
-
-/* cada letra sobe de dentro da linha; o corte é da linha, não da letra */
-.lkLinha {
+.lkNome .l2 {
+  margin-left: 0.34em;
+}
+.lkNome .ch {
   display: inline-block;
+  white-space: pre;
+  clip-path: polygon(-30% -30%, -30% -30%, -46% 130%, -46% 130%);
+  animation: write 0.16s ease-out calc(0.86s + var(--i) * 0.035s) forwards;
+}
+.lkNome.hl .line {
+  position: relative;
+  display: block;
   overflow: hidden;
-  vertical-align: bottom;
-  padding-bottom: 0.06em;
+  padding: 0.04em 0 0.14em;
+  margin-bottom: -0.2em;
 }
-.lkCh {
-  display: inline-block;
+.lkNome.hl .line > span {
+  display: block;
 }
-.lkCh > i {
-  display: inline-block;
-  font-style: normal;
-  animation: lkSobe 1.25s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: calc(0.62s + var(--i) * 0.035s);
+.lkNome .nib {
+  position: absolute;
+  top: 6%;
+  bottom: 10%;
+  left: 0;
+  width: 0.42em;
+  margin-left: -0.21em;
+  transform: rotate(-6deg);
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    rgba(247, 243, 238, 0.34),
+    rgba(247, 243, 238, 0) 72%
+  );
 }
-@keyframes lkSobe {
-  from {
-    transform: translateY(118%) rotate(5deg);
-  }
-  to {
-    transform: none;
-  }
+/* a segunda linha começa quando a primeira acaba: o atraso conta as letras
+   do primeiro nome em vez de as adivinhar */
+.lkNome .line:first-child .nib {
+  animation: nib 0.4s linear 0.86s forwards;
+}
+.lkNome .line:last-child .nib {
+  animation: nib 0.37s linear calc(0.86s + var(--n, 8) * 0.035s) forwards;
 }
 
 .lkRisco {
   display: block;
-  width: min(320px, 74%);
+  width: min(280px, 68%);
   height: 1px;
-  margin-top: 26px;
+  margin-top: 30px;
   background: linear-gradient(
     90deg,
     rgba(221, 210, 195, 0),
-    rgba(221, 210, 195, 0.5),
+    rgba(221, 210, 195, 0.45),
     rgba(221, 210, 195, 0)
   );
   transform-origin: 50% 50%;
-  animation: lkRisco 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.95s backwards;
+  animation: lkRisco 1.4s cubic-bezier(0.65, 0, 0.35, 1) 1.25s backwards;
 }
 @keyframes lkRisco {
   from {
@@ -200,40 +225,42 @@
   }
 }
 
-/* ── as ligações ────────────────────────────────────────────────────── */
+/* ── os links ───────────────────────────────────────────────────────── */
 
 .lkLista {
   display: flex;
   flex-direction: column;
-  gap: 13px;
-  perspective: 900px;
+  gap: 10px;
+  perspective: 1000px;
+  counter-reset: lk;
 }
 
 .lkItem {
   --bx: 50;
+  counter-increment: lk;
   position: relative;
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 19px 22px;
-  border-radius: 17px;
+  gap: 16px;
+  padding: 14px 20px 14px 15px;
+  border-radius: 15px;
   overflow: hidden;
   text-decoration: none;
-  background: rgba(247, 243, 238, 0.05);
-  border: 1px solid rgba(221, 210, 195, 0.15);
+  background: rgba(247, 243, 238, 0.042);
+  border: 1px solid rgba(221, 210, 195, 0.13);
   backdrop-filter: blur(10px);
   transform-style: preserve-3d;
   animation: lkEntra 1.15s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: calc(1.05s + var(--i) * 0.075s);
+  animation-delay: calc(1.35s + var(--i) * 0.08s);
   transition:
-    background 0.5s var(--exp, cubic-bezier(0.16, 1, 0.3, 1)),
-    border-color 0.5s ease,
-    box-shadow 0.5s ease;
+    background 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.55s ease,
+    box-shadow 0.55s ease;
 }
 @keyframes lkEntra {
   from {
     opacity: 0;
-    transform: translateY(34px) rotateX(-14deg);
+    transform: translateY(30px) rotateX(-12deg);
   }
   to {
     opacity: 1;
@@ -248,25 +275,30 @@
   pointer-events: none;
   opacity: 0;
   background: radial-gradient(
-    22vmax 14vmax at calc(var(--bx) * 1%) 50%,
-    rgba(247, 243, 238, 0.14),
-    rgba(247, 243, 238, 0) 62%
+    20vmax 13vmax at calc(var(--bx) * 1%) 50%,
+    rgba(247, 243, 238, 0.13),
+    rgba(247, 243, 238, 0) 60%
   );
-  transition: opacity 0.45s ease;
+  transition: opacity 0.5s ease;
 }
 
-.lkItem:hover,
-.lkItem:focus-visible {
-  background: rgba(247, 243, 238, 0.085);
-  border-color: rgba(143, 168, 134, 0.55);
-  box-shadow: 0 18px 44px rgba(20, 18, 17, 0.42);
+/* a fotografia dela manda no botão: é ela que se está a mostrar, não um ícone.
+   sem fotografia o botão fecha o espaço e alinha pelo número */
+.lkFoto {
+  flex: none;
+  width: 54px;
+  height: 66px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(221, 210, 195, 0.08);
+  box-shadow: 0 0 0 1px rgba(221, 210, 195, 0.14);
 }
-.lkItem:hover .lkBrilho,
-.lkItem:focus-visible .lkBrilho {
-  opacity: 1;
-}
-.lkItem:active {
-  transform: scale(0.985);
+.lkFoto img,
+.lkFoto picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .lkTexto {
@@ -274,14 +306,25 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+  padding-left: 5px;
+}
+/* o número herda os capítulos do site: dá ordem à lista sem uma única moldura */
+.lkRotulo::before {
+  content: counter(lk, decimal-leading-zero);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  color: var(--stone);
+  margin-right: 10px;
+  vertical-align: 0.22em;
 }
 .lkRotulo {
   font-family: var(--disp);
   font-variation-settings: 'wdth' 104;
-  font-weight: 530;
+  font-weight: 520;
   font-size: 19px;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.014em;
   line-height: 1.2;
 }
 .lkNota {
@@ -289,7 +332,7 @@
   font-style: italic;
   font-size: 15px;
   line-height: 1.35;
-  color: rgba(221, 210, 195, 0.72);
+  color: rgba(221, 210, 195, 0.7);
 }
 
 .lkSeta {
@@ -299,7 +342,10 @@
   display: grid;
   place-items: center;
   color: var(--sandLight);
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.75;
+  transition:
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.4s ease;
 }
 .lkSeta svg {
   display: block;
@@ -315,8 +361,23 @@
 .lkSeta:has(svg)::after {
   display: none;
 }
+
+.lkItem:hover,
+.lkItem:focus-visible {
+  background: rgba(247, 243, 238, 0.078);
+  border-color: rgba(143, 168, 134, 0.5);
+  box-shadow: 0 20px 46px rgba(20, 18, 17, 0.4);
+}
+.lkItem:hover .lkBrilho,
+.lkItem:focus-visible .lkBrilho {
+  opacity: 1;
+}
 .lkItem:hover .lkSeta {
-  transform: translateX(4px);
+  transform: translateX(5px);
+  opacity: 1;
+}
+.lkItem:active {
+  transform: scale(0.987);
 }
 
 /* ── rodapé ─────────────────────────────────────────────────────────── */
@@ -327,8 +388,8 @@
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 10px 22px;
-  padding-top: 4px;
+  gap: 8px 24px;
+  padding-top: 6px;
 }
 .lkContacto {
   font-family: var(--mono);
@@ -339,7 +400,7 @@
   text-decoration: none;
   padding: 8px 2px;
   position: relative;
-  animation: lkEntra 0.95s cubic-bezier(0.16, 1, 0.3, 1) 1.45s backwards;
+  animation: lkEntra 0.95s cubic-bezier(0.16, 1, 0.3, 1) 1.75s backwards;
   transition: color 0.35s ease;
 }
 .lkContacto::after {
@@ -377,17 +438,21 @@
 
 @media (min-width: 620px) {
   .lk {
-    padding-top: 72px;
+    padding-top: 68px;
   }
   .lkRotulo {
     font-size: 20px;
   }
+  .lkItem {
+    padding: 15px 22px 15px 16px;
+  }
 }
 
-/* Sem movimento: fica tudo onde vai parar, sem cortina, sem subidas, sem o
-   desenho a repetir-se ao lado do texto. */
+/* Sem movimento: fica tudo onde vai parar, sem cortina, sem letra a
+   desenhar-se, sem o traço da caneta a correr. */
 @media (prefers-reduced-motion: reduce) {
-  .lkVeu {
+  .lkVeu,
+  .lkNome .nib {
     display: none;
   }
   .lk *,
@@ -395,6 +460,9 @@
   .lk *::after {
     animation: none !important;
     transition: none !important;
+  }
+  .lkNome .ch {
+    clip-path: none;
   }
   .lkHalo,
   .lkRetrato,

@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const { hero, meta } = await getPublished();
   const nome = `${hero.firstName} ${hero.lastName}`;
   return {
-    title: `${nome} — Ligações`,
+    title: `${nome} — Links`,
     description: meta.description,
     openGraph: {
       title: nome,

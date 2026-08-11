@@ -18,9 +18,14 @@ const externo = (href: string) => /^https?:\/\//i.test(href);
 function Letras({ palavra, salto }: { palavra: string; salto: number }) {
   return (
     <>
-      {[...palavra].map((ch, i) => (
-        <span className="lkCh" key={i} style={{ '--i': i + salto } as React.CSSProperties}>
-          <i>{ch === ' ' ? ' ' : ch}</i>
+      {[...palavra].map((c, i) => (
+        <span
+          className="ch"
+          key={i}
+          aria-hidden="true"
+          style={{ '--i': i + salto } as React.CSSProperties}
+        >
+          {c}
         </span>
       ))}
     </>
@@ -184,18 +189,27 @@ export default function LinkTree({ c, hero, contact, whatsapp }: Props) {
             </div>
           </div>
           <p className="mono lkKicker">{hero.kicker}</p>
-          <h1 className="disp lkNome">
-            <span className="lkLinha">
-              <Letras palavra={hero.firstName} salto={0} />
-            </span>{' '}
-            <span className="lkLinha">
-              <Letras palavra={hero.lastName} salto={hero.firstName.length} />
+          <h1
+            className="lkNome hl"
+            style={{ '--n': hero.firstName.length } as React.CSSProperties}
+          >
+            <span className="line">
+              <span className="l1" aria-label={hero.firstName}>
+                <Letras palavra={hero.firstName} salto={0} />
+              </span>
+              <i className="nib" aria-hidden="true" />
+            </span>
+            <span className="line">
+              <span className="l2" aria-label={hero.lastName}>
+                <Letras palavra={hero.lastName} salto={hero.firstName.length} />
+              </span>
+              <i className="nib" aria-hidden="true" />
             </span>
           </h1>
           <i className="lkRisco" aria-hidden="true" />
         </header>
 
-        <nav className="lkLista" aria-label="Ligações">
+        <nav className="lkLista" aria-label="Links">
           {c.items
             .filter((l) => l.href && l.label)
             .map((l, i) => (
@@ -209,6 +223,11 @@ export default function LinkTree({ c, hero, contact, whatsapp }: Props) {
                 onClick={() => track('click', l.label)}
               >
                 <span className="lkBrilho" aria-hidden="true" />
+                {l.image ? (
+                  <span className="lkFoto" aria-hidden="true">
+                    <Pic src={l.image} alt="" />
+                  </span>
+                ) : null}
                 <span className="lkTexto">
                   <span className="lkRotulo">{l.label}</span>
                   {l.note ? <span className="lkNota">{l.note}</span> : null}
@@ -238,10 +257,10 @@ export default function LinkTree({ c, hero, contact, whatsapp }: Props) {
             {contact.instagramHandle}
           </a>
           <button className="lkContacto" type="button" onClick={partilhar}>
-            Partilhar
+            Compartilhar
           </button>
           <p className="mono lkCopia" role="status">
-            Ligação copiada
+            Link copiado
           </p>
         </footer>
       </main>

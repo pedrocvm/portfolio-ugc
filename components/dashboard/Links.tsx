@@ -14,10 +14,10 @@ import { setIn } from './paths';
 
 type State = { tone: 'idle' | 'dirty' | 'ok' | 'bad'; text: string };
 
-const CLEAN: State = { tone: 'idle', text: 'Sem alterações por guardar' };
+const CLEAN: State = { tone: 'idle', text: 'Sem alterações para salvar' };
 
 const APARELHO: Record<string, string> = {
-  mobile: 'Telemóvel',
+  mobile: 'Celular',
   tablet: 'Tablet',
   desktop: 'Computador',
   desconhecido: 'Desconhecido',
@@ -44,7 +44,7 @@ export default function Links({
   function change(path: string, value: unknown) {
     setContent((c) => setIn(c, path, value));
     setDirty(true);
-    setState({ tone: 'dirty', text: 'Alterações por guardar' });
+    setState({ tone: 'dirty', text: 'Alterações não salvas' });
   }
 
   function save() {
@@ -52,7 +52,7 @@ export default function Links({
       const res = await saveDraft({ links: content.links });
       if (res.error) return setState({ tone: 'bad', text: res.error });
       setDirty(false);
-      setState({ tone: 'ok', text: 'Guardado. Ainda não está no ar.' });
+      setState({ tone: 'ok', text: 'Salvo. Ainda não está no ar.' });
     });
   }
 
@@ -62,13 +62,13 @@ export default function Links({
       setState(
         res.error
           ? { tone: 'bad', text: res.error }
-          : { tone: 'ok', text: 'Publicado. A página já mostra estas ligações.' },
+          : { tone: 'ok', text: 'Publicado. A página já mostra estes links.' },
       );
     });
   }
 
   function discard() {
-    if (!confirm('Repor as ligações com o que está publicado?')) return;
+    if (!confirm('Restaurar os links com o que está publicado?')) return;
     start(async () => {
       const res = await discardDraft();
       if (res.error) return setState({ tone: 'bad', text: res.error });
@@ -82,26 +82,26 @@ export default function Links({
     <>
       <Busy on={pending} />
       <div className="dashBar">
-        <h1>Ligações</h1>
+        <h1>Links</h1>
         <span className="dashState" data-tone={pending ? undefined : state.tone}>
-          {pending ? <Spinner label="A guardar" /> : null}
-          {pending ? 'A processar' : state.text}
+          {pending ? <Spinner label="Salvando" /> : null}
+          {pending ? 'Processando' : state.text}
         </span>
         <a className="btn quiet" href="/contato" target="_blank" rel="noopener">
           Abrir a página
         </a>
         <button type="button" className="btn quiet" onClick={discard} disabled={pending}>
-          Repor
+          Restaurar
         </button>
         <button type="button" className="btn" onClick={save} disabled={pending || !dirty}>
-          Guardar
+          Salvar
         </button>
         <button
           type="button"
           className="btn solid"
           onClick={publish}
           disabled={pending || dirty}
-          title={dirty ? 'Guarda as alterações antes de publicar.' : undefined}
+          title={dirty ? 'Salve as alterações antes de publicar.' : undefined}
         >
           Publicar
         </button>
@@ -120,9 +120,9 @@ export default function Links({
 
       <section className="sec">
         <div className="secHead">
-          <h2>Quem lá chegou</h2>
+          <h2>Quem chegou até aqui</h2>
           <p className="said">
-            Contado sem cookies e sem guardar nada no aparelho de quem visita.
+            Contado sem cookies e sem salvar nada no aparelho de quem visita.
           </p>
         </div>
 
@@ -139,7 +139,7 @@ export default function Links({
 
           <div className="stCartoes">
             <Numero valor={r.visitas} rotulo="Visitas" />
-            <Numero valor={r.cliques} rotulo="Cliques nas ligações" />
+            <Numero valor={r.cliques} rotulo="Cliques nos links" />
             <Numero valor={r.contactos} rotulo="Contactos" nota="WhatsApp e Instagram" />
             <Numero valor={`${r.taxa}%`} rotulo="Taxa de toque" nota="Visitas que tocaram nalguma coisa" />
           </div>
@@ -147,14 +147,14 @@ export default function Links({
           {r.visitas + r.cliques === 0 ? (
             <p className="libEmpty">
               Ainda não há acessos neste período. Os números aparecem sozinhos
-              assim que alguém abrir a tua página de ligações.
+              assim que alguém abrir sua página de links.
             </p>
           ) : (
             <>
               <Grafico dados={r.porDia} />
               <div className="stTabelas">
                 <Tabela
-                  titulo="Ligações mais tocadas"
+                  titulo="Links mais tocados"
                   linhas={r.ligacoes}
                   total={r.cliques + r.contactos}
                 />
@@ -172,7 +172,7 @@ export default function Links({
             </>
           )}
           <p className="hint">
-            Partilhas da página no período: {r.partilhas}.
+            Compartilhamentos da página no período: {r.partilhas}.
           </p>
         </div>
       </section>
@@ -232,7 +232,7 @@ function Tabela({
     <div className="stTabela">
       <h3>{titulo}</h3>
       {linhas.length === 0 ? (
-        <p className="hint">Sem registos.</p>
+        <p className="hint">Sem registros.</p>
       ) : (
         <ol>
           {linhas.slice(0, 6).map((l) => (

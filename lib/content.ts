@@ -9,7 +9,7 @@ export type Format = { name: string; note: string };
 export type Step = { n: string; title: string; text: string };
 export type FaqItem = { q: string; a: string };
 export type Addon = { label: string; value: string };
-export type LinkItem = { label: string; note: string; href: string };
+export type LinkItem = { label: string; note: string; href: string; image: string };
 export type Plan = {
   name: string;
   best: boolean;
@@ -410,16 +410,19 @@ export const DEFAULT_CONTENT: Content = {
         label: 'Portfólio completo',
         note: 'Vídeos, fotos, processo e pacotes',
         href: '/',
+        image: '/img/img-01.jpg',
       },
       {
         label: 'Pacotes e preços',
         note: 'A partir de 150€, entrega em 7 dias úteis',
         href: '/#pacotes',
+        image: '/img/img-13.jpg',
       },
       {
         label: 'Instagram',
         note: 'Os vídeos mais recentes',
         href: 'https://instagram.com/carolxqueiroz',
+        image: '/img/img-06.jpg',
       },
     ],
   },
