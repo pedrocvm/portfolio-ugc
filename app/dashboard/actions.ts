@@ -69,6 +69,7 @@ export async function publishDraft(): Promise<Result> {
   if (error) return { error: `Não foi possível publicar: ${error}` };
   updateTag(CONTENT_TAG);
   revalidatePath('/');
+  revalidatePath('/contato');
   return { ok: true };
 }
 

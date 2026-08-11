@@ -350,3 +350,44 @@ export const SECTIONS: Section[] = [
     ],
   },
 ];
+
+/** A página de ligações tem template fixo: aqui só entram a fotografia, os
+ *  textos e os destinos. Fica fora de SECTIONS porque vive no seu próprio
+ *  ecrã, ao lado dos números de acesso. */
+export const LINKS_SECTION: Section = {
+  id: 'links',
+  title: 'A tua página de ligações',
+  note: 'A fotografia e os botões que abrem quando alguém toca na ligação da bio.',
+  fields: [
+    { k: 'image', path: 'links.avatar', label: 'Fotografia de perfil' },
+    {
+      k: 'text',
+      path: 'links.avatarAlt',
+      label: 'Descrição da fotografia',
+      hint: 'Lida por leitores de ecrã e por motores de busca.',
+    },
+    {
+      k: 'list',
+      path: 'links.items',
+      label: 'Ligações',
+      title: 'Ligação',
+      hint: 'Aparecem pela ordem desta lista. O WhatsApp e o Instagram já estão no fundo da página e não precisam de entrar aqui.',
+      blank: { label: '', note: '', href: '' },
+      item: [
+        { k: 'text', path: 'label', label: 'Texto do botão' },
+        {
+          k: 'text',
+          path: 'note',
+          label: 'Segunda linha',
+          hint: 'Opcional. Sai por baixo, em letra mais pequena.',
+        },
+        {
+          k: 'text',
+          path: 'href',
+          label: 'Destino',
+          hint: 'Endereço completo (https://…) ou uma parte do teu site, como /#pacotes.',
+        },
+      ],
+    },
+  ],
+};

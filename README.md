@@ -14,13 +14,27 @@ npm run dev          # http://localhost:3000
 ```bash
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
+npm run test         # node --test
 npm run build        # next build
 ```
+
+### Dependências
+
+Depois de instalar ou remover pacotes, regenerar o `package-lock.json` de raiz:
+
+```bash
+rm package-lock.json && npm install --package-lock-only
+```
+
+Um `npm install` normal no macOS escreve um lock incompleto — nunca resolve as
+variantes de outras plataformas (`@img/sharp-wasm32` e as suas dependências),
+e o `npm ci` do CI, que corre em Linux, rejeita-o.
 
 ## Estrutura
 
 ```
 app/          layout, página, folha de estilos global
+app/contato/  a página de ligações que abre a partir da bio
 components/   uma secção por ficheiro; Motion.tsx concentra o GSAP
 lib/site.ts   conteúdo e dados (pacotes, FAQ, nichos, imagens, links)
 public/img/   fotografias

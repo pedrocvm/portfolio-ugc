@@ -9,6 +9,7 @@ export type Format = { name: string; note: string };
 export type Step = { n: string; title: string; text: string };
 export type FaqItem = { q: string; a: string };
 export type Addon = { label: string; value: string };
+export type LinkItem = { label: string; note: string; href: string };
 export type Plan = {
   name: string;
   best: boolean;
@@ -116,6 +117,11 @@ export type Content = {
     video: Video;
     barLeft: string;
     barRight: string;
+  };
+  links: {
+    avatar: string;
+    avatarAlt: string;
+    items: LinkItem[];
   };
 };
 
@@ -395,6 +401,27 @@ export const DEFAULT_CONTENT: Content = {
     },
     barLeft: 'Carol Queiroz · UGC Creator',
     barRight: 'Portugal · © 2026',
+  },
+  links: {
+    avatar: '/img/img-03.jpg',
+    avatarAlt: 'Retrato de Carol Queiroz',
+    items: [
+      {
+        label: 'Portfólio completo',
+        note: 'Vídeos, fotos, processo e pacotes',
+        href: '/',
+      },
+      {
+        label: 'Pacotes e preços',
+        note: 'A partir de 150€, entrega em 7 dias úteis',
+        href: '/#pacotes',
+      },
+      {
+        label: 'Instagram',
+        note: 'Os vídeos mais recentes',
+        href: 'https://instagram.com/carolxqueiroz',
+      },
+    ],
   },
 };
 
