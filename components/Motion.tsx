@@ -196,17 +196,19 @@ function run(gsap: any, ScrollTrigger: any) {
       const prev = current;
       current = i;
       const goingDown = i > prev;
+      /* a classe sai já: deixá-la para o onComplete deste tween deixava duas
+         tomadas 'on' de cada vez que um novo tween cancelava o anterior, e a
+         que devia estar escondida continuava a apanhar o rato */
+      takeEls.forEach((el, k) => el.classList.toggle('on', k === i));
       gsap.to(takeEls[prev], {
         opacity: 0,
         scale: 0.96,
         duration: 0.22,
         ease: 'power1.out',
         onComplete() {
-          takeEls[prev].classList.remove('on');
           gsap.set(takeEls[prev], { clearProps: 'all' });
         },
       });
-      takeEls[i].classList.add('on');
       gsap.fromTo(
         takeEls[i],
         { opacity: 0, scale: goingDown ? 1.04 : 0.94 },
@@ -241,7 +243,9 @@ function run(gsap: any, ScrollTrigger: any) {
     ScrollTrigger.create({
       trigger: '#sessao',
       start: 'top top',
-      end: '+=240%',
+      /* uma passagem de roda por tomada: 240% da janela dava três a quatro
+         passagens para trocar de vídeo */
+      end: `+=${takeEls.length * 150}`,
       pin: '#sessao .pinwrap',
       scrub: 0.5,
       onUpdate(self: { progress: number }) {

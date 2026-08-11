@@ -598,6 +598,10 @@
       color: var(--paper);
       opacity: 0.8;
     }
+    .reelVazio {
+      padding: 40px 0 8px;
+      color: var(--umber);
+    }
     #shelf .foot {
       display: flex;
       justify-content: space-between;
@@ -1779,8 +1783,10 @@
       padding: 6px 14px 7px;
       border-radius: 999px;
       color: var(--jade);
-      background: rgba(143, 168, 134, 0.12);
-      border: 1px solid rgba(143, 168, 134, 0.32);
+      /* opaca: a cavalo na moldura, um fundo translúcido deixava passar a
+         cena escura e a linha do cartão por baixo do texto */
+      background: #333b30;
+      border: 1px solid rgba(143, 168, 134, 0.45);
     }
     .plan .badge::before {
       content: '';

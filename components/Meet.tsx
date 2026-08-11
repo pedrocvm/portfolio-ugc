@@ -6,8 +6,6 @@ import { useReel } from './useReel';
 import { isVideo } from '@/lib/media';
 import Pic from './Pic';
 
-const PER_NICHE = 8;
-
 export default function Meet({
   c,
   pool,
@@ -57,17 +55,10 @@ export default function Meet({
     setNiche(null);
   }
 
-  /* os registos do nicho vêm da biblioteca; enquanto ela não os escolher, a
-     gaveta continua a mostrar uma seleção automática das fotos do site */
+  /* só os registos escolhidos para este nicho. A seleção automática que estava
+     aqui enchia as gavetas nichadas com media sem nicho nenhum */
   const chosen = c.niches.find((n) => n.name === niche);
-  const shelf = chosen?.reel.length
-    ? chosen.reel.map((r) => r.src).filter(Boolean)
-    : pool.length
-      ? Array.from({ length: PER_NICHE }, (_, i) => {
-          const off = c.niches.findIndex((n) => n.name === niche);
-          return pool[(i + (off < 0 ? 0 : off * 3)) % pool.length];
-        })
-      : [];
+  const shelf = chosen?.reel.map((r) => r.src).filter(Boolean) ?? [];
 
   return (
     <>
@@ -142,7 +133,7 @@ export default function Meet({
                 className="rnd prev"
                 type="button"
                 aria-label="Anterior"
-                disabled={atStart}
+                disabled={atStart || !shelf.length}
                 onClick={() => page(-1)}
               >
                 ←
@@ -151,7 +142,7 @@ export default function Meet({
                 className="rnd next"
                 type="button"
                 aria-label="Seguinte"
-                disabled={atEnd}
+                disabled={atEnd || !shelf.length}
                 onClick={() => page(1)}
               >
                 →
@@ -166,20 +157,24 @@ export default function Meet({
               </button>
             </div>
           </div>
-          <ul className="reel" ref={reelRef}>
-            {shelf.map((src, i) => (
-              <li key={i}>
-                {isVideo(src) ? (
-                  <video src={src} muted loop playsInline preload="metadata" />
-                ) : (
-                  <Pic src={src} alt="" />
-                )}
-                <span className="idx mono">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {shelf.length ? (
+            <ul className="reel" ref={reelRef}>
+              {shelf.map((src, i) => (
+                <li key={i}>
+                  {isVideo(src) ? (
+                    <video src={src} muted loop playsInline preload="metadata" />
+                  ) : (
+                    <Pic src={src} alt="" />
+                  )}
+                  <span className="idx mono">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="reelVazio">Ainda sem registos neste nicho.</p>
+          )}
           <p className="foot mono">
             <span>{c.shelfFoot}</span>
             <span>{String(shelf.length).padStart(2, '0')} registos</span>
