@@ -568,7 +568,8 @@
       overflow: hidden;
       background: var(--sandLight);
     }
-    .reel img {
+    .reel img,
+    .reel video {
       position: absolute;
       inset: 0;
       width: 100%;
@@ -580,13 +581,28 @@
     .reel li:hover img {
       transform: scale(1.05);
     }
+    /* o vídeo não cresce ao passar o rato: a barra de comandos cresceria com
+       ele e saltava para fora da moldura */
+    .reel video {
+      transition: none;
+    }
     .reel li::after {
       content: '';
       position: absolute;
       inset: 0;
+      pointer-events: none;
       background: linear-gradient(
         to top,
         rgba(18, 16, 15, 0.66),
+        rgba(18, 16, 15, 0) 46%
+      );
+    }
+    /* onde há comandos de vídeo o véu recua para o cimo: a barra do browser
+       assenta no fundo e tem de continuar a ler-se */
+    .reel li:has(video)::after {
+      background: linear-gradient(
+        to top,
+        rgba(18, 16, 15, 0) 34%,
         rgba(18, 16, 15, 0) 46%
       );
     }

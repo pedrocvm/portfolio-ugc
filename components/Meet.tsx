@@ -53,6 +53,46 @@ export default function Meet({
     };
   }, [niche, page, update]);
 
+  /* os vídeos da gaveta tocam sozinhos, mas só o que está à vista: cinco a
+     tocar ao mesmo tempo gastavam rede e bateria por nada. Arrancam sem som
+     porque é a única forma de o browser deixar tocar sozinho, e quem quiser
+     ouvir liga pelos comandos do próprio vídeo. */
+  useEffect(() => {
+    const lista = reelRef.current;
+    if (!niche || !lista) return;
+    const videos = Array.from(lista.querySelectorAll('video'));
+    if (!videos.length) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const v = e.target as HTMLVideoElement;
+          if (e.isIntersecting) void v.play().catch(() => {});
+          else v.pause();
+        }
+      },
+      { root: lista, threshold: 0.55 },
+    );
+    videos.forEach((v) => io.observe(v));
+
+    /* ligar o som num cala os outros: dois vídeos a falar ao mesmo tempo não
+       se percebem, e o visitante não tem como adivinhar qual deles baixar */
+    function soUm(e: Event) {
+      const alvo = e.target as HTMLVideoElement;
+      if (alvo.muted) return;
+      for (const v of videos) if (v !== alvo) v.muted = true;
+    }
+    videos.forEach((v) => v.addEventListener('volumechange', soUm));
+
+    return () => {
+      io.disconnect();
+      for (const v of videos) {
+        v.removeEventListener('volumechange', soUm);
+        v.pause();
+      }
+    };
+  }, [niche, reelRef]);
+
   function close() {
     setNiche(null);
   }
@@ -165,7 +205,14 @@ export default function Meet({
               {shelf.map((src, i) => (
                 <li key={i}>
                   {isVideo(src) ? (
-                    <video src={src} muted loop playsInline preload="metadata" />
+                    <video
+                      src={src}
+                      controls
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    />
                   ) : (
                     <Pic src={src} alt="" />
                   )}
