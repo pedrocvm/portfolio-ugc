@@ -51,7 +51,7 @@ const fontVars = [archivo, sans, serif, mono, script]
 export async function generateMetadata(): Promise<Metadata> {
   const { meta } = await getPublished();
   return {
-    metadataBase: new URL('https://portfolio-ugc.vercel.app'),
+    metadataBase: new URL('https://carolqueiroz.pt'),
     title: meta.title,
     description: meta.description,
     openGraph: {
