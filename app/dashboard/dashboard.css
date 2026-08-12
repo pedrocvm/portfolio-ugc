@@ -1622,12 +1622,25 @@
   .busy {
     display: none !important;
   }
+  /* o papel e a fita passam a ser o fundo da própria folha: assim cobrem a
+     página toda, repetem-se em cada página e não dependem da altura do
+     documento — que era o que empurrava tudo para uma segunda folha */
   html,
   body {
     margin: 0;
     padding: 0;
-    background: var(--papel);
+    /* valores literais de propósito: --papel e --umbra vivem em .dash, que é
+       descendente daqui, por isso var() não resolveria e a folha saía branca */
+    background-color: #f8f5f0;
+    background-image: linear-gradient(
+      to right,
+      #4d3d34 0,
+      #4d3d34 7mm,
+      transparent 7mm
+    );
   }
+  /* transparentes: quem pinta a folha é a página, e um fundo opaco aqui
+     tapava a fita */
   .dash,
   .shell,
   .sheet,
@@ -1639,17 +1652,21 @@
     min-height: 0;
     max-width: none;
     overflow: visible;
-    background: var(--papel);
+    background: none;
   }
-  /* largura da área imprimível, não 210mm fixos: se o browser insistir em
-     margens próprias, o papel acompanha-as em vez de deixar tira branca */
+  /* sem altura imposta: 100vh é a altura da janela, não da folha, e num ecrã
+     alto atirava o documento para duas páginas */
   .doc {
     width: 100%;
     max-width: none;
-    min-height: 100vh;
+    min-height: 0;
     margin: 0 !important;
     transform: none !important;
+    background: none;
     box-shadow: none;
+  }
+  .docFita {
+    display: none;
   }
   .docSec,
   .docSign,
