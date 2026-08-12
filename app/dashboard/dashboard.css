@@ -1349,6 +1349,9 @@
   line-height: 1.5;
   color: #8a3d30;
 }
+.docTabs {
+  margin: 0 0 26px;
+}
 .docSplit {
   display: grid;
   gap: 40px;
@@ -1376,87 +1379,206 @@
 .docPaper {
   min-width: 0;
 }
+
+/* O documento é a folha A4 tal como sai da impressora: mesma proporção, mesmo
+   papel, mesmas margens. O que ela vê no ecrã é o que assina. */
 .doc {
-  max-width: 700px;
-  padding: 56px 58px 62px;
-  background: #fffdfa;
-  box-shadow: 0 2px 3px rgba(28, 26, 24, 0.05),
+  position: relative;
+  width: 210mm;
+  max-width: 100%;
+  min-height: 297mm;
+  padding: 15mm 18mm 13mm 24mm;
+  overflow: hidden;
+  background: var(--papel);
+  color: var(--tinta);
+  box-shadow:
+    0 2px 3px rgba(28, 26, 24, 0.05),
     0 30px 60px -28px rgba(28, 26, 24, 0.36);
-  font-size: 16px;
-  line-height: 1.68;
+  font-size: 9.1pt;
+  line-height: 1.4;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
-.docHead {
-  padding-bottom: 24px;
-  margin-bottom: 30px;
-  border-bottom: 1px solid var(--ink);
+/* a fita sangra até ao corte: é o que faz a folha não parecer um Word */
+.docFita {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 7mm;
+  background: linear-gradient(
+    180deg,
+    var(--umbra) 0%,
+    var(--jade) 62%,
+    var(--pedra) 100%
+  );
 }
-.doc h2 {
-  font-size: 30px;
-  margin-bottom: 10px;
+
+.docTopo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 6mm;
 }
-.docMeta {
-  font-size: 14.5px;
-  color: var(--ink2);
+.docMarca {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
+/* a mesma letra manuscrita que assina a abertura do site */
+.docNome {
+  font-family: var(--script);
+  font-size: 23pt;
+  line-height: 0.78;
+  color: var(--umbra);
+}
+.docPapel {
+  font-size: 6.6pt;
+  letter-spacing: 0.2em;
+  color: var(--pedra);
+}
+.docRef {
+  font-size: 6.8pt;
+  letter-spacing: 0.14em;
+  color: var(--tinta3);
+  text-align: right;
+  padding-bottom: 2px;
+}
+
+.docTitulo {
+  font-size: 16.5pt;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  max-width: 22ch;
+  padding-bottom: 4mm;
+  margin-bottom: 5mm;
+  border-bottom: 1px solid var(--areia2);
+}
+
 .docSec {
-  margin-bottom: 26px;
+  margin-bottom: 2.8mm;
+  break-inside: avoid;
 }
+/* o filete curto antes do título é a marca de secção do site dela */
 .doc h3 {
-  font-size: 13.5px;
-  font-weight: 600;
-  font-variation-settings: var(--narrow);
-  color: var(--ink2);
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 6.8pt;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  margin-bottom: 1.8mm;
+}
+.doc h3::before {
+  content: '';
+  width: 14px;
+  height: 1px;
+  flex: none;
+  background: var(--jade);
 }
 .doc p {
-  margin: 0 0 10px;
-  max-width: 68ch;
+  margin: 0 0 1.8mm;
+  max-width: 74ch;
   white-space: pre-line;
+  text-wrap: pretty;
 }
 .doc ul {
-  margin: 6px 0 12px;
-  padding-left: 18px;
+  margin: 1.2mm 0 2mm;
+  padding-left: 14px;
+  list-style: none;
 }
 .doc li {
-  margin-bottom: 5px;
+  position: relative;
+  margin-bottom: 1mm;
+}
+.doc li::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 0.62em;
+  width: 5px;
+  height: 1px;
+  background: var(--pedra);
 }
 .docPair {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
+  gap: 2px 14px;
+  padding: 0.7mm 0;
+  border-bottom: 1px solid rgba(221, 210, 195, 0.55);
 }
 .docLabel {
   flex: none;
-  min-width: 124px;
-  font-size: 14.5px;
-  color: var(--ink2);
-  padding-top: 2px;
+  min-width: 108px;
+  font-family: var(--mono);
+  font-size: 6.6pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  padding-top: 3px;
 }
 .docPair > span:last-child {
   flex: 1;
   min-width: 180px;
 }
+
 .docSign {
-  margin-top: 46px;
-  padding-top: 26px;
-  border-top: 1px solid var(--rule);
+  margin-top: 6mm;
+  padding-top: 4mm;
+  border-top: 1px solid var(--areia2);
+  break-inside: avoid;
 }
 .docPlace {
-  margin-bottom: 40px;
+  margin-bottom: 9mm;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--tinta2);
 }
 .docSignRow {
   display: grid;
-  gap: 34px;
+  gap: 30px;
   grid-template-columns: 1fr 1fr;
 }
 .docSignRow .rule {
   display: block;
-  border-top: 1px solid var(--ink);
-  margin-bottom: 8px;
+  border-top: 1px solid var(--tinta);
+  margin-bottom: 6px;
 }
 .docWho {
-  font-size: 14.5px;
-  color: var(--ink2);
+  font-size: 8pt;
+  color: var(--tinta2);
+}
+
+.docPe {
+  position: absolute;
+  left: 24mm;
+  right: 18mm;
+  bottom: 7mm;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 3mm;
+  border-top: 1px solid rgba(221, 210, 195, 0.7);
+  font-size: 6.2pt;
+  letter-spacing: 0.16em;
+  color: var(--pedra);
+}
+
+/* Em ecrã estreito a folha encolhe por inteiro, sem refluir: é a maqueta do
+   que sai impresso, não um documento responsivo. */
+@media (max-width: 900px) {
+  .docPaper {
+    overflow: hidden;
+  }
+  .doc {
+    transform: scale(0.46);
+    transform-origin: top left;
+    margin-bottom: -160mm;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1468,29 +1590,57 @@
   }
 }
 
+@page {
+  size: A4;
+  margin: 0;
+}
+
+/* A folha sai sem margem nenhuma: o papel dela vai até ao corte e a fita
+   lateral sangra. As margens do texto são as do próprio documento. */
 @media print {
   .noPrint,
   .masthead,
-  .dashSticky {
+  .dashSticky,
+  .side,
+  .sideOut,
+  .rail {
     display: none !important;
   }
-  .dash,
-  .sheet {
-    display: block;
+  html,
+  body {
+    margin: 0;
     padding: 0;
-    background: #fff;
+    background: var(--papel);
   }
-  .docSplit {
+  .dash,
+  .shell,
+  .sheet,
+  .docSplit,
+  .docPaper {
     display: block;
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    max-width: none;
+    overflow: visible;
+    background: var(--papel);
   }
   .doc {
+    width: 210mm;
     max-width: none;
+    min-height: 297mm;
+    margin: 0;
+    transform: none;
     box-shadow: none;
-    padding: 0;
-    font-size: 11.5pt;
   }
-  .docSec {
+  .docSec,
+  .docSign,
+  .docPair {
     break-inside: avoid;
+  }
+  .docTitulo,
+  .doc h3 {
+    break-after: avoid;
   }
 }
 

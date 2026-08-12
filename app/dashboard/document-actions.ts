@@ -7,8 +7,7 @@ import { merge } from '@/lib/merge';
 import { supabaseServer } from '@/lib/supabase/server';
 import type { Result } from './actions';
 
-const path = (kind: DocKind) =>
-  kind === 'proposal' ? '/dashboard/proposals' : '/dashboard/contracts';
+const PATH = '/dashboard/documents';
 
 export async function listDocs(kind: DocKind): Promise<DocRow[]> {
   await requireEditor();
@@ -31,7 +30,7 @@ export async function createDoc(kind: DocKind): Promise<Result & { id?: string }
     .select('id')
     .single();
   if (error) return { error: 'Não foi possível criar o documento.' };
-  revalidatePath(path(kind));
+  revalidatePath(PATH);
   return { ok: true, id: data.id };
 }
 
@@ -52,15 +51,15 @@ export async function saveDoc(
     })
     .eq('id', id);
   if (error) return { error: 'Não foi possível guardar.' };
-  revalidatePath(path(kind));
+  revalidatePath(PATH);
   return { ok: true };
 }
 
-export async function removeDoc(id: string, kind: DocKind): Promise<Result> {
+export async function removeDoc(id: string): Promise<Result> {
   await requireEditor();
   const supabase = await supabaseServer();
   const { error } = await supabase.from('document').delete().eq('id', id);
   if (error) return { error: 'Não foi possível apagar.' };
-  revalidatePath(path(kind));
+  revalidatePath(PATH);
   return { ok: true };
 }

@@ -9,27 +9,44 @@ import {
   removeDoc,
   saveDoc,
 } from '@/app/dashboard/document-actions';
-import { DOCS, type Author, type DocKind, type DocRow } from '@/lib/documents';
+import {
+  DOCS,
+  DOC_ORDER,
+  type Author,
+  type DocKind,
+  type DocRow,
+} from '@/lib/documents';
 import DocumentView from './DocumentView';
 import { Fields } from './Fields';
+import Segmented from './Segmented';
 import { setIn } from './paths';
 
 export default function Documents({
-  kind,
-  rows,
+  docs,
   author,
 }: {
-  kind: DocKind;
-  rows: DocRow[];
+  docs: Record<DocKind, DocRow[]>;
   author: Author;
 }) {
+  const [kind, setKind] = useState<DocKind>('proposal');
   const spec = DOCS[kind];
+  const rows = docs[kind];
   const [openId, setOpenId] = useState<string | null>(null);
   const [data, setData] = useState<Record<string, unknown>>(spec.blank);
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const router = useRouter();
+
+  /* trocar de separador fecha o que estiver aberto: o formulário é de outro
+     tipo e os campos não têm nada a ver uns com os outros */
+  function trocar(proximo: DocKind) {
+    if (dirty && !confirm('Tens alterações por guardar. Sair mesmo assim?')) return;
+    setKind(proximo);
+    setOpenId(null);
+    setDirty(false);
+    setMsg(null);
+  }
 
   function open(row: DocRow) {
     setOpenId(row.id);
@@ -68,7 +85,7 @@ export default function Documents({
   function drop(row: DocRow) {
     if (!confirm(`Apagar "${row.title}"?`)) return;
     start(async () => {
-      await removeDoc(row.id, kind);
+      await removeDoc(row.id);
       if (openId === row.id) setOpenId(null);
       router.refresh();
     });
@@ -78,7 +95,7 @@ export default function Documents({
     <>
       <Busy on={pending} />
       <div className="dashBar noPrint">
-        <h1>{spec.label}</h1>
+        <h1>Documentos</h1>
         <span className="dashState" data-tone={dirty ? 'dirty' : undefined}>
           {pending ? <Spinner label="A guardar" /> : null}
           {pending
@@ -99,7 +116,11 @@ export default function Documents({
               className="btn"
               onClick={() => window.print()}
               disabled={dirty}
-              title={dirty ? 'Guarda antes de imprimir.' : undefined}
+              title={
+                dirty
+                  ? 'Guarda antes de imprimir.'
+                  : 'Na janela que abre, desliga «Cabeçalhos e rodapés» para a folha sair sem margens.'
+              }
             >
               Imprimir / PDF
             </button>
@@ -124,7 +145,16 @@ export default function Documents({
         )}
       </div>
 
-      {kind === 'contract' ? (
+      <div className="docTabs noPrint">
+        <Segmented
+          label="Tipo de documento"
+          value={kind}
+          onChange={trocar}
+          options={DOC_ORDER.map((k) => ({ id: k, label: DOCS[k].label }))}
+        />
+      </div>
+
+      {kind !== 'proposal' ? (
         <p className="aviso noPrint">
           Este modelo é um ponto de partida, não é parecer jurídico. Antes de
           assinar com uma marca, mostra-o a um advogado.
@@ -183,7 +213,7 @@ export default function Documents({
             />
           </div>
           <div className="docPaper">
-            <DocumentView doc={spec.render(data, author)} />
+            <DocumentView doc={spec.render(data, author)} author={author} />
           </div>
         </div>
       )}

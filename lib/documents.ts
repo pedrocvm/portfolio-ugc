@@ -1,6 +1,6 @@
 import type { Field } from './schema';
 
-export type DocKind = 'proposal' | 'contract';
+export type DocKind = 'proposal' | 'contract' | 'usage';
 
 export type DocRow = {
   id: string;
@@ -322,6 +322,184 @@ function contract(d: Record<string, unknown>, author: Author): Rendered {
   };
 }
 
+/* ────────────────────  Autorização de utilização  ──────────────────── */
+
+export const USAGE_BLANK = {
+  brand: '',
+  brandRep: '',
+  brandEmail: '',
+  creatorName: '',
+  date: '',
+  place: '',
+  videoRef: '',
+  videoLink: '',
+  deliveredOn: '',
+  fee: '',
+  days: '30',
+  channels: 'Meta (Instagram e Facebook)\nTikTok',
+  noticeDays: '3',
+  reportDays: '10',
+  notes: '',
+};
+
+export const USAGE_FIELDS: Field[] = [
+  { k: 'text', path: 'brand', label: 'Marca' },
+  { k: 'text', path: 'brandRep', label: 'Quem assina pela marca' },
+  { k: 'text', path: 'brandEmail', label: 'E-mail da marca' },
+  { k: 'text', path: 'creatorName', label: 'O teu nome' },
+  { k: 'text', path: 'date', label: 'Data', hint: 'No formato AAAA-MM-DD.' },
+  { k: 'text', path: 'place', label: 'Local' },
+  {
+    k: 'area',
+    path: 'videoRef',
+    label: 'Que vídeo é',
+    hint: 'Identifica-o sem margem para dúvida: nome do ficheiro, produto e duração.',
+  },
+  { k: 'text', path: 'videoLink', label: 'Ligação do ficheiro entregue' },
+  { k: 'text', path: 'deliveredOn', label: 'Data de entrega', hint: 'No formato AAAA-MM-DD.' },
+  {
+    k: 'text',
+    path: 'fee',
+    label: 'Valor da licença em euros',
+    hint: 'Opcional. Deixa vazio se já estiver num contrato à parte.',
+  },
+  { k: 'text', path: 'days', label: 'Dias de utilização' },
+  {
+    k: 'area',
+    path: 'channels',
+    label: 'Canais autorizados',
+    hint: 'Um por linha. Só estes ficam autorizados.',
+  },
+  {
+    k: 'text',
+    path: 'noticeDays',
+    label: 'Aviso do primeiro anúncio, em dias úteis',
+  },
+  { k: 'text', path: 'reportDays', label: 'Prazo do resumo, em dias' },
+  { k: 'area', path: 'notes', label: 'Observações' },
+];
+
+function usage(d: Record<string, unknown>, author: Author): Rendered {
+  const dias = ou(d.days, '30');
+  const criadora = ou(d.creatorName, author.name);
+  const marca = ou(d.brand, '—');
+  const canais = lines(d.channels);
+
+  return {
+    heading: 'Autorização de utilização de conteúdo',
+    subheading: [marca, s(d.date) ? dataPt(d.date) : ''].filter(Boolean).join(' · '),
+    sections: [
+      {
+        title: 'Partes e conteúdo',
+        blocks: [
+          {
+            t: 'pair',
+            label: 'Criadora',
+            value: [criadora, author.contact].filter(Boolean).join(' · '),
+          },
+          {
+            t: 'pair',
+            label: 'Marca',
+            value: [marca, s(d.brandRep), s(d.brandEmail)].filter(Boolean).join(' · '),
+          },
+          { t: 'pair', label: 'Vídeo', value: ou(d.videoRef, '—') },
+          ...(s(d.videoLink)
+            ? [{ t: 'pair' as const, label: 'Ficheiro', value: s(d.videoLink) }]
+            : []),
+          ...(s(d.deliveredOn)
+            ? [{ t: 'pair' as const, label: 'Entregue a', value: dataPt(d.deliveredOn) }]
+            : []),
+          ...(s(d.fee)
+            ? [{ t: 'pair' as const, label: 'Licença', value: `${s(d.fee)}€` }]
+            : []),
+        ],
+      },
+      {
+        title: 'Propriedade',
+        blocks: [
+          {
+            t: 'p',
+            text: `O vídeo continua a ser propriedade de ${criadora}, que mantém os direitos de autor. Este documento concede a ${marca} uma licença de utilização — não é uma compra nem uma cedência de direitos.`,
+          },
+        ],
+      },
+      {
+        title: 'O que fica autorizado',
+        blocks: [
+          {
+            t: 'p',
+            text: `Utilização paga e orgânica do vídeo durante ${dias} dias, apenas nos canais indicados abaixo.`,
+          },
+          ...(canais.length ? [{ t: 'list' as const, items: canais }] : []),
+          {
+            t: 'p',
+            text: `Os ${dias} dias começam a contar no primeiro dia em que o vídeo corre como anúncio pago, e não na data de entrega.`,
+          },
+        ],
+      },
+      {
+        title: 'Aviso de arranque',
+        blocks: [
+          {
+            t: 'p',
+            text: `A marca informa a criadora, por escrito, da data do primeiro anúncio pago, até ${ou(d.noticeDays, '3')} dias úteis depois de arrancar. Sem esse aviso, a contagem começa na data de entrega.`,
+          },
+        ],
+      },
+      {
+        title: 'Edições',
+        blocks: [
+          {
+            t: 'p',
+            text: 'São permitidas as adaptações técnicas que a distribuição exigir: mudar de formato, cortar para a duração de cada canal, legendar e ajustar o som. Alterações que mudem substancialmente o criativo, o sentido da mensagem ou a imagem da criadora carecem de aprovação escrita.',
+          },
+        ],
+      },
+      {
+        title: 'Depois do período',
+        blocks: [
+          {
+            t: 'p',
+            text: `Terminados os ${dias} dias, a utilização paga cessa. Qualquer nova utilização paga depende de autorização escrita da criadora e é orçamentada à parte.`,
+          },
+        ],
+      },
+      {
+        title: 'Resumo de desempenho',
+        blocks: [
+          {
+            t: 'p',
+            text: `Até ${ou(d.reportDays, '10')} dias após o fim do período, a marca envia um resumo dos resultados: investimento, impressões, visualizações e taxa de cliques, ou os equivalentes de cada canal.`,
+          },
+        ],
+      },
+      {
+        title: 'O que esta autorização não inclui',
+        blocks: [
+          {
+            t: 'list',
+            items: [
+              'Ficheiros em bruto, tomadas não usadas e projetos de edição.',
+              'Qualquer outro vídeo da criadora, presente ou futuro.',
+              'Utilização por afiliados, revendedores ou parceiros, que carece de autorização própria.',
+              'Cedência dos direitos de autor ou de utilização futura.',
+              'Canais, mercados ou suportes não nomeados acima.',
+            ],
+          },
+        ],
+      },
+      ...(s(d.notes)
+        ? [{ title: 'Observações', blocks: [{ t: 'p' as const, text: s(d.notes) }] }]
+        : []),
+    ],
+    signature: [
+      `${ou(d.place, '—')}, ${s(d.date) ? dataPt(d.date) : '___ / ___ / ______'}`,
+      criadora,
+      marca,
+    ],
+  };
+}
+
 /* ────────────────────────────────────────────────────────────────────── */
 
 export type Author = { name: string; role: string; contact: string };
@@ -359,4 +537,16 @@ export const DOCS: Record<
     titleOf: (d) => s(d.clientName) || 'Contrato sem cliente',
     render: contract,
   },
+  usage: {
+    label: 'Uso de imagem',
+    one: 'Autorização',
+    novo: 'Autorização nova',
+    vazio: 'Ainda não há autorizações. Cria a primeira: é o documento que diz o que a marca pode fazer com o teu vídeo, e por quanto tempo.',
+    blank: USAGE_BLANK,
+    fields: USAGE_FIELDS,
+    titleOf: (d) => s(d.brand) || 'Autorização sem marca',
+    render: usage,
+  },
 };
+
+export const DOC_ORDER: DocKind[] = ['proposal', 'contract', 'usage'];

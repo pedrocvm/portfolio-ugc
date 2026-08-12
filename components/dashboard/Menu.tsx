@@ -17,8 +17,7 @@ export const GROUPS = [
     items: [
       { href: '/dashboard/brands', label: 'Marcas' },
       { href: '/dashboard/funnel', label: 'Funil' },
-      { href: '/dashboard/proposals', label: 'Propostas' },
-      { href: '/dashboard/contracts', label: 'Contratos' },
+      { href: '/dashboard/documents', label: 'Documentos' },
       { href: '/dashboard/clients', label: 'Clientes', soon: true },
     ],
   },

@@ -1,12 +1,28 @@
-import type { Rendered } from '@/lib/documents';
+import type { Author, Rendered } from '@/lib/documents';
 
-export default function DocumentView({ doc }: { doc: Rendered }) {
+export default function DocumentView({
+  doc,
+  author,
+}: {
+  doc: Rendered;
+  author: Author;
+}) {
   return (
     <article className="doc">
-      <header className="docHead">
-        <h2>{doc.heading}</h2>
-        <p className="docMeta">{doc.subheading}</p>
+      <i className="docFita" aria-hidden="true" />
+
+      <header className="docTopo">
+        <span className="docMarca">
+          <span className="docNome">{author.name}</span>
+          <span className="mono docPapel">{author.role}</span>
+        </span>
+        {doc.subheading ? (
+          <span className="mono docRef">{doc.subheading}</span>
+        ) : null}
       </header>
+
+      <h2 className="disp docTitulo">{doc.heading}</h2>
+
       {doc.sections.map((sec, i) => (
         <section className="docSec" key={i}>
           <h3>{sec.title}</h3>
@@ -28,6 +44,7 @@ export default function DocumentView({ doc }: { doc: Rendered }) {
           )}
         </section>
       ))}
+
       {doc.signature.length ? (
         <footer className="docSign">
           <p className="docPlace">{doc.signature[0]}</p>
@@ -41,6 +58,11 @@ export default function DocumentView({ doc }: { doc: Rendered }) {
           </div>
         </footer>
       ) : null}
+
+      <p className="mono docPe" aria-hidden="true">
+        <span>{author.name}</span>
+        <span>{author.contact}</span>
+      </p>
     </article>
   );
 }
