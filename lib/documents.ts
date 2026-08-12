@@ -166,7 +166,8 @@ function proposal(d: Record<string, unknown>, author: Author): Rendered {
         ],
       },
     ],
-    signature: [],
+    /* a proposta não se contra-assina — leva só a assinatura de quem a fez */
+    signature: [localData('', d.date), author.name],
   };
 }
 

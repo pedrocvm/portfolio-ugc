@@ -1,4 +1,5 @@
 import type { Author, Rendered } from '@/lib/documents';
+import Signature from './Signature';
 
 export default function DocumentView({
   doc,
@@ -51,6 +52,7 @@ export default function DocumentView({
           <div className="docSignRow">
             {doc.signature.slice(1).map((quem, i) => (
               <div key={i}>
+                {i === 0 ? <Signature /> : null}
                 <span className="rule" />
                 {quem ? <span className="docWho">{quem}</span> : null}
               </div>
