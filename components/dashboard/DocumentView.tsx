@@ -52,7 +52,7 @@ export default function DocumentView({
             {doc.signature.slice(1).map((quem, i) => (
               <div key={i}>
                 <span className="rule" />
-                <span className="docWho">{quem}</span>
+                {quem ? <span className="docWho">{quem}</span> : null}
               </div>
             ))}
           </div>

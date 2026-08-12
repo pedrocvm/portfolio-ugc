@@ -41,6 +41,12 @@ const dataPt = (v: unknown) => {
 
 const ou = (v: unknown, fallback: string) => s(v) || fallback;
 
+/** Sem local, fica só a data — «—, 12/08/2026» não é como se assina nada. */
+const localData = (place: unknown, date: unknown) => {
+  const quando = s(date) ? dataPt(date) : '___ / ___ / ______';
+  return s(place) ? `${s(place)}, ${quando}` : quando;
+};
+
 /* ─────────────────────────────  Proposta  ───────────────────────────── */
 
 export const PROPOSAL_BLANK = {
@@ -315,9 +321,9 @@ function contract(d: Record<string, unknown>, author: Author): Rendered {
       },
     ],
     signature: [
-      `${ou(d.place, '—')}, ${s(d.date) ? dataPt(d.date) : '___ / ___ / ______'}`,
+      localData(d.place, d.date),
       ou(d.creatorName, author.name),
-      ou(d.clientName, '—'),
+      s(d.clientName),
     ],
   };
 }
@@ -492,11 +498,7 @@ function usage(d: Record<string, unknown>, author: Author): Rendered {
         ? [{ title: 'Observações', blocks: [{ t: 'p' as const, text: s(d.notes) }] }]
         : []),
     ],
-    signature: [
-      `${ou(d.place, '—')}, ${s(d.date) ? dataPt(d.date) : '___ / ___ / ______'}`,
-      criadora,
-      marca,
-    ],
+    signature: [localData(d.place, d.date), criadora, s(d.brand)],
   };
 }
 

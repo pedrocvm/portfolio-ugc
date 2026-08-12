@@ -1419,7 +1419,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
-  padding-bottom: 6mm;
+  padding-bottom: 5mm;
 }
 .docMarca {
   display: flex;
@@ -1451,13 +1451,13 @@
   line-height: 1.08;
   letter-spacing: -0.02em;
   max-width: 22ch;
-  padding-bottom: 4mm;
-  margin-bottom: 5mm;
+  padding-bottom: 3.5mm;
+  margin-bottom: 4mm;
   border-bottom: 1px solid var(--areia2);
 }
 
 .docSec {
-  margin-bottom: 2.8mm;
+  margin-bottom: 2.5mm;
   break-inside: avoid;
 }
 /* o filete curto antes do título é a marca de secção do site dela */
@@ -1527,13 +1527,13 @@
 }
 
 .docSign {
-  margin-top: 6mm;
-  padding-top: 4mm;
+  margin-top: 4mm;
+  padding-top: 3.5mm;
   border-top: 1px solid var(--areia2);
   break-inside: avoid;
 }
-.docPlace {
-  margin-bottom: 9mm;
+.doc .docPlace {
+  margin-bottom: 16mm;
   font-family: var(--serif);
   font-style: italic;
   color: var(--tinta2);
