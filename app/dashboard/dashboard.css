@@ -1395,7 +1395,7 @@
     0 2px 3px rgba(28, 26, 24, 0.05),
     0 30px 60px -28px rgba(28, 26, 24, 0.36);
   font-size: 9.1pt;
-  line-height: 1.4;
+  line-height: 1.46;
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
 }
@@ -1414,7 +1414,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
-  padding-bottom: 5mm;
+  padding-bottom: 6mm;
 }
 .docMarca {
   display: flex;
@@ -1446,13 +1446,13 @@
   line-height: 1.08;
   letter-spacing: -0.02em;
   max-width: 22ch;
-  padding-bottom: 3.5mm;
-  margin-bottom: 4mm;
+  padding-bottom: 4mm;
+  margin-bottom: 5.5mm;
   border-bottom: 1px solid var(--areia2);
 }
 
 .docSec {
-  margin-bottom: 2.5mm;
+  margin-bottom: 3.5mm;
   break-inside: avoid;
 }
 /* o filete curto antes do título é a marca de secção do site dela */
@@ -1466,7 +1466,7 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--tinta3);
-  margin-bottom: 1.8mm;
+  margin-bottom: 2.2mm;
 }
 .doc h3::before {
   content: '';
@@ -1476,19 +1476,19 @@
   background: var(--jade);
 }
 .doc p {
-  margin: 0 0 1.8mm;
+  margin: 0 0 2.1mm;
   max-width: 74ch;
   white-space: pre-line;
   text-wrap: pretty;
 }
 .doc ul {
-  margin: 1.2mm 0 2mm;
+  margin: 1.6mm 0 2.4mm;
   padding-left: 14px;
   list-style: none;
 }
 .doc li {
   position: relative;
-  margin-bottom: 1mm;
+  margin-bottom: 1.4mm;
 }
 .doc li::before {
   content: '';
@@ -1503,7 +1503,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 2px 14px;
-  padding: 0.7mm 0;
+  padding: 1.1mm 0;
   border-bottom: 1px solid rgba(221, 210, 195, 0.55);
 }
 .docLabel {
@@ -1522,8 +1522,8 @@
 }
 
 .docSign {
-  margin-top: 4mm;
-  padding-top: 3.5mm;
+  margin-top: 5mm;
+  padding-top: 4mm;
   border-top: 1px solid var(--areia2);
   break-inside: avoid;
 }
@@ -1641,10 +1641,12 @@
     overflow: visible;
     background: var(--papel);
   }
+  /* largura da área imprimível, não 210mm fixos: se o browser insistir em
+     margens próprias, o papel acompanha-as em vez de deixar tira branca */
   .doc {
-    width: 210mm;
+    width: 100%;
     max-width: none;
-    min-height: 297mm;
+    min-height: 100vh;
     margin: 0 !important;
     transform: none !important;
     box-shadow: none;
