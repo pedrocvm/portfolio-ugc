@@ -371,7 +371,7 @@ export const LINKS_SECTION: Section = {
       path: 'links.items',
       label: 'Links',
       title: 'Link',
-      hint: 'Aparecem na ordem desta lista. WhatsApp e Instagram já ficam no rodapé da página e não precisam entrar aqui.',
+      hint: 'Aparecem na ordem desta lista, embaixo do cartão do WhatsApp. O WhatsApp e o Instagram já têm lugar próprio na página e não precisam entrar aqui.',
       blank: { label: '', note: '', href: '', image: '' },
       item: [
         { k: 'text', path: 'label', label: 'Texto do botão' },
