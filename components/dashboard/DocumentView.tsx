@@ -14,13 +14,13 @@ export default function DocumentView({
           mesmo quando «Gráficos de segundo plano» fica desligado no diálogo */}
       <svg
         className="docFundo"
-        viewBox="0 0 210 297"
+        viewBox="-2 -2 214 301"
         preserveAspectRatio="none"
         aria-hidden="true"
         focusable="false"
       >
-        <rect width="210" height="297" fill="#f8f5f0" />
-        <rect width="7" height="297" fill="#4d3d34" />
+        <rect x="-2" y="-2" width="214" height="301" fill="#f8f5f0" />
+        <rect x="-2" y="-2" width="9" height="301" fill="#4d3d34" />
       </svg>
 
       <header className="docTopo">

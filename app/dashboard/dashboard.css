@@ -1387,7 +1387,7 @@
   width: 210mm;
   max-width: 100%;
   min-height: 297mm;
-  padding: 12mm 17mm 11mm 23mm;
+  padding: 12mm 17mm 9mm 23mm;
   overflow: hidden;
   color: var(--tinta);
   box-shadow:
@@ -1403,9 +1403,10 @@
    conteúdo e sai sempre. Fica atrás do texto e sangra até ao corte. */
 .docFundo {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: -2mm;
+  left: -2mm;
+  width: calc(100% + 4mm);
+  height: calc(100% + 4mm);
   z-index: 0;
 }
 .doc > *:not(.docFundo) {
@@ -1456,7 +1457,7 @@
 }
 
 .docSec {
-  margin-bottom: 3.5mm;
+  margin-bottom: 3.3mm;
   break-inside: avoid;
 }
 /* o filete curto antes do título é a marca de secção do site dela */
@@ -1603,88 +1604,6 @@
   .dash *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-@page {
-  size: A4;
-  margin: 0;
-}
-
-/* A folha sai sem margem nenhuma: o papel dela vai até ao corte e a fita
-   lateral sangra. As margens do texto são as do próprio documento. */
-@media print {
-  .noPrint,
-  .masthead,
-  .dashSticky,
-  .side,
-  .sideOut,
-  .rail,
-  .tabbar,
-  .sheet-more,
-  .cmd,
-  .busy {
-    display: none !important;
-  }
-  /* o papel e a fita passam a ser o fundo da própria folha: assim cobrem a
-     página toda, repetem-se em cada página e não dependem da altura do
-     documento — que era o que empurrava tudo para uma segunda folha */
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-    background: none;
-  }
-  /* transparentes, e sem transform nenhuma: uma transform — mesmo a
-     identidade que sobra de uma animação — cria bloco de contenção e prende
-     o fundo fixo à caixa do documento em vez da folha */
-  .dash,
-  .shell,
-  .sheet,
-  .docSplit,
-  .docPaper {
-    display: block;
-    margin: 0;
-    padding: 0;
-    min-height: 0;
-    max-width: none;
-    overflow: visible;
-    background: none;
-    transform: none !important;
-    animation: none !important;
-    filter: none !important;
-    will-change: auto !important;
-  }
-  /* sem altura imposta: 100vh é a altura da janela, não da folha, e num ecrã
-     alto atirava o documento para duas páginas */
-  /* a folha tem a altura de uma página: o desenho do papel prende-se a ela,
-     sem depender de position:fixed — que qualquer transform num ancestral
-     ancora à caixa errada */
-  .doc {
-    width: 100%;
-    max-width: none;
-    min-height: 297mm;
-    margin: 0 !important;
-    transform: none !important;
-    animation: none !important;
-    overflow: hidden;
-    background: none;
-    box-shadow: none;
-  }
-
-  .docFundo {
-    position: absolute;
-    inset: 0;
-    height: 100%;
-  }
-  .docSec,
-  .docSign,
-  .docPair {
-    break-inside: avoid;
-  }
-  .docTitulo,
-  .doc h3 {
-    break-after: avoid;
   }
 }
 
@@ -2927,4 +2846,98 @@
   font-family: var(--mono);
   font-size: 12px;
   color: var(--tinta2);
+}
+
+/* ── impressão ─────────────────────────────────────────────────────── */
+/* Fica no fim do ficheiro de propósito: tem a mesma especificidade que as
+   regras de ecrã que anula, e a folha impressa tem 794px de largura — ou
+   seja, cai dentro do @media (max-width: 899px). Se este bloco não vier
+   depois desse, o layout mobile ganha e volta a margem branca. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+/* A folha sai sem margem nenhuma: o papel dela vai até ao corte e a fita
+   lateral sangra. As margens do texto são as do próprio documento. */
+@media print {
+  .noPrint,
+  .masthead,
+  .dashSticky,
+  .side,
+  .sideOut,
+  .rail,
+  .tabbar,
+  .sheet-more,
+  .cmd,
+  .busy {
+    display: none !important;
+  }
+  /* o papel e a fita passam a ser o fundo da própria folha: assim cobrem a
+     página toda, repetem-se em cada página e não dependem da altura do
+     documento — que era o que empurrava tudo para uma segunda folha */
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: none;
+  }
+  /* transparentes, e sem transform nenhuma: uma transform — mesmo a
+     identidade que sobra de uma animação — cria bloco de contenção e prende
+     o fundo fixo à caixa do documento em vez da folha */
+  .dash,
+  .shell,
+  .sheet,
+  .docSplit,
+  .docPaper {
+    display: block;
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    max-width: none;
+    overflow: visible;
+    background: none;
+    transform: none !important;
+    animation: none !important;
+    filter: none !important;
+    will-change: auto !important;
+  }
+  /* sem altura imposta: 100vh é a altura da janela, não da folha, e num ecrã
+     alto atirava o documento para duas páginas */
+  /* a folha tem a altura de uma página: o desenho do papel prende-se a ela,
+     sem depender de position:fixed — que qualquer transform num ancestral
+     ancora à caixa errada */
+  /* sem altura imposta: forçar 297mm punha a caixa exactamente do tamanho da
+     folha e meio pixel de arredondamento bastava para abrir uma segunda
+     página. A altura passa a ser a do texto. */
+  .doc {
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    margin: 0 !important;
+    transform: none !important;
+    animation: none !important;
+    overflow: visible;
+    background: none;
+    box-shadow: none;
+  }
+
+  /* preso à folha, não ao documento: cobre a página inteira mesmo quando o
+     texto é mais curto, e repete-se se houver segunda página */
+  .docFundo {
+    position: fixed;
+    top: -2mm;
+    left: -2mm;
+    width: calc(100% + 4mm);
+    height: calc(100% + 4mm);
+  }
+  .docSec,
+  .docSign,
+  .docPair {
+    break-inside: avoid;
+  }
+  .docTitulo,
+  .doc h3 {
+    break-after: avoid;
+  }
 }
