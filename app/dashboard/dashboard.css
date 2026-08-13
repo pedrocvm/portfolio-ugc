@@ -1387,9 +1387,8 @@
   width: 210mm;
   max-width: 100%;
   min-height: 297mm;
-  padding: 15mm 18mm 13mm 24mm;
+  padding: 12mm 17mm 11mm 23mm;
   overflow: hidden;
-  background: var(--papel);
   color: var(--tinta);
   box-shadow:
     0 2px 3px rgba(28, 26, 24, 0.05),
@@ -1399,14 +1398,19 @@
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
 }
-/* a fita sangra até ao corte: é o que faz a folha não parecer um Word */
-.docFita {
+/* O papel e a fita são desenho, não fundo. Um fundo CSS desaparece quando o
+   diálogo de impressão tem «Gráficos de segundo plano» desligado; um <svg> é
+   conteúdo e sai sempre. Fica atrás do texto e sangra até ao corte. */
+.docFundo {
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 7mm;
-  background: var(--umbra);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.doc > *:not(.docFundo) {
+  position: relative;
+  z-index: 1;
 }
 
 .docTopo {
@@ -1414,7 +1418,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
-  padding-bottom: 6mm;
+  padding-bottom: 4mm;
 }
 .docMarca {
   display: flex;
@@ -1424,7 +1428,7 @@
 /* a mesma letra manuscrita que assina a abertura do site */
 .docNome {
   font-family: var(--script);
-  font-size: 23pt;
+  font-size: 19pt;
   line-height: 0.78;
   color: var(--umbra);
 }
@@ -1442,12 +1446,12 @@
 }
 
 .docTitulo {
-  font-size: 16.5pt;
-  line-height: 1.08;
+  font-size: 14pt;
+  line-height: 1.1;
   letter-spacing: -0.02em;
   max-width: 22ch;
-  padding-bottom: 4mm;
-  margin-bottom: 5.5mm;
+  padding-bottom: 3mm;
+  margin-bottom: 4mm;
   border-bottom: 1px solid var(--areia2);
 }
 
@@ -1503,7 +1507,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 2px 14px;
-  padding: 1.1mm 0;
+  padding: 0.9mm 0;
   border-bottom: 1px solid rgba(221, 210, 195, 0.55);
 }
 .docLabel {
@@ -1522,13 +1526,13 @@
 }
 
 .docSign {
-  margin-top: 5mm;
-  padding-top: 4mm;
+  margin-top: 3.5mm;
+  padding-top: 3mm;
   border-top: 1px solid var(--areia2);
   break-inside: avoid;
 }
 .doc .docPlace {
-  margin-bottom: 16mm;
+  margin-bottom: 12mm;
   font-family: var(--serif);
   font-style: italic;
   color: var(--tinta2);
@@ -1629,18 +1633,11 @@
   body {
     margin: 0;
     padding: 0;
-    /* valores literais de propósito: --papel e --umbra vivem em .dash, que é
-       descendente daqui, por isso var() não resolveria e a folha saía branca */
-    background-color: #f8f5f0;
-    background-image: linear-gradient(
-      to right,
-      #4d3d34 0,
-      #4d3d34 7mm,
-      transparent 7mm
-    );
+    background: none;
   }
-  /* transparentes: quem pinta a folha é a página, e um fundo opaco aqui
-     tapava a fita */
+  /* transparentes, e sem transform nenhuma: uma transform — mesmo a
+     identidade que sobra de uma animação — cria bloco de contenção e prende
+     o fundo fixo à caixa do documento em vez da folha */
   .dash,
   .shell,
   .sheet,
@@ -1653,20 +1650,32 @@
     max-width: none;
     overflow: visible;
     background: none;
+    transform: none !important;
+    animation: none !important;
+    filter: none !important;
+    will-change: auto !important;
   }
   /* sem altura imposta: 100vh é a altura da janela, não da folha, e num ecrã
      alto atirava o documento para duas páginas */
+  /* a folha tem a altura de uma página: o desenho do papel prende-se a ela,
+     sem depender de position:fixed — que qualquer transform num ancestral
+     ancora à caixa errada */
   .doc {
     width: 100%;
     max-width: none;
-    min-height: 0;
+    min-height: 297mm;
     margin: 0 !important;
     transform: none !important;
+    animation: none !important;
+    overflow: hidden;
     background: none;
     box-shadow: none;
   }
-  .docFita {
-    display: none;
+
+  .docFundo {
+    position: absolute;
+    inset: 0;
+    height: 100%;
   }
   .docSec,
   .docSign,

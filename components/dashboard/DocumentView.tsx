@@ -10,7 +10,18 @@ export default function DocumentView({
 }) {
   return (
     <article className="doc">
-      <i className="docFita" aria-hidden="true" />
+      {/* o papel e a fita como desenho, não como fundo: assim saem impressos
+          mesmo quando «Gráficos de segundo plano» fica desligado no diálogo */}
+      <svg
+        className="docFundo"
+        viewBox="0 0 210 297"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <rect width="210" height="297" fill="#f8f5f0" />
+        <rect width="7" height="297" fill="#4d3d34" />
+      </svg>
 
       <header className="docTopo">
         <span className="docMarca">
