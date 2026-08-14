@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Busy from './Busy';
 import Spinner from './Spinner';
@@ -49,6 +49,9 @@ export default function Brands({ brands }: { brands: Brand[] }) {
 
       {editing ? (
         <BrandForm
+          /* remonta ao trocar de marca: sem isto os campos ficavam com os
+             valores da marca anterior (são defaultValue, só pegam ao montar) */
+          key={editing === 'nova' ? 'nova' : editing.id}
           brand={editing === 'nova' ? null : editing}
           onDone={() => {
             setEditing(null);
@@ -133,13 +136,26 @@ function BrandForm({
     saveBrand,
     {},
   );
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (state.ok) onDone();
   }, [state.ok, onDone]);
 
+  /* ao abrir, traz o formulário para a vista e põe o cursor no primeiro campo:
+     antes aparecia no topo da página, muitas vezes fora do ecrã, e parecia que
+     "Abrir" não fazia nada */
+  useEffect(() => {
+    const el = formRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.querySelector<HTMLInputElement>('input[name="name"]')?.focus({
+      preventScroll: true,
+    });
+  }, []);
+
   return (
-    <form action={action} className="brandForm">
+    <form ref={formRef} action={action} className="brandForm">
       <input type="hidden" name="id" defaultValue={brand?.id ?? ''} />
       <div className="flds two">
         <div className="fld">
