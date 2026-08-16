@@ -1,6 +1,12 @@
 'use client';
 
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import Busy from './Busy';
 import Spinner from './Spinner';
@@ -49,6 +55,7 @@ export default function Brands({ brands }: { brands: Brand[] }) {
 
       {editing ? (
         <BrandForm
+          key={editing === 'nova' ? 'nova' : editing.id}
           brand={editing === 'nova' ? null : editing}
           onDone={() => {
             setEditing(null);
@@ -134,12 +141,20 @@ function BrandForm({
     {},
   );
 
+  const box = useRef<HTMLFormElement>(null);
+
   useEffect(() => {
     if (state.ok) onDone();
   }, [state.ok, onDone]);
 
+  /* o formulário nasce no topo da página: sem isto, quem clica "Abrir" numa
+     marca do fundo da lista não vê nada acontecer */
+  useEffect(() => {
+    box.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   return (
-    <form action={action} className="brandForm">
+    <form action={action} className="brandForm" ref={box}>
       <input type="hidden" name="id" defaultValue={brand?.id ?? ''} />
       <div className="flds two">
         <div className="fld">
