@@ -32,7 +32,7 @@ const lines = (v: unknown) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
-const dataPt = (v: unknown) => {
+export const dataPt = (v: unknown) => {
   const raw = s(v);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
   const [y, m, d] = raw.split('-');

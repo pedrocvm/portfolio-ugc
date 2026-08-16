@@ -18,7 +18,7 @@ export const GROUPS = [
       { href: '/dashboard/brands', label: 'Marcas' },
       { href: '/dashboard/funnel', label: 'Funil' },
       { href: '/dashboard/documents', label: 'Documentos' },
-      { href: '/dashboard/clients', label: 'Clientes', soon: true },
+      { href: '/dashboard/clients', label: 'Clientes' },
     ],
   },
   {
@@ -36,7 +36,7 @@ export default function Menu() {
   let n = 0;
 
   return (
-    <nav className="rail" aria-label="Áreas">
+    <nav className="rail" id="rail" aria-label="Áreas">
       {GROUPS.map((g) => (
         <div className="railGroup" key={g.group}>
           <span className="railLabel">{g.group}</span>

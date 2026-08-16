@@ -315,6 +315,68 @@
   }
 }
 
+/* ── barra lateral recolhida ───────────────────────────────────────── */
+/* Só no desktop: no telemóvel quem navega é a barra de baixo, e essa não se
+   recolhe. Recolhida, a barra fica uma tira com o botão — sem ícones a
+   fingir de menu, que ícones para oito áreas seriam adivinha. */
+.sideToggle {
+  display: none;
+}
+@media (min-width: 960px) {
+  .shell {
+    transition: grid-template-columns 0.42s var(--exp);
+  }
+  .sideToggle {
+    position: absolute;
+    top: 38px;
+    right: 16px;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    background: none;
+    color: rgba(221, 210, 195, 0.55);
+    cursor: pointer;
+    transition:
+      color 0.25s,
+      background 0.25s;
+  }
+  .sideToggle svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .sideToggle:hover {
+    color: var(--paper);
+    background: rgba(247, 243, 238, 0.1);
+  }
+  :root[data-side='off'] .shell {
+    grid-template-columns: 62px minmax(0, 1fr);
+  }
+  :root[data-side='off'] .side {
+    padding: 38px 12px 34px;
+  }
+  /* display:none e não opacidade: recolhida, a navegação também sai do
+     percurso do teclado */
+  :root[data-side='off'] .sideName,
+  :root[data-side='off'] .side .rail,
+  :root[data-side='off'] .side > form {
+    display: none;
+  }
+  :root[data-side='off'] .sideToggle {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
 /* ── barra de ações ────────────────────────────────────────────────── */
 .dashSticky {
   position: sticky;
@@ -831,34 +893,149 @@
   border: 0;
 }
 
-/* ── em breve ──────────────────────────────────────────────────────── */
-.soonBox {
-  max-width: 60ch;
-  padding: 6px 0 0;
+/* ── clientes ──────────────────────────────────────────────────────── */
+/* A ficha abre e fecha com <details>: é o que o navegador já faz, e faz sem
+   uma linha de JavaScript. */
+.cliList {
+  margin-top: 26px;
+  border-top: 1px solid var(--rule);
 }
-.soonBox h2 {
-  font-size: 30px;
-  margin-bottom: 14px;
+.cli {
+  border-bottom: 1px solid var(--rule);
 }
-.soonBox p {
-  margin: 0 0 12px;
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 19px;
-  line-height: 1.45;
+.cli > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 18px 0;
+  cursor: pointer;
+  list-style: none;
+}
+.cli > summary::-webkit-details-marker {
+  display: none;
+}
+.cliName {
+  font-family: var(--disp);
+  font-variation-settings: var(--wide);
+  font-weight: 560;
+  font-size: 23px;
+  letter-spacing: -0.018em;
+}
+.cliMeta {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 14px;
   color: var(--ink2);
-  text-wrap: pretty;
 }
-.soonList {
-  margin: 26px 0 0;
+.cliMoney {
+  margin-left: auto;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 16px;
+}
+.cli > summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-left: 4px;
+  border-right: 1.5px solid var(--rule2);
+  border-bottom: 1.5px solid var(--rule2);
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform 0.32s var(--exp);
+}
+.cli[open] > summary::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+.cliBody {
+  display: grid;
+  gap: 22px;
+  padding: 4px 0 30px;
+}
+.cliFicha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px 26px;
+  margin: 0;
+}
+.cliFicha dt {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--ink2);
+  margin-bottom: 4px;
+}
+.cliFicha dd {
+  margin: 0;
+  font-size: 16px;
+}
+.cliFicha .sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  color: var(--ink2);
+}
+.cliWorks {
+  margin: 0;
   padding: 0;
   list-style: none;
   border-top: 1px solid var(--rule);
 }
-.soonList li {
-  padding: 15px 0;
+.cliWorks li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 13px 0;
   border-bottom: 1px solid var(--rule);
+}
+.cliWorkName {
   font-size: 16px;
+}
+.cliWorkDate {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 14px;
+  color: var(--ink2);
+}
+.cliWorkMoney {
+  margin-left: auto;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 16px;
+}
+/* o que não entra na conta fica em surdina: a proposta, e o cliente sem
+   nada faturado */
+.cliMoney[data-off],
+.cliWorkMoney[data-off] {
+  font-weight: 400;
+  color: var(--ink2);
+}
+.cliVazio,
+.cliNota {
+  max-width: 56ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink2);
+  text-wrap: pretty;
+  margin: 0;
+}
+.cliNota {
+  margin-top: 34px;
+}
+.cliActs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.cliActs .btn {
+  text-decoration: none;
 }
 
 /* ── entrada e conta ───────────────────────────────────────────────── */
