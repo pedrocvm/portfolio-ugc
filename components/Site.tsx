@@ -3,7 +3,6 @@ import Nav from './Nav';
 import Hero from './Hero';
 import Meet from './Meet';
 import Session from './Session';
-import Formats from './Formats';
 import Photos from './Photos';
 import Process from './Process';
 import Plans from './Plans';
@@ -46,7 +45,6 @@ export default function Site({
           <img alt="" />
           <i className="ov" />
         </div>
-        <Formats c={c.formats} />
         <Photos c={c.photos} />
         <Process c={c.process} />
         <Plans c={c.plans} phone={c.contact.phone} />

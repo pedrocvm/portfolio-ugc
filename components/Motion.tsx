@@ -6,6 +6,45 @@ export default function Motion() {
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    /* os vídeos da sessão só carregam ao aproximarem-se do ecrã, e o primeiro
+       fotograma fica visível assim que carregam — não dependem de "motion
+       reduzido" porque não são decorativos, são o conteúdo em si */
+    document
+      .querySelectorAll<HTMLVideoElement>('#sessao video[data-lazy-src]')
+      .forEach((v) => {
+        const src = v.dataset.lazySrc;
+        if (!src) return;
+        const io = new IntersectionObserver(
+          (entries) => {
+            if (!entries.some((e) => e.isIntersecting)) return;
+            io.disconnect();
+            v.addEventListener(
+              'loadeddata',
+              () => {
+                if (v.currentTime === 0) v.currentTime = 0.01;
+              },
+              { once: true },
+            );
+            v.src = src;
+          },
+          { rootMargin: '200px' },
+        );
+        io.observe(v);
+      });
+
+    /* o play de uma tomada pausa qualquer outra que estivesse a tocar: só faz
+       sentido ouvir-se uma de cada vez */
+    const sessaoVideos = Array.from(
+      document.querySelectorAll<HTMLVideoElement>('#sessao video'),
+    );
+    sessaoVideos.forEach((v) => {
+      v.addEventListener('play', () => {
+        sessaoVideos.forEach((other) => {
+          if (other !== v) other.pause();
+        });
+      });
+    });
+
     /* cada video escolhe a fonte pela largura e so carrega quando a seccao se
        aproxima. a troca para o video espera pelo canplay: assim a imagem cobre
        o intervalo e nao e preciso poster nenhum */
@@ -62,8 +101,6 @@ function paintScenes() {
   document.querySelectorAll<HTMLElement>('.scene').forEach((sc) => {
     sc.style.background = sc.dataset.bg ?? '';
   });
-  const fill = document.getElementById('progFill');
-  if (fill) fill.style.width = '100%';
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -171,93 +208,13 @@ function run(gsap: any, ScrollTrigger: any) {
     );
 
     /* a sessão */
-    const takeEls = Array.from(
-      document.querySelectorAll<HTMLElement>('#frame .takeV'),
-    );
-    const ambImgs = Array.from(
-      document.querySelectorAll<HTMLElement>(
-        '#sessao .ambient img, #sessao .ambient video',
-      ),
-    );
-    ambImgs[0]?.classList.add('on');
-    /* uma tomada pode ser vídeo: só corre a que está à vista, senão são seis
-       streams a decodificar ao mesmo tempo. */
-    const takeVideo = (el?: HTMLElement) =>
-      el?.querySelector<HTMLVideoElement>('video') ?? null;
-    const total = String(takeEls.length).padStart(2, '0');
-    const bignum = document.getElementById('bignum');
-    const counter = document.getElementById('counter');
-    const fichaTxt = document.getElementById('fichaTxt');
-    const progFill = document.getElementById('progFill');
-    let current = 0;
-
-    function setTake(i: number) {
-      if (i === current) return;
-      const prev = current;
-      current = i;
-      const goingDown = i > prev;
-      /* a classe sai já: deixá-la para o onComplete deste tween deixava duas
-         tomadas 'on' de cada vez que um novo tween cancelava o anterior, e a
-         que devia estar escondida continuava a apanhar o rato */
-      takeEls.forEach((el, k) => el.classList.toggle('on', k === i));
-      gsap.to(takeEls[prev], {
-        opacity: 0,
-        scale: 0.96,
-        duration: 0.22,
-        ease: 'power1.out',
-        onComplete() {
-          gsap.set(takeEls[prev], { clearProps: 'all' });
-        },
-      });
-      gsap.fromTo(
-        takeEls[i],
-        { opacity: 0, scale: goingDown ? 1.04 : 0.94 },
-        { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' },
-      );
-      takeVideo(takeEls[prev])?.pause();
-      aplicaSom(takeVideo(takeEls[i]));
-      void takeVideo(takeEls[i])?.play().catch(() => {});
-      const n = takeEls[i].dataset.n ?? '';
-      if (bignum) bignum.textContent = n;
-      ambImgs.forEach((im, k) => im.classList.toggle('on', k === i));
-      if (counter) counter.textContent = `${n} / ${total}`;
-      if (fichaTxt) fichaTxt.textContent = takeEls[i].dataset.niche ?? '';
-    }
-
-    void takeVideo(takeEls[0])?.play().catch(() => {});
-
-    /* o som fica desligado para o arranque automático passar, e a escolha de o
-       ligar segue com o visitante de tomada para tomada */
-    const botaoSom = document.getElementById('takeSound');
-    let comSom = false;
-    function aplicaSom(v: HTMLVideoElement | null) {
-      if (v) v.muted = !comSom;
-    }
-    botaoSom?.addEventListener('click', () => {
-      comSom = !comSom;
-      botaoSom.setAttribute('aria-pressed', String(comSom));
-      botaoSom.textContent = comSom ? 'Desligar som' : 'Ligar som';
-      aplicaSom(takeVideo(takeEls[current]));
-    });
-
-    ScrollTrigger.create({
-      trigger: '#sessao',
-      start: 'top top',
-      /* uma passagem de roda por tomada: 240% da janela dava três a quatro
-         passagens para trocar de vídeo */
-      end: `+=${takeEls.length * 150}`,
-      pin: '#sessao .pinwrap',
-      scrub: 0.5,
-      onUpdate(self: { progress: number }) {
-        if (progFill) progFill.style.width = `${self.progress * 100}%`;
-        if (!takeEls.length) return;
-        setTake(
-          Math.min(
-            takeEls.length - 1,
-            Math.floor(self.progress * takeEls.length),
-          ),
-        );
-      },
+    gsap.from('#sessao .takeCard', {
+      y: 24,
+      opacity: 0,
+      duration: 0.5,
+      stagger: 0.08,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: '#sessao .sessGrid', start: 'top 85%' },
     });
 
     /* capítulos */
@@ -286,14 +243,6 @@ function run(gsap: any, ScrollTrigger: any) {
       stagger: 0.07,
       ease: 'power2.out',
       scrollTrigger: { trigger: '#fotosReel', start: 'top 85%' },
-    });
-    gsap.from('#formatos .fmt li', {
-      y: 18,
-      opacity: 0,
-      duration: 0.5,
-      stagger: 0.07,
-      ease: 'power2.out',
-      scrollTrigger: { trigger: '#formatos .fmt', start: 'top 88%' },
     });
     gsap.fromTo(
       '#guiao .plan',

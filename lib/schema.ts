@@ -139,28 +139,6 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'formats',
-    title: 'Formatos',
-    note: 'O que gravas, sobre o vídeo de fundo.',
-    fields: [
-      ...chapter('formats', 'formatos'),
-      {
-        k: 'list',
-        path: 'formats.items',
-        label: 'Formatos',
-        title: 'Formato',
-        blank: { name: '', note: '' },
-        item: [
-          { k: 'text', path: 'name', label: 'Nome' },
-          { k: 'text', path: 'note', label: 'Nota', hint: 'Deixa vazio para não mostrar.' },
-        ],
-      },
-      { k: 'image', path: 'formats.image', label: 'Imagem de fundo · computador' },
-      { k: 'image', path: 'formats.imageSm', label: 'Imagem de fundo · telemóvel' },
-      { k: 'video', path: 'formats.video', label: 'Vídeo de fundo' },
-    ],
-  },
-  {
     id: 'photos',
     title: 'Fotos UGC',
     note: 'O carrossel de fotografias.',
@@ -312,7 +290,7 @@ export const SECTIONS: Section[] = [
         k: 'strings',
         path: 'nav.labels',
         label: 'Nomes das secções',
-        hint: 'Pela ordem: sobre, formatos, fotos, processo, pacotes e FAQ. Mudam o nome, não a ordem nem o destino.',
+        hint: 'Pela ordem: sobre, fotos, processo, pacotes e FAQ. Mudam o nome, não a ordem nem o destino.',
         fixed: true,
       },
     ],

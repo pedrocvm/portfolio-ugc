@@ -5,7 +5,6 @@ export type Video = { src: string; srcSm: string };
 export type Take = { label: string; n: string; niche: string; img: string };
 export type Photo = { src: string; alt: string };
 export type Niche = { name: string; reel: { src: string }[] };
-export type Format = { name: string; note: string };
 export type Step = { n: string; title: string; text: string };
 export type FaqItem = { q: string; a: string };
 export type Addon = { label: string; value: string };
@@ -59,16 +58,6 @@ export type Content = {
     shelfFoot: string;
   };
   session: { label: string; takes: Take[] };
-  formats: {
-    num: string;
-    eyebrow: string;
-    titleLead: string;
-    titleEm: string;
-    items: Format[];
-    image: string;
-    imageSm: string;
-    video: Video;
-  };
   photos: {
     num: string;
     eyebrow: string;
@@ -128,7 +117,6 @@ export type Content = {
 /** Os âncoras das secções são estrutura, não conteúdo: ficam fora do modelo. */
 export const NAV_HREFS = [
   '#meet',
-  '#formatos',
   '#fotos',
   '#processo',
   '#pacotes',
@@ -155,7 +143,7 @@ export const DEFAULT_CONTENT: Content = {
   nav: {
     brand: 'Carol Queiroz',
     cta: 'Pedir vídeo',
-    labels: ['Sobre', 'Formatos', 'Fotos', 'Processo', 'Pacotes', 'FAQ'],
+    labels: ['Sobre', 'Fotos', 'Processo', 'Pacotes', 'FAQ'],
     chip: 'Pedir vídeo →',
   },
   hero: {
@@ -198,27 +186,8 @@ export const DEFAULT_CONTENT: Content = {
       { label: 'Tomada 06', n: '06', niche: 'Serviços', img: '/img/img-20.jpg' },
     ],
   },
-  formats: {
-    num: '01',
-    eyebrow: 'Formatos',
-    titleLead: 'O que posso',
-    titleEm: 'gravar.',
-    items: [
-      { name: 'Demonstração de produto', note: '' },
-      { name: 'Review', note: '' },
-      { name: 'Rotina', note: '' },
-      { name: 'Unboxing', note: '' },
-      { name: 'Voice-over', note: 'A combinar' },
-    ],
-    image: '/img/img-13.jpg',
-    imageSm: '/img/img-13-sm.jpg',
-    video: {
-      src: '/videos/hero-2-loop.mp4',
-      srcSm: '/videos/hero-2-loop-sm.mp4',
-    },
-  },
   photos: {
-    num: '02',
+    num: '01',
     eyebrow: 'Registos',
     titleLead: 'Fotos',
     titleEm: 'UGC.',
@@ -235,7 +204,7 @@ export const DEFAULT_CONTENT: Content = {
     footRight: '',
   },
   process: {
-    num: '03',
+    num: '02',
     eyebrow: 'Processo',
     titleLead: 'Como',
     titleEm: 'funciona.',
@@ -264,7 +233,7 @@ export const DEFAULT_CONTENT: Content = {
     ],
   },
   plans: {
-    num: '04',
+    num: '03',
     showPrices: false,
     eyebrow: 'Pacotes',
     titleLead: 'Quanto',
@@ -350,7 +319,7 @@ export const DEFAULT_CONTENT: Content = {
     note: 'Valores de lançamento',
   },
   faq: {
-    num: '05',
+    num: '04',
     eyebrow: 'FAQ',
     titleLead: 'Antes de',
     titleEm: 'perguntares.',
