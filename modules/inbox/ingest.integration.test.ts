@@ -22,26 +22,42 @@ const ANON = process.env.SUPABASE_TEST_ANON_KEY;
 const skip = !URL || !KEY;
 const why = 'Define SUPABASE_TEST_URL e SUPABASE_TEST_SERVICE_KEY (projeto descartável) para correr isto.';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = () => createClient(URL!, KEY!, { auth: { persistSession: false } }) as any;
+/** Sem o genérico `Database` de propósito: estes testes inserem linhas
+ *  parciais para provocar erros de constraint, que é justamente o que um
+ *  cliente tipado impediria de escrever. */
+const db = () => createClient(URL!, KEY!, { auth: { persistSession: false } });
 
 const tag = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+/** `.single()` devolve `T | null` porque a leitura pode falhar. Num teste, uma
+ *  linha de preparação que não foi criada é um erro de preparação, não um caso
+ *  a tratar — por isso rebenta aqui, com o nome do que faltou. */
+function must<T>(value: T | null, what: string): T {
+  assert.ok(value, `preparação falhou: ${what}`);
+  return value;
+}
 
 test('a mesma mensagem ingerida duas vezes não cria duas linhas', { skip: skip && why }, async (t) => {
   const client = db();
   const external = `${tag}-msg-1`;
 
-  const { data: brand } = await client
-    .from('brand')
-    .insert({ name: `${tag} Marca`, normalized_name: tag.replace(/-/g, '') })
-    .select('id')
-    .single();
+  const brand = must(
+    (await client
+      .from('brand')
+      .insert({ name: `${tag} Marca`, normalized_name: tag.replace(/-/g, '') })
+      .select('id')
+      .single()).data,
+    'marca',
+  );
 
-  const { data: thread } = await client
-    .from('source_thread')
-    .insert({ provider: 'manual', external_thread_id: `${tag}-thread`, brand_id: brand.id })
-    .select('id')
-    .single();
+  const thread = must(
+    (await client
+      .from('source_thread')
+      .insert({ provider: 'manual', external_thread_id: `${tag}-thread`, brand_id: brand.id })
+      .select('id')
+      .single()).data,
+    'conversa',
+  );
 
   t.after(async () => {
     await client.from('brand').delete().eq('id', brand.id);
@@ -70,11 +86,10 @@ test('a mesma mensagem ingerida duas vezes não cria duas linhas', { skip: skip 
 
 test('a chave de deduplicação impede dois eventos iguais', { skip: skip && why }, async (t) => {
   const client = db();
-  const { data: brand } = await client
-    .from('brand')
-    .insert({ name: `${tag} Evento` })
-    .select('id')
-    .single();
+  const brand = must(
+    (await client.from('brand').insert({ name: `${tag} Evento` }).select('id').single()).data,
+    'marca',
+  );
   t.after(async () => { await client.from('brand').delete().eq('id', brand.id); });
 
   const key = `${tag}:reply.received`;
@@ -100,12 +115,14 @@ test('a chave de deduplicação impede dois eventos iguais', { skip: skip && why
 
 test('só existe um follow-up aberto por oportunidade', { skip: skip && why }, async (t) => {
   const client = db();
-  const { data: brand } = await client.from('brand').insert({ name: `${tag} Follow` }).select('id').single();
-  const { data: opp } = await client
-    .from('opportunity')
-    .insert({ brand_id: brand.id, title: 'teste' })
-    .select('id')
-    .single();
+  const brand = must(
+    (await client.from('brand').insert({ name: `${tag} Follow` }).select('id').single()).data,
+    'marca',
+  );
+  const opp = must(
+    (await client.from('opportunity').insert({ brand_id: brand.id, title: 'teste' }).select('id').single()).data,
+    'oportunidade',
+  );
   t.after(async () => { await client.from('brand').delete().eq('id', brand.id); });
 
   const followUp = {
@@ -124,33 +141,37 @@ test('só existe um follow-up aberto por oportunidade', { skip: skip && why }, a
 
 test('um orçamento enviado não se pode alterar', { skip: skip && why }, async (t) => {
   const client = db();
-  const { data: brand } = await client.from('brand').insert({ name: `${tag} Quote` }).select('id').single();
-  const { data: opp } = await client
-    .from('opportunity')
-    .insert({ brand_id: brand.id, title: 'teste' })
-    .select('id')
-    .single();
+  const brand = must(
+    (await client.from('brand').insert({ name: `${tag} Quote` }).select('id').single()).data,
+    'marca',
+  );
+  const opp = must(
+    (await client.from('opportunity').insert({ brand_id: brand.id, title: 'teste' }).select('id').single()).data,
+    'oportunidade',
+  );
   t.after(async () => { await client.from('brand').delete().eq('id', brand.id); });
 
-  const { data: quote } = await client
-    .from('quote')
-    .insert({
-      opportunity_id: opp.id,
-      brand_id: brand.id,
-      pricing_policy_version: 'v1-draft',
-      recommended_cents: 13000,
-      final_cents: 13000,
-    })
-    .select('id')
-    .single();
-
+  const quote = must(
+    (await client
+      .from('quote')
+      .insert({
+        opportunity_id: opp.id,
+        brand_id: brand.id,
+        pricing_policy_version: 'v1-draft',
+        recommended_cents: 13000,
+        final_cents: 13000,
+      })
+      .select('id')
+      .single()).data,
+    'orçamento',
+  );
   await client.from('quote').update({ status: 'sent', sent_at: new Date().toISOString() }).eq('id', quote.id);
 
   const mutated = await client.from('quote').update({ final_cents: 9900 }).eq('id', quote.id);
   assert.ok(mutated.error, 'alterar um orçamento enviado tem de ser recusado pela base');
 
   const { data: after } = await client.from('quote').select('final_cents').eq('id', quote.id).single();
-  assert.equal(after.final_cents, 13000, 'o valor histórico continua intacto');
+  assert.equal(after?.final_cents, 13000, 'o valor histórico continua intacto');
 });
 
 test('o anónimo não vê nada do CarolOS', { skip: (skip || !ANON) && `${why} E SUPABASE_TEST_ANON_KEY.` }, async () => {
