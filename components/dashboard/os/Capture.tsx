@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { capture, confirmCapture, dropCapture } from '@/app/dashboard/carolos-actions';
+import { capture, confirmCapture, dropCapture, uploadScreenshot } from '@/app/dashboard/carolos-actions';
 import { prospectableNiches } from '@/modules/brands/niches';
 import type { CaptureDraft } from '@/modules/capture/service';
 
@@ -18,6 +18,7 @@ const KINDS = [
   { id: 'profile', label: 'Perfil' },
   { id: 'product', label: 'Produto' },
   { id: 'brief', label: 'Briefing' },
+  { id: 'screenshot', label: 'Print' },
   { id: 'text', label: 'Outro' },
 ] as const;
 
@@ -26,16 +27,30 @@ export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
   const [kind, setKind] = useState<string>('url');
   const [raw, setRaw] = useState('');
   const [note, setNote] = useState('');
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const router = useRouter();
 
   const submit = () =>
     start(async () => {
       setError('');
-      const result = await capture(kind, raw, note);
+
+      // O print sobe primeiro, para o bucket privado; a captura guarda só o
+      // caminho. O ficheiro nunca passa por uma tabela.
+      let storagePath: string | null = null;
+      if (file) {
+        const form = new FormData();
+        form.set('file', file);
+        const uploaded = await uploadScreenshot(form);
+        if (uploaded.error) return setError(uploaded.error);
+        storagePath = uploaded.path ?? null;
+      }
+
+      const result = await capture(kind, raw, note, storagePath);
       if (result.error) return setError(result.error);
       setRaw('');
       setNote('');
+      setFile(null);
       router.refresh();
     });
 
@@ -59,12 +74,32 @@ export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
           ))}
         </div>
 
+        {kind === 'screenshot' ? (
+          <label className="osField">
+            <span>O print</span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <small style={{ color: 'var(--tinta3)', fontSize: 13 }}>
+              Vai para um espaço privado, nunca para a biblioteca do site. Serve para o Instagram,
+              onde não há forma de ler as mensagens automaticamente.
+            </small>
+          </label>
+        ) : null}
+
         <label className="osField">
-          <span>Cola aqui</span>
+          <span>{kind === 'screenshot' ? 'Alguma coisa a acrescentar' : 'Cola aqui'}</span>
           <textarea
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
-            placeholder="https://instagram.com/marca — ou a mensagem inteira, tal como ela veio"
+            placeholder={
+              kind === 'screenshot'
+                ? 'Opcional — o print já chega'
+                : 'https://instagram.com/marca — ou a mensagem inteira, tal como ela veio'
+            }
           />
         </label>
 
@@ -79,7 +114,12 @@ export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
         </label>
 
         <div className="osActs">
-          <button className="btn" type="button" disabled={pending || !raw.trim()} onClick={submit}>
+          <button
+            className="btn"
+            type="button"
+            disabled={pending || (!raw.trim() && !file)}
+            onClick={submit}
+          >
             {pending ? 'A ler…' : 'Capturar'}
           </button>
         </div>

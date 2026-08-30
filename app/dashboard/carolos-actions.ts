@@ -377,16 +377,45 @@ export async function evaluateBarter(input: BarterInput) {
 
 /* ── Captura rápida ─────────────────────────────────────────────────────── */
 
-export async function capture(kind: string, raw: string, note: string): Promise<Result & { id?: string }> {
+export async function capture(
+  kind: string,
+  raw: string,
+  note: string,
+  storagePath?: string | null,
+): Promise<Result & { id?: string }> {
   await requireUser();
   const result = await createCapture({
     kind: (kind as CaptureKind) ?? 'text',
     raw,
     note,
+    storagePath: storagePath ?? null,
     flags: await getFlags(),
   });
   revalidatePath('/dashboard/capture');
   return result.ok ? { ok: true, id: result.id } : { error: result.error };
+}
+
+const MAX_SCREENSHOT_BYTES = 4 * 1024 * 1024;
+
+/** Sobe um print para o bucket privado `capture`. Nunca para o `media`, que é
+ *  o que o site serve: um print de uma conversa com uma marca não pode acabar
+ *  a ser servido publicamente por engano. */
+export async function uploadScreenshot(form: FormData): Promise<Result & { path?: string }> {
+  await requireUser();
+  const file = form.get('file');
+  if (!(file instanceof File)) return { error: 'Nenhum ficheiro recebido.' };
+  if (!file.type.startsWith('image/')) return { error: 'Só imagens.' };
+  if (file.size > MAX_SCREENSHOT_BYTES) return { error: 'A imagem é grande demais (máximo 4 MB).' };
+
+  const db = await supabaseServer();
+  const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}`;
+  const { error } = await db.storage.from('capture').upload(path, file, {
+    contentType: file.type,
+    upsert: false,
+  });
+
+  if (error) return { error: 'Não foi possível guardar a imagem.' };
+  return { ok: true, path };
 }
 
 export async function confirmCapture(

@@ -5,7 +5,7 @@ import { asJson } from '@/lib/supabase/json';
 import { supabaseServer } from '@/lib/supabase/server';
 import { replanActions } from '@/modules/actions/service';
 import { recordEvent, type Db } from '@/modules/activity/service';
-import { runPrompt } from '@/modules/ai/gateway';
+import { runPrompt, type ImageInput } from '@/modules/ai/gateway';
 import { parseCapture } from '@/modules/ai/prompts/registry';
 import type { CaptureExtraction } from '@/modules/ai/schemas';
 import { normalizeDomain, normalizeEmail, normalizeHandle } from '@/modules/brands/identity';
@@ -129,10 +129,23 @@ export async function createCapture(input: {
   return { ok: true, id: data.id };
 }
 
+/** O print vive num bucket privado, nunca no `media` que o site serve. Vem
+ *  daqui para o modelo em base64 e não é guardado outra vez em lado nenhum. */
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+
+async function loadScreenshot(db: Db, storagePath: string): Promise<ImageInput | null> {
+  const { data, error } = await db.storage.from('capture').download(storagePath);
+  if (error || !data) return null;
+  if (data.size > MAX_IMAGE_BYTES) return null;
+
+  const buffer = Buffer.from(await data.arrayBuffer());
+  return { mediaType: data.type || 'image/png', base64: buffer.toString('base64') };
+}
+
 export async function processCapture(db: Db, captureId: string, flags: Flags) {
   const { data: capture } = await db
     .from('capture_item')
-    .select('id, kind, raw_input, note')
+    .select('id, kind, raw_input, note, storage_path')
     .eq('id', captureId)
     .maybeSingle();
   if (!capture) return;
@@ -141,17 +154,20 @@ export async function processCapture(db: Db, captureId: string, flags: Flags) {
   let extracted: Partial<CaptureExtraction> = { ...deterministic, confidence: 0.4 };
 
   if (aiTaskEnabled(flags, 'ai_classification')) {
+    const screenshot = capture.storage_path ? await loadScreenshot(db, capture.storage_path) : null;
+    const images = screenshot ? [screenshot] : [];
+
     const { data: brands } = await db.from('brand').select('name').limit(200);
     const result = await runPrompt(
       parseCapture,
       {
         kind: capture.kind,
-        raw: capture.raw_input,
+        raw: capture.raw_input || (screenshot ? '(sem texto: o material é a imagem em anexo)' : ''),
         note: capture.note,
         niches: prospectableNiches().map((n) => n.id).join(', '),
         knownBrands: (brands ?? []).map((b) => b.name).join(', '),
       },
-      { entityType: 'capture_item', entityId: capture.id, cache: true },
+      { entityType: 'capture_item', entityId: capture.id, cache: true, images },
     );
 
     if (result.ok) {

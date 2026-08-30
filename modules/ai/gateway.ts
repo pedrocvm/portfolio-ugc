@@ -62,7 +62,13 @@ export type Prompt<TInput, TOutput> = {
   maxTokens?: number;
 };
 
+/** Uma imagem para o modelo ler. Existe por causa do Instagram: as DMs não têm
+ *  API utilizável, e o print é o fallback documentado. */
+export type ImageInput = { mediaType: string; base64: string };
+
 export type RunOptions = {
+  /** Imagens a acompanhar o texto. O modelo lê-as no mesmo turno. */
+  images?: readonly ImageInput[];
   entityType?: string;
   entityId?: string | null;
   policyVersions?: Record<string, string>;
@@ -92,6 +98,7 @@ async function callAnthropic(
   model: string,
   system: string,
   user: string,
+  images: readonly ImageInput[],
   jsonSchema: Record<string, unknown>,
   maxTokens: number,
   timeoutMs: number,
@@ -112,7 +119,20 @@ async function callAnthropic(
         model,
         max_tokens: maxTokens,
         system,
-        messages: [{ role: 'user', content: user }],
+        messages: [
+          {
+            role: 'user',
+            // A imagem vem antes do texto: as instruções a seguir referem-se a
+            // ela, e o modelo lê melhor nesta ordem.
+            content: [
+              ...images.map((img) => ({
+                type: 'image' as const,
+                source: { type: 'base64' as const, media_type: img.mediaType, data: img.base64 },
+              })),
+              { type: 'text' as const, text: user },
+            ],
+          },
+        ],
         tools: [
           {
             name: 'emit',
@@ -169,7 +189,10 @@ export async function runPrompt<TInput, TOutput>(
   }
 
   const user = prompt.render(input);
-  const inputHash = await hashContent(`${prompt.task}:${prompt.version}:${user}`);
+  const imageFingerprint = (options.images ?? []).map((i) => `${i.mediaType}:${i.base64.length}`).join('|');
+  const inputHash = await hashContent(
+    `${prompt.task}:${prompt.version}:${user}:${imageFingerprint}`,
+  );
   const db = supabaseService();
 
   if (options.cache) {
@@ -201,6 +224,7 @@ export async function runPrompt<TInput, TOutput>(
       model,
       prompt.system,
       user,
+      options.images ?? [],
       toJsonSchema(prompt.schema as z.ZodType<unknown>),
       prompt.maxTokens ?? 2048,
       options.timeoutMs ?? DEFAULT_TIMEOUT,
