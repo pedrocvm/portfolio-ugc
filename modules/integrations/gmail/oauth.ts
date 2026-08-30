@@ -1,0 +1,280 @@
+import 'server-only';
+
+import { decryptSecret, encryptSecret, signPayload, verifyPayload } from '@/lib/crypto';
+import { supabaseService } from '@/lib/supabase/service';
+
+/** OAuth do Google sem SDK. A troca de código por token é um POST com
+ *  `application/x-www-form-urlencoded`; um pacote de dezenas de megabytes para
+ *  fazer isso seria pagar peso por nada.
+ *
+ *  Os refresh tokens são cifrados antes de tocarem na base, nunca voltam ao
+ *  browser e nunca aparecem num log. */
+
+const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
+
+/** O mínimo para o CRM passivo funcionar:
+ *  - `gmail.readonly` para ler conversas;
+ *  - `gmail.compose` para escrever um rascunho que a Carol revê e envia.
+ *  Nada que permita enviar sozinho. Não há `gmail.send` de propósito. */
+export const GMAIL_SCOPES = [
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.compose',
+];
+
+export type GoogleConfig = { clientId: string; clientSecret: string; redirectUri: string };
+
+export function googleConfig(): GoogleConfig | null {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+
+  const base = process.env.APP_BASE_URL ?? 'http://localhost:3000';
+  return {
+    clientId,
+    clientSecret,
+    redirectUri: process.env.GOOGLE_REDIRECT_URI ?? `${base}/api/integrations/google/oauth/callback`,
+  };
+}
+
+export const googleConfigured = () => googleConfig() !== null;
+
+/** O `state` é assinado e amarrado ao id do utilizador da sessão. Sem isto,
+ *  qualquer pessoa podia mandar a Carol a um callback preparado e ligar a
+ *  conta de Gmail dela a outro sítio. */
+export async function buildState(appUserId: string): Promise<string> {
+  const payload = `${appUserId}.${Date.now()}.${crypto.randomUUID()}`;
+  return `${Buffer.from(payload).toString('base64url')}.${await signPayload(payload)}`;
+}
+
+const STATE_TTL_MS = 15 * 60 * 1000;
+
+export async function readState(state: string): Promise<{ appUserId: string } | null> {
+  const [encoded, signature] = state.split('.');
+  if (!encoded || !signature) return null;
+
+  const payload = Buffer.from(encoded, 'base64url').toString();
+  if (!(await verifyPayload(payload, signature))) return null;
+
+  const [appUserId, issuedAt] = payload.split('.');
+  if (!appUserId || !issuedAt) return null;
+  if (Date.now() - Number(issuedAt) > STATE_TTL_MS) return null;
+
+  return { appUserId };
+}
+
+export function authorizeUrl(cfg: GoogleConfig, state: string): string {
+  const params = new URLSearchParams({
+    client_id: cfg.clientId,
+    redirect_uri: cfg.redirectUri,
+    response_type: 'code',
+    scope: GMAIL_SCOPES.join(' '),
+    // offline + consent garantem um refresh token mesmo numa reautorização;
+    // sem eles, a segunda ligação vem só com access token e a sincronização
+    // morre em uma hora.
+    access_type: 'offline',
+    prompt: 'consent',
+    include_granted_scopes: 'true',
+    state,
+  });
+  return `${AUTH_URL}?${params}`;
+}
+
+type TokenResponse = {
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  scope?: string;
+  error?: string;
+  error_description?: string;
+};
+
+async function postToken(body: Record<string, string>): Promise<TokenResponse> {
+  const res = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(body),
+  });
+  const json = (await res.json()) as TokenResponse;
+  if (!res.ok || json.error) {
+    // A mensagem do Google não traz segredos, mas o corpo do pedido traria:
+    // por isso só o código sai daqui.
+    throw new Error(`google_oauth:${json.error ?? res.status}`);
+  }
+  return json;
+}
+
+export async function exchangeCode(cfg: GoogleConfig, code: string) {
+  return postToken({
+    code,
+    client_id: cfg.clientId,
+    client_secret: cfg.clientSecret,
+    redirect_uri: cfg.redirectUri,
+    grant_type: 'authorization_code',
+  });
+}
+
+export async function refreshAccessToken(cfg: GoogleConfig, refreshToken: string) {
+  return postToken({
+    refresh_token: refreshToken,
+    client_id: cfg.clientId,
+    client_secret: cfg.clientSecret,
+    grant_type: 'refresh_token',
+  });
+}
+
+export type Connection = {
+  id: string;
+  appUserId: string;
+  account: string;
+  status: string;
+  cursor: string | null;
+  scopes: string[];
+};
+
+export async function saveConnection(input: {
+  appUserId: string;
+  account: string;
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn: number;
+  scopes: string[];
+}) {
+  const db = supabaseService();
+
+  // Numa reautorização o Google pode não reenviar o refresh token. Sobrepor o
+  // que está guardado com `null` matava a ligação em silêncio.
+  const encryptedRefresh = input.refreshToken ? await encryptSecret(input.refreshToken) : undefined;
+
+  await db.from('integration_connection').upsert(
+    {
+      provider: 'google_gmail',
+      app_user_id: input.appUserId,
+      account_identifier: input.account,
+      status: 'connected',
+      scopes: input.scopes,
+      encrypted_access_token: await encryptSecret(input.accessToken),
+      token_expires_at: new Date(Date.now() + input.expiresIn * 1000).toISOString(),
+      ...(encryptedRefresh ? { encrypted_refresh_token: encryptedRefresh } : {}),
+      last_error_code: null,
+      last_error_at: null,
+    },
+    { onConflict: 'provider,app_user_id' },
+  );
+}
+
+/** Devolve um access token válido, renovando-o quando falta menos de um minuto.
+ *  O token nunca sai desta camada para cima com o valor em claro senão dentro
+ *  do cabeçalho de um pedido. */
+export async function accessTokenFor(appUserId?: string): Promise<{ token: string; connectionId: string; account: string } | null> {
+  const cfg = googleConfig();
+  if (!cfg) return null;
+
+  const db = supabaseService();
+  let query = db
+    .from('integration_connection')
+    .select('id, app_user_id, account_identifier, status, encrypted_access_token, encrypted_refresh_token, token_expires_at')
+    .eq('provider', 'google_gmail');
+  if (appUserId) query = query.eq('app_user_id', appUserId);
+
+  const { data } = await query.limit(1).maybeSingle();
+  if (!data || data.status === 'revoked') return null;
+
+  const stillValid =
+    data.encrypted_access_token &&
+    data.token_expires_at &&
+    new Date(data.token_expires_at).getTime() - Date.now() > 60_000;
+
+  if (stillValid) {
+    return {
+      token: await decryptSecret(data.encrypted_access_token as string),
+      connectionId: data.id,
+      account: data.account_identifier,
+    };
+  }
+
+  if (!data.encrypted_refresh_token) {
+    await markError(data.id, 'no_refresh_token');
+    return null;
+  }
+
+  try {
+    const refreshed = await refreshAccessToken(cfg, await decryptSecret(data.encrypted_refresh_token));
+    await db
+      .from('integration_connection')
+      .update({
+        encrypted_access_token: await encryptSecret(refreshed.access_token),
+        token_expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
+        status: 'connected',
+        last_error_code: null,
+      })
+      .eq('id', data.id);
+    return { token: refreshed.access_token, connectionId: data.id, account: data.account_identifier };
+  } catch (error) {
+    const code = error instanceof Error ? error.message : 'refresh_failed';
+    await markError(data.id, code);
+    return null;
+  }
+}
+
+export async function markError(connectionId: string, code: string) {
+  await supabaseService()
+    .from('integration_connection')
+    .update({
+      status: code.includes('invalid_grant') ? 'revoked' : 'error',
+      last_error_code: code.slice(0, 100),
+      last_error_at: new Date().toISOString(),
+    })
+    .eq('id', connectionId);
+}
+
+export async function updateCursor(connectionId: string, cursor: string) {
+  await supabaseService()
+    .from('integration_connection')
+    .update({
+      cursor,
+      last_sync_at: new Date().toISOString(),
+      last_success_at: new Date().toISOString(),
+      status: 'connected',
+      last_error_code: null,
+    })
+    .eq('id', connectionId);
+}
+
+export async function disconnect(appUserId: string) {
+  const db = supabaseService();
+  const { data } = await db
+    .from('integration_connection')
+    .select('id, encrypted_refresh_token')
+    .eq('provider', 'google_gmail')
+    .eq('app_user_id', appUserId)
+    .maybeSingle();
+
+  if (!data) return;
+
+  // Revogar do lado do Google também: apagar a linha e deixar a autorização
+  // viva seria deixar uma chave dada a alguém que já não a usa.
+  if (data.encrypted_refresh_token) {
+    try {
+      const token = await decryptSecret(data.encrypted_refresh_token);
+      await fetch(REVOKE_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ token }),
+      });
+    } catch {
+      /* revogar é best-effort; apagar localmente não pode ficar refém disso */
+    }
+  }
+
+  await db
+    .from('integration_connection')
+    .update({
+      status: 'revoked',
+      encrypted_access_token: null,
+      encrypted_refresh_token: null,
+      token_expires_at: null,
+    })
+    .eq('id', data.id);
+}
