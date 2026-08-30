@@ -7,6 +7,7 @@ out
 next-env.d.ts
 .DS_Store
 .vercel
+docs.local/
 
 # o projeto usa npm; um lock de pnpm faz a Vercel trocar de gestor a meio
 pnpm-lock.yaml
