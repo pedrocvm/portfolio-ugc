@@ -787,3 +787,21 @@ export async function buildUsageDoc(licenseId: string): Promise<Result & { id?: 
   revalidatePath('/dashboard/revenue');
   return { ok: true, id: result.id };
 }
+
+/* ── Agendador (Supabase pg_cron) ───────────────────────────────────────── */
+
+export async function setUpScheduler(): Promise<Result & { jobs?: number }> {
+  await requireUser();
+  const { configureScheduler } = await import('@/modules/jobs/scheduler');
+  const result = await configureScheduler();
+  revalidatePath('/dashboard/settings');
+  return result.ok ? { ok: true, jobs: result.jobs } : { error: result.error };
+}
+
+export async function stopScheduler(): Promise<Result & { jobs?: number }> {
+  await requireUser();
+  const { clearSchedule } = await import('@/modules/jobs/scheduler');
+  const result = await clearSchedule();
+  revalidatePath('/dashboard/settings');
+  return result.ok ? { ok: true, jobs: result.jobs } : { error: result.error };
+}

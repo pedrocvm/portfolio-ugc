@@ -10,6 +10,7 @@ import { processPending } from '@/modules/inbox/ingest';
 import { getFlagsService } from '@/modules/settings/service';
 import { expireLicenses } from '@/modules/rights/service';
 import { scanUpsells } from '@/modules/revenue/service';
+import { requestPendingMetrics } from '@/modules/cases/service';
 
 /** Os trabalhos de fundo. Nenhum depende de alguém abrir o painel.
  *
@@ -17,12 +18,29 @@ import { scanUpsells } from '@/modules/revenue/service';
  *  falha em silêncio destrói a confiança no sistema muito mais depressa do que
  *  um erro visível. */
 
-export const JOBS = ['gmail-sync', 'process-pending', 'followups', 'rights', 'plan', 'upsell'] as const;
+export const JOBS = [
+  'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'plan', 'upsell',
+] as const;
 export type JobName = (typeof JOBS)[number];
 
 export const isJobName = (v: string): v is JobName => (JOBS as readonly string[]).includes(v);
 
-export type JobResult = { job: JobName; status: 'success' | 'error' | 'skipped'; detail: Record<string, unknown> };
+export type JobResult = {
+  job: JobName;
+  status: 'success' | 'error' | 'skipped';
+  detail: Record<string, unknown>;
+  /** Quantas coisas o trabalho tocou. Vai para o registo do disparo. */
+  processed?: number;
+};
+
+/** O número que interessa mostrar por trabalho. Cada um conta uma coisa
+ *  diferente, e somar tudo daria um número sem significado. */
+export function processedCount(result: JobResult): number {
+  const d = result.detail as Record<string, number | undefined>;
+  return (
+    d.processed ?? d.created ?? d.actions ?? d.markedDue ?? d.expired ?? d.requested ?? 0
+  );
+}
 
 export async function runJob(job: JobName): Promise<JobResult> {
   const flags = await getFlagsService();
@@ -66,6 +84,11 @@ export async function runJob(job: JobName): Promise<JobResult> {
         const plan = await replanActions(db);
         const global = await replanGlobalActions(db);
         return { job, status: 'success', detail: { woken, ...plan, globalActions: global } };
+      }
+
+      case 'metrics': {
+        const asked = await requestPendingMetrics(db);
+        return { job, status: 'success', detail: asked };
       }
 
       case 'upsell': {
@@ -113,7 +136,9 @@ export async function runJob(job: JobName): Promise<JobResult> {
 /** Corre a cadeia toda pela ordem certa: sincronizar, processar o que ficou,
  *  actualizar prazos, expirar licenças e replanear. Uma só entrada de cron. */
 export async function runAllJobs(): Promise<JobResult[]> {
-  const order: JobName[] = ['gmail-sync', 'process-pending', 'followups', 'rights', 'upsell', 'plan'];
+  const order: JobName[] = [
+    'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'upsell', 'plan',
+  ];
   const results: JobResult[] = [];
   for (const job of order) results.push(await runJob(job));
   return results;

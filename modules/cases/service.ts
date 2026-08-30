@@ -3,7 +3,8 @@ import 'server-only';
 import { updateTag } from 'next/cache';
 import { MEDIA_TAG } from '@/lib/content-store';
 import { supabaseServer } from '@/lib/supabase/server';
-import { recordEvent } from '@/modules/activity/service';
+import { asJson } from '@/lib/supabase/json';
+import { recordEvent, type Db } from '@/modules/activity/service';
 
 /** Case, métricas e ponte para o portfólio.
  *
@@ -387,4 +388,76 @@ export async function closeoutStatus(collaborationId: string): Promise<Closeout>
       approved && paymentResolved && rightsRegistered && portfolioPermission &&
       feedbackOrMetrics && upsellEvaluated,
   };
+}
+
+/** Pedidos de métricas em atraso.
+ *
+ *  Corre uma vez por dia. Uma campanha precisa de tempo para produzir números,
+ *  por isso o pedido só aparece catorze dias depois da aprovação — pedir no
+ *  dia seguinte é pedir a uma marca que ainda não tem nada para dar.
+ *
+ *  Sem métricas, uma entrega não vira prova comercial, e sem prova o preço da
+ *  proposta seguinte é o mesmo da anterior. */
+const METRICS_WAIT_DAYS = 14;
+
+export async function requestPendingMetrics(db: Db): Promise<{ requested: number; skipped: number }> {
+  const cutoff = new Date(Date.now() - METRICS_WAIT_DAYS * 86400000).toISOString();
+
+  const { data: collaborations } = await db
+    .from('collaboration')
+    .select('id, brand_id, opportunity_id, title, closed_at, updated_at, brand:brand_id ( name )')
+    .in('status', ['approved', 'closed'])
+    .lte('updated_at', cutoff);
+
+  let requested = 0;
+  let skipped = 0;
+
+  for (const c of collaborations ?? []) {
+    const [{ count: metrics }, { data: alreadyAsked }] = await Promise.all([
+      db.from('performance_snapshot').select('id', { count: 'exact', head: true })
+        .eq('collaboration_id', c.id),
+      db.from('action_item').select('id').eq('dedupe_key', `collab:${c.id}:metrics`).maybeSingle(),
+    ]);
+
+    if ((metrics ?? 0) > 0 || alreadyAsked) {
+      skipped++;
+      continue;
+    }
+
+    const brand = c.brand as unknown as { name: string } | null;
+
+    await db.from('action_item').upsert(
+      {
+        collaboration_id: c.id,
+        brand_id: c.brand_id,
+        opportunity_id: c.opportunity_id,
+        type: 'request_metrics' as const,
+        title: `Pedir resultados a ${brand?.name ?? 'a marca'}`,
+        reason:
+          'A campanha já teve tempo de correr. Sem números, este trabalho não sobe o preço do próximo.',
+        evidence: asJson({ collaborationId: c.id, waitedDays: METRICS_WAIT_DAYS }),
+        risk: 'none' as const,
+        priority_score: 40,
+        status: 'open' as const,
+        requires_approval: true,
+        dedupe_key: `collab:${c.id}:metrics`,
+      },
+      { onConflict: 'dedupe_key' },
+    );
+
+    await recordEvent(db, {
+      eventType: 'metrics.requested',
+      brandId: c.brand_id,
+      opportunityId: c.opportunity_id,
+      collaborationId: c.id,
+      actorType: 'system',
+      summary: 'Lembrete criado: pedir métricas da campanha.',
+      payload: { waitedDays: METRICS_WAIT_DAYS },
+      dedupeKey: `collab:${c.id}:metrics-reminder`,
+    });
+
+    requested++;
+  }
+
+  return { requested, skipped };
 }

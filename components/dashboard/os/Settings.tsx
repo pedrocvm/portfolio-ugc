@@ -4,7 +4,9 @@ import { useState, useTransition } from 'react';
 import { toggleFlag, triggerJob } from '@/app/dashboard/carolos-actions';
 import { FLAG_KEYS, FLAG_LABEL, FLAG_NOTE, type FlagKey, type Flags } from '@/lib/flags';
 import { formatDate } from '@/lib/time';
+import type { SchedulerState } from '@/modules/jobs/domain';
 import type { IntegrationHealth, JobSummary } from '@/modules/settings/service';
+import Scheduler from './Scheduler';
 
 /** Definições. Bandeiras, integrações e trabalhos de fundo.
  *
@@ -16,6 +18,7 @@ const JOBS = [
   { id: 'process-pending', label: 'Processar pendentes' },
   { id: 'followups', label: 'Actualizar follow-ups' },
   { id: 'rights', label: 'Verificar licenças' },
+  { id: 'metrics', label: 'Lembretes de métricas' },
   { id: 'upsell', label: 'Procurar upsell' },
   { id: 'plan', label: 'Recalcular a fila' },
 ];
@@ -30,11 +33,12 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function Settings({
   flags, integration, jobs, googleConfigured, aiConfigured, serviceRole, encryptionKey,
-  policyVersion, policyStatus, notice,
+  policyVersion, policyStatus, notice, scheduler,
 }: {
   flags: Flags;
   integration: IntegrationHealth;
   jobs: JobSummary[];
+  scheduler: SchedulerState;
   googleConfigured: boolean;
   aiConfigured: boolean;
   serviceRole: boolean;
@@ -177,11 +181,13 @@ export default function Settings({
         </p>
       </section>
 
+      <Scheduler state={scheduler} />
+
       <section className="osSection">
         <h2>Correr agora</h2>
         <p className="osNote">
-          Os trabalhos correm sozinhos quando o cron estiver ligado. Estes botões são para quando
-          não quiseres esperar.
+          Os trabalhos já correm sozinhos pelo agendador. Estes botões são para quando não quiseres
+          esperar pela próxima passagem.
         </p>
         <div className="osActs">
           {JOBS.map((j) => (

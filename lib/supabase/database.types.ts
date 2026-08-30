@@ -1178,6 +1178,42 @@ export type Database = {
           },
         ]
       }
+      cron_dispatch: {
+        Row: {
+          confirmed_at: string | null
+          dispatched_at: string
+          error: string | null
+          id: string
+          job_type: string
+          processed_count: number | null
+          request_id: number | null
+          status: string
+          status_code: number | null
+        }
+        Insert: {
+          confirmed_at?: string | null
+          dispatched_at?: string
+          error?: string | null
+          id?: string
+          job_type: string
+          processed_count?: number | null
+          request_id?: number | null
+          status?: string
+          status_code?: number | null
+        }
+        Update: {
+          confirmed_at?: string | null
+          dispatched_at?: string
+          error?: string | null
+          id?: string
+          job_type?: string
+          processed_count?: number | null
+          request_id?: number | null
+          status?: string
+          status_code?: number | null
+        }
+        Relationships: []
+      }
       deliverable: {
         Row: {
           approval_status: string
@@ -2466,7 +2502,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      carolos_apply_schedule: {
+        Args: never
+        Returns: {
+          job_name: string
+          schedule: string
+        }[]
+      }
+      carolos_clear_schedule: { Args: never; Returns: number }
+      carolos_dispatch_job: { Args: { p_job: string }; Returns: string }
       carolos_normalize: { Args: { v: string }; Returns: string }
+      carolos_reconcile_dispatches: { Args: never; Returns: number }
+      carolos_schedule_status: {
+        Args: never
+        Returns: {
+          active: boolean
+          failures_24h: number
+          job_name: string
+          last_dispatch: string
+          last_error: string
+          last_status: string
+          processed_count: number
+          schedule: string
+        }[]
+      }
+      carolos_set_cron_secret: {
+        Args: { p_secret: string }
+        Returns: undefined
+      }
+      carolos_should_dispatch: { Args: { p_job: string }; Returns: boolean }
       carolos_user_id: { Args: never; Returns: string }
       is_carolos_user: { Args: never; Returns: boolean }
     }

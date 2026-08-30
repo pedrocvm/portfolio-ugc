@@ -1,15 +1,20 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { currentUser } from '@/lib/auth';
-import { isJobName, runAllJobs, runJob, JOBS } from '@/modules/jobs/runner';
+import { isJobName, processedCount, runAllJobs, runJob, JOBS } from '@/modules/jobs/runner';
+import { confirmDispatch } from '@/modules/jobs/scheduler';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 /** Ponto de entrada dos trabalhos de fundo.
  *
+ *  Quem chama isto é o pg_cron do Supabase, através do pg_net — a Vercel deixou
+ *  de ter cron porque o plano Hobby só permite um por dia, e o Gmail precisa de
+ *  ser visto de quinze em quinze minutos.
+ *
  *  Duas formas de autorizar, e nenhuma delas é «público»:
- *   - `Authorization: Bearer <CRON_SECRET>`, que é como a Vercel Cron chama;
- *   - sessão autenticada, que é como a Carol carrega em «sincronizar agora».
+ *   - `Authorization: Bearer <CRON_SECRET>`, que é como o Supabase chama;
+ *   - sessão autenticada, que é como a Carol carrega em «correr agora».
  *
  *  Sem CRON_SECRET definido, a via automática fica fechada em vez de aberta:
  *  um endpoint que corre sincronizações não pode ficar acessível por omissão
@@ -27,6 +32,18 @@ function authorizedByCron(request: NextRequest): boolean {
   return diff === 0;
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** O id do disparo viaja no corpo do POST que o pg_net faz. Confirmar por id
+ *  exacto é melhor do que a reconciliação adivinhar por proximidade de horas —
+ *  e é o que permite guardar quantas coisas o trabalho tocou. */
+async function dispatchIdFrom(request: NextRequest): Promise<string | null> {
+  if (request.method !== 'POST') return null;
+  const body = (await request.json().catch(() => null)) as { dispatch_id?: unknown } | null;
+  const id = body?.dispatch_id;
+  return typeof id === 'string' && UUID.test(id) ? id : null;
+}
+
 async function handle(request: NextRequest, job: string) {
   const viaCron = authorizedByCron(request);
   const viaSession = viaCron ? null : await currentUser();
@@ -35,18 +52,45 @@ async function handle(request: NextRequest, job: string) {
     return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
   }
 
-  if (job === 'all') {
-    return NextResponse.json({ results: await runAllJobs() });
-  }
+  const dispatchId = viaCron ? await dispatchIdFrom(request) : null;
 
-  if (!isJobName(job)) {
-    return NextResponse.json({ error: 'Trabalho desconhecido.', known: [...JOBS, 'all'] }, { status: 404 });
-  }
+  try {
+    if (job === 'all') {
+      const results = await runAllJobs();
+      const failed = results.filter((r) => r.status === 'error');
+      if (dispatchId) {
+        await confirmDispatch(dispatchId, {
+          ok: failed.length === 0,
+          processed: results.reduce((sum, r) => sum + processedCount(r), 0),
+          error: failed.map((r) => r.job).join(', ') || undefined,
+        });
+      }
+      return NextResponse.json({ results });
+    }
 
-  return NextResponse.json(await runJob(job));
+    if (!isJobName(job)) {
+      return NextResponse.json({ error: 'Trabalho desconhecido.', known: [...JOBS, 'all'] }, { status: 404 });
+    }
+
+    const result = await runJob(job);
+    if (dispatchId) {
+      await confirmDispatch(dispatchId, {
+        ok: result.status !== 'error',
+        processed: processedCount(result),
+        error: result.status === 'error' ? JSON.stringify(result.detail).slice(0, 400) : undefined,
+      });
+    }
+    return NextResponse.json(result);
+  } catch (error) {
+    // Uma excepção que escape ao runner não pode deixar o disparo em aberto: a
+    // reconciliação iria marcá-lo como perdido e o recuo nunca arrancava.
+    const message = error instanceof Error ? error.message : 'Falha desconhecida.';
+    if (dispatchId) await confirmDispatch(dispatchId, { ok: false, error: message });
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
-/** GET porque é assim que a Vercel Cron chama; POST para o botão manual. */
+/** GET para chamadas manuais; POST é o que o pg_net faz. */
 export async function GET(request: NextRequest, ctx: { params: Promise<{ job: string }> }) {
   return handle(request, (await ctx.params).job);
 }

@@ -158,14 +158,44 @@ As variáveis `CAROLOS_*_ENABLED` só conseguem **fechar** uma bandeira, nunca
 abri-la. É assim que um preview não fala com o Gmail de produção mesmo que a
 bandeira esteja ligada na base.
 
+## Agendamento
+
+O relógio não está na Vercel. O plano Hobby só permite **um cron por dia**, e o
+Gmail precisa de ser visto de quinze em quinze minutos — baixar a frequência
+para caber no plano seria estragar o produto para poupar configuração.
+
+A Vercel aloja a aplicação; o Supabase agenda. `pg_cron` dispara, `pg_net` faz
+o POST autenticado, e o endpoint corre o trabalho e confirma de volta.
+
+| Trabalho | Frequência (UTC) | Porquê |
+|---|---|---|
+| Sincronizar o Gmail | 15/15 min, 06–21h | É o intervalo entre uma marca responder e a Carol saber. |
+| Processar pendentes | 30/30 min | Mensagens por processar e extrações de IA que falharam. |
+| Follow-ups | de hora a hora | Marca vencidos, semeia os que faltam. |
+| Recalcular a fila | de hora a hora | O Hoje fresco sem ela abrir a aplicação. |
+| Licenças | 1×/dia | Uma licença expira ao dia, não ao minuto. |
+| Métricas | 1×/dia | Pede resultados de campanhas que já correram. |
+| Upsell | 1×/dia | Avalia trabalhos aprovados que já assentaram. |
+| Reconciliar | 5/5 min | Fecha disparos cuja resposta se perdeu. |
+
+A janela 06–21 UTC cobre as 07h–21h de Lisboa nos dois lados da mudança de hora.
+
+**Ligar:** define `APP_BASE_URL` e `CRON_SECRET` no ambiente e carrega em
+*Ligar o agendador* em `/dashboard/settings`. O segredo é escrito no Vault do
+Supabase por uma função `security definer` — nunca passa por SQL escrito à mão
+nem fica em `app_setting`, e nunca volta ao browser.
+
+Se algo falhar repetidamente, o disparo recua sozinho: 5, 10, 20… até 120
+minutos, e uma hora inteira num 401, porque um erro de autenticação é
+configuração e não se resolve a insistir.
+
+**Não há `vercel.json` com crons, e não deve haver.** Dois agendadores para o
+mesmo trabalho é a receita para duplicar sincronizações.
+
 ## Deploy
 
 CD pela Vercel a partir do GitHub. CI em `.github/workflows/ci.yml`
 (typecheck, lint, test, build em cada push e PR).
-
-O cron está em `vercel.json` e chama `/api/jobs/all` de hora a hora durante o
-dia. O endpoint exige `CRON_SECRET`; sem essa variável, a via automática fica
-fechada em vez de aberta.
 
 ```bash
 npx vercel link

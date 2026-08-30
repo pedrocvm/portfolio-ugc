@@ -4,6 +4,7 @@ import { hasServiceRole } from '@/lib/supabase/service';
 import { aiConfigured } from '@/modules/ai/gateway';
 import { googleConfigured } from '@/modules/integrations/gmail/oauth';
 import { activePolicy } from '@/modules/pricing/service';
+import { schedulerState } from '@/modules/jobs/scheduler';
 import { getFlags, integrationHealth, recentJobs } from '@/modules/settings/service';
 import Settings from '@/components/dashboard/os/Settings';
 
@@ -15,11 +16,12 @@ export default async function SettingsPage({
   searchParams: Promise<{ google?: string }>;
 }) {
   await requireUser();
-  const [flags, integration, jobs, policy, params] = await Promise.all([
+  const [flags, integration, jobs, policy, scheduler, params] = await Promise.all([
     getFlags(),
     integrationHealth(),
     recentJobs(),
     activePolicy(),
+    schedulerState(),
     searchParams,
   ]);
 
@@ -35,6 +37,7 @@ export default async function SettingsPage({
       policyVersion={policy.version}
       policyStatus={policy.status}
       notice={params.google ?? null}
+      scheduler={scheduler}
     />
   );
 }
