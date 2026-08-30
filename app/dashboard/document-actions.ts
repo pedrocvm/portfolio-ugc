@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireEditor } from '@/lib/auth';
 import { DOCS, type DocKind, type DocRow } from '@/lib/documents';
 import { merge } from '@/lib/merge';
+import { asJson } from '@/lib/supabase/json';
 import { supabaseServer } from '@/lib/supabase/server';
 import type { Result } from './actions';
 
@@ -26,7 +27,7 @@ export async function createDoc(kind: DocKind): Promise<Result & { id?: string }
   const blank = { ...DOCS[kind].blank, date: new Date().toISOString().slice(0, 10) };
   const { data, error } = await supabase
     .from('document')
-    .insert({ kind, title: DOCS[kind].titleOf(blank), data: blank })
+    .insert({ kind, title: DOCS[kind].titleOf(blank), data: asJson(blank) })
     .select('id')
     .single();
   if (error) return { error: 'Não foi possível criar o documento.' };
@@ -45,7 +46,7 @@ export async function saveDoc(
   const { error } = await supabase
     .from('document')
     .update({
-      data: clean,
+      data: asJson(clean),
       title: DOCS[kind].titleOf(clean),
       updated_at: new Date().toISOString(),
     })
