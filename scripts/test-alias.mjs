@@ -18,6 +18,10 @@ registerHooks({
     const isRelative = specifier.startsWith('./') || specifier.startsWith('../');
     if (!isAlias && !isRelative) return next(specifier, context);
 
+    // Dentro de node_modules manda o Node: um pacote CommonJS resolve
+    // `./Cliente` para `.js` e completar-lhe a extensão à força parte-o.
+    if (context.parentURL?.includes('/node_modules/')) return next(specifier, context);
+
     const base = isAlias
       ? new URL(specifier.slice(2), ROOT).href
       : new URL(specifier, context.parentURL).href;

@@ -17,9 +17,17 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      # Domínio puro e contratos da camada de IA. Os testes de integração
+      # saltam-se sozinhos sem SUPABASE_TEST_*, e a avaliação com modelo real
+      # corre à parte: uma chamada a um modelo por commit seria cara, lenta e
+      # instável o suficiente para tornar o CI numa moeda ao ar.
+      - run: npm run test
       # o build avalia lib/supabase/config.ts, que exige as variáveis. Aqui não
       # se fala com a base: os valores só têm de existir e ser válidos.
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://ci.invalid
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+          # Previews e CI nunca falam com o Gmail nem com o modelo de produção.
+          CAROLOS_JOBS_ENABLED: 'false'
+          CAROLOS_EXTERNAL_SEND_ENABLED: 'false'

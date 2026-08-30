@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "comment": "A cadeia toda: sincronizar, processar o que ficou, actualizar prazos, expirar licenças e replanear. De hora a hora nas horas de trabalho é suficiente — um follow-up não fica melhor por ser calculado de cinco em cinco minutos, e o endpoint exige CRON_SECRET.",
+      "path": "/api/jobs/all",
+      "schedule": "0 7-20 * * *"
+    }
+  ]
+}
