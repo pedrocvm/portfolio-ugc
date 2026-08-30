@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { quotePreview, saveQuote, sendQuote } from '@/app/dashboard/carolos-actions';
 import { formatMoney, parseMoneyToCents } from '@/lib/money';
+import { label } from '@/lib/labels';
 import { USAGE_TERMS, USAGE_TERM_LABEL, type QuoteResult, type UsageTerm } from '@/modules/pricing/engine';
 import type { QuoteRow } from '@/modules/pricing/service';
 
@@ -314,7 +315,9 @@ export default function QuoteBuilder({
                   </p>
                 </div>
                 <div className="osRowSide">
-                  <span className="osTag" data-tone={q.status === 'sent' ? 'ok' : 'mute'}>{q.status}</span>
+                  <span className="osTag" data-tone={q.status === 'sent' ? 'ok' : 'mute'}>
+                    {label('documentStatus', q.status)}
+                  </span>
                   {q.status === 'draft' ? (
                     <SendQuote quoteId={q.id} opportunityId={opportunityId} />
                   ) : null}

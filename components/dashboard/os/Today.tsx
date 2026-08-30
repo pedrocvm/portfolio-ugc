@@ -56,11 +56,11 @@ export default function Today({ data }: { data: TodayData }) {
         </div>
         <div className="osStat">
           <b>{counts.openOpportunities}</b>
-          <span>oportunidades abertas</span>
+          <span>em aberto</span>
         </div>
         <div className="osStat">
           <b>{counts.needsReview}</b>
-          <span>conversas por triar</span>
+          <span>por triar</span>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { capture, confirmCapture, dropCapture, uploadScreenshot } from '@/app/dashboard/carolos-actions';
 import { prospectableNiches } from '@/modules/brands/niches';
+import { label } from '@/lib/labels';
 import type { CaptureDraft } from '@/modules/capture/service';
 
 /** Captura rápida.
@@ -157,7 +158,7 @@ function Draft({ draft }: { draft: CaptureDraft }) {
     <article className="osCard">
       <div className="osCardMain">
         <div className="osCardTop">
-          <span className="osBrand">{draft.kind}</span>
+          <span className="osBrand">{label('captureKind', draft.kind)}</span>
           {typeof draft.confidence === 'number' ? (
             <span className="osTag" data-tone="mute">confiança {Math.round(draft.confidence * 100)}%</span>
           ) : null}

@@ -275,21 +275,20 @@ export async function replanGlobalActions(db: Db): Promise<number> {
 
   const { data: licenses } = await db
     .from('rights_license')
-    .select('id, brand_id, opportunity_id, end_at, platforms, brand:brand_id ( name )')
+    .select('id, brand_id, opportunity_id, end_at, platforms')
     .eq('status', 'active')
     .not('end_at', 'is', null);
 
   for (const l of licenses ?? []) {
     const status = expiryStatus(l.end_at);
     if (status.state !== 'expiring' && status.state !== 'expired') continue;
-    const brand = l.brand as unknown as { name: string } | null;
     const score = priorityScore({ type: 'renew_rights', dueAt: `${l.end_at}T12:00:00Z`, risk: 'medium' });
     await db.from('action_item').upsert(
       {
         opportunity_id: l.opportunity_id,
         brand_id: l.brand_id,
         type: 'renew_rights' as const,
-        title: `Licença de ${brand?.name ?? 'marca'} ${status.state === 'expired' ? 'expirou' : 'está a expirar'}`,
+        title: status.state === 'expired' ? 'Licença de uso expirada' : 'Licença de uso a expirar',
         reason:
           status.state === 'expired'
             ? `A licença terminou há ${status.daysAgo} dias. Se ainda está a correr, é uso não autorizado.`
@@ -309,19 +308,18 @@ export async function replanGlobalActions(db: Db): Promise<number> {
 
   const { data: overdue } = await db
     .from('payment')
-    .select('id, brand_id, opportunity_id, amount_cents, currency, due_at, brand:brand_id ( name )')
+    .select('id, brand_id, opportunity_id, amount_cents, currency, due_at')
     .in('status', ['due', 'invoiced'])
     .not('due_at', 'is', null)
     .lte('due_at', new Date().toISOString().slice(0, 10));
 
   for (const p of overdue ?? []) {
-    const brand = p.brand as unknown as { name: string } | null;
     await db.from('action_item').upsert(
       {
         opportunity_id: p.opportunity_id,
         brand_id: p.brand_id,
         type: 'chase_payment' as const,
-        title: `Pagamento em atraso · ${brand?.name ?? 'marca'}`,
+        title: 'Pagamento em atraso',
         reason: `Vencido a ${p.due_at}. ${(p.amount_cents / 100).toFixed(2)} ${p.currency}.`,
         evidence: asJson({ paymentId: p.id, dueAt: p.due_at, amountCents: p.amount_cents }),
         risk: 'high' as const,

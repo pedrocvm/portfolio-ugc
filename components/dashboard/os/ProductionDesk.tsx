@@ -6,6 +6,7 @@ import {
   patchCollaboration, setCollaborationStatus, submitBrief,
 } from '@/app/dashboard/carolos-actions';
 import { formatDate } from '@/lib/time';
+import { label } from '@/lib/labels';
 import type { BriefRow } from '@/modules/briefs/service';
 import type { Closeout } from '@/modules/cases/service';
 import { COLLABORATION_STATUS, STATUS_LABEL, type CollaborationRow, type CollaborationStatus } from '@/modules/production/domain';
@@ -191,7 +192,7 @@ function BriefPanel({ collaborationId, briefs }: { collaborationId: string; brie
         <>
           <div className="osCardTop">
             <span className="osTag" data-tone={latest.status === 'validated' ? 'ok' : latest.gaps.length ? 'bad' : 'hot'}>
-              {latest.status}
+              {label('briefStatus', latest.status)}
             </span>
             <span className="osTag" data-tone="mute">v{latest.version}</span>
           </div>
@@ -305,14 +306,15 @@ function DeliveryPanel({
                 </p>
                 {d.feedback_class && d.feedback_class !== 'in_scope' ? (
                   <p className="osRowSub">
-                    Esta revisão está fora do âmbito ({d.feedback_class}): é uma negociação nova,
+                    Esta revisão está fora do âmbito ({label('feedbackClass', d.feedback_class)}):
+                    é uma negociação nova,
                     não uma correção incluída.
                   </p>
                 ) : null}
               </div>
               <div className="osRowSide">
                 <span className="osTag" data-tone={d.approval_status === 'approved' ? 'won' : 'mute'}>
-                  {d.approval_status}
+                  {label('approval', d.approval_status)}
                 </span>
                 {d.approval_status !== 'approved' ? (
                   <>

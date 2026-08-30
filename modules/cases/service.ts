@@ -405,7 +405,7 @@ export async function requestPendingMetrics(db: Db): Promise<{ requested: number
 
   const { data: collaborations } = await db
     .from('collaboration')
-    .select('id, brand_id, opportunity_id, title, closed_at, updated_at, brand:brand_id ( name )')
+    .select('id, brand_id, opportunity_id, title, closed_at, updated_at')
     .in('status', ['approved', 'closed'])
     .lte('updated_at', cutoff);
 
@@ -424,15 +424,13 @@ export async function requestPendingMetrics(db: Db): Promise<{ requested: number
       continue;
     }
 
-    const brand = c.brand as unknown as { name: string } | null;
-
     await db.from('action_item').upsert(
       {
         collaboration_id: c.id,
         brand_id: c.brand_id,
         opportunity_id: c.opportunity_id,
         type: 'request_metrics' as const,
-        title: `Pedir resultados a ${brand?.name ?? 'a marca'}`,
+        title: 'Pedir os resultados da campanha',
         reason:
           'A campanha já teve tempo de correr. Sem números, este trabalho não sobe o preço do próximo.',
         evidence: asJson({ collaborationId: c.id, waitedDays: METRICS_WAIT_DAYS }),

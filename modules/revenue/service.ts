@@ -331,7 +331,7 @@ export async function scanUpsells(db: Db, flags: Flags) {
         brand_id: c.brand_id,
         collaboration_id: c.id,
         type: 'upsell' as const,
-        title: `Próxima oferta para ${brand?.name ?? 'a marca'}`,
+        title: 'Avaliar a próxima oferta',
         reason,
         evidence: asJson({ collaborationId: c.id, daysSinceApproval: since, offer }),
         risk: 'none' as const,

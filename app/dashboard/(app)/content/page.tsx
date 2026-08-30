@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
+import { label } from '@/lib/labels';
 import { CAPABILITY_LABEL, FUNNEL_LABEL, capabilityInventory, listContent, type FunnelRole } from '@/modules/content/service';
 
 export const dynamic = 'force-dynamic';
@@ -71,7 +72,9 @@ export default async function ContentPage() {
                     ) : null}
                   </div>
                   <div className="osRowSide">
-                    <span className="osTag" data-tone={c.status === 'approved' ? 'won' : 'mute'}>{c.status}</span>
+                    <span className="osTag" data-tone={c.status === 'approved' ? 'won' : 'mute'}>
+                      {label('contentStatus', c.status)}
+                    </span>
                     {c.collaborationId ? (
                       <Link className="chip" href={`/dashboard/production/${c.collaborationId}`}>Abrir</Link>
                     ) : null}

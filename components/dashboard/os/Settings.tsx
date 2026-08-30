@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { toggleFlag, triggerJob } from '@/app/dashboard/carolos-actions';
 import { FLAG_KEYS, FLAG_LABEL, FLAG_NOTE, type FlagKey, type Flags } from '@/lib/flags';
 import { formatDate } from '@/lib/time';
+import { jobLabel, label } from '@/lib/labels';
 import type { SchedulerState } from '@/modules/jobs/domain';
 import type { IntegrationHealth, JobSummary } from '@/modules/settings/service';
 import Scheduler from './Scheduler';
@@ -214,7 +215,7 @@ export default function Settings({
             {jobs.map((j) => (
               <div className="osRow" key={j.id}>
                 <div>
-                  <span className="osRowName" style={{ fontSize: 16 }}>{j.jobType}</span>
+                  <span className="osRowName" style={{ fontSize: 16 }}>{jobLabel(j.jobType)}</span>
                   <p className="osRowSub">
                     {formatDate(j.startedAt)} · {j.itemsProcessed} item(ns)
                     {j.errorSummary ? ` · ${j.errorSummary.slice(0, 120)}` : ''}
@@ -222,7 +223,7 @@ export default function Settings({
                 </div>
                 <div className="osRowSide">
                   <span className="osTag" data-tone={j.status === 'success' ? 'ok' : j.status === 'error' ? 'bad' : 'mute'}>
-                    {j.status}
+                    {label('runStatus', j.status)}
                   </span>
                 </div>
               </div>

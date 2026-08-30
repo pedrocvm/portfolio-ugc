@@ -37,7 +37,18 @@ test('um pedido de preço vira a ação de enviar valor, não uma resposta gené
     NOW,
   );
   assert.equal(action.type, 'send_rate');
-  assert.match(action.reason, /rate_request/);
+  // A razão nomeia o pedido em português corrente: um id de máquina no meio de
+  // uma frase é o sistema a falar consigo próprio à frente de quem o usa.
+  assert.match(action.reason, /A marca pediu o teu valor, e ainda não teve resposta\./);
+  assert.doesNotMatch(action.reason, /rate_request/);
+});
+
+test('vários pedidos ficam numa lista que se lê em voz alta', () => {
+  const [action] = planForOpportunity(
+    snap({ awaitingReplySince: daysAgo(1), openAsks: ['rate_request', 'ads_rights', 'portfolio_request'] }),
+    NOW,
+  );
+  assert.match(action.reason, /o teu valor, direitos para anúncios e o portfólio/);
 });
 
 test('um pedido de portfólio vira a ação de enviar portfólio', () => {
@@ -114,6 +125,19 @@ test('nenhuma oportunidade activa fica em silêncio: sem nada, aparece como sem 
   assert.equal(actions.length, 1);
   assert.equal(actions[0].type, 'review');
   assert.match(actions[0].title, /sem próxima ação/i);
+});
+
+test('o título não repete a marca, que já está no cabeçalho do cartão', () => {
+  for (const snapshot of [
+    snap({ awaitingReplySince: daysAgo(1) }),
+    snap({ dueFollowUp: { id: 'f1', dueAt: daysAgo(1), reason: 'x' } }),
+    snap({ stage: 'commercial_qualification' }),
+    snap({ stage: 'negotiation' }),
+  ]) {
+    for (const action of planForOpportunity(snapshot, NOW)) {
+      assert.doesNotMatch(action.title, /Cecotec/, `"${action.title}" repete a marca`);
+    }
+  }
 });
 
 test('a próxima ação legada do painel antigo é reaproveitada como motivo', () => {

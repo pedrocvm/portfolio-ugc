@@ -3,11 +3,13 @@ import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { formatMoney } from '@/lib/money';
 import { formatDate, relativeDays } from '@/lib/time';
+import { label } from '@/lib/labels';
 import { supabaseServer } from '@/lib/supabase/server';
 import { actionsForOpportunity } from '@/modules/actions/service';
 import { opportunityTimeline } from '@/modules/activity/service';
 import { threadsForOpportunity } from '@/modules/inbox/queries';
 import { STAGE_LABEL, MODEL_LABEL } from '@/modules/opportunities/domain';
+import { STATUS_LABEL, type CollaborationStatus } from '@/modules/production/domain';
 import { documentsFor, unlinkedDocumentsFor } from '@/modules/documents/service';
 import { getOpportunity } from '@/modules/opportunities/service';
 import { activePolicy, quotesFor } from '@/modules/pricing/service';
@@ -138,7 +140,7 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
 
       {collab.data ? (
         <p className="osWarn" data-tone="ok">
-          A produção está aberta ({collab.data.status}).{' '}
+          A produção está aberta ({STATUS_LABEL[collab.data.status as CollaborationStatus] ?? collab.data.status}).{' '}
           <Link href={`/dashboard/production/${collab.data.id}`}>Abrir</Link>.
         </p>
       ) : null}
@@ -178,7 +180,7 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
                 </div>
                 <div className="osRowSide">
                   <span className="osTag" data-tone={l.expiry.state === 'expired' ? 'bad' : l.expiry.state === 'expiring' ? 'hot' : 'ok'}>
-                    {l.expiry.state === 'no_end' ? 'sem fim' : l.expiry.state}
+                    {label('expiry', l.expiry.state)}
                   </span>
                 </div>
               </div>

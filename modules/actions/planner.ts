@@ -9,6 +9,7 @@
  *  carregamentos da página. */
 
 import { daysBetween } from '@/lib/time';
+import { REPLY_TYPE_LABEL, type ReplyType } from '@/modules/ai/schemas';
 import { STAGE_PROXIMITY, isOpen, type Stage } from '@/modules/opportunities/domain';
 
 export const ACTION_TYPES = [
@@ -181,6 +182,30 @@ const ASK_TO_ACTION: Record<string, { type: ActionType; title: string }> = {
   brief: { type: 'request_brief', title: 'Validar o briefing recebido' },
 };
 
+/** O que a marca pediu, como substantivo, para caber numa frase.
+ *
+ *  As etiquetas do inbox são frases verbais («Pede preço») e ficam bem numa
+ *  lista, mas «a marca pediu pede preço» não é português. E um `rate_request`
+ *  no meio de uma frase é o sistema a falar consigo próprio à frente de quem
+ *  o usa. */
+const ASK_NOUN: Record<string, string> = {
+  portfolio_request: 'o portfólio',
+  rate_request: 'o teu valor',
+  ads_rights: 'direitos para anúncios',
+  usage_request: 'direitos de uso',
+  barter_offer: 'uma permuta',
+  affiliate_offer: 'uma parceria de afiliação',
+  media_kit_request: 'o media kit',
+  call_request: 'uma call',
+  brief: 'o briefing',
+};
+
+const askNames = (asks: readonly string[]) => {
+  const names = asks.map((a) => ASK_NOUN[a] ?? REPLY_TYPE_LABEL[a as ReplyType]?.toLowerCase() ?? a);
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`;
+};
+
 /** Gera as ações que uma oportunidade justifica agora. Uma oportunidade activa
  *  sem nada aqui e sem estado de espera é um bug — o Hoje mostra-a como
  *  «sem próxima ação» em vez de a esconder. */
@@ -210,9 +235,9 @@ export function planForOpportunity(
     const type = primary?.type ?? 'respond';
     out.push({
       type,
-      title: primary?.title ?? `Responder a ${opp.brandName}`,
+      title: primary?.title ?? 'Responder à mensagem',
       reason: asks.length
-        ? `A marca pediu ${asks.join(', ')} e ainda não teve resposta.`
+        ? `A marca pediu ${askNames(asks)}, e ainda não teve resposta.`
         : `Mensagem recebida a aguardar resposta desde ${opp.awaitingReplySince.slice(0, 10)}.`,
       cta: ACTION_CTA[type],
       dueAt: opp.awaitingReplySince,
@@ -228,7 +253,7 @@ export function planForOpportunity(
   if (opp.dueFollowUp && !opp.awaitingReplySince) {
     out.push({
       type: 'follow_up',
-      title: `Follow-up a ${opp.brandName}`,
+      title: 'Enviar o follow-up',
       reason: opp.dueFollowUp.reason,
       cta: ACTION_CTA.follow_up,
       dueAt: opp.dueFollowUp.dueAt,
@@ -244,7 +269,7 @@ export function planForOpportunity(
   if (opp.waitingUntil && new Date(opp.waitingUntil).getTime() <= now.getTime()) {
     out.push({
       type: 'wait_expired',
-      title: `A espera combinada com ${opp.brandName} terminou`,
+      title: 'A espera combinada terminou',
       reason: 'Passou a data até à qual a oportunidade estava em espera.',
       cta: ACTION_CTA.wait_expired,
       dueAt: opp.waitingUntil,
@@ -260,7 +285,7 @@ export function planForOpportunity(
   if (opp.stage === 'commercial_qualification' && !opp.hasQuote && !opp.awaitingReplySince) {
     out.push({
       type: 'create_proposal',
-      title: `Preparar oferta para ${opp.brandName}`,
+      title: 'Preparar a oferta',
       reason: 'A oportunidade está qualificada mas ainda não tem valor nem âmbito enviados.',
       cta: ACTION_CTA.create_proposal,
       dueAt: null,
@@ -281,7 +306,7 @@ export function planForOpportunity(
   ) {
     out.push({
       type: 'review',
-      title: `${opp.brandName} está sem próxima ação`,
+      title: 'Sem próxima ação definida',
       reason:
         opp.nextActionText.trim() ||
         'Nenhum evento recente e nenhum follow-up agendado. Decide o próximo passo ou põe em nurture.',

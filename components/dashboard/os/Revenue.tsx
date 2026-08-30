@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import { addPayment, paymentReceived, saveLicense } from '@/app/dashboard/carolos-actions';
 import { formatMoney, parseMoneyToCents } from '@/lib/money';
 import { formatDate } from '@/lib/time';
+import { label } from '@/lib/labels';
 import type { LicenseRow } from '@/modules/rights/service';
 import type { PaymentRow, RelationshipRow, RevenueSummary } from '@/modules/revenue/service';
 
@@ -105,14 +106,16 @@ export default function Revenue({
                     {p.brandName} · {formatMoney(p.amountCents)}
                   </span>
                   <p className="osRowSub">
-                    {p.kind === 'barter' ? 'permuta (não conta como receita)' : p.kind}
+                    {p.kind === 'barter'
+                      ? 'permuta (não conta como receita)'
+                      : label('paymentKind', p.kind)}
                     {p.dueAt ? ` · vence ${formatDate(p.dueAt)}` : ''}
                     {p.invoiceRef ? ` · ${p.invoiceRef}` : ''}
                   </p>
                 </div>
                 <div className="osRowSide">
                   <span className="osTag" data-tone={p.status === 'paid' ? 'ok' : p.dueAt && p.dueAt < new Date().toISOString().slice(0, 10) ? 'bad' : 'mute'}>
-                    {p.status}
+                    {label('paymentStatus', p.status)}
                   </span>
                   {p.status !== 'paid' && p.kind !== 'barter' ? <MarkPaid id={p.id} /> : null}
                 </div>
@@ -146,7 +149,9 @@ export default function Revenue({
                   </p>
                 </div>
                 <div className="osRowSide">
-                  <span className="osTag" data-tone={l.status === 'active' ? 'ok' : 'mute'}>{l.status}</span>
+                  <span className="osTag" data-tone={l.status === 'active' ? 'ok' : 'mute'}>
+                    {label('licenseStatus', l.status)}
+                  </span>
                 </div>
               </div>
             ))}

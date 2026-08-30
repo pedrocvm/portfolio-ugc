@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { buildShotList, saveContentAsset, scriptApproved } from '@/app/dashboard/carolos-actions';
+import { label } from '@/lib/labels';
 import { CAPABILITIES, CAPABILITY_LABEL, FUNNEL_LABEL, FUNNEL_NOTE, type ContentRow, type FunnelRole } from '@/modules/content/domain';
 
 /** Roteiro e shot list.
@@ -226,7 +227,9 @@ function ContentItem({ item, collaborationId }: { item: ContentRow; collaboratio
         </details>
       </div>
       <div className="osRowSide">
-        <span className="osTag" data-tone={item.status === 'approved' ? 'won' : 'mute'}>{item.status}</span>
+        <span className="osTag" data-tone={item.status === 'approved' ? 'won' : 'mute'}>
+          {label('contentStatus', item.status)}
+        </span>
       </div>
     </div>
   );

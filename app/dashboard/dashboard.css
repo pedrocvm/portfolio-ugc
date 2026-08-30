@@ -3717,6 +3717,15 @@ a.osRow:hover .osRowName {
   .osCard {
     grid-template-columns: 1fr;
   }
+  /* Uma caixa de verificação de uma linha só ficava com 22px de alvo. No
+     telemóvel isto é tocado com o polegar, não apontado com um rato. */
+  .osCheck {
+    min-height: 44px;
+    align-items: center;
+  }
+  .osCheck input {
+    margin-top: 0;
+  }
   .osCardActs {
     flex-direction: row;
     flex-wrap: wrap;
@@ -3739,4 +3748,19 @@ a.osRow:hover .osRowName {
   .osBar i {
     grid-column: 1 / -1;
   }
+}
+
+/* Um campo tem a largura do que lá cabe. Uma caixa de 600px para escrever «1»
+   é ar a mais mesmo numa interface que gosta de ar: a área privada troca
+   respiração por densidade quando a densidade ajuda a decidir. */
+.osField input[type='number'],
+.osField input[type='date'] {
+  max-width: 180px;
+}
+.osField input[inputmode='decimal'] {
+  max-width: 220px;
+}
+/* Dentro de uma linha partilhada, o flex já reparte: não voltar a limitar. */
+.osInline .osField input {
+  max-width: none;
 }

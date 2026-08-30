@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { triageThread } from '@/app/dashboard/carolos-actions';
 import { REPLY_TYPE_LABEL, type ReplyType } from '@/modules/ai/schemas';
+import { STAGE_LABEL, type Stage } from '@/modules/opportunities/domain';
 import type { ThreadRow } from '@/modules/inbox/queries';
 
 /** Inbox comercial. Três montes:
@@ -47,7 +48,11 @@ function Thread({ thread }: { thread: ThreadRow }) {
         ) : null}
       </div>
       <div className="osRowSide">
-        {thread.stage ? <span className="osTag" data-tone="mute">{thread.stage}</span> : null}
+        {thread.stage ? (
+          <span className="osTag" data-tone="mute">
+            {STAGE_LABEL[thread.stage as Stage] ?? thread.stage}
+          </span>
+        ) : null}
         <span>{when(thread.lastMessageAt)}</span>
       </div>
     </Link>

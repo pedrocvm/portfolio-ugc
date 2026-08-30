@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { formatMoney } from '@/lib/money';
 import { formatDate, relativeDays } from '@/lib/time';
+import { label } from '@/lib/labels';
 import { supabaseServer } from '@/lib/supabase/server';
 import { brandTimeline } from '@/modules/activity/service';
 import { latestDossier } from '@/modules/brands/dossier';
@@ -133,7 +134,11 @@ export default async function BrandPage({ params }: { params: Promise<{ id: stri
                   <p className="osRowSub">{[c.role, c.email].filter(Boolean).join(' · ')}</p>
                 </div>
                 <div className="osRowSide">
-                  {c.preferred_channel ? <span className="osTag" data-tone="mute">{c.preferred_channel}</span> : null}
+                  {c.preferred_channel ? (
+                    <span className="osTag" data-tone="mute">
+                      {label('channel', c.preferred_channel)}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -175,7 +180,7 @@ export default async function BrandPage({ params }: { params: Promise<{ id: stri
                 </div>
                 <div className="osRowSide">
                   <span className="osTag" data-tone={l.expiry.state === 'expired' ? 'bad' : l.expiry.state === 'expiring' ? 'hot' : 'ok'}>
-                    {l.expiry.state}
+                    {label('expiry', l.expiry.state)}
                   </span>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import { requireUser } from '@/lib/auth';
 import { formatMoney } from '@/lib/money';
+import { aiTaskLabel, jobLabel } from '@/lib/labels';
 import { formatDate } from '@/lib/time';
 import { automationHealth, commercialAnalytics } from '@/modules/analytics/service';
 import { nicheById } from '@/modules/brands/niches';
@@ -180,7 +181,7 @@ export default async function AnalyticsPage() {
             {health.jobs.map((j) => (
               <div className="osRow" key={j.jobType}>
                 <div>
-                  <span className="osRowName" style={{ fontSize: 17 }}>{j.jobType}</span>
+                  <span className="osRowName" style={{ fontSize: 17 }}>{jobLabel(j.jobType)}</span>
                   <p className="osRowSub">
                     {j.lastAt ? `último a ${formatDate(j.lastAt)}` : 'ainda não correu'}
                   </p>
@@ -207,7 +208,7 @@ export default async function AnalyticsPage() {
               {health.aiTasks.map((t) => (
                 <div className="osRow" key={t.taskType}>
                   <div>
-                    <span className="osRowName" style={{ fontSize: 17 }}>{t.taskType}</span>
+                    <span className="osRowName" style={{ fontSize: 17 }}>{aiTaskLabel(t.taskType)}</span>
                     <p className="osRowSub">
                       {t.runs} corrida(s)
                       {t.avgConfidence !== null ? ` · confiança média ${t.avgConfidence}` : ''}

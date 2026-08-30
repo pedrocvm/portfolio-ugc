@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { attachDocument, buildProposal, sendDocument } from '@/app/dashboard/carolos-actions';
 import { formatDate } from '@/lib/time';
+import { label } from '@/lib/labels';
 import type { LinkedDocument } from '@/modules/documents/service';
 
 /** Os documentos desta oportunidade.
@@ -50,7 +51,9 @@ export default function Documents({
                 </p>
               </div>
               <div className="osRowSide">
-                <span className="osTag" data-tone={d.status === 'sent' ? 'ok' : 'mute'}>{d.status}</span>
+                <span className="osTag" data-tone={d.status === 'sent' ? 'ok' : 'mute'}>
+                  {label('documentStatus', d.status)}
+                </span>
                 <Link className="chip" href="/dashboard/documents">Abrir</Link>
                 {d.status === 'draft' ? (
                   <button

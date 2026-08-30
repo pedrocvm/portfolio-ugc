@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { dismiss, doneAction, snooze } from '@/app/dashboard/carolos-actions';
 import type { ActionRow } from '@/modules/actions/service';
+import { STAGE_LABEL, type Stage } from '@/modules/opportunities/domain';
 
 /** O cartão do Hoje. Uma decisão por cartão: o que aconteceu, porquê importa,
  *  e um botão principal. Tudo o resto é secundário e fica em texto pequeno. */
@@ -66,9 +67,10 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
         <p className="osWhy">{action.reason}</p>
 
         <div className="osMeta">
-          {action.stage ? <span>etapa <b>{action.stage}</b></span> : null}
+          {action.stage ? (
+            <span>etapa <b>{STAGE_LABEL[action.stage as Stage] ?? action.stage}</b></span>
+          ) : null}
           {action.requiresApproval ? <span>precisa da tua aprovação</span> : null}
-          <span>prioridade <b>{action.priorityScore}</b></span>
         </div>
 
         {error ? <p className="osWarn" role="alert">{error}</p> : null}
