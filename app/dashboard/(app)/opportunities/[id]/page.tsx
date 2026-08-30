@@ -8,12 +8,14 @@ import { actionsForOpportunity } from '@/modules/actions/service';
 import { opportunityTimeline } from '@/modules/activity/service';
 import { threadsForOpportunity } from '@/modules/inbox/queries';
 import { STAGE_LABEL, MODEL_LABEL } from '@/modules/opportunities/domain';
+import { documentsFor, unlinkedDocumentsFor } from '@/modules/documents/service';
 import { getOpportunity } from '@/modules/opportunities/service';
 import { activePolicy, quotesFor } from '@/modules/pricing/service';
 import { licensesForBrand } from '@/modules/rights/service';
 import { getFlags } from '@/modules/settings/service';
 import BarterCheck from '@/components/dashboard/os/BarterCheck';
 import Copilot from '@/components/dashboard/os/Copilot';
+import Documents from '@/components/dashboard/os/Documents';
 import QuoteBuilder from '@/components/dashboard/os/QuoteBuilder';
 import StageControl from '@/components/dashboard/os/StageControl';
 import Timeline from '@/components/dashboard/os/Timeline';
@@ -30,16 +32,19 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
   if (!opportunity) notFound();
 
   const db = await supabaseServer();
-  const [timeline, actions, quotes, policy, licenses, flags, threads, collab] = await Promise.all([
-    opportunityTimeline(id),
-    actionsForOpportunity(id),
-    quotesFor(id),
-    activePolicy(),
-    licensesForBrand(opportunity.brandId),
-    getFlags(),
-    threadsForOpportunity(id),
-    db.from('collaboration').select('id, status').eq('opportunity_id', id).maybeSingle(),
-  ]);
+  const [timeline, actions, quotes, policy, licenses, flags, threads, collab, documents, candidates] =
+    await Promise.all([
+      opportunityTimeline(id),
+      actionsForOpportunity(id),
+      quotesFor(id),
+      activePolicy(),
+      licensesForBrand(opportunity.brandId),
+      getFlags(),
+      threadsForOpportunity(id),
+      db.from('collaboration').select('id, status').eq('opportunity_id', id).maybeSingle(),
+      documentsFor(id),
+      unlinkedDocumentsFor(opportunity.brandId),
+    ]);
 
   const classified = timeline.find((e) => e.eventType === 'reply.classified');
   const facts = (classified?.payload ?? {}) as {
@@ -145,6 +150,8 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
       />
 
       <QuoteBuilder opportunityId={id} quotes={quotes} policyVersion={policy.version} />
+
+      <Documents opportunityId={id} documents={documents} candidates={candidates} />
 
       {opportunity.commercialModel === 'barter' ||
       opportunity.commercialModel === 'reimbursement' ||

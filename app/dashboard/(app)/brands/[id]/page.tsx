@@ -5,6 +5,7 @@ import { formatMoney } from '@/lib/money';
 import { formatDate, relativeDays } from '@/lib/time';
 import { supabaseServer } from '@/lib/supabase/server';
 import { brandTimeline } from '@/modules/activity/service';
+import { latestDossier } from '@/modules/brands/dossier';
 import { brandFit, brandIdentities, getBrand } from '@/modules/brands/service';
 import { hypothesesFor } from '@/modules/content/service';
 import { STAGE_LABEL } from '@/modules/opportunities/domain';
@@ -13,6 +14,7 @@ import { licensesForBrand } from '@/modules/rights/service';
 import { getFlags } from '@/modules/settings/service';
 import FitPanel from '@/components/dashboard/os/FitPanel';
 import CreativeIdeas from '@/components/dashboard/os/CreativeIdeas';
+import Dossier from '@/components/dashboard/os/Dossier';
 import Timeline from '@/components/dashboard/os/Timeline';
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +29,7 @@ export default async function BrandPage({ params }: { params: Promise<{ id: stri
   if (!brand) notFound();
 
   const db = await supabaseServer();
-  const [opportunities, timeline, identities, licenses, hypotheses, flags, contacts, relationship] =
+  const [opportunities, timeline, identities, licenses, hypotheses, flags, contacts, relationship, dossier] =
     await Promise.all([
       opportunitiesForBrand(id),
       brandTimeline(id),
@@ -37,6 +39,7 @@ export default async function BrandPage({ params }: { params: Promise<{ id: stri
       getFlags(),
       db.from('contact').select('id, name, role, email, preferred_channel').eq('brand_id', id),
       db.from('relationship').select('*').eq('brand_id', id).maybeSingle(),
+      latestDossier(id),
     ]);
 
   const { computed, effective } = brandFit(brand);
@@ -101,6 +104,13 @@ export default async function BrandPage({ params }: { params: Promise<{ id: stri
           <p className="osEmpty">Ainda não há oportunidades registadas com esta marca.</p>
         )}
       </section>
+
+      <Dossier
+        brandId={id}
+        dossier={dossier}
+        generatedAt={brand.dossierAt}
+        aiEnabled={flags.ai_enabled && flags.ai_classification}
+      />
 
       <FitPanel
         brandId={id}

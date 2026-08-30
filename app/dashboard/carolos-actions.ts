@@ -702,3 +702,59 @@ export async function triggerJob(job: string): Promise<Result & { detail?: unkno
     ? { error: JSON.stringify(result.detail) }
     : { ok: true, detail: result.detail };
 }
+
+/* ── Dossiê de marca ────────────────────────────────────────────────────── */
+
+export async function researchBrand(brandId: string): Promise<Result & { fitScore?: number }> {
+  await requireUser();
+  const { buildDossier } = await import('@/modules/brands/dossier');
+  const result = await buildDossier(brandId, await getFlags());
+  if (!result.ok) return { error: result.message };
+  revalidatePath(`/dashboard/brands/${brandId}`);
+  revalidatePath('/dashboard/brands');
+  return { ok: true, fitScore: result.fitScore };
+}
+
+/* ── Documentos ─────────────────────────────────────────────────────────── */
+
+export async function buildProposal(
+  opportunityId: string,
+): Promise<Result & { id?: string; warnings?: string[] }> {
+  const { app } = await requireUser();
+  const { proposalFromOpportunity } = await import('@/modules/documents/service');
+  const result = await proposalFromOpportunity(opportunityId, app.id);
+  if (!result.ok) return { error: result.error };
+  revalidatePath('/dashboard/documents');
+  revalidatePath(`/dashboard/opportunities/${opportunityId}`);
+  return { ok: true, id: result.id, warnings: result.warnings };
+}
+
+export async function sendDocument(documentId: string, opportunityId?: string): Promise<Result> {
+  const { app } = await requireUser();
+  const { markDocumentSent } = await import('@/modules/documents/service');
+  const result = await markDocumentSent(documentId, app.id);
+  if (!result.ok) return { error: result.error };
+  revalidatePath('/dashboard/documents');
+  if (opportunityId) revalidatePath(`/dashboard/opportunities/${opportunityId}`);
+  refreshOs();
+  return { ok: true };
+}
+
+export async function attachDocument(documentId: string, opportunityId: string): Promise<Result> {
+  const { app } = await requireUser();
+  const { linkDocument } = await import('@/modules/documents/service');
+  const result = await linkDocument(documentId, opportunityId, app.id);
+  if (!result.ok) return { error: result.error };
+  revalidatePath(`/dashboard/opportunities/${opportunityId}`);
+  return { ok: true };
+}
+
+export async function buildUsageDoc(licenseId: string): Promise<Result & { id?: string }> {
+  const { app } = await requireUser();
+  const { usageDocFromLicense } = await import('@/modules/documents/service');
+  const result = await usageDocFromLicense(licenseId, app.id);
+  if (!result.ok) return { error: result.error };
+  revalidatePath('/dashboard/documents');
+  revalidatePath('/dashboard/revenue');
+  return { ok: true, id: result.id };
+}
