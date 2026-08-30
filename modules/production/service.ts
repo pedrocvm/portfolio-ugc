@@ -5,6 +5,7 @@ import { asJson } from '@/lib/supabase/json';
 import { priorityScore } from '@/modules/actions/planner';
 import { recordEvent, type Db } from '@/modules/activity/service';
 import { refreshRelationship } from '@/modules/revenue/service';
+import { gateBlockers, type CollaborationRow, type CollaborationStatus } from './domain';
 
 /** Ciclo de vida da produção.
  *
@@ -12,48 +13,10 @@ import { refreshRelationship } from '@/modules/revenue/service';
  *  ideia» não é aceitação, e o redutor de etapas já garante isso. Aqui o que
  *  se garante é o outro lado: nada entra em produção com termos por fechar. */
 
-export const COLLABORATION_STATUS = [
-  'accepted', 'awaiting_terms', 'awaiting_product', 'awaiting_brief',
-  'production_ready', 'in_production', 'delivered', 'in_revision',
-  'approved', 'closed', 'cancelled',
-] as const;
-
-export type CollaborationStatus = (typeof COLLABORATION_STATUS)[number];
-
-export const STATUS_LABEL: Record<CollaborationStatus, string> = {
-  accepted: 'Aceite',
-  awaiting_terms: 'À espera de termos',
-  awaiting_product: 'À espera do produto',
-  awaiting_brief: 'À espera do briefing',
-  production_ready: 'Pronta para produzir',
-  in_production: 'Em produção',
-  delivered: 'Entregue',
-  in_revision: 'Em revisão',
-  approved: 'Aprovada',
-  closed: 'Encerrada',
-  cancelled: 'Cancelada',
-};
-
-export type CollaborationRow = {
-  id: string;
-  opportunityId: string;
-  brandId: string;
-  brandName: string;
-  title: string;
-  status: CollaborationStatus;
-  compensationModel: string;
-  deadlineAt: string | null;
-  logisticsKind: string | null;
-  shippedAt: string | null;
-  receivedAt: string | null;
-  trackingRef: string | null;
-  accessStatus: string | null;
-  paymentGate: string;
-  gateBlockers: string[];
-  revisionsIncluded: number | null;
-  acceptedAt: string | null;
-  notes: string;
-};
+export {
+  COLLABORATION_STATUS, STATUS_LABEL, gateBlockers,
+  type CollaborationRow, type CollaborationStatus,
+} from './domain';
 
 const SELECT = `
   id, opportunity_id, brand_id, title, status, compensation_model, deadline_at,
@@ -106,34 +69,6 @@ export async function getCollaboration(id: string): Promise<CollaborationRow | n
   const db = await supabaseServer();
   const { data } = await db.from('collaboration').select(SELECT).eq('id', id).maybeSingle();
   return data ? toCollab(data as unknown as RawCollab) : null;
-}
-
-/** O que ainda falta antes de valer a pena gravar. Se a Carol produzir sem
- *  isto resolvido, descobre o problema depois de a câmara já ter desligado. */
-export function gateBlockers(c: {
-  compensationModel: string;
-  logisticsKind: string | null;
-  receivedAt: string | null;
-  accessStatus: string | null;
-  hasBrief: boolean;
-  hasRights: boolean;
-  deadlineAt: string | null;
-  paymentGate: string;
-}): string[] {
-  const blockers: string[] = [];
-
-  if (c.compensationModel === 'unclear') blockers.push('Modelo de compensação por definir.');
-  if (!c.deadlineAt) blockers.push('Sem prazo combinado.');
-  if (!c.hasBrief) blockers.push('Briefing por receber ou por validar.');
-  if (!c.hasRights) blockers.push('Direitos de uso por registar.');
-  if (c.paymentGate === 'unresolved') blockers.push('Regra de pagamento por decidir.');
-
-  if (c.logisticsKind === 'physical' && !c.receivedAt) blockers.push('Produto ainda não chegou.');
-  if (c.logisticsKind === 'digital' && c.accessStatus !== 'ready') {
-    blockers.push('Acesso ao produto digital ainda não está pronto.');
-  }
-
-  return blockers;
 }
 
 /** Cria a colaboração a partir de uma oportunidade fechada. */

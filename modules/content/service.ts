@@ -5,6 +5,7 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { recordEvent } from '@/modules/activity/service';
 import { runPrompt } from '@/modules/ai/gateway';
 import { creativeHypotheses } from '@/modules/ai/prompts/registry';
+import { type ContentRow, type FunnelRole, type Shot } from './domain';
 
 /** Inteligência criativa.
  *
@@ -12,70 +13,10 @@ import { creativeHypotheses } from '@/modules/ai/prompts/registry';
  *  É essa diferença que permite vender um pacote de três como três razões
  *  distintas para o consumidor avançar, em vez de «três vídeos com desconto». */
 
-export const FUNNEL_ROLES = ['DISCOVERY', 'CONSIDERATION', 'DECISION'] as const;
-export type FunnelRole = (typeof FUNNEL_ROLES)[number];
-
-export const FUNNEL_LABEL: Record<FunnelRole, string> = {
-  DISCOVERY: 'Descoberta',
-  CONSIDERATION: 'Consideração',
-  DECISION: 'Decisão',
-};
-
-export const FUNNEL_NOTE: Record<FunnelRole, string> = {
-  DISCOVERY: 'Interrompe o scroll e cria curiosidade sobre um problema.',
-  CONSIDERATION: 'Compara, demonstra e mostra o produto a resolver.',
-  DECISION: 'Responde à objeção que ainda trava a compra.',
-};
-
-/** Competências que uma peça demonstra. É o que permite escolher o exemplo
- *  certo para um lead em vez de mandar o portfólio inteiro. */
-export const CAPABILITIES = [
-  'demo', 'before_after', 'saas_app', 'home_tech', 'pet_tech', 'objection',
-  'testimonial', 'humor', 'storytelling', 'talking_head', 'voice_over',
-  'b_roll', 'english_scripted', 'unboxing', 'routine', 'asmr',
-] as const;
-
-export const CAPABILITY_LABEL: Record<string, string> = {
-  demo: 'Demonstração',
-  before_after: 'Antes/depois',
-  saas_app: 'SaaS ou app',
-  home_tech: 'Home tech',
-  pet_tech: 'Pet tech',
-  objection: 'Objeção',
-  testimonial: 'Testemunho',
-  humor: 'Humor',
-  storytelling: 'Storytelling',
-  talking_head: 'Talking head',
-  voice_over: 'Voice-over',
-  b_roll: 'B-roll',
-  english_scripted: 'Inglês com guião',
-  unboxing: 'Unboxing',
-  routine: 'Rotina',
-  asmr: 'ASMR',
-};
-
-export type ContentRow = {
-  id: string;
-  collaborationId: string | null;
-  brandId: string | null;
-  brandName: string;
-  title: string;
-  hypothesis: string;
-  funnelRole: FunnelRole | null;
-  format: string;
-  hook: string;
-  coreMessage: string;
-  cta: string;
-  emotion: string;
-  capabilities: string[];
-  language: string;
-  script: string;
-  shotList: { shot: string; note?: string; required?: boolean }[];
-  status: string;
-  mediaItemId: string | null;
-  portfolioPermission: boolean | null;
-  publishedAt: string | null;
-};
+export {
+  CAPABILITIES, CAPABILITY_LABEL, FUNNEL_LABEL, FUNNEL_NOTE, FUNNEL_ROLES,
+  shotListFromScript, type ContentRow, type FunnelRole, type Shot,
+} from './domain';
 
 const SELECT = `
   id, collaboration_id, brand_id, title, hypothesis, funnel_role, format, hook,
@@ -108,7 +49,7 @@ const toContent = (r: RawContent): ContentRow => ({
   capabilities: r.capabilities ?? [],
   language: r.language,
   script: r.script,
-  shotList: (r.shot_list ?? []) as ContentRow['shotList'],
+  shotList: (r.shot_list ?? []) as Shot[],
   status: r.status,
   mediaItemId: r.media_item_id,
   portfolioPermission: r.portfolio_permission,
@@ -186,30 +127,7 @@ export async function saveContent(input: {
   return { ok: true, id: data.id };
 }
 
-/** Shot list a partir do guião. Determinístico: uma linha por cena, com a
- *  marcação de obrigatória para as tomadas que o briefing exige.
- *
- *  ponytail: um parser de guião a sério é outra coisa; isto resolve o caso
- *  real, que é a Carol escrever cenas separadas por linha antes de gravar. */
-export function shotListFromScript(script: string, mandatory: string[] = []) {
-  const lines = script
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l.length > 3);
-
-  return lines.map((line) => {
-    const clean = line.replace(/^[-*\d.)\s]+/, '');
-    return {
-      shot: clean,
-      required: mandatory.some((m) => clean.toLowerCase().includes(m.toLowerCase())),
-    };
-  });
-}
-
-export async function saveShotList(
-  contentId: string,
-  shots: { shot: string; note?: string; required?: boolean }[],
-) {
+export async function saveShotList(contentId: string, shots: Shot[]) {
   const db = await supabaseServer();
   await db.from('content_asset').update({ shot_list: shots as never }).eq('id', contentId);
 }

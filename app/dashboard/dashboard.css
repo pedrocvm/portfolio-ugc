@@ -3118,3 +3118,625 @@
     break-after: avoid;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CarolOS
+
+   A gramática é a mesma do resto: tipo grande, filetes finos, muito ar e
+   nenhuma moldura. O que muda é a densidade — aqui decide-se, não se
+   contempla, e por isso a linha vem antes da caixa.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── fila de ações ─────────────────────────────────────────────────────── */
+.osQueue {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--areia2);
+}
+.osCard {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 24px;
+  padding: 22px 0 20px;
+  border-bottom: 1px solid var(--areia2);
+  animation: rise 0.5s var(--exp) both;
+  animation-delay: calc(var(--r, 0) * 45ms);
+}
+.osCard[data-risk='high'] {
+  box-shadow: inset 3px 0 0 -1px var(--alerta);
+  padding-left: 14px;
+}
+.osCard[data-risk='medium'] {
+  box-shadow: inset 3px 0 0 -1px var(--pedra);
+  padding-left: 14px;
+}
+.osCardMain {
+  min-width: 0;
+}
+.osCardTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin-bottom: 5px;
+}
+.osBrand {
+  font-family: var(--disp);
+  font-variation-settings: var(--wide);
+  font-weight: 560;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta2);
+}
+.osCard h3 {
+  font-size: clamp(20px, 2.4vw, 27px);
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+.osWhy {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--tinta2);
+  max-width: 62ch;
+  margin: 0;
+}
+.osCardActs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+}
+.osMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--tinta3);
+  letter-spacing: 0.02em;
+}
+.osMeta b {
+  font-weight: 500;
+  color: var(--tinta2);
+}
+.osDue[data-late='1'] {
+  color: var(--alerta);
+  font-weight: 500;
+}
+
+/* ── etiquetas ─────────────────────────────────────────────────────────── */
+.osTag {
+  display: inline-block;
+  padding: 3px 9px 4px;
+  border-radius: 6px;
+  background: var(--areia);
+  color: var(--tinta2);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-variation-settings: var(--narrow);
+  white-space: nowrap;
+}
+.osTag[data-tone='won'],
+.osTag[data-tone='ok'] {
+  background: var(--jadeLeve);
+  color: var(--jade);
+}
+.osTag[data-tone='lost'],
+.osTag[data-tone='bad'] {
+  background: var(--alertaLeve);
+  color: var(--alerta);
+}
+.osTag[data-tone='hot'] {
+  background: var(--realceLeve);
+  color: var(--umbra);
+}
+.osTag[data-tone='mute'] {
+  background: transparent;
+  color: var(--tinta3);
+  border: 1px solid var(--areia2);
+}
+
+/* ── secções e estados ─────────────────────────────────────────────────── */
+.osSection {
+  margin: 44px 0 0;
+}
+.osSection > h2 {
+  font-size: clamp(22px, 2.6vw, 30px);
+  margin-bottom: 4px;
+}
+.osNote {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--tinta2);
+  margin: 0 0 18px;
+  max-width: 66ch;
+}
+.osEmpty {
+  padding: 34px 0 40px;
+  border-top: 1px solid var(--areia2);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
+  color: var(--tinta2);
+  max-width: 60ch;
+}
+.osWarn {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border-radius: 9px;
+  background: var(--alertaLeve);
+  color: var(--alerta);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.osWarn[data-tone='info'] {
+  background: var(--realceLeve);
+  color: var(--umbra);
+}
+.osWarn[data-tone='ok'] {
+  background: var(--jadeLeve);
+  color: var(--jade);
+}
+
+/* ── linhas de dados ───────────────────────────────────────────────────── */
+.osRows {
+  border-top: 1px solid var(--areia2);
+}
+.osRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 6px 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--areia2);
+  text-decoration: none;
+}
+a.osRow:hover .osRowName {
+  color: var(--umbra);
+}
+.osRowName {
+  font-family: var(--disp);
+  font-variation-settings: var(--wide);
+  font-weight: 560;
+  font-size: 20px;
+  letter-spacing: -0.015em;
+  transition: color 0.2s var(--quart);
+}
+.osRowSub {
+  font-size: 14px;
+  color: var(--tinta3);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.osRowSide {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--tinta3);
+}
+
+/* ── grelha de números ─────────────────────────────────────────────────── */
+.osStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2px;
+  background: var(--areia2);
+  border: 1px solid var(--areia2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0 0 26px;
+}
+.osStat {
+  background: var(--papel);
+  padding: 18px 18px 16px;
+}
+.osStat b {
+  display: block;
+  font-family: var(--disp);
+  font-variation-settings: var(--wide);
+  font-weight: 560;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.osStat span {
+  display: block;
+  margin-top: 7px;
+  font-size: 13px;
+  color: var(--tinta3);
+  letter-spacing: 0.02em;
+}
+.osStat em {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--tinta3);
+}
+
+/* ── linha do tempo ────────────────────────────────────────────────────── */
+.osTimeline {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 20px;
+  list-style: none;
+  border-left: 1px solid var(--areia2);
+}
+.osTimeline li {
+  position: relative;
+  padding: 0 0 22px;
+}
+.osTimeline li::before {
+  content: '';
+  position: absolute;
+  left: -25px;
+  top: 7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--papel);
+  border: 1px solid var(--pedra);
+}
+.osTimeline li[data-actor='brand']::before {
+  background: var(--umbra);
+  border-color: var(--umbra);
+}
+.osTimeline li[data-actor='carol']::before {
+  background: var(--jade);
+  border-color: var(--jade);
+}
+.osTimeline li[data-actor='ai']::before {
+  background: var(--areia2);
+}
+.osEvent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.osEventType {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  font-variation-settings: var(--narrow);
+}
+.osEventWhen {
+  font-size: 13px;
+  color: var(--pedra);
+}
+.osEventText {
+  margin: 3px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--tinta2);
+  max-width: 70ch;
+}
+.osEvidence {
+  margin: 7px 0 0;
+  font-size: 13px;
+  color: var(--tinta3);
+}
+.osEvidence summary {
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.osEvidence pre {
+  margin: 8px 0 0;
+  padding: 11px 13px;
+  border-radius: 8px;
+  background: var(--areia);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── painéis de trabalho ───────────────────────────────────────────────── */
+.osPanel {
+  padding: 22px 0 26px;
+  border-top: 1px solid var(--areia2);
+}
+.osPanel h3 {
+  font-size: 21px;
+  margin: 0 0 4px;
+}
+.osGrid {
+  display: grid;
+  gap: 26px 40px;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .osGrid {
+    grid-template-columns: 1fr;
+  }
+}
+.osField {
+  display: block;
+  margin: 0 0 14px;
+}
+.osField > span {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  font-variation-settings: var(--narrow);
+}
+.osField input[type='text'],
+.osField input[type='date'],
+.osField input[type='number'],
+.osField input[type='url'],
+.osField select,
+.osField textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--areia2);
+  border-radius: 8px;
+  background: var(--papel);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 15px;
+}
+.osField textarea {
+  min-height: 120px;
+  line-height: 1.55;
+  resize: vertical;
+}
+.osField input:focus-visible,
+.osField select:focus-visible,
+.osField textarea:focus-visible {
+  outline: 2px solid var(--umbra);
+  outline-offset: 1px;
+}
+.osCheck {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0 0 11px;
+  font-size: 15px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+.osCheck input {
+  margin-top: 3px;
+  accent-color: var(--umbra);
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.osCheck small {
+  display: block;
+  color: var(--tinta3);
+  font-size: 13px;
+  margin-top: 2px;
+}
+.osActs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: 14px;
+}
+.osInline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.osInline .osField {
+  margin: 0;
+  flex: 1 1 150px;
+}
+
+/* ── listas de razões e riscos ─────────────────────────────────────────── */
+.osList {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--tinta2);
+}
+.osList li {
+  margin-bottom: 5px;
+}
+.osList[data-tone='bad'] li::marker {
+  color: var(--alerta);
+}
+.osList[data-tone='ok'] li::marker {
+  color: var(--jade);
+}
+
+/* ── barras de composição ──────────────────────────────────────────────── */
+.osBars {
+  margin: 12px 0 0;
+}
+.osBar {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.6fr) minmax(0, 3fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+}
+.osBar i {
+  display: block;
+  height: 7px;
+  border-radius: 4px;
+  background: var(--umbra);
+  min-width: 2px;
+}
+.osBar[data-assumed='1'] i {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--areia2) 0 5px,
+    transparent 5px 9px
+  );
+}
+.osBar b {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta2);
+}
+
+/* ── quadro do funil ───────────────────────────────────────────────────── */
+.osBoard {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(190px, 1fr);
+  gap: 18px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scroll-snap-type: x proximity;
+}
+.osCol {
+  scroll-snap-align: start;
+  min-width: 0;
+}
+.osColHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--areia2);
+  margin-bottom: 10px;
+}
+.osColHead span {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tinta2);
+  font-variation-settings: var(--narrow);
+}
+.osColHead b {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--tinta3);
+}
+.osMini {
+  display: block;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--areia);
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.osMini small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--tinta3);
+}
+
+/* ── captura rápida ────────────────────────────────────────────────────── */
+.osCapture textarea {
+  min-height: 170px;
+  font-size: 16px;
+}
+.osCaptureHint {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--tinta2);
+  margin: 0 0 14px;
+}
+.osKinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.osKinds button {
+  padding: 6px 13px;
+  border: 1px solid var(--areia2);
+  border-radius: 999px;
+  background: none;
+  color: var(--tinta2);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s var(--quart);
+}
+.osKinds button[aria-pressed='true'] {
+  background: var(--umbra);
+  border-color: var(--umbra);
+  color: var(--papel);
+}
+
+/* ── bandeiras ─────────────────────────────────────────────────────────── */
+.osFlag {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 8px 20px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--areia2);
+}
+.osFlag b {
+  font-weight: 500;
+  font-size: 16px;
+}
+.osFlag p {
+  margin: 3px 0 0;
+  font-size: 14px;
+  color: var(--tinta3);
+  line-height: 1.5;
+  max-width: 60ch;
+}
+.osSwitch {
+  padding: 5px 14px;
+  border: 1px solid var(--areia2);
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s var(--quart);
+}
+.osSwitch[aria-pressed='true'] {
+  background: var(--jade);
+  border-color: var(--jade);
+  color: var(--papel);
+}
+
+/* ── telemóvel: a fila tem de caber na mão ─────────────────────────────── */
+@media (max-width: 700px) {
+  .osCard {
+    grid-template-columns: 1fr;
+  }
+  .osCardActs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 18px;
+    margin-top: 12px;
+  }
+  .osRow {
+    grid-template-columns: 1fr;
+  }
+  .osRowSide {
+    margin-top: 6px;
+  }
+  .osStats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .osBar {
+    grid-template-columns: 1fr auto;
+  }
+  .osBar i {
+    grid-column: 1 / -1;
+  }
+}

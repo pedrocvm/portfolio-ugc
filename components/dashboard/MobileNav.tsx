@@ -41,13 +41,34 @@ const ICON = {
       <circle cx="18" cy="12" r="1.4" />
     </>
   ),
+  today: (
+    <>
+      <path d="M4.6 6.4h14.8v13H4.6z" />
+      <path d="M4.6 10.2h14.8M8.6 4.4v3.4M15.4 4.4v3.4" />
+      <path d="m8.8 14.4 2 2 3.6-3.8" />
+    </>
+  ),
+  inbox: (
+    <>
+      <path d="M3.6 12.6 6 5.4h12l2.4 7.2v6H3.6z" />
+      <path d="M3.6 12.6h4.2l1.2 2.4h5.9l1.3-2.4h4.2" />
+    </>
+  ),
+  capture: (
+    <>
+      <path d="M12 5.2v13.6M5.2 12h13.6" />
+      <circle cx="12" cy="12" r="8.2" />
+    </>
+  ),
 };
 
+/* No telemóvel só cabem quatro. São as quatro que ela usa em movimento:
+   decidir, ler, capturar e ver a marca. O editor do site vive no «Mais». */
 const TABS = [
-  { href: '/dashboard', label: 'Conteúdo', icon: 'content' as const },
-  { href: '/dashboard/library', label: 'Biblioteca', icon: 'library' as const },
+  { href: '/dashboard', label: 'Hoje', icon: 'today' as const },
+  { href: '/dashboard/inbox', label: 'Inbox', icon: 'inbox' as const },
+  { href: '/dashboard/capture', label: 'Capturar', icon: 'capture' as const },
   { href: '/dashboard/brands', label: 'Marcas', icon: 'brands' as const },
-  { href: '/dashboard/funnel', label: 'Funil', icon: 'funnel' as const },
 ];
 
 function Glyph({ name }: { name: keyof typeof ICON }) {

@@ -1,10 +1,8 @@
-import Library from '@/components/dashboard/Library';
-import { listMedia } from '@/app/dashboard/library-actions';
-import { getDraft } from '@/lib/content-store';
+import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
-
-export default async function LibraryPage() {
-  const [items, content] = await Promise.all([listMedia(), getDraft()]);
-  return <Library items={items} niches={content.meet.niches.map((n) => n.name)} />;
+/** A biblioteca mudou para /dashboard/site/library. O endereço antigo fica a
+ *  redirecionar: um marcador guardado não deve partir por causa de uma
+ *  reorganização de menu. */
+export default function MovedLibrary() {
+  redirect('/dashboard/site/library');
 }
