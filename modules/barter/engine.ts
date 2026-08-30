@@ -69,10 +69,16 @@ const rightsCostCents = (r: BarterInput['rightsRequested'], reference: number) =
   (r.exclusivity ? reference * 0.7 : 0) +
   (r.rawFootage ? reference * 0.3 : 0);
 
-/** Custo de oportunidade: cada nível de esforço come uma fatia do valor de um
- *  trabalho pago equivalente. */
+/** Custo de oportunidade. Mesmo o trabalho mais leve ocupa metade de um espaço
+ *  de agenda que podia ser vendido — a produção é indivisível, não se grava
+ *  meio vídeo. O esforço move o custo de metade a um trabalho inteiro. */
 const effortCostCents = (effort: number | null, reference: number) =>
-  reference * ((effort ?? 3) / 5);
+  reference * (0.5 + ((effort ?? 3) / 5) * 0.5);
+
+/** Bónus só acima de neutro. Um valor estratégico "aceitável" (3) não
+ *  acrescenta nada: se acrescentasse, qualquer permuta ficava atraente por
+ *  omissão, que é exactamente o erro que este motor existe para evitar. */
+const aboveNeutral = (value: number | null | undefined) => Math.max(0, ((value ?? 2) - 3) / 2);
 
 export function decideBarter(input: BarterInput): BarterResult {
   const reasons: string[] = [];
@@ -117,8 +123,8 @@ export function decideBarter(input: BarterInput): BarterResult {
     missing.push('Valor de um trabalho pago equivalente (falta política de preço).');
   }
 
-  const strategic = ((input.strategicValue ?? 2) / 5) * (reference ?? 0) * 0.4;
-  const portfolio = ((input.portfolioValue ?? 2) / 5) * (reference ?? 0) * 0.25;
+  const strategic = aboveNeutral(input.strategicValue) * (reference ?? 0) * 0.4;
+  const portfolio = aboveNeutral(input.portfolioValue) * (reference ?? 0) * 0.25;
   const effectiveValueCents = Math.round(productValue + strategic + portfolio);
 
   const requestedRights = Object.entries(input.rightsRequested).filter(([, v]) => v).map(([k]) => k);

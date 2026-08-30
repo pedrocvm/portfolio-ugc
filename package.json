@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"lib/*.test.ts\""
+    "test": "node --import ./scripts/test-alias.mjs --test \"lib/*.test.ts\" \"modules/**/*.test.ts\"",
+    "db:types": "echo \"Gera lib/supabase/database.types.ts a partir do projeto ligado:\" && npx --yes supabase@latest gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" > lib/supabase/database.types.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

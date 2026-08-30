@@ -125,21 +125,31 @@ export const isExcludedNiche = (id: string | null | undefined) =>
  *  histórico, nunca como alvo. */
 export const prospectableNiches = () => NICHES.filter((n) => n.prospect);
 
-const strip = (v: string) =>
-  v.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+/** Acentos fora, pontuação vira espaço, e o resultado fica rodeado de espaços.
+ *  Comparar por substring cru dava falsos positivos silenciosos: «api» está
+ *  dentro de «rápida», e um power bank ia parar a SaaS. */
+const tokenize = (v: string) =>
+  ` ${v
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()} `;
 
 /** Adivinha a categoria a partir de texto livre — nome, descrição, produto.
  *  Devolve `null` quando nada bate, porque «não sei» é uma resposta válida e
  *  «other» aplicado por omissão esconde a diferença. */
 export function guessNiche(...texts: (string | null | undefined)[]): Niche | null {
-  const haystack = strip(texts.filter(Boolean).join(' '));
-  if (!haystack.trim()) return null;
+  const haystack = tokenize(texts.filter(Boolean).join(' '));
+  if (haystack.trim() === '') return null;
 
   let best: { niche: Niche; hits: number } | null = null;
   for (const niche of NICHES) {
     let hits = 0;
     for (const kw of niche.keywords) {
-      if (haystack.includes(strip(kw))) hits++;
+      const term = tokenize(kw).slice(0, -1); // mantém o espaço da frente
+      // O plural simples conta: «gatos» é o mesmo nicho que «gato».
+      if (haystack.includes(`${term} `) || haystack.includes(`${term}s `)) hits++;
     }
     if (hits > 0 && (!best || hits > best.hits)) best = { niche, hits };
   }
