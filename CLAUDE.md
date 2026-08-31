@@ -8,7 +8,7 @@ por cada ficheiro tocado), com mensagem clara sobre o "porquê" da mudança,
 seguindo o estilo dos commits já existentes no histórico.
 
 Isto cobre apenas `git commit` local. Continua a pedir confirmação antes de
-`git push` ou de qualquer outra ação que afete o remoto.
+Nunca commitar com `Co-Authored-By` nem atribuição de IA.
 
 ## CarolOS
 
