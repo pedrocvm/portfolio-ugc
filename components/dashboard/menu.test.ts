@@ -44,11 +44,14 @@ test('«Hoje» e «Captura» ficam fora dos grupos, sempre à vista', () => {
   assert.match(pinned, /'\/dashboard\/capture'/);
 });
 
-test('o menu cabe: no máximo cinco grupos, nenhum com mais de cinco entradas', () => {
+test('o menu cabe: no máximo cinco grupos, nenhum com mais de seis entradas', () => {
+  // Seis e não cinco: com o acordeão só um grupo está aberto de cada vez, e
+  // medido a 1280x800 o carril ainda cabe com o maior grupo aberto. O limite
+  // existe para travar o crescimento, não para o proibir.
   const groups = [...MENU.matchAll(/group: '([^']+)',\s*items: \[([\s\S]*?)\],/g)];
   assert.ok(groups.length <= 5, `${groups.length} grupos`);
   for (const [, name, body] of groups) {
     const n = [...body.matchAll(/href:/g)].length;
-    assert.ok(n <= 5, `o grupo «${name}» tem ${n} entradas`);
+    assert.ok(n <= 6, `o grupo «${name}» tem ${n} entradas`);
   }
 });

@@ -254,3 +254,58 @@ export const DailyReadSchema = z.object({
   read: z.string(),
 });
 export type DailyRead = z.infer<typeof DailyReadSchema>;
+
+/* ── Prospecção diária ──────────────────────────────────────────────────── */
+
+export const OutreachStyleSchema = z.object({
+  formality: z.string(),
+  opening: z.string(),
+  howSheIntroducesHerself: z.string(),
+  howSheExplainsUgc: z.string(),
+  howMuchOfTheIdeaSheReveals: z.string(),
+  ctaStyle: z.string(),
+  avoids: z.array(z.string()),
+});
+export type OutreachStyle = z.infer<typeof OutreachStyleSchema>;
+
+export const OutreachResearchSchema = z.object({
+  /** O produto, plano ou funcionalidade concreta a nomear. Null se não houver. */
+  product: z.string().nullable(),
+  category: z.string().nullable(),
+  country: z.string().nullable(),
+  why_fit: z.string(),
+  why_now: z.string(),
+  why_may_pay: z.string(),
+  risk: z.string(),
+  paid_media_signal: z.enum(['none', 'weak', 'medium', 'strong']),
+  paid_media_evidence: z.string(),
+  ugc_signal: z.enum(['none', 'product_only', 'influencers', 'ugc', 'creator_program']),
+  ugc_evidence: z.string(),
+  /** O que a Carol faria melhor ou diferente. Não «usam UGC». */
+  creative_opportunity: z.string(),
+  content_ideas: z.array(z.object({ title: z.string(), angle: z.string() })),
+  red_flags: z.array(z.string()),
+  contact: z
+    .object({
+      name: z.string().nullable(),
+      role: z.string().nullable(),
+      email: z.string().nullable(),
+      confidence: z.enum(['verified', 'high', 'medium', 'low', 'unknown']),
+      source: z.string().nullable(),
+    })
+    .nullable(),
+  /** Cada facto usado, com o sítio onde foi visto. */
+  sources: z.array(z.object({ label: z.string(), url: z.string().nullable() })),
+  /** Sinais para o motor de encaixe, de 0 a 5. Desconhecido é null, não zero. */
+  fit_signals: z.record(z.string(), z.number().nullable()),
+});
+export type OutreachResearch = z.infer<typeof OutreachResearchSchema>;
+
+export const OutreachEmailSchema = z.object({
+  subject: z.string(),
+  body: z.string(),
+  /** Cada afirmação factual do email, ligada à fonte que a sustenta. */
+  claims: z.array(z.object({ text: z.string(), source: z.string().nullable() })),
+  cta: z.string(),
+});
+export type OutreachEmail = z.infer<typeof OutreachEmailSchema>;

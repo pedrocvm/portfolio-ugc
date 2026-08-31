@@ -4904,3 +4904,77 @@ a.aiSource:hover {
     padding-right: 0;
   }
 }
+
+/* ── prospecção ────────────────────────────────────────────────────────── */
+.outDetail {
+  margin-top: 12px;
+  border-top: 1px solid var(--areia);
+  padding-top: 10px;
+}
+.outDetail > summary {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--tinta3);
+  cursor: pointer;
+  list-style: none;
+}
+.outDetail > summary::-webkit-details-marker {
+  display: none;
+}
+.outDetail > summary::before {
+  content: '▸ ';
+  color: var(--pedra);
+}
+.outDetail[open] > summary::before {
+  content: '▾ ';
+}
+.outDetail > summary:hover {
+  color: var(--tinta);
+}
+.outDetail > div {
+  padding: 10px 0 4px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--tinta2);
+}
+.outDetail p + p {
+  margin-top: 7px;
+}
+.outDetail b {
+  color: var(--tinta);
+  font-weight: 600;
+}
+.outDetail ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+.outDetail li + li {
+  margin-top: 4px;
+}
+.outMail {
+  display: grid;
+  gap: 8px;
+}
+.outMail input,
+.outMail textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--areia2);
+  border-radius: 9px;
+  background: var(--papel);
+  font: inherit;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--tinta);
+}
+.outMail textarea {
+  resize: vertical;
+  min-height: 180px;
+}
+.outMail input:focus-visible,
+.outMail textarea:focus-visible {
+  outline: 2px solid var(--umbra);
+  outline-offset: 1px;
+}

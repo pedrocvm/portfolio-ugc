@@ -16,8 +16,13 @@ const REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
 
 /** O mínimo para o CRM passivo funcionar:
  *  - `gmail.readonly` para ler conversas;
- *  - `gmail.compose` para escrever um rascunho que a Carol revê e envia.
- *  Nada que permita enviar sozinho. Não há `gmail.send` de propósito. */
+ *  - `gmail.compose` para escrever rascunhos e enviar o que ela aprovar.
+ *
+ *  O scope `gmail.send` continua a não existir aqui, e isso é de propósito: o
+ *  que existe é envio a pedido de uma pessoa. Nenhum trabalho de fundo envia —
+ *  a prospecção diária pesquisa, escreve e prepara, e pára. A regra 3 do
+ *  CarolOS é que nada sai sozinho, e continua a ser verdade: sai quando ela
+ *  carrega em enviar. */
 export const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/gmail.compose',

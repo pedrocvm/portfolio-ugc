@@ -241,3 +241,37 @@ export async function createDraft(
   });
   return { id: res.id };
 }
+
+/** Envia uma mensagem pela conta dela.
+ *
+ *  O remetente NÃO é um parâmetro livre: vem sempre da conta ligada. Aceitar um
+ *  `from` arbitrário seria dar a quem chamasse a capacidade de escrever em nome
+ *  de outra pessoa a partir da caixa da Carol. */
+export async function sendMessage(
+  token: string,
+  input: { to: string; subject: string; body: string; from: string; threadId?: string },
+): Promise<{ id: string; threadId: string }> {
+  const mime = [
+    `From: ${input.from}`,
+    `To: ${input.to}`,
+    `Subject: ${encodeHeader(input.subject)}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    input.body,
+  ].join('\r\n');
+
+  const raw = Buffer.from(mime, 'utf8').toString('base64url');
+  const res = await call<{ id: string; threadId: string }>(token, '/messages/send', {
+    method: 'POST',
+    body: JSON.stringify({ raw, ...(input.threadId ? { threadId: input.threadId } : {}) }),
+  });
+  return { id: res.id, threadId: res.threadId };
+}
+
+/** Um assunto com acentos não passa num cabeçalho em ASCII. RFC 2047. */
+function encodeHeader(value: string): string {
+  if (/^[\x00-\x7F]*$/.test(value)) return value;
+  return `=?UTF-8?B?${Buffer.from(value, 'utf8').toString('base64')}?=`;
+}

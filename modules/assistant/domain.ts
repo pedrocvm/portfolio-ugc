@@ -177,7 +177,7 @@ export function memoryCandidate(message: string): MemoryCandidate | null {
 /** Ler não pergunta. Escrever pouco pergunta. Sair para fora, mexer em dinheiro
  *  ou apagar pergunta sempre. */
 export const HIGH_RISK = new Set([
-  'send_email', 'send_dm', 'set_pricing_policy', 'accept_opportunity', 'update_rights',
+  'send_email', 'send_approved_outreach', 'send_outreach', 'send_dm', 'set_pricing_policy', 'accept_opportunity', 'update_rights',
   'delete_data', 'update_contract', 'publish_case', 'publish_portfolio', 'send_proposal',
 ]);
 

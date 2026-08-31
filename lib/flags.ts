@@ -14,6 +14,7 @@ export const FLAG_KEYS = [
   'auto_apply_low_risk',
   'background_jobs',
   'assistant_enabled',
+  'daily_outreach',
   'shadow_mode',
 ] as const;
 
@@ -30,6 +31,7 @@ export const FLAG_LABEL: Record<FlagKey, string> = {
   auto_apply_low_risk: 'Aplicar mudanças de baixo risco',
   background_jobs: 'Trabalhos em segundo plano',
   assistant_enabled: 'Carol AI',
+  daily_outreach: 'Prospecção diária',
   shadow_mode: 'Modo sombra',
 };
 
@@ -46,6 +48,8 @@ export const FLAG_NOTE: Record<FlagKey, string> = {
   background_jobs: 'Correr sincronizações e verificações sem ninguém abrir o painel.',
   assistant_enabled:
     'O assistente que lê os teus dados e responde. Sem isto o botão não aparece.',
+  daily_outreach:
+    'Procurar marcas novas todas as manhãs, pesquisá-las e preparar o email. Nunca envia sozinho.',
   shadow_mode: 'Observar e recomendar sem mexer no estado. Liga isto primeiro.',
 };
 
@@ -59,6 +63,7 @@ export const DEFAULT_FLAGS: Flags = {
   auto_apply_low_risk: false,
   background_jobs: false,
   assistant_enabled: false,
+  daily_outreach: false,
   shadow_mode: true,
 };
 

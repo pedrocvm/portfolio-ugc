@@ -83,6 +83,12 @@ export function jobOutcome(job: string, detail: unknown): string {
       return bits ? `Avisos: ${bits}.` : 'Nada de novo para avisar.';
     }
 
+    case 'outreach': {
+      const found = n(d.selected);
+      if (found === 0) return 'Nenhuma marca nova atingiu o nível de qualidade hoje.';
+      return `${plural(found, 'marca nova encontrada', 'marcas novas encontradas')}, com email preparado.`;
+    }
+
     default:
       return 'Correu.';
   }

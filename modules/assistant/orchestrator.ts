@@ -43,6 +43,11 @@ const STATUS: Record<string, string> = {
   search_business_memory: 'A lembrar-me…',
   search_knowledge: 'A consultar as fontes…',
   create_memory_candidate: 'A guardar…',
+  get_daily_outreach_batch: 'A ver as marcas de hoje…',
+  get_outreach_candidate: 'A ler a pesquisa da marca…',
+  update_outreach_draft: 'A reescrever o email…',
+  approve_outreach: 'A aprovar…',
+  prepare_outreach_send: 'A verificar o envio…',
 };
 
 const toolSchemas = () =>

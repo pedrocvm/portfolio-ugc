@@ -2251,6 +2251,332 @@ export type Database = {
           },
         ]
       }
+      outreach_candidate: {
+        Row: {
+          ai_body: string
+          ai_subject: string
+          body: string
+          brand_id: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_role: string | null
+          contact_source: string | null
+          content_ideas: Json
+          country: string | null
+          created_at: string
+          creative_opportunity: string
+          domain: string | null
+          email_confidence: string | null
+          fit_band: string | null
+          fit_breakdown: Json | null
+          fit_score: number | null
+          gmail_message_id: string | null
+          gmail_thread_id: string | null
+          id: string
+          language: string
+          name: string
+          niche_id: string | null
+          normalized_name: string
+          opportunity_id: string | null
+          paid_media_signal: string | null
+          portfolio_match: Json | null
+          product: string | null
+          quality: Json | null
+          rank: number
+          red_flags: Json
+          reject_reason: string | null
+          researched_at: string | null
+          risk: string
+          run_id: string
+          sent_at: string | null
+          socials: Json
+          sources: Json
+          status: string
+          subject: string
+          ugc_signal: string | null
+          updated_at: string
+          website: string | null
+          why_fit: string
+          why_may_pay: string
+          why_now: string
+        }
+        Insert: {
+          ai_body?: string
+          ai_subject?: string
+          body?: string
+          brand_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          contact_source?: string | null
+          content_ideas?: Json
+          country?: string | null
+          created_at?: string
+          creative_opportunity?: string
+          domain?: string | null
+          email_confidence?: string | null
+          fit_band?: string | null
+          fit_breakdown?: Json | null
+          fit_score?: number | null
+          gmail_message_id?: string | null
+          gmail_thread_id?: string | null
+          id?: string
+          language?: string
+          name: string
+          niche_id?: string | null
+          normalized_name: string
+          opportunity_id?: string | null
+          paid_media_signal?: string | null
+          portfolio_match?: Json | null
+          product?: string | null
+          quality?: Json | null
+          rank?: number
+          red_flags?: Json
+          reject_reason?: string | null
+          researched_at?: string | null
+          risk?: string
+          run_id: string
+          sent_at?: string | null
+          socials?: Json
+          sources?: Json
+          status?: string
+          subject?: string
+          ugc_signal?: string | null
+          updated_at?: string
+          website?: string | null
+          why_fit?: string
+          why_may_pay?: string
+          why_now?: string
+        }
+        Update: {
+          ai_body?: string
+          ai_subject?: string
+          body?: string
+          brand_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          contact_source?: string | null
+          content_ideas?: Json
+          country?: string | null
+          created_at?: string
+          creative_opportunity?: string
+          domain?: string | null
+          email_confidence?: string | null
+          fit_band?: string | null
+          fit_breakdown?: Json | null
+          fit_score?: number | null
+          gmail_message_id?: string | null
+          gmail_thread_id?: string | null
+          id?: string
+          language?: string
+          name?: string
+          niche_id?: string | null
+          normalized_name?: string
+          opportunity_id?: string | null
+          paid_media_signal?: string | null
+          portfolio_match?: Json | null
+          product?: string | null
+          quality?: Json | null
+          rank?: number
+          red_flags?: Json
+          reject_reason?: string | null
+          researched_at?: string | null
+          risk?: string
+          run_id?: string
+          sent_at?: string | null
+          socials?: Json
+          sources?: Json
+          status?: string
+          subject?: string
+          ugc_signal?: string | null
+          updated_at?: string
+          website?: string | null
+          why_fit?: string
+          why_may_pay?: string
+          why_now?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_candidate_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_candidate_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_candidate_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_run"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_run: {
+        Row: {
+          app_user_id: string
+          discovered: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          input_tokens: number
+          kind: string
+          output_tokens: number
+          partial_failures: Json
+          researched: number
+          run_date: string
+          screened: number
+          selected: number
+          started_at: string
+          status: string
+          strategy: Json
+        }
+        Insert: {
+          app_user_id: string
+          discovered?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_tokens?: number
+          kind?: string
+          output_tokens?: number
+          partial_failures?: Json
+          researched?: number
+          run_date: string
+          screened?: number
+          selected?: number
+          started_at?: string
+          status?: string
+          strategy?: Json
+        }
+        Update: {
+          app_user_id?: string
+          discovered?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_tokens?: number
+          kind?: string
+          output_tokens?: number
+          partial_failures?: Json
+          researched?: number
+          run_date?: string
+          screened?: number
+          selected?: number
+          started_at?: string
+          status?: string
+          strategy?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_run_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_style_profile: {
+        Row: {
+          app_user_id: string
+          built_at: string
+          edit_patterns: Json
+          id: string
+          language: string
+          profile: Json
+          sample_count: number
+          version: number
+        }
+        Insert: {
+          app_user_id: string
+          built_at?: string
+          edit_patterns?: Json
+          id?: string
+          language?: string
+          profile?: Json
+          sample_count?: number
+          version?: number
+        }
+        Update: {
+          app_user_id?: string
+          built_at?: string
+          edit_patterns?: Json
+          id?: string
+          language?: string
+          profile?: Json
+          sample_count?: number
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_style_profile_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_suppression: {
+        Row: {
+          app_user_id: string
+          brand_id: string | null
+          created_at: string
+          domain: string | null
+          id: string
+          kind: string
+          normalized_name: string
+          reason: string
+          until: string | null
+        }
+        Insert: {
+          app_user_id: string
+          brand_id?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          kind?: string
+          normalized_name: string
+          reason?: string
+          until?: string | null
+        }
+        Update: {
+          app_user_id?: string
+          brand_id?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          kind?: string
+          normalized_name?: string
+          reason?: string
+          until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_suppression_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_suppression_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment: {
         Row: {
           amount_cents: number

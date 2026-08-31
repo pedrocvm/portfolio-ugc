@@ -688,6 +688,126 @@ const getInsights = define(
   },
 );
 
+
+/* ── Prospecção diária ───────────────────────────────────────────────────── */
+
+const getDailyOutreach = define(
+  'get_daily_outreach_batch',
+  'As marcas que a prospecção encontrou hoje, com encaixe, porquê, contacto e o email preparado.',
+  z.object({ niche: z.string().optional(), limit: z.number().optional() }),
+  async ({ niche, limit }) => {
+    const db = await supabaseServer();
+    const { data: run } = await db
+      .from('outreach_run')
+      .select('id, run_date, status, selected')
+      .order('run_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!run) return { data: { found: false, note: 'Ainda não correu nenhuma prospecção.' }, sources: [] };
+
+    let q = db
+      .from('outreach_candidate')
+      .select('id, name, website, country, niche_id, fit_score, product, why_fit, why_may_pay, risk, paid_media_signal, ugc_signal, creative_opportunity, contact_email, email_confidence, subject, status')
+      .eq('run_id', run.id)
+      .not('status', 'in', '(rejected,skipped)')
+      .order('rank')
+      .limit(cap(limit, 12));
+    if (niche) q = q.eq('niche_id', niche);
+
+    const { data } = await q;
+    const rows = data ?? [];
+    return {
+      data: { found: true, runDate: run.run_date, count: rows.length, candidates: rows },
+      sources: rows.map((c) => ({
+        id: c.id, type: 'brand' as const, label: c.name, at: run.run_date, href: '/dashboard/outreach',
+      })),
+    };
+  },
+);
+
+const getOutreachCandidate = define(
+  'get_outreach_candidate',
+  'Uma candidata em detalhe: pesquisa completa, ideias, fontes e o email por inteiro.',
+  z.object({ candidate_id: z.string().uuid() }),
+  async ({ candidate_id }) => {
+    const db = await supabaseServer();
+    const { data } = await db.from('outreach_candidate').select('*').eq('id', candidate_id).maybeSingle();
+    if (!data) return { data: { found: false }, sources: [] };
+    return {
+      data: { found: true, ...data },
+      sources: [{ id: data.id, type: 'brand' as const, label: data.name, at: null, href: '/dashboard/outreach' }],
+    };
+  },
+);
+
+const updateOutreachDraftTool = define(
+  'update_outreach_draft',
+  'Reescreve o assunto ou o corpo de uma abordagem. Guarda; não envia.',
+  z.object({
+    candidate_id: z.string().uuid(),
+    subject: z.string().min(3).max(200).optional(),
+    body: z.string().min(40).max(6000).optional(),
+  }),
+  async ({ candidate_id, subject, body }) => {
+    const db = await supabaseServer();
+    const { error } = await db
+      .from('outreach_candidate')
+      .update({
+        status: 'edited',
+        ...(subject ? { subject: subject.trim() } : {}),
+        ...(body ? { body: body.trim() } : {}),
+      })
+      .eq('id', candidate_id);
+    if (error) throw new Error(`update_outreach_draft: ${error.message}`);
+    return { data: { saved: true, sent: false, note: 'Guardado. O envio continua a passar por ela.' }, sources: [] };
+  },
+);
+
+const approveOutreachTool = define(
+  'approve_outreach',
+  'Marca uma abordagem como aprovada. Aprovar não envia: o envio é um segundo passo, e é dela.',
+  z.object({ candidate_id: z.string().uuid() }),
+  async ({ candidate_id }) => {
+    const db = await supabaseServer();
+    const { error } = await db.from('outreach_candidate').update({ status: 'approved' }).eq('id', candidate_id);
+    if (error) throw new Error(`approve_outreach: ${error.message}`);
+    return { data: { approved: true, sent: false }, sources: [] };
+  },
+);
+
+const prepareOutreachSend = define(
+  'prepare_outreach_send',
+  'Verifica se uma abordagem está pronta a sair e devolve exactamente o que sairia. NÃO envia — o envio é sempre uma acção da Carol na interface.',
+  z.object({ candidate_id: z.string().uuid() }),
+  async ({ candidate_id }) => {
+    const db = await supabaseServer();
+    const { data } = await db
+      .from('outreach_candidate')
+      .select('name, contact_email, subject, body, status, email_confidence, quality')
+      .eq('id', candidate_id)
+      .maybeSingle();
+    if (!data) return { data: { ready: false, reason: 'Não encontrei essa candidata.' }, sources: [] };
+
+    const { validateSend } = await import('@/modules/outreach/send');
+    const problem = validateSend({
+      to: data.contact_email, subject: data.subject, body: data.body, status: data.status,
+    });
+
+    return {
+      data: {
+        ready: !problem,
+        reason: problem,
+        to: data.contact_email,
+        subject: data.subject,
+        body: data.body,
+        emailConfidence: data.email_confidence,
+        note: 'Nada foi enviado. Para enviar, ela carrega em Enviar na tela de Prospecção.',
+      },
+      sources: [],
+    };
+  },
+);
+
 export const TOOLS: Tool[] = [
   searchBrands, getBrand, getBrandActivity,
   searchOpportunities, getOpportunity,
@@ -698,6 +818,8 @@ export const TOOLS: Tool[] = [
   searchBusinessMemory, searchKnowledge, createMemoryCandidate,
   getInstagramContext, getInsights,
   createFollowupDraft, createNote, snoozeFollowupTool,
+  getDailyOutreach, getOutreachCandidate, updateOutreachDraftTool,
+  approveOutreachTool, prepareOutreachSend,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));

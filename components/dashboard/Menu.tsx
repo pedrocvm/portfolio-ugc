@@ -19,6 +19,7 @@ export const GROUPS = [
     group: 'Negócio',
     items: [
       { href: '/dashboard/inbox', label: 'Inbox' },
+      { href: '/dashboard/outreach', label: 'Prospecção' },
       { href: '/dashboard/opportunities', label: 'Oportunidades' },
       { href: '/dashboard/followups', label: 'Follow-ups' },
       { href: '/dashboard/brands', label: 'Marcas' },

@@ -150,6 +150,7 @@ export const JOB_LABEL: Record<string, string> = {
   metrics: 'Métricas',
   upsell: 'Upsell',
   insights: 'Avisos',
+  outreach: 'Prospecção',
   all: 'Todos',
 };
 

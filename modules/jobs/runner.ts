@@ -20,7 +20,7 @@ import { requestPendingMetrics } from '@/modules/cases/service';
 
 export const JOBS = [
   'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'plan', 'upsell',
-  'insights',
+  'insights', 'outreach',
 ] as const;
 export type JobName = (typeof JOBS)[number];
 
@@ -105,6 +105,19 @@ export async function runJob(job: JobName, opts: { manual?: boolean } = {}): Pro
         const { refreshInsights } = await import('@/modules/assistant/insights-service');
         return { job, status: 'success', detail: await refreshInsights() };
       }
+
+      case 'outreach': {
+        if (!flags.daily_outreach) {
+          return { job, status: 'skipped', detail: { reason: 'o interruptor «Prospecção diária» está desligado.' } };
+        }
+        const { runDailyOutreach } = await import('@/modules/outreach/pipeline');
+        const r = await runDailyOutreach({ kind: 'daily' });
+        return {
+          job,
+          status: r.status === 'error' ? 'error' : r.status === 'empty' ? 'skipped' : 'success',
+          detail: { ...r },
+        };
+      }
     }
   } catch (error) {
     const summary = error instanceof Error ? error.message : 'Falha desconhecida.';
@@ -148,7 +161,7 @@ export async function runJob(job: JobName, opts: { manual?: boolean } = {}): Pro
 export async function runAllJobs(opts: { manual?: boolean } = {}): Promise<JobResult[]> {
   const order: JobName[] = [
     'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'upsell', 'plan',
-    'insights',
+    'insights', 'outreach',
   ];
   const results: JobResult[] = [];
   for (const job of order) results.push(await runJob(job, opts));
