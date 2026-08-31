@@ -27,18 +27,19 @@ const sleep = (ms: number, signal?: AbortSignal) =>
 // ponytail: uma fila por processo. Duas instâncias na Vercel podem passar o
 // dobro dos pedidos; se isso vier a doer, o contador tem de sair daqui para
 // fora (Postgres ou Redis). Para uma pessoa a usar isto, chega.
-let queue: Promise<unknown> = Promise.resolve();
-let lastStart = 0;
+type Gate = { queue: Promise<unknown>; lastStart: number };
 
-function scheduled<T>(work: (signal?: AbortSignal) => Promise<T>, signal?: AbortSignal): Promise<T> {
-  const turn = queue.then(async () => {
-    const wait = lastStart + MIN_GAP_MS - Date.now();
+/** Uma fila por chave, não uma por processo. Cada chave tem a sua cota; com uma
+ *  fila partilhada, duas chaves andariam ao ritmo de uma. */
+function scheduled<T>(gate: Gate, work: (signal?: AbortSignal) => Promise<T>, signal?: AbortSignal): Promise<T> {
+  const turn = gate.queue.then(async () => {
+    const wait = gate.lastStart + MIN_GAP_MS - Date.now();
     if (wait > 0) await sleep(wait, signal);
-    lastStart = Date.now();
+    gate.lastStart = Date.now();
     return work(signal);
   });
   // A fila não pode partir-se com uma falha: a chamada seguinte ainda espera vez.
-  queue = turn.then(() => undefined, () => undefined);
+  gate.queue = turn.then(() => undefined, () => undefined);
   return turn;
 }
 
@@ -50,10 +51,10 @@ function retryable(error: unknown): boolean {
   return kind === 'quota' && quotaWindow(error) !== 'day';
 }
 
-async function attempt<T>(work: (signal?: AbortSignal) => Promise<T>, signal?: AbortSignal): Promise<T> {
+async function attempt<T>(gate: Gate, work: (signal?: AbortSignal) => Promise<T>, signal?: AbortSignal): Promise<T> {
   for (let i = 0; ; i++) {
     try {
-      return await scheduled(work, signal);
+      return await scheduled(gate, work, signal);
     } catch (error) {
       if (i >= MAX_ATTEMPTS - 1 || !retryable(error)) throw error;
       await sleep(retryAfterMs(error) ?? BACKOFF_MS[i] ?? 20_000, signal);
@@ -64,6 +65,7 @@ async function attempt<T>(work: (signal?: AbortSignal) => Promise<T>, signal?: A
 /** Espaça as chamadas e repete as que valem a pena. Fica por dentro da tradução
  *  de erros, para ver o 429 em bruto antes de virar frase. */
 export function paced<T extends object>(provider: T): T {
+  const gate: Gate = { queue: Promise.resolve(), lastStart: 0 };
   return new Proxy(provider, {
     get(target, prop, receiver) {
       const value = Reflect.get(target, prop, receiver);
@@ -75,14 +77,14 @@ export function paced<T extends object>(provider: T): T {
 
         // Um gerador já entregou pedaços quando falha: repeti-lo duplicava-os.
         // Espera a vez, mas não se repete.
-        if (prop === 'stream') return streamAfterTurn(call, signal);
-        return attempt(async () => call() as Promise<unknown>, signal);
+        if (prop === 'stream') return streamAfterTurn(gate, call, signal);
+        return attempt(gate, async () => call() as Promise<unknown>, signal);
       };
     },
   });
 }
 
-async function* streamAfterTurn(call: () => unknown, signal?: AbortSignal) {
-  const source = await scheduled(async () => call() as AsyncIterable<unknown>, signal);
+async function* streamAfterTurn(gate: Gate, call: () => unknown, signal?: AbortSignal) {
+  const source = await scheduled(gate, async () => call() as AsyncIterable<unknown>, signal);
   yield* source;
 }

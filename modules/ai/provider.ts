@@ -14,6 +14,7 @@ import type { z } from 'zod';
 
 import { humanizeErrors } from './failure';
 import { paced } from './pace';
+import { withFallback } from './fallback';
 
 export type ProviderId = 'gemini' | 'anthropic';
 
@@ -443,6 +444,8 @@ export type AiSetup = {
   models: { fast: string; chat: string; deep: string };
   /** Porque é que não há fornecedor, quando não há. */
   missing: string | null;
+  /** Quantas chaves há na cadeia. Uma só significa que não há para onde ir. */
+  keyCount: number;
 };
 
 export function aiSetup(): AiSetup {
@@ -460,21 +463,40 @@ export function aiSetup(): AiSetup {
         deep: process.env.ANTHROPIC_DEEP_MODEL ?? chat,
       },
       missing: key ? null : 'ANTHROPIC_API_KEY',
+      keyCount: key ? 1 : 0,
     };
   }
 
-  const key = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
+  // Cada chave do Gemini traz a sua cota. GEMINI_API_KEY_2, _3… entram na
+  // cadeia: quando a primeira esgota, a corrida continua na seguinte em vez de
+  // morrer a meio da manhã.
+  const keys = geminiKeys();
   const chat = process.env.GEMINI_CHAT_MODEL ?? 'gemini-flash-lite-latest';
   return {
-    provider: key ? humanizeErrors(paced(gemini(key))) : null,
+    provider: keys.length
+      ? humanizeErrors(
+          withFallback(
+            keys.map((k, i) => ({ provider: paced(gemini(k)), label: `chave ${i + 1}` })),
+            (from, to) => console.warn(`[ai] ${from} sem cota, a passar para a ${to}`),
+          ),
+        )
+      : null,
     id: 'gemini',
     models: {
       fast: process.env.GEMINI_FAST_MODEL ?? chat,
       chat,
       deep: process.env.GEMINI_DEEP_MODEL ?? chat,
     },
-    missing: key ? null : 'GEMINI_API_KEY',
+    missing: keys.length ? null : 'GEMINI_API_KEY',
+    keyCount: keys.length,
   };
+}
+
+/** As chaves do Gemini por ordem: a principal e depois as numeradas. */
+export function geminiKeys(): string[] {
+  const primary = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
+  const extras = [2, 3, 4, 5].map((n) => process.env[`GEMINI_API_KEY_${n}`]);
+  return [primary, ...extras].filter((k): k is string => Boolean(k?.trim()));
 }
 
 export const aiReady = () => aiSetup().provider !== null;
