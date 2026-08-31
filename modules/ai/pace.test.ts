@@ -158,3 +158,17 @@ test('um stream espera a vez mas não é repetido: duplicaria o que já saiu', a
   assert.equal(n, 1, 'repetiu um stream e ia duplicar os pedaços');
   assert.deepEqual(vistos, ['a']);
 });
+
+test('sem saldo não se repete: esperar não carrega a conta', async () => {
+  let n = 0;
+  const p = paced({
+    async text() {
+      n++;
+      throw new Error('{"error":{"code":429,"message":"Your prepayment credits are depleted.","status":"RESOURCE_EXHAUSTED"}}');
+    },
+  });
+  await withFakeClock(async () => {
+    await assert.rejects(p.text());
+  });
+  assert.equal(n, 1, 'gastou tentativas numa conta sem saldo');
+});

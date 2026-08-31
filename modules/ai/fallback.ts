@@ -64,8 +64,11 @@ async function run<T extends object>(
       return await fn.apply(entry.provider, args);
     } catch (error) {
       last = error;
-      if (failureKind(error) !== 'quota') throw error;
-      entry.restingUntil = Date.now() + REST_MS[quotaWindow(error)];
+      const kind = failureKind(error);
+      // Sem saldo é tão definitivo como sem cota, e também vale a pena tentar a
+      // chave seguinte — o que não vale é insistir nesta.
+      if (kind !== 'quota' && kind !== 'billing') throw error;
+      entry.restingUntil = Date.now() + (kind === 'billing' ? REST_MS.day : REST_MS[quotaWindow(error)]);
       const next = order[i + 1];
       if (next) onSwitch?.(entry.label, next.label);
     }
@@ -101,6 +104,8 @@ export function routeSearch<T extends object>(general: T, searcher: T | null): T
           // projeto sem faturação. Chamar-lhe «limite de uso» manda esperar por
           // uma franquia que não existe — e é igual com chave dedicada ou sem
           // ela, porque o que falta é a faturação, não a variável.
+          // Saldo esgotado já se explica sozinho: dizer que falta faturação
+          // manda ligar o que já está ligado.
           if (failureKind(error) === 'quota') {
             throw new Error(
               'A pesquisa na web foi recusada. Quase sempre é a chave vir de um projeto sem faturação ligada: a pesquisa Google não existe no plano grátis.',

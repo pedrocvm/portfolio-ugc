@@ -6,13 +6,16 @@
  *  uma frase em português. A tradução é aqui, uma vez, à saída do fornecedor —
  *  nos chamadores era o mesmo erro dez vezes. */
 
-export type FailureKind = 'quota' | 'key' | 'overloaded' | 'blocked' | 'offline' | 'unknown';
+export type FailureKind = 'billing' | 'quota' | 'key' | 'overloaded' | 'blocked' | 'offline' | 'unknown';
 
 const raw = (error: unknown): string =>
   (error instanceof Error ? error.message : String(error ?? '')).toLowerCase();
 
 export function failureKind(error: unknown): FailureKind {
   const t = raw(error);
+  // Antes da cota: saldo esgotado também chega como 429, e as duas pedem coisas
+  // opostas. Uma passa por esperar; a outra só passa por alguém pagar.
+  if (/prepayment|credits are depleted|billing account|payment required|\b402\b/.test(t)) return 'billing';
   if (/429|resource_exhausted|quota|rate.?limit/.test(t)) return 'quota';
   if (/401|403|api_key|api key|permission_denied|unauthenticated|invalid.*credential/.test(t)) return 'key';
   if (/503|500|unavailable|overloaded|internal error|deadline/.test(t)) return 'overloaded';
@@ -52,6 +55,8 @@ export function aiFailure(error: unknown): string {
   switch (failureKind(error)) {
     case 'quota':
       return quotaSentence(t);
+    case 'billing':
+      return 'A conta da IA ficou sem saldo. É preciso carregar créditos no projeto do Google; esperar não resolve.';
     case 'key':
       return 'A chave da IA não foi aceite. Isto é configuração, não é nada que possas resolver daí.';
     case 'overloaded':

@@ -90,3 +90,18 @@ test('o embrulho traduz o que o gerador atira a meio', async () => {
   );
   assert.deepEqual(vistos, ['primeiro pedaço'], 'o que já tinha chegado não se perde');
 });
+
+/** O erro real da chave com faturação pré-paga e saldo zero. */
+const SEM_SALDO = new Error(
+  '{"error":{"code":429,"message":"Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing.","status":"RESOURCE_EXHAUSTED"}}',
+);
+
+test('saldo esgotado não é cota: uma passa por esperar, a outra não', () => {
+  assert.equal(failureKind(SEM_SALDO), 'billing');
+  const frase = aiFailure(SEM_SALDO);
+  assert.match(frase, /saldo/);
+  // Chega como 429 e diz RESOURCE_EXHAUSTED, tal como a cota. Se for lido como
+  // cota, a frase manda esperar por algo que só volta quando alguém pagar.
+  assert.doesNotMatch(frase, /amanhã|daqui a um minuto/);
+  assert.doesNotMatch(frase, /[{}"[\]]|https?:/);
+});

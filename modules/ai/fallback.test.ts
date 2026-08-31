@@ -132,3 +132,18 @@ test('um erro que não é de cota passa como está: não é falta de faturação
   );
   await assert.rejects(p.search(), /400/);
 });
+
+test('sem saldo passa à chave seguinte, mas não finge que falta faturação', async () => {
+  const semSaldo = new Error('{"error":{"code":429,"message":"Your prepayment credits are depleted."}}');
+  const p = withFallback([
+    { provider: keyThat(async () => { throw semSaldo; }), label: 'chave 1' },
+    { provider: keyThat(async () => 'da segunda'), label: 'chave 2' },
+  ]);
+  assert.equal(await p.text(), 'da segunda');
+
+  const r = routeSearch(provider('grátis', () => { throw semSaldo; }), null);
+  await assert.rejects(r.search(), (e: Error) => {
+    assert.doesNotMatch(e.message, /faturação ligada/, 'mandou ligar o que já está ligado');
+    return true;
+  });
+});
