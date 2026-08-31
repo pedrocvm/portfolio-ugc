@@ -147,7 +147,7 @@ export async function saveConnection(input: {
   // que está guardado com `null` matava a ligação em silêncio.
   const encryptedRefresh = input.refreshToken ? await encryptSecret(input.refreshToken) : undefined;
 
-  await db.from('integration_connection').upsert(
+  const { error } = await db.from('integration_connection').upsert(
     {
       provider: 'google_gmail',
       app_user_id: input.appUserId,
@@ -162,6 +162,11 @@ export async function saveConnection(input: {
     },
     { onConflict: 'provider,app_user_id' },
   );
+
+  // O cliente do Supabase devolve o erro, não o lança. Sem isto uma escrita
+  // recusada passava despercebida e o callback dizia «ligado» com a tabela
+  // vazia — que é pior do que falhar, porque ela deixa de vigiar a caixa.
+  if (error) throw new Error(`save_connection_failed: ${error.code ?? error.message}`);
 }
 
 /** Devolve um access token válido, renovando-o quando falta menos de um minuto.

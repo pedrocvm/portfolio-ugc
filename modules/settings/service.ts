@@ -62,11 +62,18 @@ export async function integrationHealth(provider = 'google_gmail'): Promise<Inte
   };
   if (!hasServiceRole()) return blank;
 
-  const { data } = await supabaseService()
+  const { data, error } = await supabaseService()
     .from('integration_connection')
     .select('account_identifier, status, scopes, cursor, last_sync_at, last_success_at, last_error_code, last_error_at')
     .eq('provider', provider)
     .maybeSingle();
+
+  // Não conseguir ler não é o mesmo que não estar ligado. Dizer «desligado»
+  // quando a resposta certa é «não sei» manda-a ligar outra vez uma coisa que
+  // talvez já esteja ligada, e esconde a avaria real.
+  if (error) {
+    return { ...blank, status: 'error', lastErrorCode: error.code ?? 'read_failed' };
+  }
 
   if (!data) return blank;
   return {
