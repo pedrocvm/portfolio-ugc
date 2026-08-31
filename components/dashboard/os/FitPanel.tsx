@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { overrideFit, rescoreBrand } from '@/app/dashboard/carolos-actions';
 import { FIT_LABEL, FIT_WEIGHTS, type FitCriterion, type FitLine } from '@/modules/brands/fit';
 import { NICHES } from '@/modules/brands/niches';
+import { label } from '@/lib/labels';
 
 /** O fit tem de conseguir explicar-se linha a linha, e tem de aceitar que a
  *  Carol discorde. Um score que não se explica nem se corrige é superstição
@@ -103,7 +104,7 @@ export default function FitPanel({
               <option value="">Por definir</option>
               {NICHES.map((n) => (
                 <option key={n.id} value={n.id}>
-                  {n.label} {n.tier === 'EXCLUDED' ? '(fora da estratégia)' : `· ${n.tier}`}
+                  {n.label} · {label('nicheTier', n.tier)}
                 </option>
               ))}
             </select>

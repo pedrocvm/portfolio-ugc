@@ -244,17 +244,12 @@ export default function Outreach({
 
   const approved = candidates.filter((c) => c.status === 'approved').length;
 
-  const run = (id: string, fn: () => Promise<{ error?: string; sent?: number; selected?: number }>) => {
+  const run = (id: string, fn: () => Promise<{ error?: string; sent?: number; message?: string }>) => {
     setRunning(id);
     start(async () => {
       const r = await fn();
       setRunning('');
-      setMsg(
-        r.error ??
-          (r.sent !== undefined
-            ? `${r.sent} enviados.`
-            : `${r.selected ?? 0} marcas novas.`),
-      );
+      setMsg(r.error ?? (r.sent !== undefined ? `${r.sent} enviados.` : (r.message ?? '')));
     });
   };
 
@@ -297,8 +292,7 @@ export default function Outreach({
       </div>
 
       <form
-        className="osInline"
-        style={{ marginTop: 12 }}
+        className="osSearch"
         onSubmit={(e) => {
           e.preventDefault();
           if (ask.trim()) run('ask', () => discoverNow(ask.trim()));
@@ -307,11 +301,11 @@ export default function Outreach({
         <input
           value={ask}
           onChange={(e) => setAsk(e.target.value)}
-          placeholder="Ou pede uma busca: «SaaS portugueses», «robôs aspiradores»…"
+          placeholder="Ou peça uma busca: «SaaS portugueses», «robôs aspiradores»…"
           aria-label="Busca dirigida"
         />
-        <button className="osPageBtn" type="submit" disabled={pending || !ask.trim()}>
-          {running === 'ask' ? <Spinner label="A procurar" /> : null}
+        <button type="submit" disabled={pending || !ask.trim()}>
+          {running === 'ask' ? <Spinner label="Procurando" /> : null}
           Procurar
         </button>
       </form>

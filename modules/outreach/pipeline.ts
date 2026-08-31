@@ -36,17 +36,22 @@ export async function runDailyOutreach(
   const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
   if (!me) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Sem usuário.'] };
 
-  // Idempotente pelo dia: correr duas vezes não faz dois lotes.
-  const { data: existing } = await db
-    .from('outreach_run')
-    .select('id, status')
-    .eq('app_user_id', me.id)
-    .eq('run_date', runDate)
-    .eq('kind', kind)
-    .maybeSingle();
+  // A corrida diária é idempotente pelo dia: o cron pode disparar duas vezes e
+  // não faz dois lotes. Uma busca que ela pediu é outra coisa — pedir duas no
+  // mesmo dia é exactamente o que se espera de um botão «procurar agora», e
+  // bloqueá-la era o que fazia a busca parecer que não devolvia nada.
+  if (kind === 'daily') {
+    const { data: existing } = await db
+      .from('outreach_run')
+      .select('id, status')
+      .eq('app_user_id', me.id)
+      .eq('run_date', runDate)
+      .eq('kind', 'daily')
+      .maybeSingle();
 
-  if (existing && existing.status !== 'error') {
-    return { runId: existing.id, status: 'success', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Já correu hoje.'] };
+    if (existing && existing.status !== 'error') {
+      return { runId: existing.id, status: 'success', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['A corrida de hoje já aconteceu.'] };
+    }
   }
 
   const recent = await recentNiches(db);
@@ -54,10 +59,7 @@ export async function runDailyOutreach(
 
   const { data: run } = await db
     .from('outreach_run')
-    .upsert(
-      { app_user_id: me.id, run_date: runDate, kind, status: 'running', strategy: strategy as never },
-      { onConflict: 'app_user_id,run_date,kind' },
-    )
+    .insert({ app_user_id: me.id, run_date: runDate, kind, status: 'running', strategy: strategy as never })
     .select('id')
     .maybeSingle();
 

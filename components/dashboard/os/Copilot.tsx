@@ -5,6 +5,7 @@ import {
   decideOnRecommendation, draftMessage, logConcession, pushDraftToGmail, runCopilot,
 } from '@/app/dashboard/carolos-actions';
 import type { NegotiationAnalysis } from '@/modules/ai/schemas';
+import { label } from '@/lib/labels';
 
 /** Copiloto comercial. Recomendação primeiro, texto depois — e nunca envio.
  *
@@ -122,7 +123,7 @@ export default function Copilot({
               <ul className="osList" data-tone="bad">
                 {analysis.risks.map((r) => (
                   <li key={r.code}>
-                    <b>{r.severity}</b> — {r.note}
+                    <b>risco {label('severity', r.severity)}</b> — {r.note}
                   </li>
                 ))}
               </ul>
