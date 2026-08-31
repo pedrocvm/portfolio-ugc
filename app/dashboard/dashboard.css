@@ -67,7 +67,12 @@
 .dash *::after {
   box-sizing: border-box;
 }
-.dash a {
+/* `:where()` zera a especificidade: isto continua a ser a cor por omissão de
+   um link, mas deixa de ganhar a componentes que definem a sua própria. Sem
+   isto, `.dash a` (0,1,1) batia `.osGo` (0,1,0) e o botão castanho ficava com
+   texto escuro por cima — ilegível, e invisível para quem só lê o CSS do
+   componente. */
+.dash :where(a) {
   color: inherit;
 }
 .dash h1,

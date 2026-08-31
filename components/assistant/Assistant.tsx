@@ -50,6 +50,7 @@ export default function Assistant({ configured, pending = 0 }: { configured: boo
   const [uploadError, setUploadError] = useState('');
   const [dragging, setDragging] = useState(false);
   const [web, setWeb] = useState(false);
+  const panel = useRef<HTMLElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const stick = useRef(true);
@@ -78,8 +79,21 @@ export default function Assistant({ configured, pending = 0 }: { configured: boo
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') a.setOpen(false);
     };
+    /** Carregar fora fecha. Não perde nada: a conversa, o rascunho e os anexos
+     *  vivem no provider, por isso reabrir devolve tudo onde estava — e uma
+     *  resposta que chegue entretanto acende a bolinha. */
+    const onOutside = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (target && panel.current && !panel.current.contains(target)) a.setOpen(false);
+    };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    // `pointerdown` e não `click`: fecha ao pousar o dedo, sem esperar pelo
+    // fim do gesto, e não é enganado por um clique que arrasta.
+    document.addEventListener('pointerdown', onOutside);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onOutside);
+    };
   }, [a.open, a.entity.type, a.entity.id, a]);
 
   const upload = useCallback(
@@ -246,6 +260,7 @@ export default function Assistant({ configured, pending = 0 }: { configured: boo
       role="dialog"
       aria-modal="false"
       aria-label="Carol AI"
+      ref={panel}
       data-dragging={dragging || undefined}
       onDragOver={(e) => {
         e.preventDefault();
