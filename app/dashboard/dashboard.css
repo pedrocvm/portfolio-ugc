@@ -3614,6 +3614,71 @@ a.osRow:hover .osRowName {
   gap: 8px;
   margin-top: 16px;
 }
+
+/* ── paginação da fila ─────────────────────────────────────────────────── */
+.osPager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 24px;
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid var(--areia2);
+}
+.osPagerNav,
+.osPagerSize,
+.osPagerSizes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.osPagerAt,
+.osPagerSize > span {
+  font-size: 14px;
+  color: var(--tinta3);
+  white-space: nowrap;
+}
+.osPageBtn {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--areia2);
+  border-radius: 9px;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s var(--quart),
+    background 0.2s var(--quart),
+    color 0.2s var(--quart);
+}
+.osPageBtn:hover:not(:disabled):not([aria-pressed='true']) {
+  border-color: var(--pedra);
+  background: var(--areia);
+}
+.osPageBtn:disabled {
+  cursor: default;
+  color: var(--t1);
+  border-color: var(--areia);
+}
+.osPageBtn[aria-pressed='true'] {
+  background: var(--umbra);
+  border-color: var(--umbra);
+  color: var(--papel);
+}
+@media (max-width: 559px) {
+  .osPager {
+    justify-content: flex-start;
+  }
+  .osPagerNav {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
 .osJob {
   display: inline-flex;
   align-items: center;

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ActionRow } from '@/modules/actions/service';
 import type { Flags } from '@/lib/flags';
-import ActionCard from './ActionCard';
+import Queue from './Queue';
 import Replan from './Replan';
 
 /** «O que preciso de fazer hoje?»
@@ -22,9 +22,6 @@ export type TodayData = {
 
 export default function Today({ data, read }: { data: TodayData; read?: React.ReactNode }) {
   const { actions, flags, integration } = data;
-  const urgent = actions.filter((a) => a.priorityScore >= 90);
-  const rest = actions.filter((a) => a.priorityScore < 90);
-
   return (
     <>
       <div className="dashBar">
@@ -69,28 +66,7 @@ export default function Today({ data, read }: { data: TodayData; read?: React.Re
         </p>
       ) : null}
 
-      {urgent.length ? (
-        <section className="osSection">
-          <h2>Primeiro isto</h2>
-          <p className="osNote">Alguém está à espera de ti, ou há dinheiro a arriscar-se.</p>
-          <div className="osQueue">
-            {urgent.map((a, i) => (
-              <ActionCard key={a.id} action={a} index={i} />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {rest.length ? (
-        <section className="osSection">
-          <h2>{urgent.length ? 'Depois' : 'A fila'}</h2>
-          <div className="osQueue">
-            {rest.map((a, i) => (
-              <ActionCard key={a.id} action={a} index={i} />
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <Queue actions={actions} />
     </>
   );
 }
