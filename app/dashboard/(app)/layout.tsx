@@ -10,6 +10,7 @@ import MobileNav from '@/components/dashboard/MobileNav';
 import SideToggle from '@/components/dashboard/SideToggle';
 import { requireEditor } from '@/lib/auth';
 import { assistantReady } from '@/modules/assistant/config';
+import { getFlags } from '@/modules/settings/service';
 import { getDraft } from '@/lib/content-store';
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   await requireEditor();
-  const { hero } = await getDraft();
+  const [{ hero }, flags] = await Promise.all([getDraft(), getFlags()]);
 
   return (
     <>
@@ -59,8 +60,9 @@ export default async function AppLayout({
           }
         />
           <Command />
-          {/* Só na área privada: o portfólio público não conhece a Carol AI. */}
-          <Assistant configured={assistantReady()} />
+          {/* Só na área privada, e só com a bandeira aberta: o portfólio público
+              não conhece a Carol AI. */}
+          {flags.assistant_enabled ? <Assistant configured={assistantReady()} /> : null}
         </div>
       </AssistantProvider>
     </>
