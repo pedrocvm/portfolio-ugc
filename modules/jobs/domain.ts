@@ -62,6 +62,14 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
     label: 'Procurar próxima oferta',
     why: 'Uma vez por dia. Avalia trabalhos aprovados que já assentaram.',
   },
+  'carolos-insights': {
+    label: 'Procurar o que precisa de atenção',
+    why: 'Uma vez por dia, de manhã. Marcas paradas, licenças a acabar, dinheiro por receber e janelas de upsell — o que começa a doer antes de você reparar.',
+  },
+  'carolos-outreach': {
+    label: 'Procurar marcas novas',
+    why: 'Uma vez por dia, antes de você acordar. Pesquisa, qualifica e escreve o email. Nunca envia: isso é seu.',
+  },
   'carolos-reconcile': {
     label: 'Reconciliar chamadas',
     why: 'De 5 em 5 minutos. Fecha os disparos cuja resposta se perdeu, para nenhum ficar em aberto.',

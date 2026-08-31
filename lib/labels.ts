@@ -149,8 +149,8 @@ export const JOB_LABEL: Record<string, string> = {
   rights: 'Licenças',
   metrics: 'Métricas',
   upsell: 'Upsell',
-  insights: 'Avisos',
-  outreach: 'Prospecção',
+  insights: 'Procurar avisos',
+  outreach: 'Procurar marcas',
   all: 'Todos',
 };
 
