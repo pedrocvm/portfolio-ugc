@@ -24,14 +24,17 @@ export function dailyBrief(i: BriefInput): string {
   if (i.queued === 0) {
     parts.push(
       i.openOpportunities === 0
-        ? 'Não tens nada esperando por você.'
+        ? 'Você não tem nada esperando.'
         : i.openOpportunities === 1
           ? 'Nada esperando por você hoje: a conversa que você tem em aberto está dentro do prazo.'
           : `Nada esperando por você hoje: as ${i.openOpportunities} conversas em aberto estão todas dentro do prazo.`,
     );
   } else {
     let first = `Você tem ${i.queued} ${plural(i.queued, 'coisa', 'coisas')} para fazer hoje`;
-    if (i.overdue >= i.queued) first += ', e já passaram todas do prazo';
+    // Uma só não «passaram todas»: com singular a frase tem de mudar de forma.
+    if (i.overdue >= i.queued) {
+      first += i.queued === 1 ? ', e já passou do prazo' : ', e já passaram todas do prazo';
+    }
     else if (i.overdue > 0) first += `, ${i.overdue} já fora de prazo`;
     parts.push(`${first}.`);
 

@@ -57,6 +57,25 @@ test('por triar entra como frase, não como contador', () => {
   assert.match(dailyBrief(input({ needsReview: 5 })), /5 mensagens por triar/);
 });
 
+test('uma só coisa, e atrasada, não diz «passaram todas»', () => {
+  const s = dailyBrief(input({ queued: 1, overdue: 1 }));
+  assert.match(s, /Você tem 1 coisa para fazer hoje, e já passou do prazo\./);
+  assert.doesNotMatch(s, /passaram todas/);
+});
+
+test('nada em lado nenhum fala em segunda pessoa europeia', () => {
+  const casos = [
+    input(),
+    input({ openOpportunities: 5 }),
+    input({ queued: 3, overdue: 1, head: [{ brandName: 'X', overdueDays: 2 }] }),
+    input({ needsReview: 2, gmailConnected: false }),
+  ];
+  for (const c of casos) {
+    const s = dailyBrief(c);
+    assert.doesNotMatch(s, /\btens\b|\bpodes\b|\bteu\b|\btua\b|\bde ti\b/i, s);
+  }
+});
+
 test('sem Gmail ligado, o silêncio é explicado', () => {
   const s = dailyBrief(input({ gmailConnected: false }));
   assert.match(s, /O Gmail ainda não está ligado/);
