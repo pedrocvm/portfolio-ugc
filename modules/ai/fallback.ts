@@ -72,3 +72,43 @@ async function run<T extends object>(
   }
   throw last;
 }
+
+/** A pesquisa vai a uma chave, o resto vai a outra.
+ *
+ *  Só a descoberta usa a pesquisa Google, uma vez por corrida, e só ela precisa
+ *  de um projeto com faturação ligada. As outras vinte e uma chamadas continuam
+ *  no plano grátis. Encaminhar por finalidade — e não por esgotamento, como a
+ *  cadeia acima — é o que impede a corrida inteira de cair no projeto que paga.
+ *
+ *  Sem chave de pesquisa, tudo segue como antes: a pesquisa vai à cadeia normal
+ *  e falha lá, com uma frase que diz porquê em vez de falar em cota. */
+export function routeSearch<T extends object>(general: T, searcher: T | null): T {
+  return new Proxy(general, {
+    get(target, prop, receiver) {
+      if (prop !== 'search') return Reflect.get(target, prop, receiver);
+
+      if (searcher) {
+        return (...args: unknown[]) =>
+          (Reflect.get(searcher, prop) as (...a: unknown[]) => unknown).apply(searcher, args);
+      }
+
+      const fn = Reflect.get(target, prop, receiver);
+      if (typeof fn !== 'function') return fn;
+      return async (...args: unknown[]) => {
+        try {
+          return await (fn as (...a: unknown[]) => Promise<unknown>).apply(target, args);
+        } catch (error) {
+          // Uma chave grátis não tem pesquisa nenhuma para gastar. Chamar a isto
+          // «limite de uso» manda esperar por uma cota que nunca vai chegar.
+          if (failureKind(error) === 'quota') {
+            throw new Error(
+              'A pesquisa na web não funciona com uma chave do plano grátis. É preciso uma chave de um projeto com faturação ligada.',
+              { cause: error },
+            );
+          }
+          throw error;
+        }
+      };
+    },
+  });
+}

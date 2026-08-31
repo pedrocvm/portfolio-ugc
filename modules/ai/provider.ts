@@ -14,7 +14,7 @@ import type { z } from 'zod';
 
 import { humanizeErrors } from './failure';
 import { paced } from './pace';
-import { withFallback } from './fallback';
+import { routeSearch, withFallback } from './fallback';
 
 export type ProviderId = 'gemini' | 'anthropic';
 
@@ -471,13 +471,19 @@ export function aiSetup(): AiSetup {
   // cadeia: quando a primeira esgota, a corrida continua na seguinte em vez de
   // morrer a meio da manhã.
   const keys = geminiKeys();
+  // A pesquisa Google não existe no plano grátis. Esta chave — e só esta — vem
+  // de um projeto com faturação ligada, e serve uma chamada por corrida.
+  const searchKey = process.env.GEMINI_SEARCH_API_KEY?.trim();
   const chat = process.env.GEMINI_CHAT_MODEL ?? 'gemini-flash-lite-latest';
   return {
     provider: keys.length
       ? humanizeErrors(
-          withFallback(
-            keys.map((k, i) => ({ provider: paced(gemini(k)), label: `chave ${i + 1}` })),
-            (from, to) => console.warn(`[ai] ${from} sem cota, a passar para a ${to}`),
+          routeSearch(
+            withFallback(
+              keys.map((k, i) => ({ provider: paced(gemini(k)), label: `chave ${i + 1}` })),
+              (from, to) => console.warn(`[ai] ${from} sem cota, a passar para a ${to}`),
+            ),
+            searchKey ? paced(gemini(searchKey)) : null,
           ),
         )
       : null,
@@ -488,7 +494,7 @@ export function aiSetup(): AiSetup {
       deep: process.env.GEMINI_DEEP_MODEL ?? chat,
     },
     missing: keys.length ? null : 'GEMINI_API_KEY',
-    keyCount: keys.length,
+    keyCount: keys.length + (searchKey ? 1 : 0),
   };
 }
 

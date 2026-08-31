@@ -7,6 +7,7 @@
 const keys = [
   ['GEMINI_API_KEY', process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY],
   ...[2, 3, 4, 5].map((n) => [`GEMINI_API_KEY_${n}`, process.env[`GEMINI_API_KEY_${n}`]]),
+  ['GEMINI_SEARCH_API_KEY', process.env.GEMINI_SEARCH_API_KEY],
 ].filter(([, v]) => v?.trim());
 
 if (keys.length === 0) {
@@ -41,7 +42,15 @@ async function ask(key, grounded) {
 
 for (const [name, key] of keys) {
   const tag = `${name} (…${key.slice(-4)})`;
-  console.log(`${tag}`);
+  // Só a chave de pesquisa precisa de responder à pesquisa: é a única que serve
+  // a descoberta, e é a única que se espera que esteja num projeto faturado.
+  const searchOnly = name === 'GEMINI_SEARCH_API_KEY';
+  console.log(`${tag}${searchOnly ? '  ← a que paga, só para a descoberta' : ''}`);
   console.log(`  normal:   ${await ask(key, false)}`);
-  console.log(`  pesquisa: ${await ask(key, true)}`);
+  console.log(`  pesquisa: ${await ask(key, true)}${searchOnly ? '' : '   (não precisa: não é esta que pesquisa)'}`);
+}
+
+if (!process.env.GEMINI_SEARCH_API_KEY?.trim()) {
+  console.log('\nSem GEMINI_SEARCH_API_KEY. A descoberta vai à cadeia normal e');
+  console.log('falha lá: a pesquisa Google não existe no plano grátis.');
 }

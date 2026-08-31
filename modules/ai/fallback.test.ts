@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { withFallback } from './fallback.ts';
+import { routeSearch, withFallback } from './fallback.ts';
 
 const quota = (extra = '') => new Error(`{"error":{"code":429,"status":"RESOURCE_EXHAUSTED"${extra}}}`);
 
@@ -79,4 +79,54 @@ test('um stream escolhe a chave antes de começar e não troca a meio', async ()
   const out: unknown[] = [];
   for await (const c of p.stream()) out.push(c);
   assert.deepEqual(out, ['primeira']);
+});
+
+/* ── Encaminhar por finalidade ────────────────────────────────────────────── */
+
+const provider = (label: string, fail?: () => never) => ({
+  async text() {
+    return `text:${label}`;
+  },
+  async search() {
+    if (fail) fail();
+    return `search:${label}`;
+  },
+});
+
+test('a pesquisa vai à chave faturada e o resto fica na grátis', async () => {
+  const p = routeSearch(provider('grátis'), provider('faturada'));
+  assert.equal(await p.search(), 'search:faturada');
+  assert.equal(await p.text(), 'text:grátis', 'uma chamada normal foi parar à chave que paga');
+});
+
+test('sem chave de pesquisa, nada muda', async () => {
+  const p = routeSearch(provider('grátis'), null);
+  assert.equal(await p.search(), 'search:grátis');
+  assert.equal(await p.text(), 'text:grátis');
+});
+
+test('sem chave de pesquisa, o 429 diz a verdade em vez de falar em cota', async () => {
+  const p = routeSearch(
+    provider('grátis', () => {
+      throw quota();
+    }),
+    null,
+  );
+  await assert.rejects(p.search(), (e: Error) => {
+    assert.match(e.message, /faturação/);
+    // «Espere um minuto» manda esperar por uma cota que nunca vai chegar.
+    assert.doesNotMatch(e.message, /minuto|amanhã|limite de uso/);
+    assert.doesNotMatch(e.message, /[{}"]/);
+    return true;
+  });
+});
+
+test('um erro que não é de cota passa como está: não é falta de faturação', async () => {
+  const p = routeSearch(
+    provider('grátis', () => {
+      throw new Error('[400] pedido malformado');
+    }),
+    null,
+  );
+  await assert.rejects(p.search(), /400/);
 });
