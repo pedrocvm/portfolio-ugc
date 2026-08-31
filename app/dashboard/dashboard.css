@@ -3193,7 +3193,12 @@
 /* ── fila de ações ─────────────────────────────────────────────────────── */
 .osQueue {
   display: grid;
-  gap: 12px;
+  gap: 16px;
+}
+/* Os cartões da prospecção são altos e abrem-se: 16px entre eles fazia-os
+   parecer uma coisa só quando dois estavam abertos ao mesmo tempo. */
+.osQueue[data-air] {
+  gap: 26px;
 }
 
 /* Uma medida de leitura para a coluna do Hoje.

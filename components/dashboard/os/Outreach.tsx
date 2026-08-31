@@ -324,7 +324,7 @@ export default function Outreach({
           lista com o que não presta.
         </p>
       ) : (
-        <div className="osQueue" style={{ marginTop: 22 }}>
+        <div className="osQueue" data-air="" style={{ marginTop: 22 }}>
           {candidates.map((c) => (
             <Card key={c.id} c={c} />
           ))}
