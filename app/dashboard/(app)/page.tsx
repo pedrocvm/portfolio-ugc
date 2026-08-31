@@ -1,8 +1,12 @@
+import { Suspense } from 'react';
 import { requireUser } from '@/lib/auth';
+import { daysBetween } from '@/lib/time';
 import { supabaseServer } from '@/lib/supabase/server';
 import { todayQueue, wakeSnoozed } from '@/modules/actions/service';
 import { markDue } from '@/modules/followups/service';
 import { getFlags, integrationHealth } from '@/modules/settings/service';
+import { dailyBrief } from '@/modules/actions/brief';
+import DailyRead from '@/components/dashboard/os/DailyRead';
 import Today from '@/components/dashboard/os/Today';
 
 export const dynamic = 'force-dynamic';
@@ -25,12 +29,32 @@ export default async function TodayPage() {
     loadCounts(),
   ]);
 
+  const now = new Date();
+  const overdueDays = (dueAt: string | null) => {
+    if (!dueAt) return null;
+    const d = daysBetween(new Date(dueAt), now);
+    return d > 0 ? d : null;
+  };
+
+  const brief = dailyBrief({
+    queued: actions.length,
+    overdue: counts.overdue,
+    openOpportunities: counts.openOpportunities,
+    needsReview: counts.needsReview,
+    head: actions.slice(0, 3).map((a) => ({
+      brandName: a.brandName,
+      overdueDays: overdueDays(a.dueAt),
+    })),
+    gmailConnected: integration.status === 'connected',
+  });
+
   return (
     <Today
       data={{
         actions,
         greeting: app.displayName,
         counts,
+        brief,
         flags,
         integration: {
           status: integration.status,
@@ -38,6 +62,18 @@ export default async function TodayPage() {
           account: integration.account,
         },
       }}
+      read={
+        <Suspense fallback={null}>
+          <DailyRead
+            brief={brief}
+            queue={actions
+              .slice(0, 12)
+              .map((a) => `- ${a.brandName} (${a.stage ?? 'sem etapa'}): ${a.title} — ${a.reason}`)
+              .join('\n')}
+            openCount={counts.openOpportunities}
+          />
+        </Suspense>
+      }
     />
   );
 }

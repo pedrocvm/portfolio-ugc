@@ -13,12 +13,15 @@ export type TodayData = {
   actions: ActionRow[];
   greeting: string;
   counts: { openOpportunities: number; dueFollowUps: number; needsReview: number; overdue: number };
+  /** O dia dito por extenso. Substitui os contadores: «13» não é informação
+   *  até alguém dizer 13 de quê e se isso é bom ou mau. */
+  brief: string;
   flags: Flags;
   integration: { status: string; lastSuccessAt: string | null; account: string };
 };
 
-export default function Today({ data }: { data: TodayData }) {
-  const { actions, counts, flags, integration } = data;
+export default function Today({ data, read }: { data: TodayData; read?: React.ReactNode }) {
+  const { actions, flags, integration } = data;
   const urgent = actions.filter((a) => a.priorityScore >= 90);
   const rest = actions.filter((a) => a.priorityScore < 90);
 
@@ -45,30 +48,24 @@ export default function Today({ data }: { data: TodayData }) {
         </p>
       ) : null}
 
-      <div className="osStats">
-        <div className="osStat">
-          <b>{actions.length}</b>
-          <span>na fila</span>
-        </div>
-        <div className="osStat">
-          <b>{counts.overdue}</b>
-          <span>fora de prazo</span>
-        </div>
-        <div className="osStat">
-          <b>{counts.openOpportunities}</b>
-          <span>em aberto</span>
-        </div>
-        <div className="osStat">
-          <b>{counts.needsReview}</b>
-          <span>por triar</span>
-        </div>
-      </div>
+      <p className="osBrief">{data.brief}</p>
+      {read}
 
+      {/* O motivo do silêncio já está no resumo acima; aqui fica só o que ela
+          pode fazer a seguir. */}
       {actions.length === 0 ? (
         <p className="osEmpty">
-          Nada à espera de ti. Se isto parecer estranho, é porque o sistema ainda não está a ver as
-          tuas conversas: liga o Gmail em <Link href="/dashboard/settings">Definições</Link> ou cola
-          uma conversa em <Link href="/dashboard/capture">Captura</Link>.
+          {integration.status === 'connected' ? (
+            <>
+              Se souberes de alguma coisa que o sistema não viu,{' '}
+              <Link href="/dashboard/capture">cola aqui</Link>.
+            </>
+          ) : (
+            <>
+              Podes <Link href="/dashboard/settings">ligar o Gmail</Link> para as conversas
+              entrarem sozinhas, ou <Link href="/dashboard/capture">colar uma</Link> à mão.
+            </>
+          )}
         </p>
       ) : null}
 

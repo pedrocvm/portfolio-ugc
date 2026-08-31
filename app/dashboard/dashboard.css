@@ -201,6 +201,10 @@
   padding: 22px 20px 24px;
   background: var(--graphite);
   color: var(--paper);
+  /* sem isto, um menu mais alto do que a barra transbordava para fora dela e
+     deixava ver o fundo do body por baixo — dois escuros diferentes, que era
+     exactamente o que parecia um erro de cor */
+  overflow: hidden;
 }
 .sideName {
   text-decoration: none;
@@ -218,18 +222,69 @@
 }
 .rail {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 18px;
+  flex-direction: column;
+  gap: 2px;
+  /* o carril é que rola, não a barra: o nome e o «Sair» ficam no sítio */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(221, 210, 195, 0.22) transparent;
 }
-.railGroup {
-  display: contents;
+.railPin {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
 }
+/* Sem `display` próprio: sobrepor o display de um <details> parte o estado
+   fechado no Chrome — os filhos continuam desenhados, só ficam fora de vista.
+   O bloco por omissão é o que faz o elemento nativo funcionar. */
 .railLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 16px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  /* agora são botões, não legendas: 0.5 dava 3.78:1 sobre o ferro */
+  color: rgba(221, 210, 195, 0.72);
+  cursor: pointer;
+  list-style: none;
+  transition: color 0.25s;
+}
+.railLabel::-webkit-details-marker {
   display: none;
 }
+/* seta desenhada: a nativa não roda nem herda a cor */
+.railLabel::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.28s var(--exp);
+}
+.railGroup[open] > .railLabel::before {
+  transform: rotate(45deg);
+}
+.railLabel:hover {
+  color: var(--paper);
+}
+.railGroup > a {
+  /* alinhado com o texto do rótulo, não com a seta */
+  padding-left: 29px;
+  margin-top: 2px;
+}
 .rail a {
+  display: block;
   position: relative;
-  padding: 11px 16px;
+  padding: 10px 16px;
   font-size: 17px;
   text-decoration: none;
   color: rgba(247, 243, 238, 0.62);
@@ -289,26 +344,15 @@
     position: sticky;
     top: 0;
     height: 100dvh;
-    padding: 40px 26px 34px;
-    gap: 40px;
+    padding: 34px 26px 28px;
+    gap: 26px;
+  }
+  .side .logoName {
+    font-size: 34px;
   }
   .rail {
-    flex-direction: column;
-    gap: 26px;
+    gap: 4px;
     margin-left: -16px;
-  }
-  .railGroup {
-    display: grid;
-    gap: 2px;
-  }
-  .railLabel {
-    display: block;
-    margin: 0 0 8px 16px;
-    font-family: var(--disp);
-    font-variation-settings: var(--narrow);
-    font-weight: 500;
-    font-size: 13px;
-    color: rgba(221, 210, 195, 0.45);
   }
   .sheet {
     padding: 0 clamp(30px, 4vw, 64px) 130px;
@@ -2281,7 +2325,7 @@
   display: none;
 }
 
-@media (max-width: 899px) {
+@media (max-width: 959px) {
   .side {
     /* no telemóvel deixa de ser fixa: só a barra de ações fica colada ao topo,
        senão as duas disputavam o mesmo topo e sobrepunham-se */
@@ -2856,7 +2900,7 @@
   height: 12px;
 }
 
-@media (max-width: 899px) {
+@media (max-width: 959px) {
   /* no telemóvel o espaço é curto: ao rolar fica só o título pequeno e as
      ações, e o estado passa para o fio de trabalho */
   .dashSticky[data-stuck] .dashBar {
@@ -3028,7 +3072,7 @@
 /* ── impressão ─────────────────────────────────────────────────────── */
 /* Fica no fim do ficheiro de propósito: tem a mesma especificidade que as
    regras de ecrã que anula, e a folha impressa tem 794px de largura — ou
-   seja, cai dentro do @media (max-width: 899px). Se este bloco não vier
+   seja, cai dentro do @media (max-width: 959px). Se este bloco não vier
    depois desse, o layout mobile ganha e volta a margem branca. */
 @page {
   size: A4;
@@ -3258,6 +3302,7 @@
   max-width: 66ch;
 }
 .osEmpty {
+  margin-top: 30px;
   padding: 34px 0 40px;
   border-top: 1px solid var(--areia2);
   font-family: var(--serif);
@@ -3282,6 +3327,32 @@
 .osWarn[data-tone='ok'] {
   background: var(--jadeLeve);
   color: var(--jade);
+}
+
+/* O dia dito por extenso, no lugar onde estavam quatro caixas com números.
+   Escala de título porque é a primeira frase que ela lê; a leitura da IA vem
+   a seguir em serifa itálica, que é a voz de nota de margem já usada no resto
+   da casa. */
+.osBrief {
+  margin: 0 0 8px;
+  max-width: 46ch;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: clamp(21px, 2.5vw, 28px);
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+  color: var(--tinta);
+  text-wrap: balance;
+}
+.osRead {
+  margin: 0;
+  max-width: 58ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--tinta2);
 }
 
 /* ── linhas de dados ───────────────────────────────────────────────────── */

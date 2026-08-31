@@ -247,3 +247,10 @@ export const UpsellSchema = z.object({
   confidence,
 });
 export type UpsellScan = z.infer<typeof UpsellSchema>;
+
+/** A leitura do dia. Uma frase só: se precisar de duas, não é uma leitura, é
+ *  um relatório — e disso a Carol já tem a fila abaixo. */
+export const DailyReadSchema = z.object({
+  read: z.string(),
+});
+export type DailyRead = z.infer<typeof DailyReadSchema>;

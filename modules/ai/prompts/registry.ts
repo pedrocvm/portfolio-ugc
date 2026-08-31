@@ -1,8 +1,10 @@
 import type { Prompt } from '../gateway';
 import {
-  BriefSchema, CaptureSchema, CommercialExtractionSchema, CreativeSchema, DossierSchema,
+  BriefSchema, CaptureSchema, CommercialExtractionSchema, CreativeSchema, DailyReadSchema,
+  DossierSchema,
   NegotiationSchema, NextActionSchema, ReplyDraftSchema, ThreadClassificationSchema, UpsellSchema,
   type BrandDossier, type CaptureExtraction, type CommercialExtraction, type CreativeHypotheses,
+  type DailyRead,
   type NegotiationAnalysis, type NextActionRecommendation, type ParsedBrief, type ReplyDraft,
   type ThreadClassification, type UpsellScan,
 } from '../schemas';
@@ -462,4 +464,44 @@ ${i.content}
 
 Direitos activos:
 ${i.rights}`,
+};
+
+export const dailyRead: Prompt<
+  { brief: string; queue: string; openCount: number },
+  DailyRead
+> = {
+  task: 'daily_read',
+  version: 'v1',
+  tier: 'fast',
+  schema: DailyReadSchema,
+  maxTokens: 300,
+  system: `${CAROL}
+
+Escreves uma frase para a Carol, no topo da fila do dia dela.
+
+O sistema já lhe disse quantas coisas tem e por onde começar. Não repitas isso.
+O teu trabalho é o que a contagem não mostra: o padrão. Três marcas à espera do
+mesmo, duas conversas presas na mesma pergunta, uma fila inteira que se despacha
+com uma decisão só, dinheiro parado numa etapa que não anda.
+
+Regras da frase:
+- UMA frase. Curta. Como uma amiga que olhou para a lista por cima do ombro.
+- Só o que se lê nos dados que te dou. Sem números novos, sem nomes que não
+  estejam na lista, sem conselho genérico de produtividade.
+- Se não houver padrão nenhum digno de nota, devolve string vazia. É a resposta
+  certa muitas vezes, e é melhor do que encher.
+- Não cumprimentes, não motives, não elogies.
+
+${HONESTY}`,
+  render: (i) => `O que o sistema já lhe disse:
+"""
+${i.brief}
+"""
+
+Conversas em aberto no total: ${i.openCount}
+
+A fila de hoje, por ordem:
+"""
+${i.queue || '(vazia)'}
+"""`,
 };
