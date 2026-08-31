@@ -3193,12 +3193,16 @@
 /* ── fila de ações ─────────────────────────────────────────────────────── */
 .osQueue {
   display: grid;
-  gap: 16px;
+  /* Maior do que o padding de dentro do cartão (22px), de propósito: o olho
+     agrupa pelo espaço, e enquanto o de fora for igual ao de dentro os cartões
+     lêem-se como uma lista contínua em vez de decisões separadas. */
+  gap: 30px;
 }
 /* Os cartões da prospecção são altos e abrem-se: 16px entre eles fazia-os
    parecer uma coisa só quando dois estavam abertos ao mesmo tempo. */
 .osQueue[data-air] {
-  gap: 26px;
+  /* Os da prospecção são altos e abrem-se em duas secções. */
+  gap: 42px;
 }
 
 /* Uma medida de leitura para a coluna do Hoje.
@@ -3216,7 +3220,7 @@
    onde o rato pode pousar. */
 .osCard {
   position: relative;
-  padding: 20px 22px 16px;
+  padding: 22px 24px 18px;
   border: 1px solid var(--areia2);
   border-radius: 14px;
   background: var(--papel);
@@ -3462,7 +3466,7 @@
 
 /* ── secções e estados ─────────────────────────────────────────────────── */
 .osSection {
-  margin: 44px 0 0;
+  margin: 52px 0 0;
 }
 .osSection > h2 {
   font-size: clamp(22px, 2.6vw, 30px);
@@ -4670,8 +4674,8 @@ a.aiSource:hover {
 /* Os avisos no Hoje. Uma lista curta, e cada um leva a um sítio. */
 .osInsights {
   display: grid;
-  gap: 8px;
-  margin: 22px 0 0;
+  gap: 10px;
+  margin: 26px 0 0;
 }
 .osInsight {
   display: flex;
