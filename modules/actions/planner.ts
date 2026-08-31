@@ -230,15 +230,20 @@ export function planForOpportunity(
 
   // 1. A marca respondeu e a bola está do lado dela.
   if (opp.awaitingReplySince && isOpen(opp.stage)) {
+    const waitingDays = daysBetween(new Date(opp.awaitingReplySince), now);
     const asks = opp.openAsks.filter((a) => ASK_TO_ACTION[a]);
     const primary = asks.length ? ASK_TO_ACTION[asks[0]] : null;
     const type = primary?.type ?? 'respond';
     out.push({
       type,
       title: primary?.title ?? 'Responder à mensagem',
+      // Sem data ISO no meio de uma frase. «2026-08-31» é o sistema a falar
+      // consigo próprio; ela quer saber há quanto tempo é que a pessoa espera.
       reason: asks.length
         ? `A marca pediu ${askNames(asks)}, e ainda não teve resposta.`
-        : `Mensagem recebida a aguardar resposta desde ${opp.awaitingReplySince.slice(0, 10)}.`,
+        : waitingDays <= 0
+          ? 'Chegou hoje e ainda não teve resposta.'
+          : `Está à espera de resposta há ${waitingDays} ${waitingDays === 1 ? 'dia' : 'dias'}.`,
       cta: ACTION_CTA[type],
       dueAt: opp.awaitingReplySince,
       risk,

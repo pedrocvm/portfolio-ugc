@@ -3183,6 +3183,16 @@
   gap: 12px;
 }
 
+/* Uma medida de leitura para a coluna do Hoje.
+   Num ecrã de 2300px, um cartão a toda a largura põe a marca à esquerda e a
+   data a mil e novecentos pixels de distância, com nada pelo meio: deixa de se
+   ler como um cartão e passa a ler-se como uma avaria. O texto do motivo já
+   estava travado nos 62ch; faltava travar a caixa que o contém. */
+.osQueue,
+.osInsights {
+  max-width: 880px;
+}
+
 /* Cada decisão é um objecto, não uma linha de lista. Superfície própria,
    canto arredondado e um filete: separa sem gritar, e dá ao cartão um sítio
    onde o rato pode pousar. */
@@ -3386,6 +3396,16 @@
   .osGo {
     flex: 1;
     justify-content: center;
+  }
+  /* No telemóvel isto é um polegar, não um rato: 38px chegam para apontar e
+     não chegam para acertar. */
+  .osGo,
+  .osCardActs > button,
+  .osMore > summary {
+    min-height: 44px;
+  }
+  .osMore > summary {
+    width: 44px;
   }
 }
 
@@ -4591,8 +4611,9 @@ a.aiSource:hover {
 }
 .osInsight {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 12px;
+  gap: 2px 12px;
   padding: 12px 14px;
   border: 1px solid var(--areia2);
   border-left-width: 3px;
@@ -4622,6 +4643,10 @@ a.aiSource:hover {
   font-size: 15px;
 }
 .osInsight span {
+  /* Cabe ao lado do título quando há espaço; cai para baixo quando não há.
+     Sem isto, no telemóvel os dois espremiam-se em duas colunas estreitas. */
+  flex: 1 1 22ch;
+  min-width: 22ch;
   font-size: 13.5px;
   color: var(--tinta3);
 }

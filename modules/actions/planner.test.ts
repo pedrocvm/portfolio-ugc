@@ -223,3 +223,34 @@ test('vários riscos escalam para risco alto', () => {
   );
   assert.equal(action.risk, 'high');
 });
+
+test('nunca sai uma data ISO no meio de uma frase', () => {
+  const iso = /\d{4}-\d{2}-\d{2}/;
+  for (const snapshot of [
+    snap({ awaitingReplySince: daysAgo(5) }),
+    snap({ awaitingReplySince: daysAgo(0) }),
+    snap({ awaitingReplySince: daysAgo(1) }),
+    snap({ dueFollowUp: { id: 'f1', dueAt: daysAgo(1), reason: 'Cadência.' } }),
+    snap({ waitingUntil: daysAgo(3) }),
+    snap({ stage: 'commercial_qualification' }),
+    snap({ stage: 'negotiation' }),
+  ]) {
+    for (const action of planForOpportunity(snapshot, NOW)) {
+      assert.doesNotMatch(action.reason, iso, `"${action.reason}" tem uma data crua`);
+      assert.doesNotMatch(action.title, iso, `"${action.title}" tem uma data crua`);
+    }
+  }
+});
+
+test('a espera conta-se em dias, e um dia é singular', () => {
+  const um = planForOpportunity(snap({ awaitingReplySince: daysAgo(1) }), NOW)[0];
+  assert.match(um.reason, /há 1 dia\./);
+  const muitos = planForOpportunity(snap({ awaitingReplySince: daysAgo(6) }), NOW)[0];
+  assert.match(muitos.reason, /há 6 dias\./);
+});
+
+test('uma mensagem de hoje não diz «há 0 dias»', () => {
+  const hoje = planForOpportunity(snap({ awaitingReplySince: daysAgo(0) }), NOW)[0];
+  assert.match(hoje.reason, /Chegou hoje/);
+  assert.doesNotMatch(hoje.reason, /0 dias/);
+});
