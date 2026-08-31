@@ -3615,6 +3615,121 @@ a.osRow:hover .osRowName {
   margin-top: 16px;
 }
 
+/* ── ler e responder um email ──────────────────────────────────────────── */
+/* A linha do inbox passou de <a> a <button> para abrir o modal: sem isto
+   herdava o alinhamento ao centro e o tipo do agente do utilizador. */
+.osRowBtn {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--areia2);
+  cursor: pointer;
+}
+.osRowBtn:hover .osRowName {
+  color: var(--umbra);
+}
+.mailBox {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  max-height: min(86dvh, 900px);
+  padding: 24px 26px 22px;
+}
+.mailHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--areia2);
+}
+.mailHead h2 {
+  font-size: clamp(19px, 2.2vw, 24px);
+  line-height: 1.25;
+}
+.mailScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 2px 8px;
+  scrollbar-width: thin;
+}
+.mailMsg {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--areia);
+}
+.mailMsg:last-child {
+  border-bottom: 0;
+}
+.mailMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 14px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: var(--tinta3);
+}
+.mailMeta b {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 560;
+  font-size: 15px;
+  color: var(--tinta);
+}
+/* O corpo vem de email: quebras de linha contam, e uma palavra sem espaços
+   (um URL longo) não pode empurrar o modal. */
+.mailBody {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  line-height: 1.62;
+  color: var(--tinta2);
+}
+.mailMsg[data-dir='outbound'] .mailBody {
+  color: var(--tinta3);
+  font-style: italic;
+}
+.mailReply {
+  padding-top: 16px;
+  border-top: 1px solid var(--areia2);
+}
+.mailReply textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--areia2);
+  border-radius: 10px;
+  background: var(--papel);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--tinta);
+  resize: vertical;
+}
+.mailReply textarea:focus-visible {
+  outline: 2px solid var(--umbra);
+  outline-offset: 1px;
+}
+.mailActs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 12px 0 10px;
+}
+@media (max-width: 559px) {
+  .mailBox {
+    width: 100%;
+    max-height: 92dvh;
+    padding: 18px 16px 16px;
+  }
+}
+
 /* ── paginação da fila ─────────────────────────────────────────────────── */
 .osPager {
   display: flex;

@@ -38,6 +38,9 @@ export type NormalizedMessage = {
   snippet: string;
   /** Endereços da própria Carol, para saber quem é a marca na conversa. */
   selfAddresses: string[];
+  /** Qual das caixas dela recebeu isto. Sem isto, a resposta podia sair pelo
+   *  endereço errado quando há mais do que uma conta ligada. */
+  connectionId?: string | null;
   rawRef?: string | null;
 };
 
@@ -100,6 +103,7 @@ export async function ingestMessage(
         subject: msg.subject,
         participants: [...new Set([msg.fromAddress, ...msg.toAddresses])].filter(Boolean),
         last_message_at: msg.sentAt,
+        ...(msg.connectionId ? { connection_id: msg.connectionId } : {}),
       },
       { onConflict: 'provider,external_thread_id' },
     )

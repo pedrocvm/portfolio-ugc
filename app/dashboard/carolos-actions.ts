@@ -805,3 +805,145 @@ export async function stopScheduler(): Promise<Result & { jobs?: number }> {
   revalidatePath('/dashboard/settings');
   return result.ok ? { ok: true, jobs: result.jobs } : { error: result.error };
 }
+
+/* ── Ler e responder um email sem sair do CarolOS ────────────────────────── */
+
+export type MailMessage = {
+  id: string;
+  direction: 'inbound' | 'outbound';
+  sentAt: string;
+  fromAddress: string;
+  fromName: string;
+  subject: string;
+  body: string;
+};
+
+export type MailThread = {
+  id: string;
+  subject: string;
+  brandId: string | null;
+  brandName: string | null;
+  opportunityId: string | null;
+  /** Para quem vai a resposta: o último remetente de fora. */
+  replyTo: string | null;
+  messages: MailMessage[];
+};
+
+/** O corpo das mensagens já está guardado na ingestão, por isso ler uma
+ *  conversa não gasta uma ida ao Gmail nem depende de ele estar de pé. */
+export async function readMailThread(threadId: string): Promise<MailThread | { error: string }> {
+  await requireUser();
+  if (!z.string().uuid().safeParse(threadId).success) return { error: 'Conversa inválida.' };
+
+  const db = await supabaseServer();
+  const { data: thread, error } = await db
+    .from('source_thread')
+    .select('id, subject, brand_id, opportunity_id, brand:brand_id ( name )')
+    .eq('id', threadId)
+    .maybeSingle();
+
+  if (error) return { error: 'Não consegui ler a conversa.' };
+  if (!thread) return { error: 'Conversa não encontrada.' };
+
+  const { data: rows } = await db
+    .from('source_message')
+    .select('id, direction, sent_at, from_address, from_name, subject, body_text')
+    .eq('thread_id', threadId)
+    .order('sent_at', { ascending: true });
+
+  const messages = (rows ?? []).map((m) => ({
+    id: m.id,
+    direction: m.direction as 'inbound' | 'outbound',
+    sentAt: m.sent_at,
+    fromAddress: m.from_address,
+    fromName: m.from_name,
+    subject: m.subject,
+    body: m.body_text,
+  }));
+
+  const brand = thread.brand as { name: string } | { name: string }[] | null;
+  const lastInbound = [...messages].reverse().find((m) => m.direction === 'inbound');
+
+  return {
+    id: thread.id,
+    subject: thread.subject,
+    brandId: thread.brand_id,
+    brandName: Array.isArray(brand) ? (brand[0]?.name ?? null) : (brand?.name ?? null),
+    opportunityId: thread.opportunity_id,
+    replyTo: lastInbound?.fromAddress ?? null,
+    messages,
+  };
+}
+
+/** A resposta sai como rascunho na caixa dela, dentro da mesma conversa.
+ *
+ *  Regra 3 do CarolOS: nada sai para fora sozinho. Escrever aqui e enviar daqui
+ *  seriam duas decisões diferentes, e a segunda não está tomada — por isso o
+ *  botão prepara, e é ela que carrega em enviar no Gmail. */
+export async function replyToMailThread(threadId: string, body: string): Promise<Result> {
+  await requireUser();
+
+  const text = body.trim();
+  if (!z.string().uuid().safeParse(threadId).success) return { error: 'Conversa inválida.' };
+  if (text.length < 2) return { error: 'Escreve a resposta primeiro.' };
+  if (text.length > 20000) return { error: 'Resposta demasiado longa para um email.' };
+
+  const flags = await getFlags();
+  if (!flags.gmail_draft_creation) {
+    return { error: 'A bandeira «Criar rascunho no Gmail» está fechada.' };
+  }
+
+  const db = await supabaseServer();
+  const { data: thread } = await db
+    .from('source_thread')
+    .select('id, subject, external_thread_id, connection_id')
+    .eq('id', threadId)
+    .maybeSingle();
+  if (!thread) return { error: 'Conversa não encontrada.' };
+
+  const { data: last } = await db
+    .from('source_message')
+    .select('from_address')
+    .eq('thread_id', threadId)
+    .eq('direction', 'inbound')
+    .order('sent_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!last?.from_address) return { error: 'Esta conversa não tem remetente para responder.' };
+
+  const { accessTokenFor } = await import('@/modules/integrations/gmail/oauth');
+  const { createDraft } = await import('@/modules/integrations/gmail/client');
+
+  const auth = await accessTokenFor(thread.connection_id ?? undefined);
+  if (!auth) return { error: 'Sem ligação válida ao Gmail.' };
+
+  const subject = thread.subject.toLowerCase().startsWith('re:')
+    ? thread.subject
+    : `Re: ${thread.subject}`;
+
+  try {
+    await createDraft(auth.token, {
+      to: last.from_address,
+      subject,
+      body: text,
+      from: auth.account,
+      threadId: thread.external_thread_id ?? undefined,
+    });
+  } catch {
+    return { error: 'O Gmail recusou criar o rascunho. Verifica a ligação em Definições.' };
+  }
+
+  const { recordEvent } = await import('@/modules/activity/service');
+  const { supabaseService } = await import('@/lib/supabase/service');
+  await recordEvent(supabaseService(), {
+    eventType: 'reply.drafted',
+    actorType: 'carol',
+    sourceThreadId: threadId,
+    summary: `Rascunho de resposta preparado para ${last.from_address}.`,
+    payload: { to: last.from_address, chars: text.length },
+  });
+
+  revalidatePath('/dashboard/inbox');
+  return { ok: true };
+}

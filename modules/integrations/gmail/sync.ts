@@ -218,6 +218,7 @@ async function syncMailbox(flags: Flags, mailbox: Mailbox, options: { limit?: nu
         bodyText: parsed.bodyText,
         snippet: parsed.snippet,
         selfAddresses: self,
+        connectionId: auth.connectionId,
         rawRef: `gmail:${parsed.id}`,
       };
 

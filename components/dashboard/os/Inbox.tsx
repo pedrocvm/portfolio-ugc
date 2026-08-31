@@ -6,6 +6,7 @@ import { triageThread } from '@/app/dashboard/carolos-actions';
 import { REPLY_TYPE_LABEL, type ReplyType } from '@/modules/ai/schemas';
 import { STAGE_LABEL, type Stage } from '@/modules/opportunities/domain';
 import type { ThreadRow } from '@/modules/inbox/queries';
+import MailThread from './MailThread';
 
 /** Inbox comercial. Três montes:
  *  — a marca falou e espera resposta;
@@ -23,15 +24,11 @@ function when(at: string | null) {
   return `há ${days} dias`;
 }
 
-function Thread({ thread }: { thread: ThreadRow }) {
-  const target = thread.opportunityId
-    ? `/dashboard/opportunities/${thread.opportunityId}`
-    : thread.brandId
-      ? `/dashboard/brands/${thread.brandId}`
-      : '#';
-
+function Thread({ thread, onOpen }: { thread: ThreadRow; onOpen: (id: string) => void }) {
+  // A linha é um email, por isso carregar nela abre o email. Os atalhos para a
+  // marca e para a oportunidade estão dentro do modal.
   return (
-    <Link className="osRow" href={target}>
+    <button className="osRow osRowBtn" type="button" onClick={() => onOpen(thread.id)}>
       <div>
         <span className="osRowName">{thread.brandName ?? thread.subject}</span>
         <p className="osRowSub">
@@ -55,11 +52,11 @@ function Thread({ thread }: { thread: ThreadRow }) {
         ) : null}
         <span>{when(thread.lastMessageAt)}</span>
       </div>
-    </Link>
+    </button>
   );
 }
 
-function ReviewThread({ thread }: { thread: ThreadRow }) {
+function ReviewThread({ thread, onOpen }: { thread: ThreadRow; onOpen: (id: string) => void }) {
   const [pending, start] = useTransition();
   const [gone, setGone] = useState(false);
   if (gone) return null;
@@ -92,6 +89,10 @@ function ReviewThread({ thread }: { thread: ThreadRow }) {
         <button className="chip" type="button" disabled={pending} onClick={() => decide('irrelevant')}>
           Não é
         </button>
+        {/* Decidir sem ler é adivinhar: o email fica a um toque. */}
+        <button className="chip" type="button" onClick={() => onOpen(thread.id)}>
+          Ler o email
+        </button>
       </div>
     </article>
   );
@@ -108,6 +109,8 @@ export default function Inbox({
   quiet: ThreadRow[];
   gmailConnected: boolean;
 }) {
+  const [openThread, setOpenThread] = useState<string | null>(null);
+
   return (
     <>
       <div className="dashBar">
@@ -129,7 +132,7 @@ export default function Inbox({
         {waiting.length ? (
           <div className="osRows">
             {waiting.map((t) => (
-              <Thread key={t.id} thread={t} />
+              <Thread key={t.id} thread={t} onOpen={setOpenThread} />
             ))}
           </div>
         ) : (
@@ -146,7 +149,7 @@ export default function Inbox({
           </p>
           <div className="osQueue">
             {review.map((t) => (
-              <ReviewThread key={t.id} thread={t} />
+              <ReviewThread key={t.id} thread={t} onOpen={setOpenThread} />
             ))}
           </div>
         </section>
@@ -158,10 +161,14 @@ export default function Inbox({
           <p className="osNote">Já respondeste. O follow-up é agendado sozinho.</p>
           <div className="osRows">
             {quiet.map((t) => (
-              <Thread key={t.id} thread={t} />
+              <Thread key={t.id} thread={t} onOpen={setOpenThread} />
             ))}
           </div>
         </section>
+      ) : null}
+
+      {openThread ? (
+        <MailThread threadId={openThread} onClose={() => setOpenThread(null)} />
       ) : null}
     </>
   );

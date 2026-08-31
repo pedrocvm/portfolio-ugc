@@ -2421,6 +2421,7 @@ export type Database = {
           classification: string
           classification_confidence: number | null
           classification_reason: string
+          connection_id: string | null
           contact_id: string | null
           created_at: string
           external_thread_id: string
@@ -2440,6 +2441,7 @@ export type Database = {
           classification?: string
           classification_confidence?: number | null
           classification_reason?: string
+          connection_id?: string | null
           contact_id?: string | null
           created_at?: string
           external_thread_id: string
@@ -2459,6 +2461,7 @@ export type Database = {
           classification?: string
           classification_confidence?: number | null
           classification_reason?: string
+          connection_id?: string | null
           contact_id?: string | null
           created_at?: string
           external_thread_id?: string
@@ -2479,6 +2482,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "source_thread_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "integration_connection"
             referencedColumns: ["id"]
           },
           {
