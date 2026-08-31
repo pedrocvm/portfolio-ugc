@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import {
   approveOutreach, discoverNow, sendApprovedOutreach, sendOutreach, skipOutreach,
@@ -7,23 +8,12 @@ import {
 } from '@/app/dashboard/outreach-actions';
 import Spinner from '@/components/dashboard/Spinner';
 import { formatDate } from '@/lib/time';
+import { CONF_LABEL, PAID_LABEL, UGC_LABEL } from '@/modules/outreach/history';
 
 /** A revisão diária.
  *
  *  O objetivo é ela decidir em segundos: porquê esta marca, quanto vale, e o
  *  email já escrito. Tudo o resto está a um toque, dobrado. */
-
-const PAID_LABEL: Record<string, string> = {
-  strong: 'compra criativos', medium: 'anuncia', weak: 'anuncia pouco', none: 'sem anúncios',
-};
-const UGC_LABEL: Record<string, string> = {
-  creator_program: 'tem programa de creators', ugc: 'já usa UGC',
-  influencers: 'só influencers', product_only: 'só produto', none: 'sem creators',
-};
-const CONF_LABEL: Record<string, string> = {
-  verified: 'verificado', high: 'confiança alta', medium: 'confiança média',
-  low: 'confiança baixa', unknown: 'por confirmar',
-};
 
 export type Candidate = {
   id: string; name: string; website: string | null; country: string | null;
@@ -260,6 +250,9 @@ export default function Outreach({
       <div className="dashBar">
         <h1>Prospecção</h1>
         {runDate ? <span className="dashState">lote de {formatDate(runDate)}</span> : null}
+        <Link className="osMore" href="/dashboard/outreach/history">
+          Histórico
+        </Link>
       </div>
 
       {!enabled ? (

@@ -14,6 +14,26 @@ const MENU = readFileSync(path.join(ROOT, 'components/dashboard/Menu.tsx'), 'utf
 
 const hrefs = [...MENU.matchAll(/href: '([^']+)'/g)].map((m) => m[1]);
 
+/** Nem tudo precisa de entrada no menu: uma sub-vista pertence ao ecrã que a
+ *  abre, e enfiá-la no carril é como o menu deixa de caber. O que não pode
+ *  existir é uma tela sem porta nenhuma — por isso vale também um link a partir
+ *  de outra tela. */
+function linkedFromScreens(): string[] {
+  const found: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const here = path.join(dir, e.name);
+      if (e.isDirectory()) walk(here);
+      else if (/\.tsx$/.test(e.name)) {
+        for (const m of readFileSync(here, 'utf8').matchAll(/href="(\/dashboard[^"]*)"/g)) found.push(m[1]);
+      }
+    }
+  };
+  walk(path.join(ROOT, 'components'));
+  walk(path.join(ROOT, 'app'));
+  return found;
+}
+
 /** Restos anteriores ao CarolOS: continuam a responder, ninguém lhes chama.
  *  Ficam nomeados aqui para o teste não passar por distração. */
 const UNLINKED = new Set(['/dashboard/funnel', '/dashboard/library', '/dashboard/links']);
@@ -28,10 +48,11 @@ function routes(dir: string, prefix = ''): string[] {
   });
 }
 
-test('todas as telas do painel têm entrada no menu', () => {
+test('nenhuma tela do painel fica sem porta', () => {
   const all = routes(path.join(ROOT, 'app/dashboard/(app)'));
-  const missing = all.filter((r) => !hrefs.includes(r) && !UNLINKED.has(r));
-  assert.deepEqual(missing, [], `sem entrada no menu: ${missing.join(', ')}`);
+  const reachable = new Set([...hrefs, ...linkedFromScreens()]);
+  const missing = all.filter((r) => !reachable.has(r) && !UNLINKED.has(r));
+  assert.deepEqual(missing, [], `sem menu e sem link: ${missing.join(', ')}`);
 });
 
 test('nenhum destino aparece duas vezes', () => {

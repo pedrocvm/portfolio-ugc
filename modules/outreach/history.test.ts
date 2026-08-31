@@ -1,0 +1,104 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { groupByDay, statusLabel, summarize, summarySentence, type HistoryRow } from './history.ts';
+
+const row = (over: Partial<HistoryRow> = {}): HistoryRow => ({
+  id: crypto.randomUUID(),
+  name: 'Cecotec',
+  domain: 'cecotec.es',
+  country: 'ES',
+  niche_id: 'home_tech',
+  fit_score: 80,
+  fit_band: 'A',
+  status: 'ready',
+  reject_reason: null,
+  sent_at: null,
+  created_at: '2026-08-31T09:00:00Z',
+  red_flags: [],
+  quality: { pass: true, score: 90, failures: [] },
+  contact_email: 'a@cecotec.es',
+  email_confidence: 'high',
+  ...over,
+});
+
+test('sem histórico, não se inventa um resumo', () => {
+  const s = summarize([]);
+  assert.equal(s.total, 0);
+  assert.equal(s.avgFit, null, 'a média de nada não é zero');
+  assert.match(summarySentence(s), /Ainda não há/);
+});
+
+test('a média de encaixe ignora quem nunca chegou a ser pesquisada', () => {
+  // Uma marca morta na triagem não tem nota. Contá-la como zero fazia a
+  // prospecção parecer má por uma razão que não é de qualidade.
+  const s = summarize([row({ fit_score: 80 }), row({ fit_score: 90 }), row({ fit_score: null })]);
+  assert.equal(s.avgFit, 85);
+});
+
+test('cada marca conta uma vez só, na coluna certa', () => {
+  const s = summarize([
+    row({ status: 'sent' }),
+    row({ status: 'ready' }),
+    row({ status: 'needs_review' }),
+    row({ status: 'rejected' }),
+    row({ status: 'skipped' }),
+  ]);
+  assert.equal(s.total, 5);
+  assert.equal(s.sent, 1);
+  assert.equal(s.waiting, 2);
+  assert.equal(s.discarded, 2);
+  assert.equal(s.sent + s.waiting + s.discarded, s.total, 'alguma marca ficou por contar ou contou duas vezes');
+});
+
+test('as falhas de qualidade saem por frequência: é o que diz o que corrigir', () => {
+  const s = summarize([
+    row({ quality: { pass: false, score: 40, failures: ['genérico', 'sem prova'] } }),
+    row({ quality: { pass: false, score: 50, failures: ['genérico'] } }),
+    row({ quality: { pass: true, score: 90, failures: [] } }),
+  ]);
+  assert.equal(s.qualityChecked, 3);
+  assert.equal(s.qualityPassed, 1);
+  assert.deepEqual(s.topFailures[0], { reason: 'genérico', count: 2 });
+});
+
+test('a frase conta o que aconteceu sem despejar números soltos', () => {
+  const frase = summarySentence(
+    summarize([row({ status: 'sent' }), row({ status: 'ready' }), row({ status: 'rejected' })]),
+  );
+  assert.match(frase, /3 marcas/);
+  assert.match(frase, /1 enviada/);
+  assert.match(frase, /à espera de você/);
+  assert.doesNotMatch(frase, /\bready\b|\brejected\b/, 'um estado cru chegou à frase');
+});
+
+test('a frase avisa quando os emails não passam no corte', () => {
+  const frase = summarySentence(
+    summarize([row({ quality: { pass: false, score: 30, failures: ['genérico'] } })]),
+  );
+  assert.match(frase, /não passou/);
+});
+
+test('o singular e o plural concordam', () => {
+  assert.match(summarySentence(summarize([row({ status: 'sent' })])), /1 marca:/);
+  assert.doesNotMatch(summarySentence(summarize([row({ status: 'sent' })])), /1 marcas/);
+});
+
+test('os dias saem do mais recente para o mais antigo', () => {
+  const g = groupByDay([
+    row({ created_at: '2026-08-29T10:00:00Z' }),
+    row({ created_at: '2026-08-31T10:00:00Z' }),
+    row({ created_at: '2026-08-31T18:00:00Z' }),
+  ]);
+  assert.deepEqual(g.map((d) => d.day), ['2026-08-31', '2026-08-29']);
+  assert.equal(g[0].rows.length, 2, 'o mesmo dia partiu-se em dois grupos');
+});
+
+test('nenhum estado chega à tela como está na base', () => {
+  const crus = ['discovered', 'screened', 'researched', 'ready', 'needs_review',
+    'approved', 'edited', 'sent', 'skipped', 'rejected', 'failed'];
+  for (const s of crus) {
+    const label = statusLabel(s);
+    assert.notEqual(label, s, `«${s}» não tem tradução`);
+    assert.doesNotMatch(label, /_/, `«${label}» ainda parece um identificador`);
+  }
+});

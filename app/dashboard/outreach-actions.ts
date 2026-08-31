@@ -169,3 +169,32 @@ export async function rebuildStyleProfile(): Promise<Result & { samples?: number
   if (!profile) return { error: 'Não encontrei emails de prospecção suficientes no Gmail.' };
   return { ok: true, samples: profile.sampleCount };
 }
+
+/** O histórico completo, para ela ver quem já foi prospectado e se presta.
+ *
+ *  Lê tudo — incluindo as recusadas e as postas de lado, que a revisão diária
+ *  esconde. É esse o ponto: o que ficou de fora é metade do que diz se a
+ *  prospecção está a acertar. */
+export async function outreachHistory(status?: string) {
+  await requireUser();
+  const db = await supabaseServer();
+
+  let q = db
+    .from('outreach_candidate')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(300);
+
+  if (status && status !== 'todas') q = q.eq('status', status);
+
+  const [{ data: rows }, { data: runs }] = await Promise.all([
+    q,
+    db
+      .from('outreach_run')
+      .select('id, run_date, kind, status, discovered, screened, researched, selected, partial_failures')
+      .order('run_date', { ascending: false })
+      .limit(30),
+  ]);
+
+  return { rows: rows ?? [], runs: runs ?? [] };
+}

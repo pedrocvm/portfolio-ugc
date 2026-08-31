@@ -5054,3 +5054,185 @@ a.aiSource:hover {
     padding: 0 14px;
   }
 }
+
+/* ── Histórico de prospecção ──────────────────────────────────────────────── */
+
+.dash .histStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 18px 0 8px;
+}
+.dash .histStats > div {
+  padding: 14px 16px;
+  border: 1px solid var(--areia2);
+  border-radius: 12px;
+  background: var(--papel);
+}
+.dash .histStats b {
+  display: block;
+  font-size: 26px;
+  font-variation-settings: var(--wide);
+  line-height: 1.1;
+  color: var(--tinta);
+}
+.dash .histStats span {
+  font-size: 13px;
+  color: var(--tinta2);
+}
+
+.dash .histNote {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--tinta2);
+}
+
+.dash .histFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 10px;
+}
+.dash .histFilters a {
+  padding: 7px 14px;
+  border: 1px solid var(--areia2);
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--tinta2);
+  text-decoration: none;
+  /* 44px de alvo no toque sem engordar a pastilha no ecrã. */
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+}
+.dash .histFilters a[aria-current='page'] {
+  border-color: var(--tinta);
+  background: var(--tinta);
+  color: var(--papel);
+}
+
+.dash .histDay {
+  margin-top: 34px;
+}
+.dash .histDay > h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-variation-settings: var(--wide);
+  color: var(--tinta);
+}
+.dash .histDay > h2 span {
+  font-size: 13px;
+  font-variation-settings: normal;
+  color: var(--tinta2);
+}
+
+.dash .histRow {
+  border: 1px solid var(--areia2);
+  border-radius: 12px;
+  background: var(--papel);
+  margin-bottom: 10px;
+}
+.dash .histRow > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  list-style: none;
+  min-height: 48px;
+}
+.dash .histRow > summary::-webkit-details-marker {
+  display: none;
+}
+.dash .histRow[open] > summary {
+  border-bottom: 1px solid var(--areia2);
+}
+.dash .histName {
+  font-weight: 500;
+  color: var(--tinta);
+}
+.dash .histFit {
+  padding: 2px 9px;
+  border: 1px solid var(--areia2);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--tinta2);
+}
+.dash .histStatus {
+  font-size: 13px;
+  color: var(--tinta2);
+}
+.dash .histStatus[data-status='sent'] {
+  color: var(--realce);
+}
+.dash .histStatus[data-status='rejected'],
+.dash .histStatus[data-status='skipped'],
+.dash .histStatus[data-status='failed'] {
+  opacity: 0.72;
+}
+.dash .histWhere {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--tinta2);
+}
+
+.dash .histDetail {
+  margin: 0;
+  padding: 16px 18px 18px;
+}
+.dash .histField {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 14px;
+  padding: 7px 0;
+  border-top: 1px solid color-mix(in srgb, var(--areia2) 55%, transparent);
+}
+.dash .histField:first-child {
+  border-top: 0;
+}
+.dash .histField dt {
+  font-size: 13px;
+  color: var(--tinta2);
+}
+.dash .histField dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--tinta);
+  /* Uma medida de leitura: uma linha de 120 caracteres não se lê, varre-se. */
+  max-width: 68ch;
+}
+.dash .histList {
+  margin: 0;
+  padding-left: 18px;
+}
+.dash .histList[data-tone='warn'] {
+  color: var(--realce);
+}
+.dash [data-tone='warn'] {
+  color: var(--realce);
+}
+.dash .histMail {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--areia2) 26%, transparent);
+}
+.dash .histMail p {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .dash .histField {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+  .dash .histWhere {
+    margin-left: 0;
+  }
+}
