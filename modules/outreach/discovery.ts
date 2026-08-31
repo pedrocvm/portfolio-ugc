@@ -59,7 +59,7 @@ export async function discoverBrands(
   extra?: string,
 ): Promise<{ found: Discovered[]; failure: string | null }> {
   const setup = aiSetup();
-  if (!setup.provider) return { found: [], failure: `Falta ${setup.missing ?? 'a credencial de IA'}.` };
+  if (!setup.provider) return { found: [], failure: 'A IA não está configurada, por isso não há como procurar.' };
 
   const ask = [
     `Nichos a procurar hoje: ${strategy.niches.join(', ')}.`,

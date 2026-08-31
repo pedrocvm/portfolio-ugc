@@ -22,6 +22,10 @@ export type RunResult = {
   researched: number;
   selected: number;
   failures: string[];
+  /** Porque é que a corrida não chegou a andar. Zero marcas porque a pesquisa
+   *  não devolveu nada é uma coisa; zero porque a IA nem foi chamada é outra, e
+   *  só uma delas se resolve mudando a busca. */
+  blocked: string | null;
 };
 
 export async function runDailyOutreach(
@@ -34,7 +38,7 @@ export async function runDailyOutreach(
   const failures: string[] = [];
 
   const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
-  if (!me) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Sem usuário.'] };
+  if (!me) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Sem usuário.'], blocked: 'Sem usuário.' };
 
   // A corrida diária é idempotente pelo dia: o cron pode disparar duas vezes e
   // não faz dois lotes. Uma busca que ela pediu é outra coisa — pedir duas no
@@ -50,7 +54,7 @@ export async function runDailyOutreach(
       .maybeSingle();
 
     if (existing && existing.status !== 'error') {
-      return { runId: existing.id, status: 'success', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['A corrida de hoje já aconteceu.'] };
+      return { runId: existing.id, status: 'success', discovered: 0, screened: 0, researched: 0, selected: 0, failures: [], blocked: 'A procura de hoje já correu. As marcas que ela achou estão na lista.' };
     }
   }
 
@@ -64,7 +68,7 @@ export async function runDailyOutreach(
     .maybeSingle();
 
   const runId = run?.id ?? null;
-  if (!runId) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Não consegui abrir a corrida.'] };
+  if (!runId) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Não consegui abrir a corrida.'], blocked: 'Não consegui começar a procura.' };
 
   const finish = async (r: Omit<RunResult, 'runId'>) => {
     await db
@@ -84,12 +88,14 @@ export async function runDailyOutreach(
 
   // ── 1. Descobrir ────────────────────────────────────────────────────────
   const { found, failure } = await discoverBrands(strategy, opts.ask);
-  if (failure) failures.push(`descoberta: ${failure}`);
-  if (found.length === 0) return finish({ status: 'empty', discovered: 0, screened: 0, researched: 0, selected: 0, failures });
+  if (failure) failures.push(failure);
+  if (found.length === 0) {
+    return finish({ status: failure ? 'error' : 'empty', discovered: 0, screened: 0, researched: 0, selected: 0, failures, blocked: failure });
+  }
 
   // ── 2. Triar: barato antes de caro ──────────────────────────────────────
   const known = await buildKnownSet();
-  if (!known.complete) failures.push(`histórico incompleto: ${known.reason ?? 'desconhecido'}`);
+  if (!known.complete) failures.push('Não consegui ler o histórico todo, por isso pode repetir-se alguma marca.');
 
   const fresh = dedupe(found).filter((c) => !suppress(c, known, now).blocked);
 
@@ -103,11 +109,11 @@ export async function runDailyOutreach(
     }
     const history = await gmailHasHistory(c.domain);
     if (history.found) continue;
-    if (!history.checked) failures.push(`Gmail não verificado para ${c.name}`);
+    if (!history.checked) failures.push(`Não confirmei no Gmail se já falou com a ${c.name}.`);
     screened.push(c);
   }
 
-  if (screened.length === 0) return finish({ status: 'empty', discovered: found.length, screened: 0, researched: 0, selected: 0, failures });
+  if (screened.length === 0) return finish({ status: 'empty', discovered: found.length, screened: 0, researched: 0, selected: 0, failures, blocked: null });
 
   // ── 3. Pesquisar a fundo, só as finalistas ──────────────────────────────
   const { researchCandidate } = await import('./research');
@@ -115,7 +121,7 @@ export async function runDailyOutreach(
   for (const c of screened.slice(0, LIMITS.maxDeepResearch)) {
     const r = await researchCandidate(c);
     if (!r) {
-      failures.push(`pesquisa falhou: ${c.name}`);
+      failures.push(`Não consegui pesquisar a ${c.name}.`);
       continue;
     }
     researched.push(r);
@@ -139,7 +145,7 @@ export async function runDailyOutreach(
     })),
   );
 
-  if (shortlist.length === 0) return finish({ status: 'empty', discovered: found.length, screened: screened.length, researched: researched.length, selected: 0, failures });
+  if (shortlist.length === 0) return finish({ status: 'empty', discovered: found.length, screened: screened.length, researched: researched.length, selected: 0, failures, blocked: null });
 
   const { writeOutreachEmail } = await import('./email');
   const { checkEmail } = await import('./mailcheck-dns');
@@ -159,7 +165,7 @@ export async function runDailyOutreach(
 
     const written = await writeOutreachEmail(s, style);
     if (!written) {
-      failures.push(`email falhou: ${s.candidate.name}`);
+      failures.push(`Não consegui escrever o email da ${s.candidate.name}.`);
       continue;
     }
     const quality = scoreEmail({
@@ -220,11 +226,12 @@ export async function runDailyOutreach(
 
   if (rows.length) {
     const { error } = await db.from('outreach_candidate').insert(rows);
-    if (error) failures.push(`gravação: ${error.message}`);
+    if (error) failures.push('Encontrei marcas mas não as consegui guardar.');
   }
 
   return finish({
     status: failures.length ? 'partial' : 'success',
+    blocked: null,
     discovered: found.length,
     screened: screened.length,
     researched: researched.length,

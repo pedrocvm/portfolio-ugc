@@ -273,3 +273,41 @@ export function selectDaily<T extends Rankable>(
     .sort((a, b) => rankScore(b) - rankScore(a))
     .slice(0, limits.max);
 }
+
+/** O que dizer à Carol depois de uma procura.
+ *
+ *  Estava na action, misturado com o acesso a dados, e por isso sem teste. Foi
+ *  onde apareceu o JSON do Gemini colado a «Tente uma busca mais concreta»:
+ *  duas frases a dizer coisas diferentes, e a errada primeiro. */
+export type RunSummary = {
+  status: 'success' | 'partial' | 'empty' | 'error';
+  discovered: number;
+  screened: number;
+  researched: number;
+  selected: number;
+  failures: string[];
+  blocked: string | null;
+};
+
+export function runMessage(r: RunSummary): { ok: boolean; message: string } {
+  // Se a procura não chegou a andar, o porquê é a mensagem inteira.
+  if (r.blocked) return { ok: r.status !== 'error', message: r.blocked };
+  if (r.status === 'error') return { ok: false, message: r.failures[0] ?? 'A procura falhou.' };
+
+  if (r.selected > 0) {
+    const marcas = r.selected === 1 ? 'marca nova' : 'marcas novas';
+    return { ok: true, message: `${r.selected} ${marcas}, de ${r.discovered} encontradas.` };
+  }
+
+  const why =
+    r.discovered === 0
+      ? 'A pesquisa não encontrou empresas. Tente uma busca mais concreta.'
+      : r.screened === 0
+        ? `Encontrei ${r.discovered}, mas já as conhecia todas — ou já falou com elas por email.`
+        : r.researched === 0
+          ? `Encontrei ${r.discovered} novas, mas a pesquisa de cada uma falhou.`
+          : `Pesquisei ${r.researched} e nenhuma chegou ao mínimo de encaixe. Melhor assim do que encher a lista.`;
+
+  const extra = r.failures.length ? ` ${r.failures.slice(0, 2).join(' ')}` : '';
+  return { ok: true, message: why + extra };
+}

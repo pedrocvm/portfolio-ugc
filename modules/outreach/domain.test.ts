@@ -1,8 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  dedupe, LIMITS, rankScore, scoreEmail, selectDaily, strategyFor, suppress,
-  type Known, type Rankable,
+  dedupe,
+  LIMITS,
+  rankScore,
+  scoreEmail,
+  selectDaily,
+  strategyFor,
+  suppress,
+  type Known,
+  type Rankable,
+  runMessage,
+  type RunSummary,
 } from './domain.ts';
 
 const known = (over: Partial<Known> = {}): Known => ({
@@ -213,4 +222,53 @@ test('nunca mais do que o máximo do dia', () => {
 test('vem ordenado, o melhor primeiro', () => {
   const out = selectDaily([cand({ fitScore: 72 }), cand({ fitScore: 95 }), cand({ fitScore: 80 })]);
   assert.deepEqual(out.map((c) => c.fitScore), [95, 80, 72]);
+});
+
+/* ── O que a procura diz quando corre mal ─────────────────────────────────── */
+
+const run = (over: Partial<RunSummary> = {}): RunSummary => ({
+  status: 'empty',
+  discovered: 0,
+  screened: 0,
+  researched: 0,
+  selected: 0,
+  failures: [],
+  blocked: null,
+  ...over,
+});
+
+test('nenhuma mensagem da procura leva JSON, chaves ou um link', () => {
+  const casos = [
+    run({ status: 'error', blocked: 'A IA chegou a um limite de uso. Espere um minuto.' }),
+    run({ discovered: 0 }),
+    run({ discovered: 7 }),
+    run({ discovered: 7, screened: 3, researched: 2 }),
+    run({ status: 'success', discovered: 9, selected: 4 }),
+    run({ status: 'partial', discovered: 5, screened: 5, researched: 5, selected: 1, failures: ['Não consegui pesquisar a Cecotec.'] }),
+  ];
+  for (const c of casos) {
+    const { message } = runMessage(c);
+    assert.doesNotMatch(message, /[{}"[\]]|https?:|_[A-Z]|\b\d{3}\b(?! )/, `código na mensagem: ${message}`);
+  }
+});
+
+test('quando a procura não chegou a andar, a razão é a mensagem inteira', () => {
+  const limite = 'A IA chegou a um limite de uso. Espere um minuto e tente outra vez.';
+  const { ok, message } = runMessage(run({ status: 'error', blocked: limite }));
+  assert.equal(ok, false);
+  assert.equal(message, limite);
+  // O defeito que a Carol viu: mandar mudar a busca quando a busca nem correu.
+  assert.doesNotMatch(message, /busca mais concreta/);
+});
+
+test('zero por a pesquisa não achar nada não é zero por a IA falhar', () => {
+  const vazio = runMessage(run({ discovered: 0 })).message;
+  const falhou = runMessage(run({ status: 'error', blocked: 'A IA está fora do ar.' })).message;
+  assert.match(vazio, /busca mais concreta/);
+  assert.notEqual(vazio, falhou);
+});
+
+test('a procura repetida do dia não é um erro', () => {
+  const { ok } = runMessage(run({ status: 'success', blocked: 'A procura de hoje já correu.' }));
+  assert.equal(ok, true);
 });

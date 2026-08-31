@@ -12,6 +12,8 @@ import type { z } from 'zod';
  *
  *  Duas implementações, e a escolha é do ambiente. */
 
+import { humanizeErrors } from './failure';
+
 export type ProviderId = 'gemini' | 'anthropic';
 
 export type ToolSpec = {
@@ -449,7 +451,7 @@ export function aiSetup(): AiSetup {
     const key = process.env.ANTHROPIC_API_KEY;
     const chat = process.env.ANTHROPIC_CHAT_MODEL ?? 'claude-sonnet-5';
     return {
-      provider: key ? anthropic(key) : null,
+      provider: key ? humanizeErrors(anthropic(key)) : null,
       id,
       models: {
         fast: process.env.ANTHROPIC_FAST_MODEL ?? 'claude-haiku-4-5-20251001',
@@ -463,7 +465,7 @@ export function aiSetup(): AiSetup {
   const key = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
   const chat = process.env.GEMINI_CHAT_MODEL ?? 'gemini-flash-lite-latest';
   return {
-    provider: key ? gemini(key) : null,
+    provider: key ? humanizeErrors(gemini(key)) : null,
     id: 'gemini',
     models: {
       fast: process.env.GEMINI_FAST_MODEL ?? chat,

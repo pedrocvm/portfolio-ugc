@@ -157,29 +157,9 @@ export async function discoverNow(ask?: string): Promise<Result & { message?: st
   const r = await runDailyOutreach({ kind: ask ? 'targeted' : 'manual', ask });
   revalidatePath('/dashboard/outreach');
 
-  if (r.status === 'error') {
-    return { error: r.failures.join('; ') || 'A procura falhou.' };
-  }
-
-  if (r.selected > 0) {
-    return {
-      ok: true,
-      message: `${r.selected} ${r.selected === 1 ? 'marca nova' : 'marcas novas'}, de ${r.discovered} encontradas.`,
-    };
-  }
-
-  // Zero tem sempre uma razão, e a razão é útil.
-  const why =
-    r.discovered === 0
-      ? 'A pesquisa não encontrou empresas. Tenta uma busca mais concreta.'
-      : r.screened === 0
-        ? `Encontrei ${r.discovered}, mas já as conhecias todas — ou já falaste com elas por email.`
-        : r.researched === 0
-          ? `Encontrei ${r.discovered} novas, mas a pesquisa de cada uma falhou.`
-          : `Pesquisei ${r.researched} e nenhuma chegou ao mínimo de encaixe. Melhor assim do que encher a lista.`;
-
-  const extra = r.failures.length ? ` (${r.failures.slice(0, 2).join('; ')})` : '';
-  return { ok: true, message: why + extra };
+  const { runMessage } = await import('@/modules/outreach/domain');
+  const out = runMessage(r);
+  return out.ok ? { ok: true, message: out.message } : { error: out.message };
 }
 
 export async function rebuildStyleProfile(): Promise<Result & { samples?: number }> {
