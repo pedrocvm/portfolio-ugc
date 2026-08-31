@@ -4,12 +4,14 @@ import { signOut } from '@/app/dashboard/actions';
 import Assistant from '@/components/assistant/Assistant';
 import { AssistantProvider } from '@/components/assistant/AssistantProvider';
 import Command from '@/components/dashboard/Command';
+import Notifications from '@/components/dashboard/Notifications';
 import Logo from '@/components/dashboard/Logo';
 import Menu from '@/components/dashboard/Menu';
 import MobileNav from '@/components/dashboard/MobileNav';
 import SideToggle from '@/components/dashboard/SideToggle';
 import { requireEditor } from '@/lib/auth';
 import { assistantReady } from '@/modules/assistant/config';
+import { notifications } from '@/modules/assistant/service';
 import { getFlags } from '@/modules/settings/service';
 import { getDraft } from '@/lib/content-store';
 
@@ -24,7 +26,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   await requireEditor();
-  const [{ hero }, flags] = await Promise.all([getDraft(), getFlags()]);
+  const [{ hero }, flags, alerts] = await Promise.all([getDraft(), getFlags(), notifications()]);
 
   return (
     <>
@@ -59,6 +61,8 @@ export default async function AppLayout({
             </form>
           }
         />
+          {/* Fixo no topo, em todos os ecrãs. */}
+          <Notifications items={alerts} />
           <Command />
           {/* Só na área privada, e só com a bandeira aberta: o portfólio público
               não conhece a Carol AI. */}

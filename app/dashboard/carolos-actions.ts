@@ -727,13 +727,19 @@ export async function toggleFlag(key: string, value: boolean): Promise<Result> {
 export async function triggerJob(job: string): Promise<Result & { message?: string }> {
   await requireUser();
   const { jobOutcome } = await import('@/modules/jobs/outcome');
-  const result = await runJob(job as JobName);
+  const result = await runJob(job as JobName, { manual: true });
   revalidatePath('/dashboard/settings');
   refreshOs();
 
   if (result.status === 'error') {
     const detail = result.detail as { error?: string } | null;
     return { error: detail?.error ?? 'O trabalho falhou.' };
+  }
+  // Saltado não é feito. Dizer «correu» quando nada correu é o pior resultado
+  // possível: ela deixa de vigiar uma coisa que ninguém está a fazer.
+  if (result.status === 'skipped') {
+    const detail = result.detail as { reason?: string; detail?: string } | null;
+    return { ok: true, message: `Não correu — ${detail?.reason ?? detail?.detail ?? 'está desligado.'}` };
   }
   return { ok: true, message: jobOutcome(job, result.detail) };
 }
@@ -745,24 +751,30 @@ export async function triggerAllJobs(): Promise<Result & { message?: string }> {
   const { runAllJobs } = await import('@/modules/jobs/runner');
   const { jobOutcome } = await import('@/modules/jobs/outcome');
 
-  const results = await runAllJobs();
+  const results = await runAllJobs({ manual: true });
   revalidatePath('/dashboard/settings');
   refreshOs();
 
+  const { jobLabel } = await import('@/lib/labels');
   const failed = results.filter((r) => r.status === 'error');
+  const skipped = results.filter((r) => r.status === 'skipped');
   const lines = results
-    .filter((r) => r.status !== 'error')
+    .filter((r) => r.status === 'success')
     .map((r) => jobOutcome(r.job, r.detail))
     // O que não teve nada a dizer não ocupa espaço no relatório.
     .filter((l) => !/^(Nada|Nenhum|Não hav)/.test(l));
 
   if (failed.length) {
-    return { error: `${failed.length} de ${results.length} falharam: ${failed.map((f) => f.job).join(', ')}.` };
+    return { error: `${failed.map((f) => jobLabel(f.job)).join(', ')} falharam.` };
   }
-  return {
-    ok: true,
-    message: lines.length ? lines.join(' ') : 'Corri tudo. Não havia nada de novo.',
-  };
+
+  const parts: string[] = [];
+  parts.push(lines.length ? lines.join(' ') : 'Corri tudo, não havia nada de novo.');
+  // Saltado aparece sempre e com nome. Silenciar isto era dizer que correu.
+  if (skipped.length) {
+    parts.push(`Não correram: ${skipped.map((r) => jobLabel(r.job)).join(', ')}.`);
+  }
+  return { ok: true, message: parts.join(' ') };
 }
 
 /* ── Dossiê de marca ────────────────────────────────────────────────────── */

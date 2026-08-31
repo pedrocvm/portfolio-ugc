@@ -45,7 +45,7 @@ export type SyncReport = {
  *  ecrã a dizer porquê. Uma caixa a falhar não impede as outras. */
 export async function syncGmail(flags: Flags, options: { limit?: number } = {}): Promise<SyncReport> {
   if (!flags.gmail_ingestion) {
-    return { ...EMPTY, detail: 'A bandeira gmail_ingestion está fechada.' };
+    return { ...EMPTY, detail: 'o interruptor «Ingestão do Gmail» está desligado.' };
   }
 
   const mailboxes = await listMailboxes();
@@ -106,7 +106,7 @@ async function syncMailbox(flags: Flags, mailbox: Mailbox, options: { limit?: nu
   };
 
   if (!flags.gmail_ingestion) {
-    return { ...blank, detail: 'A bandeira gmail_ingestion está fechada.' };
+    return { ...blank, detail: 'o interruptor «Ingestão do Gmail» está desligado.' };
   }
 
   const auth = await accessTokenFor(mailbox.id);

@@ -129,3 +129,49 @@ export async function openInsights(limit = 6) {
     href: i.href,
   }));
 }
+
+export type Notification = {
+  id: string;
+  severity: 'info' | 'warn' | 'urgent';
+  title: string;
+  detail: string;
+  href: string | null;
+};
+
+/** Tudo o que precisa dela, num sítio só e alcançável de qualquer ecrã.
+ *
+ *  Junta duas coisas que ela vive como uma: o que já passou do prazo, que é
+ *  trabalho concreto e por isso vem primeiro, e os avisos do negócio, que são
+ *  coisas a começar a doer. */
+export async function notifications(): Promise<Notification[]> {
+  const db = await supabaseServer();
+  const now = new Date().toISOString();
+
+  const [late, insights] = await Promise.all([
+    db
+      .from('action_item')
+      .select('id, title, reason, due_at, opportunity_id, brand:brand_id ( name )')
+      .eq('status', 'open')
+      .lte('due_at', now)
+      .order('priority_score', { ascending: false })
+      .limit(6),
+    openInsights(8),
+  ]);
+
+  const overdue: Notification[] = (late.data ?? []).map((a) => {
+    const b = a.brand as { name: string } | { name: string }[] | null;
+    const name = (Array.isArray(b) ? b[0]?.name : b?.name) ?? 'sem marca';
+    const days = a.due_at
+      ? Math.floor((Date.now() - new Date(a.due_at).getTime()) / 86400000)
+      : 0;
+    return {
+      id: `action:${a.id}`,
+      severity: days >= 7 ? 'urgent' : 'warn',
+      title: `${name}: ${a.title}`,
+      detail: days <= 0 ? 'É para hoje.' : `${days} ${days === 1 ? 'dia' : 'dias'} de atraso.`,
+      href: a.opportunity_id ? `/dashboard/opportunities/${a.opportunity_id}` : '/dashboard',
+    };
+  });
+
+  return [...overdue, ...insights.map((i) => ({ ...i, id: `insight:${i.id}` }))];
+}

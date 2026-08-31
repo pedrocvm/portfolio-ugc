@@ -43,11 +43,15 @@ export function processedCount(result: JobResult): number {
   );
 }
 
-export async function runJob(job: JobName): Promise<JobResult> {
+/** `background_jobs` governa correr **sem ninguém abrir o painel** — é o que a
+ *  própria bandeira diz. Um clique dela no botão não é isso: é uma pessoa a
+ *  pedir. Antes disto, ela carregava em «Correr tudo» e sete dos oito trabalhos
+ *  saltavam em silêncio. */
+export async function runJob(job: JobName, opts: { manual?: boolean } = {}): Promise<JobResult> {
   const flags = await getFlagsService();
 
-  if (!flags.background_jobs && job !== 'gmail-sync') {
-    return { job, status: 'skipped', detail: { reason: 'A bandeira background_jobs está fechada.' } };
+  if (!opts.manual && !flags.background_jobs && job !== 'gmail-sync') {
+    return { job, status: 'skipped', detail: { reason: 'Os trabalhos em segundo plano estão desligados.' } };
   }
 
   const db = supabaseService();
@@ -141,12 +145,12 @@ export async function runJob(job: JobName): Promise<JobResult> {
 
 /** Corre a cadeia toda pela ordem certa: sincronizar, processar o que ficou,
  *  actualizar prazos, expirar licenças e replanear. Uma só entrada de cron. */
-export async function runAllJobs(): Promise<JobResult[]> {
+export async function runAllJobs(opts: { manual?: boolean } = {}): Promise<JobResult[]> {
   const order: JobName[] = [
     'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'upsell', 'plan',
     'insights',
   ];
   const results: JobResult[] = [];
-  for (const job of order) results.push(await runJob(job));
+  for (const job of order) results.push(await runJob(job, opts));
   return results;
 }
