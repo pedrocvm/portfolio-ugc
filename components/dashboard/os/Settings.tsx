@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { toggleFlag, triggerJob } from '@/app/dashboard/carolos-actions';
+import { toggleFlag, triggerAllJobs, triggerJob } from '@/app/dashboard/carolos-actions';
 import { FLAG_KEYS, FLAG_LABEL, FLAG_NOTE, type FlagKey, type Flags } from '@/lib/flags';
 import { formatDate } from '@/lib/time';
 import { jobLabel, label } from '@/lib/labels';
@@ -59,15 +59,19 @@ export default function Settings({
   const [running, setRunning] = useState<string | null>(null);
   const pending = running !== null;
 
-  const run = (id: string, work: () => Promise<void>) =>
+  const run = (id: string, work: () => Promise<void>) => {
+    // Fora da transição, de propósito. Uma transição existe para adiar o novo
+    // estado e manter o antigo visível — que é exactamente o contrário de
+    // mostrar que se carregou no botão. O spinner tem de ser urgente.
+    setRunning(id);
     start(async () => {
-      setRunning(id);
       try {
         await work();
       } finally {
         setRunning(null);
       }
     });
+  };
 
   const flip = (key: FlagKey) =>
     run(`flag:${key}`, async () => {
@@ -217,6 +221,24 @@ export default function Settings({
           esperar pela próxima passagem.
         </p>
         <div className="osJobs">
+          {/* Sete botões para sincronizar tudo é sete decisões. Este corre a
+              cadeia pela ordem certa, que é o que ela quer quando não espera
+              pela próxima passagem. */}
+          <button
+            className="osJob"
+            data-primary=""
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              run('job:all', async () => {
+                const result = await triggerAllJobs();
+                setMessage(result.error ?? result.message ?? '');
+              })
+            }
+          >
+            {running === 'job:all' ? <Spinner label="A correr tudo" /> : null}
+            Correr tudo agora
+          </button>
           {JOBS.map((j) => (
             <button
               key={j.id}
@@ -226,7 +248,7 @@ export default function Settings({
               onClick={() =>
                 run(`job:${j.id}`, async () => {
                   const result = await triggerJob(j.id);
-                  setMessage(result.error ? `${j.label}: ${result.error}` : `${j.label}: ${JSON.stringify(result.detail)}`);
+                  setMessage(result.error ? `${j.label}: ${result.error}` : `${j.label} — ${result.message}`);
                 })
               }
             >

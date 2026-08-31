@@ -722,14 +722,47 @@ export async function toggleFlag(key: string, value: boolean): Promise<Result> {
   return { ok: true };
 }
 
-export async function triggerJob(job: string): Promise<Result & { detail?: unknown }> {
+/** Devolve uma frase, não um objecto. O ecrã mostra o que vier daqui, e um
+ *  `JSON.stringify` numa caixa de aviso é a máquina a falar consigo própria. */
+export async function triggerJob(job: string): Promise<Result & { message?: string }> {
   await requireUser();
+  const { jobOutcome } = await import('@/modules/jobs/outcome');
   const result = await runJob(job as JobName);
   revalidatePath('/dashboard/settings');
   refreshOs();
-  return result.status === 'error'
-    ? { error: JSON.stringify(result.detail) }
-    : { ok: true, detail: result.detail };
+
+  if (result.status === 'error') {
+    const detail = result.detail as { error?: string } | null;
+    return { error: detail?.error ?? 'O trabalho falhou.' };
+  }
+  return { ok: true, message: jobOutcome(job, result.detail) };
+}
+
+/** Corre a cadeia toda pela ordem certa, para quando ela não quer esperar pela
+ *  próxima passagem do agendador nem carregar em sete botões. */
+export async function triggerAllJobs(): Promise<Result & { message?: string }> {
+  await requireUser();
+  const { runAllJobs } = await import('@/modules/jobs/runner');
+  const { jobOutcome } = await import('@/modules/jobs/outcome');
+
+  const results = await runAllJobs();
+  revalidatePath('/dashboard/settings');
+  refreshOs();
+
+  const failed = results.filter((r) => r.status === 'error');
+  const lines = results
+    .filter((r) => r.status !== 'error')
+    .map((r) => jobOutcome(r.job, r.detail))
+    // O que não teve nada a dizer não ocupa espaço no relatório.
+    .filter((l) => !/^(Nada|Nenhum|Não hav)/.test(l));
+
+  if (failed.length) {
+    return { error: `${failed.length} de ${results.length} falharam: ${failed.map((f) => f.job).join(', ')}.` };
+  }
+  return {
+    ok: true,
+    message: lines.length ? lines.join(' ') : 'Corri tudo. Não havia nada de novo.',
+  };
 }
 
 /* ── Dossiê de marca ────────────────────────────────────────────────────── */

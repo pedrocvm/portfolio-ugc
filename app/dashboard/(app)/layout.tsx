@@ -10,7 +10,6 @@ import MobileNav from '@/components/dashboard/MobileNav';
 import SideToggle from '@/components/dashboard/SideToggle';
 import { requireEditor } from '@/lib/auth';
 import { assistantReady } from '@/modules/assistant/config';
-import { openInsights } from '@/modules/assistant/service';
 import { getFlags } from '@/modules/settings/service';
 import { getDraft } from '@/lib/content-store';
 
@@ -25,7 +24,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   await requireEditor();
-  const [{ hero }, flags, insights] = await Promise.all([getDraft(), getFlags(), openInsights(9)]);
+  const [{ hero }, flags] = await Promise.all([getDraft(), getFlags()]);
 
   return (
     <>
@@ -64,7 +63,7 @@ export default async function AppLayout({
           {/* Só na área privada, e só com a bandeira aberta: o portfólio público
               não conhece a Carol AI. */}
           {flags.assistant_enabled ? (
-            <Assistant configured={assistantReady()} pending={insights.length} />
+            <Assistant configured={assistantReady()} />
           ) : null}
         </div>
       </AssistantProvider>

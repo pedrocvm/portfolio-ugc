@@ -24,15 +24,18 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
   const [running, setRunning] = useState<'apply' | 'stop' | null>(null);
   const pending = running !== null;
 
-  const run = (id: 'apply' | 'stop', work: () => Promise<void>) =>
+  const run = (id: 'apply' | 'stop', work: () => Promise<void>) => {
+    // Ver a nota em Settings: dentro da transição o spinner nunca chega a
+    // aparecer, porque a transição mantém o ecrã anterior de pé.
+    setRunning(id);
     start(async () => {
-      setRunning(id);
       try {
         await work();
       } finally {
         setRunning(null);
       }
     });
+  };
 
   if (!state.available) {
     return (
@@ -56,6 +59,12 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
         Gmail precisa de ser visto muito mais vezes do que isso. Nada aqui depende de tu abrires a
         aplicação.
       </p>
+      {state.configured ? (
+        <p className="osNote">
+          Já está a correr sozinho. Só precisas de voltar aqui quando o CarolOS tiver trabalhos
+          novos — «actualizar a lista» põe-nos no relógio.
+        </p>
+      ) : null}
 
       {!state.configured ? (
         <p className="osWarn" data-tone="info">
@@ -103,7 +112,11 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
           }
         >
           {running === 'apply' ? <Spinner label="A aplicar o horário" /> : null}
-          {state.configured ? 'Voltar a aplicar o horário' : 'Ligar o agendador'}
+          {/* «Voltar a aplicar o horário» não diz o que faz nem quando serve.
+              O que o botão faz é pôr no relógio a lista de trabalhos que esta
+              versão do CarolOS tem — e isso só interessa depois de haver
+              trabalhos novos. */}
+          {state.configured ? 'Actualizar a lista de trabalhos' : 'Ligar o agendador'}
         </button>
         {state.configured ? (
           <button

@@ -41,7 +41,7 @@ function Sources({ sources }: { sources: Source[] }) {
   );
 }
 
-export default function Assistant({ configured, pending = 0 }: { configured: boolean; pending?: number }) {
+export default function Assistant({ configured }: { configured: boolean }) {
   const a = useAssistant();
   const [status, setStatus] = useState('');
   const [threads, setThreads] = useState<{ id: string; title: string }[]>([]);
@@ -243,13 +243,11 @@ export default function Assistant({ configured, pending = 0 }: { configured: boo
         data-unread={a.unread || undefined}
       >
         <AssistantMark state={a.busy ? 'busy' : 'idle'} />
-        <span className="aiLauncherText">{a.busy ? 'A responder…' : 'Carol AI'}</span>
-        {/* A bolinha é a resposta que ficou à espera dela; o número são os
-            avisos do negócio. Coisas diferentes, sinais diferentes. */}
+        {/* Só a bolinha, e só quando há mesmo uma resposta à espera dela.
+            O número que aqui estava eram avisos do negócio, e um número num
+            botão de conversa lê-se como «tens nove mensagens por ler» — dizia
+            uma coisa que não era verdade. Os avisos já têm casa no Hoje. */}
         {a.unread ? <span className="aiDot" /> : null}
-        {!a.unread && pending > 0 ? (
-          <span className="aiBadge">{pending > 9 ? '9+' : pending}</span>
-        ) : null}
       </button>
     );
   }
