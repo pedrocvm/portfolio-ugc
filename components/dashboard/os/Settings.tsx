@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/time';
 import { jobLabel, label } from '@/lib/labels';
 import type { SchedulerState } from '@/modules/jobs/domain';
 import type { IntegrationHealth, JobSummary } from '@/modules/settings/service';
+import Spinner from '@/components/dashboard/Spinner';
 import Scheduler from './Scheduler';
 
 /** Definições. Bandeiras, integrações e trabalhos de fundo.
@@ -48,12 +49,27 @@ export default function Settings({
   policyStatus: string;
   notice: string | null;
 }) {
-  const [pending, start] = useTransition();
+  const [, start] = useTransition();
   const [local, setLocal] = useState(flags);
   const [message, setMessage] = useState('');
+  /** Qual acção está a correr. Um booleano partilhado desactivava tudo sem
+   *  dizer o que estava a acontecer, e sincronizar o Gmail demora o suficiente
+   *  para parecer que o clique se perdeu. */
+  const [running, setRunning] = useState<string | null>(null);
+  const pending = running !== null;
+
+  const run = (id: string, work: () => Promise<void>) =>
+    start(async () => {
+      setRunning(id);
+      try {
+        await work();
+      } finally {
+        setRunning(null);
+      }
+    });
 
   const flip = (key: FlagKey) =>
-    start(async () => {
+    run(`flag:${key}`, async () => {
       const next = !local[key];
       setLocal((f) => ({ ...f, [key]: next }));
       await toggleFlag(key, next);
@@ -99,7 +115,9 @@ export default function Settings({
             {mailboxes.map((m) => (
               <div className="osRow" key={m.id || m.account}>
                 <div>
-                  <b>{m.account || 'conta por identificar'}</b>
+                  <span className="osRowName" style={{ fontSize: 17 }}>
+                    {m.account || 'conta por identificar'}
+                  </span>
                   <span className="osRowSub">
                     {STATUS_LABEL[m.status] ?? m.status}
                     {' · '}
@@ -115,7 +133,7 @@ export default function Settings({
                     type="button"
                     disabled={pending}
                     onClick={() =>
-                      start(async () => {
+                      run(`disc:${m.id}`, async () => {
                         await fetch('/api/integrations/google/disconnect', {
                           method: 'POST',
                           headers: { 'content-type': 'application/json' },
@@ -125,6 +143,7 @@ export default function Settings({
                       })
                     }
                   >
+                    {running === `disc:${m.id}` ? <Spinner label="A desligar" /> : null}
                     Desligar
                   </button>
                 ) : null}
@@ -166,6 +185,7 @@ export default function Settings({
               disabled={pending}
               onClick={() => flip(key)}
             >
+              {running === `flag:${key}` ? <Spinner label="A guardar" /> : null}
               {local[key] ? 'ligado' : 'desligado'}
             </button>
           </div>
@@ -195,20 +215,21 @@ export default function Settings({
           Os trabalhos já correm sozinhos pelo agendador. Estes botões são para quando não quiseres
           esperar pela próxima passagem.
         </p>
-        <div className="osActs">
+        <div className="osJobs">
           {JOBS.map((j) => (
             <button
               key={j.id}
-              className="chip"
+              className="osJob"
               type="button"
               disabled={pending}
               onClick={() =>
-                start(async () => {
+                run(`job:${j.id}`, async () => {
                   const result = await triggerJob(j.id);
                   setMessage(result.error ? `${j.label}: ${result.error}` : `${j.label}: ${JSON.stringify(result.detail)}`);
                 })
               }
             >
+              {running === `job:${j.id}` ? <Spinner label={`A correr: ${j.label}`} /> : null}
               {j.label}
             </button>
           ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Spinner from '@/components/dashboard/Spinner';
 import { setUpScheduler, stopScheduler } from '@/app/dashboard/carolos-actions';
 import { formatDate, relativeDays } from '@/lib/time';
 import {
@@ -15,9 +16,23 @@ import {
  *  se desliga e se vê se está a correr. */
 
 export default function Scheduler({ state }: { state: SchedulerState }) {
-  const [pending, start] = useTransition();
+  const [, start] = useTransition();
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  // Aplicar o horário fala com o Postgres e com o Vault: demora o suficiente
+  // para o clique parecer perdido sem nada a girar.
+  const [running, setRunning] = useState<'apply' | 'stop' | null>(null);
+  const pending = running !== null;
+
+  const run = (id: 'apply' | 'stop', work: () => Promise<void>) =>
+    start(async () => {
+      setRunning(id);
+      try {
+        await work();
+      } finally {
+        setRunning(null);
+      }
+    });
 
   if (!state.available) {
     return (
@@ -78,7 +93,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
           type="button"
           disabled={pending}
           onClick={() =>
-            start(async () => {
+            run('apply', async () => {
               setError('');
               setMessage('');
               const result = await setUpScheduler();
@@ -87,6 +102,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
             })
           }
         >
+          {running === 'apply' ? <Spinner label="A aplicar o horário" /> : null}
           {state.configured ? 'Voltar a aplicar o horário' : 'Ligar o agendador'}
         </button>
         {state.configured ? (
@@ -95,7 +111,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
             type="button"
             disabled={pending}
             onClick={() =>
-              start(async () => {
+              run('stop', async () => {
                 setError('');
                 setMessage('');
                 const result = await stopScheduler();
@@ -104,6 +120,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
               })
             }
           >
+            {running === 'stop' ? <Spinner label="A parar" /> : null}
             Parar tudo
           </button>
         ) : null}

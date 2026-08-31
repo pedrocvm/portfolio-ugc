@@ -1912,8 +1912,14 @@
 .side .logoName {
   animation: fade 0.5s var(--quart) both;
 }
-.rail a {
+.railPin a,
+.railLabel {
   animation: rise 0.5s var(--exp) calc(0.06s + var(--r, 0) * 0.03s) both;
+}
+/* Abrir um grupo é uma resposta a um clique, não uma entrada em cena: sem
+   atraso nenhum, senão os itens parecem lentos a chegar. */
+.railGroup > a {
+  animation: fade 0.14s var(--quart) both;
 }
 
 /* fio de trabalho */
@@ -3380,6 +3386,7 @@ a.osRow:hover .osRowName {
   transition: color 0.2s var(--quart);
 }
 .osRowSub {
+  display: block;
   font-size: 14px;
   color: var(--tinta3);
   margin-top: 3px;
@@ -3596,6 +3603,55 @@ a.osRow:hover .osRowName {
   align-items: center;
   gap: 8px 20px;
   margin-top: 14px;
+}
+
+/* Sete acções manuais em fila. Como texto simples liam-se como uma frase e não
+   como coisas em que se carrega — o espaçamento largo do .osActs ajudava a
+   confusão. */
+.osJobs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.osJob {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--areia2);
+  border-radius: 9px;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s var(--quart),
+    background 0.2s var(--quart),
+    color 0.2s var(--quart);
+}
+.osJob:hover:not(:disabled) {
+  border-color: var(--pedra);
+  background: var(--areia);
+}
+.osJob:disabled {
+  cursor: default;
+  color: var(--tinta3);
+}
+/* O que está mesmo a correr fica legível enquanto os outros esmorecem: sem
+   isto, carregar num botão apagava os sete por igual. */
+.osJob:disabled:has(.spin) {
+  color: var(--tinta);
+  border-color: var(--pedra);
+  background: var(--areia);
+}
+
+/* O nome da caixa e o seu estado são duas linhas, não uma frase corrida. */
+.osRow .osRowName + .osRowSub {
+  margin-top: 4px;
 }
 .osInline {
   display: flex;
