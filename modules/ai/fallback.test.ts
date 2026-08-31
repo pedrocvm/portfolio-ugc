@@ -105,20 +105,22 @@ test('sem chave de pesquisa, nada muda', async () => {
   assert.equal(await p.text(), 'text:grátis');
 });
 
-test('sem chave de pesquisa, o 429 diz a verdade em vez de falar em cota', async () => {
-  const p = routeSearch(
-    provider('grátis', () => {
-      throw quota();
-    }),
-    null,
-  );
+test('o 429 na pesquisa diz a verdade, com chave dedicada ou sem ela', async () => {
+  const recusa = () => provider('x', () => {
+    throw quota();
+  });
+  // O mesmo erro com as duas configurações: o que falta é a faturação, não a
+  // variável de ambiente.
+  for (const p of [routeSearch(recusa(), null), routeSearch(provider('grátis'), recusa())]) {
   await assert.rejects(p.search(), (e: Error) => {
     assert.match(e.message, /faturação/);
+    assert.doesNotMatch(e.message, /limite de uso/);
     // «Espere um minuto» manda esperar por uma cota que nunca vai chegar.
     assert.doesNotMatch(e.message, /minuto|amanhã|limite de uso/);
     assert.doesNotMatch(e.message, /[{}"]/);
     return true;
   });
+  }
 });
 
 test('um erro que não é de cota passa como está: não é falta de faturação', async () => {

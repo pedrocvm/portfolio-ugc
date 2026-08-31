@@ -87,22 +87,23 @@ export function routeSearch<T extends object>(general: T, searcher: T | null): T
     get(target, prop, receiver) {
       if (prop !== 'search') return Reflect.get(target, prop, receiver);
 
-      if (searcher) {
-        return (...args: unknown[]) =>
-          (Reflect.get(searcher, prop) as (...a: unknown[]) => unknown).apply(searcher, args);
-      }
-
-      const fn = Reflect.get(target, prop, receiver);
+      const host = searcher ?? target;
+      const fn = searcher
+        ? (Reflect.get(searcher, prop) as unknown)
+        : Reflect.get(target, prop, receiver);
       if (typeof fn !== 'function') return fn;
+
       return async (...args: unknown[]) => {
         try {
-          return await (fn as (...a: unknown[]) => Promise<unknown>).apply(target, args);
+          return await (fn as (...a: unknown[]) => Promise<unknown>).apply(host, args);
         } catch (error) {
-          // Uma chave grátis não tem pesquisa nenhuma para gastar. Chamar a isto
-          // «limite de uso» manda esperar por uma cota que nunca vai chegar.
+          // Uma cota recusada na pesquisa quase nunca é cota: é a chave ser de um
+          // projeto sem faturação. Chamar-lhe «limite de uso» manda esperar por
+          // uma franquia que não existe — e é igual com chave dedicada ou sem
+          // ela, porque o que falta é a faturação, não a variável.
           if (failureKind(error) === 'quota') {
             throw new Error(
-              'A pesquisa na web não funciona com uma chave do plano grátis. É preciso uma chave de um projeto com faturação ligada.',
+              'A pesquisa na web foi recusada. Quase sempre é a chave vir de um projeto sem faturação ligada: a pesquisa Google não existe no plano grátis.',
               { cause: error },
             );
           }
