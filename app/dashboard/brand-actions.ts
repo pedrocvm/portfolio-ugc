@@ -49,7 +49,7 @@ export async function saveBrand(_prev: Result, form: FormData): Promise<Result> 
         .eq('id', id)
     : await supabase.from('brand').insert(values);
 
-  if (error) return { error: 'Não foi possível guardar a marca.' };
+  if (error) return { error: 'Não foi possível salvar a marca.' };
   revalidatePath('/dashboard/brands');
   revalidatePath('/dashboard/funnel');
   return { ok: true };

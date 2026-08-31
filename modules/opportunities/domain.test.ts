@@ -99,7 +99,7 @@ test('fechada sem data de aceitação é uma violação de invariante', () => {
   assert.ok(problems.some((p) => p.includes('aceitação')));
 });
 
-test('uma oportunidade activa sem próxima ação nem espera é uma violação', () => {
+test('uma oportunidade ativa sem próxima ação nem espera é uma violação', () => {
   const problems = violations({
     stage: 'negotiation',
     wonAt: null,

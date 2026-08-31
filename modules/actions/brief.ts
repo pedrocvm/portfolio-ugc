@@ -24,13 +24,13 @@ export function dailyBrief(i: BriefInput): string {
   if (i.queued === 0) {
     parts.push(
       i.openOpportunities === 0
-        ? 'Não tens nada à espera de ti.'
+        ? 'Não tens nada esperando por você.'
         : i.openOpportunities === 1
-          ? 'Nada à espera de ti hoje: a conversa que tens em aberto está dentro do prazo.'
-          : `Nada à espera de ti hoje: as ${i.openOpportunities} conversas em aberto estão todas dentro do prazo.`,
+          ? 'Nada esperando por você hoje: a conversa que você tem em aberto está dentro do prazo.'
+          : `Nada esperando por você hoje: as ${i.openOpportunities} conversas em aberto estão todas dentro do prazo.`,
     );
   } else {
-    let first = `Tens ${i.queued} ${plural(i.queued, 'coisa', 'coisas')} para fazer hoje`;
+    let first = `Você tem ${i.queued} ${plural(i.queued, 'coisa', 'coisas')} para fazer hoje`;
     if (i.overdue >= i.queued) first += ', e já passaram todas do prazo';
     else if (i.overdue > 0) first += `, ${i.overdue} já fora de prazo`;
     parts.push(`${first}.`);
@@ -39,8 +39,8 @@ export function dailyBrief(i: BriefInput): string {
     if (lead) {
       parts.push(
         lead.overdueDays && lead.overdueDays > 0
-          ? `Começa pela ${lead.brandName}, que passou do prazo há ${lead.overdueDays} ${plural(lead.overdueDays, 'dia', 'dias')}.`
-          : `Começa pela ${lead.brandName}.`,
+          ? `Comece pela ${lead.brandName}, que passou do prazo há ${lead.overdueDays} ${plural(lead.overdueDays, 'dia', 'dias')}.`
+          : `Comece pela ${lead.brandName}.`,
       );
     }
   }
@@ -55,7 +55,7 @@ export function dailyBrief(i: BriefInput): string {
 
   // Última frase de propósito: explica um silêncio que de outra forma parece avaria.
   if (!i.gmailConnected) {
-    parts.push('O Gmail ainda não está ligado, por isso só entra aqui o que colares na Captura.');
+    parts.push('O Gmail ainda não está ligado, então só entra aqui o que você colar na Captura.');
   }
 
   return parts.join(' ');

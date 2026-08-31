@@ -130,7 +130,7 @@ export async function updateOpportunity(
     })
     .eq('id', opportunityId);
 
-  if (error) return { error: 'Não foi possível guardar.' };
+  if (error) return { error: 'Não foi possível salvar.' };
   revalidatePath(`/dashboard/opportunities/${opportunityId}`);
   return { ok: true };
 }
@@ -245,7 +245,7 @@ export async function pushDraftToGmail(
     .limit(1)
     .maybeSingle();
 
-  if (!contact?.email) return { error: 'Esta marca ainda não tem um e-mail de contacto.' };
+  if (!contact?.email) return { error: 'Esta marca ainda não tem um e-mail de contato.' };
 
   const { data: thread } = await db
     .from('source_thread')
@@ -289,7 +289,7 @@ const ScopeInput = z.object({
 export async function quotePreview(scope: unknown) {
   await requireUser();
   const parsed = ScopeInput.safeParse(scope);
-  if (!parsed.success) return { error: 'Âmbito inválido.' as const };
+  if (!parsed.success) return { error: 'Escopo inválido.' as const };
   return { ok: true as const, quote: await previewQuote(parsed.data) };
 }
 
@@ -301,7 +301,7 @@ export async function saveQuote(
 ): Promise<Result & { quoteId?: string }> {
   const { app } = await requireUser();
   const parsed = ScopeInput.safeParse(scope);
-  if (!parsed.success) return { error: 'Âmbito inválido.' };
+  if (!parsed.success) return { error: 'Escopo inválido.' };
 
   const result = await createQuote({
     opportunityId,
@@ -403,7 +403,7 @@ const MAX_SCREENSHOT_BYTES = 4 * 1024 * 1024;
 export async function uploadScreenshot(form: FormData): Promise<Result & { path?: string }> {
   await requireUser();
   const file = form.get('file');
-  if (!(file instanceof File)) return { error: 'Nenhum ficheiro recebido.' };
+  if (!(file instanceof File)) return { error: 'Nenhum arquivo recebido.' };
   if (!file.type.startsWith('image/')) return { error: 'Só imagens.' };
   if (file.size > MAX_SCREENSHOT_BYTES) return { error: 'A imagem é grande demais (máximo 4 MB).' };
 
@@ -414,7 +414,7 @@ export async function uploadScreenshot(form: FormData): Promise<Result & { path?
     upsert: false,
   });
 
-  if (error) return { error: 'Não foi possível guardar a imagem.' };
+  if (error) return { error: 'Não foi possível salvar a imagem.' };
   return { ok: true, path };
 }
 
@@ -497,7 +497,7 @@ export async function deliver(
   channel: string,
 ): Promise<Result> {
   const { app } = await requireUser();
-  if (!assetUrl.trim()) return { error: 'Falta a ligação do ficheiro entregue.' };
+  if (!assetUrl.trim()) return { error: 'Falta a ligação do arquivo entregue.' };
   const result = await recordDelivery({
     collaborationId,
     assetUrl: assetUrl.trim(),
@@ -606,7 +606,7 @@ export async function publishCase(
   niche: string,
 ): Promise<Result> {
   const { app } = await requireUser();
-  if (!mediaItemIds.length) return { error: 'Escolhe pelo menos um ficheiro da biblioteca.' };
+  if (!mediaItemIds.length) return { error: 'Escolhe pelo menos um arquivo da biblioteca.' };
   const result = await publishToPortfolio({ caseId, mediaItemIds, niche, actorUserId: app.id });
   if (!result.ok) return { error: result.error };
   revalidatePath('/dashboard/cases');
@@ -722,7 +722,7 @@ export async function toggleFlag(key: string, value: boolean): Promise<Result> {
   return { ok: true };
 }
 
-/** Devolve uma frase, não um objecto. O ecrã mostra o que vier daqui, e um
+/** Devolve uma frase, não um objecto. A tela mostra o que vier daqui, e um
  *  `JSON.stringify` numa caixa de aviso é a máquina a falar consigo própria. */
 export async function triggerJob(job: string): Promise<Result & { message?: string }> {
   await requireUser();
@@ -736,7 +736,7 @@ export async function triggerJob(job: string): Promise<Result & { message?: stri
     return { error: detail?.error ?? 'O trabalho falhou.' };
   }
   // Saltado não é feito. Dizer «correu» quando nada correu é o pior resultado
-  // possível: ela deixa de vigiar uma coisa que ninguém está a fazer.
+  // possível: ela deixa de vigiar uma coisa que ninguém está fazendo.
   if (result.status === 'skipped') {
     const detail = result.detail as { reason?: string; detail?: string } | null;
     return { ok: true, message: `Não correu — ${detail?.reason ?? detail?.detail ?? 'está desligado.'}` };
@@ -874,7 +874,7 @@ export type MailThread = {
   messages: MailMessage[];
 };
 
-/** O corpo das mensagens já está guardado na ingestão, por isso ler uma
+/** O corpo das mensagens já está salvo na ingestão, por isso ler uma
  *  conversa não gasta uma ida ao Gmail nem depende de ele estar de pé. */
 export async function readMailThread(threadId: string): Promise<MailThread | { error: string }> {
   await requireUser();
@@ -924,7 +924,7 @@ export async function readMailThread(threadId: string): Promise<MailThread | { e
  *
  *  Regra 3 do CarolOS: nada sai para fora sozinho. Escrever aqui e enviar daqui
  *  seriam duas decisões diferentes, e a segunda não está tomada — por isso o
- *  botão prepara, e é ela que carrega em enviar no Gmail. */
+ *  botão prepara, e é ela que clica em enviar no Gmail. */
 export async function replyToMailThread(threadId: string, body: string): Promise<Result> {
   await requireUser();
 

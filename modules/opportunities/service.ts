@@ -104,7 +104,7 @@ export async function opportunitiesForBrand(brandId: string): Promise<Opportunit
 }
 
 /** Uma marca pode ter várias oportunidades ao longo do tempo, mas só uma
- *  activa de cada vez por defeito: uma conversa nova sobre o mesmo produto é
+ *  ativa de cada vez por defeito: uma conversa nova sobre o mesmo produto é
  *  continuação, não um segundo negócio. */
 export async function activeOpportunityFor(db: Db, brandId: string): Promise<string | null> {
   const { data } = await db

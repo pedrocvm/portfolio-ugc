@@ -45,7 +45,7 @@ export async function updateOutreachDraft(id: string, subject: string, body: str
     .from('outreach_candidate')
     .update({ subject: subject.trim(), body: body.trim(), status: 'edited' })
     .eq('id', id);
-  if (error) return { error: 'Não consegui guardar.' };
+  if (error) return { error: 'Não consegui salvar.' };
   revalidatePath('/dashboard/outreach');
   return { ok: true };
 }
@@ -66,7 +66,7 @@ const REASONS = [
 ] as const;
 
 /** Saltar é para hoje; rejeitar é para sempre. São decisões diferentes e
- *  guardam-se em sítios diferentes. */
+ *  salvam-se em sítios diferentes. */
 export async function skipOutreach(id: string, reason?: string): Promise<Result> {
   await requireUser();
   if (!Uuid.safeParse(id).success) return { error: 'Candidata inválida.' };
@@ -108,14 +108,14 @@ export async function suppressBrand(
     },
     { onConflict: 'app_user_id,normalized_name' },
   );
-  if (error) return { error: 'Não consegui guardar a decisão.' };
+  if (error) return { error: 'Não consegui salvar a decisão.' };
 
   await db.from('outreach_candidate').update({ status: 'rejected', reject_reason: reason ?? null }).eq('id', id);
   revalidatePath('/dashboard/outreach');
   return { ok: true };
 }
 
-/** Envia. É a única acção irreversível desta tela, e por isso é a única que a
+/** Envia. É a única ação irreversível desta tela, e por isso é a única que a
  *  interface pede para confirmar. */
 export async function sendOutreach(id: string): Promise<Result & { messageId?: string }> {
   await requireUser();

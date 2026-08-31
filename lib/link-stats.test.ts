@@ -34,7 +34,7 @@ test('resumir separa os tipos e calcula a taxa de toque', () => {
   );
   assert.equal(r.visitas, 4);
   assert.equal(r.cliques, 1);
-  assert.equal(r.contactos, 1);
+  assert.equal(r.contatos, 1);
   assert.equal(r.partilhas, 1);
   /* dois toques em quatro visitas */
   assert.equal(r.taxa, 50);

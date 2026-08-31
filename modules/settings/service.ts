@@ -16,7 +16,7 @@ export const getFlags = cache(async (): Promise<Flags> => {
   return readFlags(data?.value);
 });
 
-/** Versão para trabalhos de fundo, onde não há sessão de utilizador. */
+/** Versão para trabalhos de fundo, onde não há sessão de usuário. */
 export async function getFlagsService(): Promise<Flags> {
   if (!hasServiceRole()) return DEFAULT_FLAGS;
   const { data } = await supabaseService()

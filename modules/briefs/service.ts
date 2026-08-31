@@ -48,7 +48,7 @@ export function detectGaps(brief: Partial<ParsedBrief>) {
     questions.push('Vão correr como anúncio pago: durante quanto tempo e em que plataformas?');
   }
   if (brief.raw_footage === true) {
-    gaps.push('Ficheiros em bruto pedidos e não contratados');
+    gaps.push('Arquivos em bruto pedidos e não contratados');
   }
   if (brief.exclusivity === true) {
     gaps.push('Exclusividade assumida no briefing');
@@ -71,16 +71,16 @@ export function detectRiskFlags(brief: Partial<ParsedBrief>) {
   }
 
   if (brief.raw_footage === true) {
-    flags.push({ code: 'raw_footage', severity: 'medium', note: 'Ficheiros em bruto são entrega e licença à parte.' });
+    flags.push({ code: 'raw_footage', severity: 'medium', note: 'Arquivos em bruto são entrega e licença à parte.' });
   }
   if (brief.exclusivity === true) {
     flags.push({ code: 'exclusivity', severity: 'high', note: 'Exclusividade bloqueia marcas concorrentes: decisão humana.' });
   }
   if (brief.revisions === null || brief.revisions === undefined) {
-    flags.push({ code: 'unlimited_revisions', severity: 'medium', note: 'Sem limite de revisões escrito, o âmbito não tem fundo.' });
+    flags.push({ code: 'unlimited_revisions', severity: 'medium', note: 'Sem limite de revisões escrito, o escopo não tem fundo.' });
   }
   if (brief.music_licensing) {
-    flags.push({ code: 'music', severity: 'low', note: `Música indicada: ${brief.music_licensing}. Confirmar licença para anúncios.` });
+    flags.push({ code: 'music', severity: 'low', note: `Música indicada: ${brief.music_licensing}. Confirmer licença para anúncios.` });
   }
 
   return flags;
@@ -195,7 +195,7 @@ export async function ingestBrief(input: {
       questions: allQuestions,
       risk_flags: asJson(riskFlags),
       // Um briefing com lacunas críticas nunca fica «validado». Marcá-lo como
-      // pronto seria mentir ao ecrã de produção.
+      // pronto seria mentir à tela de produção.
       status: gaps.length ? 'incomplete' : 'parsed',
       ai_run_id: aiRunId,
       version: (last?.version ?? 0) + 1,
@@ -203,7 +203,7 @@ export async function ingestBrief(input: {
     .select('id')
     .single();
 
-  if (error || !data) return { ok: false, error: 'Não foi possível guardar o briefing.' };
+  if (error || !data) return { ok: false, error: 'Não foi possível salvar o briefing.' };
 
   await recordEvent(db, {
     eventType: 'brief.received',

@@ -8,8 +8,8 @@ import { recordEvent, type Db } from '@/modules/activity/service';
 
 /** Case, métricas e ponte para o portfólio.
  *
- *  Duas regras que este ficheiro existe para garantir:
- *   1. um projecto não acaba na entrega — acaba quando aprovação, pagamento,
+ *  Duas regras que este arquivo existe para garantir:
+ *   1. um projeto não acaba na entrega — acaba quando aprovação, pagamento,
  *      direitos, permissão, métricas e upsell estiverem avaliados;
  *   2. nada privado sai para o site sem permissão registada. O portfólio
  *      público lê `media_item` com nicho preenchido; um case só pode escrever
@@ -265,7 +265,7 @@ export async function updateCase(
  *  `media_item` com nicho preenchido é o que o site lê. Sem duplicar tabelas
  *  e sem recadastrar metadados.
  *
- *  A permissão é verificada aqui, do lado do servidor. Um botão desactivado na
+ *  A permissão é verificada aqui, do lado do servidor. Um botão desativado na
  *  interface não é controlo de acesso. */
 export async function publishToPortfolio(input: {
   caseId: string;
@@ -288,7 +288,7 @@ export async function publishToPortfolio(input: {
     };
   }
   if (!input.niche.trim()) {
-    return { ok: false, error: 'Escolhe o nicho: é o que faz o registo aparecer no site.' };
+    return { ok: false, error: 'Escolhe o nicho: é o que faz o registro aparecer no site.' };
   }
 
   // O nicho preenchido é o que torna o media_item legível pelo público.
@@ -343,7 +343,7 @@ export async function unpublishFromPortfolio(caseId: string) {
   updateTag(MEDIA_TAG);
 }
 
-/** Estado de encerramento. Um projecto só fecha quando todas as caixas estão
+/** Estado de encerramento. Um projeto só fecha quando todas as caixas estão
  *  respondidas — mesmo que a resposta seja «não se aplica». */
 export type Closeout = {
   approved: boolean;

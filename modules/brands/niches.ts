@@ -13,7 +13,7 @@ export type Niche = {
   tier: NicheTier;
   /** Contributo para o critério de categoria do Fit Score, de 0 a 5. */
   fit: number;
-  /** Se a descoberta e as sugestões podem propor esta categoria activamente. */
+  /** Se a descoberta e as sugestões podem propor esta categoria ativamente. */
   prospect: boolean;
   keywords: readonly string[];
 };
@@ -121,7 +121,7 @@ export const isExcludedNiche = (id: string | null | undefined) =>
   nicheById(id).tier === 'EXCLUDED';
 
 /** Categorias que a descoberta e as sugestões podem propor por iniciativa
- *  própria. Skincare e haircare nunca entram aqui: podem existir como registo
+ *  própria. Skincare e haircare nunca entram aqui: podem existir como registro
  *  histórico, nunca como alvo. */
 export const prospectableNiches = () => NICHES.filter((n) => n.prospect);
 
@@ -138,7 +138,7 @@ const tokenize = (v: string) =>
 
 /** Adivinha a categoria a partir de texto livre — nome, descrição, produto.
  *  Devolve `null` quando nada bate, porque «não sei» é uma resposta válida e
- *  «other» aplicado por omissão esconde a diferença. */
+ *  «other» aplicado por padrão esconde a diferença. */
 export function guessNiche(...texts: (string | null | undefined)[]): Niche | null {
   const haystack = tokenize(texts.filter(Boolean).join(' '));
   if (haystack.trim() === '') return null;

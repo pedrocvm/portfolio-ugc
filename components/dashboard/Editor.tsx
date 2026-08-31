@@ -13,7 +13,7 @@ import { setIn } from './paths';
 
 type State = { tone: 'idle' | 'dirty' | 'ok' | 'bad'; text: string };
 
-const CLEAN: State = { tone: 'idle', text: 'Sem alterações por guardar' };
+const CLEAN: State = { tone: 'idle', text: 'Sem alterações por salvar' };
 
 export default function Editor({ initial }: { initial: Content }) {
   const [content, setContent] = useState(initial);
@@ -40,7 +40,7 @@ export default function Editor({ initial }: { initial: Content }) {
     return () => io.disconnect();
   }, []);
 
-  /* o cabeçalho de cada secção encosta ao topo enquanto essa secção está em
+  /* o cabeçalho de cada seção encosta ao topo enquanto essa seção está em
      vista; a sentinela diz quando isso acontece, para o cabeçalho encolher */
   useEffect(() => {
     const cabecas = Array.from(
@@ -62,7 +62,7 @@ export default function Editor({ initial }: { initial: Content }) {
     return () => io.disconnect();
   }, []);
 
-  /* o índice da margem marca a secção em vista */
+  /* o índice da margem marca a seção em vista */
   useEffect(() => {
     const alvos = SECTIONS.map((s) => document.getElementById(`s-${s.id}`)).filter(
       (el): el is HTMLElement => !!el,
@@ -87,7 +87,7 @@ export default function Editor({ initial }: { initial: Content }) {
     if (!el) return;
     const ro = new ResizeObserver(([e]) => {
       /* exatamente a altura da barra: qualquer folga deixa o conteúdo
-         aparecer entre a barra e o cabeçalho da secção */
+         aparecer entre a barra e o cabeçalho da seção */
       document.documentElement.style.setProperty(
         '--stickyH',
         `${Math.round(e.contentRect.height)}px`,
@@ -108,7 +108,7 @@ export default function Editor({ initial }: { initial: Content }) {
     tocadas.current.add(path.split('.')[0]);
     setContent((c) => setIn(c, path, value));
     setDirty(true);
-    setState({ tone: 'dirty', text: 'Alterações por guardar' });
+    setState({ tone: 'dirty', text: 'Alterações por salvar' });
   }
 
   function save() {
@@ -122,7 +122,7 @@ export default function Editor({ initial }: { initial: Content }) {
       if (r.error) return setState({ tone: 'bad', text: r.error });
       tocadas.current.clear();
       setDirty(false);
-      setState({ tone: 'ok', text: 'Guardado. Ainda não está no site.' });
+      setState({ tone: 'ok', text: 'Salvo. Ainda não está no site.' });
       /* sem router.refresh aqui: o rascunho já está no cliente, e esperar pela
          página inteira deixava o estado preso em "a processar" */
     });
@@ -159,7 +159,7 @@ export default function Editor({ initial }: { initial: Content }) {
       <div className="dashBar">
         <h1>Conteúdo do site</h1>
         <span className="dashState" data-tone={pending ? undefined : state.tone}>
-          {pending ? <Spinner label="A guardar" /> : null}
+          {pending ? <Spinner label="A salvar" /> : null}
           {pending ? 'A processar' : state.text}
         </span>
         <button
@@ -176,7 +176,7 @@ export default function Editor({ initial }: { initial: Content }) {
           onClick={save}
           disabled={pending || !dirty}
         >
-          Guardar
+          Salvar
         </button>
         <button
           type="button"

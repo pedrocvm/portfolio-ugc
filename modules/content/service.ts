@@ -9,7 +9,7 @@ import { type ContentRow, type FunnelRole, type Shot } from './domain';
 
 /** Inteligência criativa.
  *
- *  Conteúdo é uma hipótese criativa com uma função no funil, não um ficheiro.
+ *  Conteúdo é uma hipótese criativa com uma função no funil, não um arquivo.
  *  É essa diferença que permite vender um pacote de três como três razões
  *  distintas para o consumidor avançar, em vez de «três vídeos com desconto». */
 
@@ -123,7 +123,7 @@ export async function saveContent(input: {
     ? await db.from('content_asset').update(row).eq('id', input.id).select('id').maybeSingle()
     : await db.from('content_asset').insert(row).select('id').maybeSingle();
 
-  if (error || !data) return { ok: false, error: 'Não foi possível guardar o conteúdo.' };
+  if (error || !data) return { ok: false, error: 'Não foi possível salvar o conteúdo.' };
   return { ok: true, id: data.id };
 }
 

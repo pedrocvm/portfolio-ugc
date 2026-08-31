@@ -1,7 +1,7 @@
 /** Conjunto de avaliação da camada de IA.
  *
  *  Casos reais da operação da Carol, anonimizados onde era preciso. Cada um
- *  diz o que a extracção TEM de apanhar, o que NÃO pode inventar, e que ações
+ *  diz o que a extração TEM de apanhar, o que NÃO pode inventar, e que ações
  *  seriam aceitáveis a seguir.
  *
  *  Isto não corre em cada build: chamar um modelo por commit é caro e lento, e
@@ -99,7 +99,7 @@ potential is unlimited!`,
   {
     id: 'promised_date',
     note: 'A marca prometeu responder numa data concreta.',
-    message: `Obrigada pela proposta, Carol. Vou apresentá-la à equipa esta semana e dou-te
+    message: `Obrigada pela proposta, Carol. Vou apresentá-la à equipe esta semana e dou-te
 uma resposta definitiva na sexta-feira, dia 11.`,
     expect: {
       replyTypes: ['future_followup'],
@@ -112,7 +112,7 @@ uma resposta definitiva na sexta-feira, dia 11.`,
   {
     id: 'enthusiasm_not_acceptance',
     note: 'Entusiasmo sem aceitação. O sistema não pode fechar aqui.',
-    message: `Carol, adorámos mesmo o conceito! A equipa toda achou brilhante. Vamos ver
+    message: `Carol, adorámos mesmo o conceito! A equipe toda achou brilhante. Vamos ver
 como encaixamos isto no plano do trimestre.`,
     expect: {
       replyTypes: ['interest'],
@@ -139,7 +139,7 @@ Meta. Enviamos o produto esta semana e o briefing amanhã.`,
   {
     id: 'rejection_not_now',
     note: '«Agora não» é nurture, não perda.',
-    message: `Olá Carol, obrigada pelo contacto. Neste momento não estamos a fazer
+    message: `Olá Carol, obrigada pelo contato. Neste momento não estamos a fazer
 parcerias, mas voltamos a falar quando abrirmos o próximo ciclo de campanhas.`,
     expect: {
       replyTypes: ['rejection', 'future_followup'],

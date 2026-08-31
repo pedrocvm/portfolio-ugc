@@ -11,7 +11,7 @@ import { STAGE_LABEL, type Stage } from '@/modules/opportunities/domain';
  *
  *  Antes eram quatro botões com o mesmo peso — abrir, feito, adiar, dispensar —
  *  e escolher entre quatro coisas iguais é trabalho. Agora há um botão que é a
- *  acção, um que é o fim, e o resto dobrado atrás de «mais». */
+ *  ação, um que é o fim, e o resto dobrado atrás de «mais». */
 
 const RISK_LABEL: Record<string, string> = {
   low: 'atenção',
@@ -87,7 +87,7 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
               etapa <b>{STAGE_LABEL[action.stage as Stage] ?? action.stage}</b>
             </span>
           ) : null}
-          {action.requiresApproval ? <span>precisa da tua aprovação</span> : null}
+          {action.requiresApproval ? <span>precisa da sua aprovação</span> : null}
         </div>
       ) : null}
 

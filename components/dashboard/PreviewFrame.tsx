@@ -8,7 +8,7 @@ import { useExit } from './useExit';
 const SIZES = [
   { id: 'desktop', label: 'Computador', width: '100%' },
   { id: 'tablet', label: 'Tablet', width: '834px' },
-  { id: 'phone', label: 'Telemóvel', width: '390px' },
+  { id: 'phone', label: 'Celular', width: '390px' },
 ];
 
 export default function PreviewFrame({
@@ -79,7 +79,7 @@ export default function PreviewFrame({
         <div className="pvBar">
           <h2 className="pvTitle">Rascunho, ainda fora do ar</h2>
           <Segmented
-            label="Tamanho do ecrã"
+            label="Tamanho da tela"
             value={size.id}
             onChange={(id) =>
               setSize(SIZES.find((s) => s.id === id) ?? SIZES[0])
@@ -105,7 +105,7 @@ export default function PreviewFrame({
         {dirty ? (
           <p className="pvNote">
             Estás a ver as alterações que ainda não guardaste. O site só muda
-            depois de Guardar e Publicar.
+            depois de Salvar e Publicar.
           </p>
         ) : null}
         <div className="pvFrame" style={{ maxWidth: size.width }}>

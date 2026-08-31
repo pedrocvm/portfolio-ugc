@@ -2,7 +2,7 @@ import 'server-only';
 
 import { supabaseServer } from '@/lib/supabase/server';
 
-/** O ecrã onde ela está.
+/** A tela onde ela está.
  *
  *  O browser manda o tipo e o id, nunca o conteúdo: um nome de marca vindo do
  *  cliente é texto que alguém pode ter mudado. O servidor volta a resolvê-lo,

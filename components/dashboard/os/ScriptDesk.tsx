@@ -33,7 +33,7 @@ export default function ScriptDesk({
     <div className="osPanel">
       <h3>Conteúdo e shot list</h3>
       <p className="osNote">
-        Cada peça é uma hipótese com uma função no funil, não um ficheiro. É isso que permite vender
+        Cada peça é uma hipótese com uma função no funil, não um arquivo. É isso que permite vender
         um pacote por cobertura de mensagem em vez de por desconto.
       </p>
 
@@ -120,7 +120,7 @@ export default function ScriptDesk({
                 })
               }
             >
-              Guardar peça
+              Salvar peça
             </button>
           </div>
           {error ? <p className="osWarn" role="alert">{error}</p> : null}
@@ -166,7 +166,7 @@ function ContentItem({ item, collaborationId }: { item: ContentRow; collaboratio
               type="text"
               value={mandatory}
               onChange={(e) => setMandatory(e.target.value)}
-              placeholder="logótipo, embalagem, ecrã"
+              placeholder="logótipo, embalagem, tela"
             />
           </label>
 

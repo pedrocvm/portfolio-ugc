@@ -7,7 +7,7 @@ import { windowTurns } from './domain';
 
 /** Resumo da conversa, para caber no contexto.
  *
- *  Não substitui nada: as mensagens ficam todas guardadas e a Carol continua a
+ *  Não substitui nada: as mensagens ficam todas salvas e a Carol continua a
  *  vê-las. O resumo existe só para o modelo — mandar trinta turnos a cada
  *  pergunta é pagar o princípio da conversa para sempre.
  *

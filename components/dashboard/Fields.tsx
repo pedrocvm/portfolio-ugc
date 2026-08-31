@@ -101,8 +101,8 @@ function One({ f, ctx }: { f: Field; ctx: Ctx }) {
         />
         <MediaField
           kind="video"
-          label={`${f.label} · versão para telemóvel`}
-          hint="Opcional. Sem isto, o telemóvel usa o vídeo de cima."
+          label={`${f.label} · versão para celular`}
+          hint="Opcional. Sem isto, o celular usa o vídeo de cima."
           value={str(v.srcSm)}
           onChange={(next) => set({ ...v, srcSm: next })}
         />

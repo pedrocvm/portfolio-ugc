@@ -140,7 +140,7 @@ export default function Links({
           <div className="stCartoes">
             <Numero valor={r.visitas} rotulo="Visitas" />
             <Numero valor={r.cliques} rotulo="Cliques nos links" />
-            <Numero valor={r.contactos} rotulo="Contactos" nota="WhatsApp e Instagram" />
+            <Numero valor={r.contatos} rotulo="Contatos" nota="WhatsApp e Instagram" />
             <Numero valor={`${r.taxa}%`} rotulo="Taxa de toque" nota="Visitas que tocaram nalguma coisa" />
           </div>
 
@@ -156,7 +156,7 @@ export default function Links({
                 <Tabela
                   titulo="Links mais tocados"
                   linhas={r.ligacoes}
-                  total={r.cliques + r.contactos}
+                  total={r.cliques + r.contatos}
                 />
                 <Tabela titulo="De onde vieram" linhas={r.origens} total={r.visitas} />
                 <Tabela

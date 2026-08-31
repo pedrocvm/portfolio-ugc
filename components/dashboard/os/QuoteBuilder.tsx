@@ -9,7 +9,7 @@ import type { QuoteRow } from '@/modules/pricing/service';
 
 /** Calculadora de preço e direitos.
  *
- *  Quando a política não tem um valor, o ecrã diz «por resolver» em vez de
+ *  Quando a política não tem um valor, a tela diz «por resolver» em vez de
  *  mostrar um número. É a diferença entre uma ferramenta que protege a Carol e
  *  uma que a faz confiar num palpite. */
 
@@ -85,7 +85,7 @@ export default function QuoteBuilder({
       const final = manual.trim() ? parseMoneyToCents(manual) : null;
       const out = await saveQuote(opportunityId, scope, final, reason);
       if (out.error) return setError(out.error);
-      setSaved('Orçamento guardado. Fica congelado assim que o marcares como enviado.');
+      setSaved('Orçamento salvo. Fica congelado assim que o marcares como enviado.');
     });
 
   return (
@@ -125,7 +125,7 @@ export default function QuoteBuilder({
           </label>
           <label className="osCheck">
             <input type="checkbox" checked={scope.rawFootage} onChange={(e) => set('rawFootage', e.target.checked)} />
-            <span>Ficheiros em bruto<small>Nunca incluídos por omissão. Entrega e licença à parte.</small></span>
+            <span>Arquivos em bruto<small>Nunca incluídos por padrão. Entrega e licença à parte.</small></span>
           </label>
 
           <label className="osCheck">
@@ -188,7 +188,7 @@ export default function QuoteBuilder({
           </label>
           <label className="osCheck">
             <input type="checkbox" checked={scope.perpetual} onChange={(e) => set('perpetual', e.target.checked)} />
-            <span>Uso perpétuo ou buyout<small>Nunca concedido por omissão.</small></span>
+            <span>Uso perpétuo ou buyout<small>Nunca concedido por padrão.</small></span>
           </label>
 
           <div className="osActs">
@@ -260,7 +260,7 @@ export default function QuoteBuilder({
 
               {result.humanOnly.length ? (
                 <>
-                  <p className="osRowSub" style={{ marginTop: 16 }}>Só tu podes decidir</p>
+                  <p className="osRowSub" style={{ marginTop: 16 }}>Só você pode decidir</p>
                   <ul className="osList" data-tone="bad">
                     {result.humanOnly.map((h) => <li key={h}>{h}</li>)}
                   </ul>
@@ -285,12 +285,12 @@ export default function QuoteBuilder({
 
               <div className="osActs">
                 <button className="btn" type="button" disabled={pending} onClick={persist}>
-                  Guardar orçamento
+                  Salvar orçamento
                 </button>
               </div>
             </>
           ) : (
-            <p className="osRowSub">Escolhe o âmbito e carrega em calcular.</p>
+            <p className="osRowSub">Escolha o escopo e clique em calcular.</p>
           )}
 
           {error ? <p className="osWarn" role="alert">{error}</p> : null}

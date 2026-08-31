@@ -6,7 +6,7 @@ import { DEFAULT_CONTENT } from './content.ts';
 import { hashParts, isPwnedIn } from './hibp.ts';
 import { merge } from './merge.ts';
 
-test('merge mantém a origem quando o guardado não tem o campo', () => {
+test('merge mantém a origem quando o salvo não tem o campo', () => {
   const out = merge(DEFAULT_CONTENT, { hero: { top: 'Novo' } });
   assert.equal(out.hero.top, 'Novo');
   assert.equal(out.hero.firstName, DEFAULT_CONTENT.hero.firstName);
@@ -102,9 +102,9 @@ test('fit respeita o lado longo no formato horizontal', () => {
   assert.ok(w <= 1920 && h <= 1080);
 });
 
-test('guardar uma secção não mexe no resto do rascunho', () => {
+test('salvar uma seção não mexe no resto do rascunho', () => {
   /* o que a base tem: vídeos carregados pela editora numa sessão anterior */
-  const guardado = merge(DEFAULT_CONTENT, {
+  const salvo = merge(DEFAULT_CONTENT, {
     session: {
       takes: [{ label: 'Casa&Decor', n: '01', niche: 'SWEEK', img: 'https://x/v.mp4' }],
     },
@@ -112,8 +112,8 @@ test('guardar uma secção não mexe no resto do rascunho', () => {
   /* o que esta janela mexeu: só o processo */
   const patch = { process: { ...DEFAULT_CONTENT.process, num: '09' } };
 
-  const out = merge(DEFAULT_CONTENT, { ...guardado, ...patch });
+  const out = merge(DEFAULT_CONTENT, { ...salvo, ...patch });
 
   assert.equal(out.process.num, '09');
-  assert.deepEqual(out.session.takes, guardado.session.takes);
+  assert.deepEqual(out.session.takes, salvo.session.takes);
 });

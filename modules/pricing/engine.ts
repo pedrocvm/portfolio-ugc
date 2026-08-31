@@ -1,11 +1,11 @@
 /** Motor de preço. Determinístico e versionado.
  *
- *  A regra que este ficheiro existe para garantir: quando a política não tem
+ *  A regra que este arquivo existe para garantir: quando a política não tem
  *  um valor, o motor devolve «por resolver» — não inventa, não interpola a
  *  partir de uma negociação antiga, e não deixa um modelo preencher o buraco.
  *
  *  O único número documentado hoje é a negociação AllMatters (base 130 €,
- *  3 meses +50%, 6 meses +70%). Está guardado como referência histórica na
+ *  3 meses +50%, 6 meses +70%). Está salvo como referência histórica na
  *  política e é isso que é: evidência de uma negociação, não uma tabela. */
 
 import { applyPercent, sumCents } from '@/lib/money';
@@ -166,7 +166,7 @@ export function calculateQuote(
       'base',
       'Valor base por vídeo',
       rules.base?.unresolved_reason ??
-        'A política activa não define um valor base. O motor não o pode inferir de uma negociação anterior.',
+        'A política ativa não define um valor base. O motor não o pode inferir de uma negociação anterior.',
     );
   }
 
@@ -181,7 +181,7 @@ export function calculateQuote(
     if (count <= 0) return;
     if (unit == null) {
       lines.push({ id, label: `${label} ×${count}`, cents: null, basis: 'Sem valor configurado.', unresolved: id });
-      need(unresolved, id, unresolvedLabel, 'A política activa não define este extra.');
+      need(unresolved, id, unresolvedLabel, 'A política ativa não define este extra.');
       return;
     }
     lines.push({
@@ -224,13 +224,13 @@ export function calculateQuote(
 
   if (scope.rush) {
     percentLine('rush', 'Urgência', rules.rush, 'Acréscimo de urgência',
-      'A política activa não define acréscimo por urgência.');
+      'A política ativa não define acréscimo por urgência.');
   }
 
   if (scope.rawFootage) {
-    percentLine('raw_footage', 'Ficheiros em bruto', rules.raw_footage, 'Preço dos ficheiros em bruto',
-      'Ficheiros em bruto nunca estão incluídos por omissão e a política ainda não tem preço.');
-    humanOnly.push('Ficheiros em bruto: entrega separada, decisão da Carol.');
+    percentLine('raw_footage', 'Arquivos em bruto', rules.raw_footage, 'Preço dos arquivos em bruto',
+      'Arquivos em bruto nunca estão incluídos por padrão e a política ainda não tem preço.');
+    humanOnly.push('Arquivos em bruto: entrega separada, decisão da Carol.');
   }
 
   // ── Licença de uso pago ─────────────────────────────────────────────────
@@ -255,11 +255,11 @@ export function calculateQuote(
           id: 'paid_usage',
           label: `Uso pago · ${USAGE_TERM_LABEL[scope.usageTerm]}`,
           cents: null,
-          basis: 'Sem percentagem configurada para este período.',
+          basis: 'Sem porcentagem configurada para este período.',
           unresolved: 'usage_rate',
         });
         need(unresolved, 'usage_rate', `Percentagem de uso pago para ${USAGE_TERM_LABEL[scope.usageTerm]}`,
-          rules.paid_usage?.unresolved_reason ?? 'A política activa não define esta percentagem.');
+          rules.paid_usage?.unresolved_reason ?? 'A política ativa não define esta porcentagem.');
       } else {
         lines.push({
           id: 'paid_usage',
@@ -283,14 +283,14 @@ export function calculateQuote(
 
   if (scope.whitelisting) {
     percentLine('whitelisting', 'Whitelisting', rules.whitelisting, 'Preço de whitelisting',
-      'Whitelisting não está incluído por omissão e a política ainda não tem preço.');
+      'Whitelisting não está incluído por padrão e a política ainda não tem preço.');
     humanOnly.push('Whitelisting: correr anúncios a partir do perfil da Carol. Decisão dela.');
   }
 
   if (scope.exclusivity) {
     percentLine('exclusivity', 'Exclusividade', rules.exclusivity, 'Preço de exclusividade',
       'Exclusividade bloqueia marcas concorrentes e a política ainda não tem preço nem limite.');
-    humanOnly.push('Exclusividade: âmbito e duração têm de ser decididos por pessoa.');
+    humanOnly.push('Exclusividade: escopo e duração têm de ser decididos por pessoa.');
   }
 
   if (scope.perpetual) {
@@ -298,12 +298,12 @@ export function calculateQuote(
       id: 'perpetual',
       label: 'Uso perpétuo / buyout',
       cents: null,
-      basis: 'Não concedido por omissão.',
+      basis: 'Não concedido por padrão.',
       unresolved: 'perpetual',
     });
     need(unresolved, 'perpetual', 'Uso perpétuo',
       rules.buyout_perpetual?.reason ??
-        'Perpetuidade nunca é concedida por omissão: é uma cedência sem retorno futuro.');
+        'Perpetuidade nunca é concedida por padrão: é uma cedência sem retorno futuro.');
     humanOnly.push('Uso perpétuo ou buyout: apenas por decisão explícita da Carol.');
   }
 

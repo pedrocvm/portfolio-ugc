@@ -10,7 +10,7 @@ import { formatDate } from '@/lib/time';
 
 /** A revisão diária.
  *
- *  O objectivo é ela decidir em segundos: porquê esta marca, quanto vale, e o
+ *  O objetivo é ela decidir em segundos: porquê esta marca, quanto vale, e o
  *  email já escrito. Tudo o resto está a um toque, dobrado. */
 
 const PAID_LABEL: Record<string, string> = {
@@ -84,10 +84,10 @@ function Card({ c }: { c: Candidate }) {
         {c.ugc_signal ? <span>{UGC_LABEL[c.ugc_signal]}</span> : null}
         {c.contact_email ? (
           <span>
-            {c.contact_name ?? 'contacto'} · <b>{CONF_LABEL[c.email_confidence ?? 'unknown']}</b>
+            {c.contact_name ?? 'contato'} · <b>{CONF_LABEL[c.email_confidence ?? 'unknown']}</b>
           </span>
         ) : (
-          <span>sem contacto encontrado</span>
+          <span>sem contato encontrado</span>
         )}
         {c.website ? (
           <a href={c.website} target="_blank" rel="noreferrer noopener">
@@ -188,8 +188,8 @@ function Card({ c }: { c: Candidate }) {
                 disabled={pending}
                 onClick={() => run('save', () => updateOutreachDraft(c.id, subject, body), () => setStatus('edited'))}
               >
-                {running === 'save' ? <Spinner label="A guardar" /> : null}
-                Guardar
+                {running === 'save' ? <Spinner label="A salvar" /> : null}
+                Salvar
               </button>
             ) : (
               <button
@@ -267,7 +267,7 @@ export default function Outreach({
 
       {!enabled ? (
         <p className="osWarn" data-tone="info">
-          A prospecção diária está desligada. Liga em Definições para o CarolOS procurar marcas
+          A prospecção diária está desligada. Ligue em Definições para o CarolOS procurar marcas
           novas todas as manhãs — nunca envia nada sozinho.
         </p>
       ) : null}

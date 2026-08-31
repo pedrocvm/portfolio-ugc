@@ -11,7 +11,7 @@ type Held = { id: string; dx: number; dy: number; w: number; h: number };
 
 /** Arrastar com Pointer Events: o Safari do iPhone não dispara eventos de
  *  drag em toque, por isso o arrastar nativo do HTML5 não serve de nada num
- *  telemóvel. No dedo o arrasto só começa depois de uma pausa curta, senão
+ *  celular. No dedo o arrasto só começa depois de uma pausa curta, senão
  *  roubava o gesto de scroll ao tabuleiro. */
 export function useBoardDrag(
   onDrop: (id: string, zone: string) => void,
@@ -43,7 +43,7 @@ export function useBoardDrag(
 
   /* Enquanto arrasta: coloca o fantasma, marca a coluna sob o dedo e, se o
      dedo estiver junto à borda, empurra o tabuleiro. Sem isto não se alcança
-     uma coluna que esteja fora do ecrã, que no telemóvel é quase sempre.
+     uma coluna que esteja fora da tela, que no celular é quase sempre.
      O ciclo vive num efeito e não numa função que se agenda a si própria. */
   useEffect(() => {
     if (!held) return;

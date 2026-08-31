@@ -1,11 +1,11 @@
 /** O vocabulário que a Carol lê.
  *
- *  Os valores guardados são ids de máquina estáveis — `commercial_qualification`,
+ *  Os valores salvos são ids de máquina estáveis — `commercial_qualification`,
  *  `usage_license`, `script_approved` — e é assim que têm de ficar na base: uma
  *  etiqueta traduzida como valor gravado parte-se na primeira vez que alguém
  *  muda uma palavra.
  *
- *  O problema é o outro lado: metade do ecrã traduzia e a outra metade não, e
+ *  O problema é o outro lado: metade da tela traduzia e a outra metade não, e
  *  chegava a acontecer na mesma linha — «Pede preço» ao lado de «negotiation».
  *  Isto existe para haver um sítio só, e para o próximo enum não voltar a
  *  aparecer cru por esquecimento.
@@ -34,7 +34,7 @@ const DICTIONARIES: Record<string, Record<string, string>> = {
   /** `rights_license.status` */
   licenseStatus: {
     draft: 'rascunho',
-    active: 'activa',
+    active: 'ativa',
     expired: 'expirada',
     renewed: 'renovada',
     cancelled: 'cancelada',
@@ -156,7 +156,7 @@ export const JOB_LABEL: Record<string, string> = {
 
 export const AI_TASK_LABEL: Record<string, string> = {
   classify_commercial_thread: 'Classificar conversa',
-  extract_commercial_message: 'Extrair factos',
+  extract_commercial_message: 'Extrair fatos',
   recommend_next_action: 'Recomendar próxima ação',
   draft_reply: 'Escrever rascunho',
   negotiation_analysis: 'Analisar negociação',

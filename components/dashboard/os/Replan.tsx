@@ -4,7 +4,7 @@ import { useTransition } from 'react';
 import { replan } from '@/app/dashboard/carolos-actions';
 
 /** Recalcular à mão existe porque o cron pode não estar ligado — e uma fila
- *  desactualizada é pior do que uma fila vazia. */
+ *  desatualizada é pior do que uma fila vazia. */
 export default function Replan() {
   const [pending, start] = useTransition();
   return (

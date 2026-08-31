@@ -30,14 +30,14 @@ export default function Dossier({
 
       {!aiEnabled ? (
         <p className="osNote">
-          Liga a camada de IA em Definições para o sistema resumir o que já sabe
+          Ligue a camada de IA em Definições para o sistema resumir o que já sabe
           sobre esta marca numa leitura comercial.
         </p>
       ) : (
         <>
           <p className="osNote">
-            Sintetiza o que o sistema observou — conversas, capturas, produtos, contactos. Não
-            navega a web: o que não estiver no registo sai como desconhecido, não como afirmação.
+            Sintetiza o que o sistema observou — conversas, capturas, produtos, contatos. Não
+            navega a web: o que não estiver no registro sai como desconhecido, não como afirmação.
           </p>
           <div className="osActs">
             <button
@@ -50,7 +50,7 @@ export default function Dossier({
                   setMessage('');
                   const result = await researchBrand(brandId);
                   if (result.error) return setError(result.error);
-                  setMessage(`Dossiê actualizado. Fit recalculado: ${result.fitScore}.`);
+                  setMessage(`Dossiê atualizado. Fit recalculado: ${result.fitScore}.`);
                 })
               }
             >
@@ -74,7 +74,7 @@ export default function Dossier({
               <Block label="Produto a propor" text={dossier.best_product_to_pitch} />
             ) : null}
             <Block label="Sinal comercial" text={dossier.commercial_signal} />
-            {dossier.contact_path ? <Block label="Caminho de contacto" text={dossier.contact_path} /> : null}
+            {dossier.contact_path ? <Block label="Caminho de contato" text={dossier.contact_path} /> : null}
           </div>
 
           {dossier.creative_opportunities.length ? (

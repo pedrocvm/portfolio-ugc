@@ -36,11 +36,11 @@ export const FLAG_LABEL: Record<FlagKey, string> = {
 };
 
 export const FLAG_NOTE: Record<FlagKey, string> = {
-  gmail_ingestion: 'Ler as conversas do Gmail e transformá-las em marcas, contactos e eventos.',
+  gmail_ingestion: 'Ler as conversas do Gmail e transformá-las em marcas, contatos e eventos.',
   ai_enabled: 'Interruptor geral. Fechado, nenhuma tarefa de IA corre.',
-  ai_classification: 'Classificar respostas e extrair factos comerciais.',
-  ai_drafting: 'Preparar texto de resposta para tu reveres.',
-  gmail_draft_creation: 'Escrever o rascunho aprovado na tua caixa do Gmail.',
+  ai_classification: 'Classificar respostas e extrair fatos comerciais.',
+  ai_drafting: 'Preparar texto de resposta para você revisar.',
+  gmail_draft_creation: 'Escrever o rascunho aprovado na sua caixa do Gmail.',
   external_send:
     'Enviar mensagens sem aprovação. Fica fechado: nenhuma decisão comercial sai daqui sozinha.',
   auto_apply_low_risk:

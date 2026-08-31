@@ -53,7 +53,7 @@ test('A: abordagem enviada leva a oportunidade a "abordada" e agenda o primeiro 
 });
 
 test('A: a marca pede portfólio e o Hoje mostra "enviar portfólio", não "responder"', () => {
-  // Pedir portfólio ainda não é qualificação comercial: a marca está a avaliar
+  // Pedir portfólio ainda não é qualificação comercial: a marca está avaliando
   // se vale a pena falar de dinheiro, não a falar de dinheiro.
   const stage = reduceStage('outreach', {
     eventType: 'reply.received',
@@ -75,7 +75,7 @@ test('A: a marca pede portfólio e o Hoje mostra "enviar portfólio", não "resp
 
 /* ── B. «Manda-me rates + ads rights» ──────────────────────────────────── */
 
-test('B: rates com ads rights vai para qualificação comercial e pede âmbito primeiro', () => {
+test('B: rates com ads rights vai para qualificação comercial e pede escopo primeiro', () => {
   const stage = reduceStage('replied', {
     eventType: 'reply.received',
     replyTypes: ['rate_request', 'ads_rights'],
@@ -202,7 +202,7 @@ test('E: duas marcas diferentes nunca se fundem por nomes vagamente parecidos', 
 
 /* ── F. A integração parte ─────────────────────────────────────────────── */
 
-test('F: uma oportunidade activa nunca fica calada, mesmo sem sincronização', () => {
+test('F: uma oportunidade ativa nunca fica calada, mesmo sem sincronização', () => {
   const actions = planForOpportunity(snapshot({ stage: 'negotiation' }), MONDAY);
   assert.equal(actions.length, 1);
   assert.equal(actions[0].type, 'review');

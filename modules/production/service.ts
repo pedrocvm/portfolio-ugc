@@ -340,7 +340,7 @@ export async function recordDelivery(input: {
   return { ok: true as const, id: data.id, version };
 }
 
-/** Uma revisão é classificada contra o âmbito acordado. Tratar tudo como
+/** Uma revisão é classificada contra o escopo acordado. Tratar tudo como
  *  incluído é como o scope creep entra sem ninguém dar por ela. */
 export async function recordFeedback(input: {
   deliverableId: string;
@@ -380,8 +380,8 @@ export async function recordFeedback(input: {
     actorType: 'brand',
     actorUserId: input.actorUserId,
     summary: outOfScope
-      ? `Revisão fora do âmbito (${input.classification}): é uma nova negociação, não uma correção.`
-      : `Revisão dentro do âmbito na versão ${data.version}.`,
+      ? `Revisão fora do escopo (${input.classification}): é uma nova negociação, não uma correção.`
+      : `Revisão dentro do escopo na versão ${data.version}.`,
     payload: { deliverableId: input.deliverableId, classification: input.classification, outOfScope },
   });
 }
@@ -421,7 +421,7 @@ export async function approveDelivery(deliverableId: string, actorUserId: string
   });
 
   // A aprovação abre o encerramento: case, métricas, direitos, upsell. É aqui
-  // que um projecto deixa de morrer na entrega.
+  // que um projeto deixa de morrer na entrega.
   await db.from('action_item').upsert(
     {
       collaboration_id: data.collaboration_id,

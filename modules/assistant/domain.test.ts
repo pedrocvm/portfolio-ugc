@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  classifyDomain, memoryCandidate, needsConfirmation, tokens, windowTurns,
+  classifyDomain, memoryCandidate, needsConfirmetion, tokens, windowTurns,
 } from './domain.ts';
 
 test('acentos não mudam a palavra', () => {
@@ -44,10 +44,10 @@ test('a meio de uma conversa também', () => {
   assert.equal(classifyDomain('e depois disso?', { priorTurns: 3 }), 'business_relevant');
 });
 
-test('acções de ler não pedem confirmação; enviar pede', () => {
-  assert.equal(needsConfirmation('get_brand'), false);
-  assert.equal(needsConfirmation('send_email'), true);
-  assert.equal(needsConfirmation('set_pricing_policy'), true);
+test('ações de ler não pedem confirmação; enviar pede', () => {
+  assert.equal(needsConfirmetion('get_brand'), false);
+  assert.equal(needsConfirmetion('send_email'), true);
+  assert.equal(needsConfirmetion('set_pricing_policy'), true);
 });
 
 test('a janela guarda tudo e envia o fim', () => {
@@ -75,15 +75,15 @@ test('cansaço não é regra do negócio', () => {
 test('recusar um nicho vira preferência de marca, sem pedir confirmação', () => {
   const m = memoryCandidate('não quero mais trabalhar com skincare');
   assert.equal(m?.type, 'brand_preference');
-  assert.equal(m?.needsConfirmation, false);
+  assert.equal(m?.needsConfirmetion, false);
 });
 
 test('mudar o preço mínimo é crítico e espera por ela', () => {
   const m = memoryCandidate('o meu valor mínimo agora é 180€');
   assert.equal(m?.type, 'pricing_decision');
-  assert.equal(m?.needsConfirmation, true);
+  assert.equal(m?.needsConfirmetion, true);
 });
 
-test('um objetivo declarado é guardado como objetivo', () => {
+test('um objetivo declarado é salvo como objetivo', () => {
   assert.equal(memoryCandidate('o meu objetivo é fechar o primeiro cliente pago')?.type, 'goal');
 });

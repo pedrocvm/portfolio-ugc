@@ -228,7 +228,7 @@ export const DEFAULT_CONTENT: Content = {
       {
         n: '05',
         title: 'Entrega',
-        text: 'Entrego o ficheiro final no formato combinado.',
+        text: 'Entrego o arquivo final no formato combinado.',
       },
     ],
   },
@@ -330,7 +330,7 @@ export const DEFAULT_CONTENT: Content = {
       },
       {
         q: 'Quanto tempo demora?',
-        a: 'Até 7 dias úteis depois de o produto chegar. Se tiveres um prazo mais apertado, diz-me no primeiro contacto e eu digo-te se consigo.',
+        a: 'Até 7 dias úteis depois de o produto chegar. Se tiveres um prazo mais apertado, diz-me no primeiro contato e eu digo-te se consigo.',
       },
       {
         q: 'Quantas revisões estão incluídas?',

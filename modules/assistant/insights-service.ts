@@ -6,7 +6,7 @@ import { buildInsights, type Insight } from './insights';
 /** Alimenta o motor de insights com o estado real e guarda o resultado.
  *
  *  Corre no agendador do Supabase, não à espera de ela abrir a aplicação — é
- *  esse o ponto de um aviso proactivo. Idempotente pela chave de deduplicação:
+ *  esse o ponto de um aviso proativo. Idempotente pela chave de deduplicação:
  *  correr duas vezes no mesmo dia não duplica nada. */
 export async function refreshInsights(): Promise<{ created: number; closed: number }> {
   const db = supabaseService();

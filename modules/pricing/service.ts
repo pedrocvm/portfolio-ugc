@@ -51,7 +51,7 @@ export async function listPolicies() {
   return data ?? [];
 }
 
-/** Guarda regras novas numa versão nova. Editar uma política activa por cima
+/** Guarda regras novas numa versão nova. Editar uma política ativa por cima
  *  tornava impossível dizer que regras produziram um orçamento antigo. */
 export async function savePolicyDraft(
   version: string,
@@ -75,12 +75,12 @@ export async function savePolicyDraft(
     },
     { onConflict: 'version' },
   );
-  return error ? { ok: false, error: 'Não foi possível guardar a política.' } : { ok: true };
+  return error ? { ok: false, error: 'Não foi possível salvar a política.' } : { ok: true };
 }
 
 export async function activatePolicy(version: string, actorUserId: string) {
   const db = await supabaseServer();
-  // Só uma activa de cada vez — a base garante isso com um índice único.
+  // Só uma ativa de cada vez — a base garante isso com um índice único.
   await db.from('pricing_policy').update({ status: 'retired' }).eq('status', 'active');
   await db
     .from('pricing_policy')
@@ -133,7 +133,7 @@ export async function previewQuote(scope: unknown): Promise<QuoteResult> {
 }
 
 /** Cria um orçamento a partir do cálculo. Guarda a fotografia completa —
- *  política, âmbito, linhas, direitos — para o poder reconstruir depois de a
+ *  política, escopo, linhas, direitos — para o poder reconstruir depois de a
  *  política mudar. */
 export async function createQuote(input: {
   opportunityId: string;

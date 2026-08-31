@@ -34,7 +34,7 @@ const COUNTRIES = ['Portugal', 'Espanha', 'Brasil', 'Reino Unido', 'Alemanha', '
 /** Ângulos de procura. Rodam para não se encontrar sempre o mesmo tipo de
  *  empresa — «SaaS português» todos os dias devolve a mesma lista à terceira. */
 const ANGLES = [
-  'marcas com anúncios activos e criativos repetitivos',
+  'marcas com anúncios ativos e criativos repetitivos',
   'produtos lançados nos últimos meses',
   'marcas que já trabalham com creators mas só com influencers grandes',
   'empresas com bom produto e presença social fraca',
@@ -231,7 +231,7 @@ export function scoreEmail(input: EmailInput): QualityResult {
   );
 
   // Personalização e factualidade não se compensam com o resto: um email
-  // impecável sobre factos inventados continua a ser um email a rejeitar.
+  // impecável sobre fatos inventados continua a ser um email a rejeitar.
   const hardFail = scores.personalization < 50 || scores.factuality < 70 || scores.genericness < 60;
 
   return { pass: !hardFail && score >= 70, score, failures, scores };
@@ -250,7 +250,7 @@ export type Rankable = {
 const PAID = { strong: 12, medium: 8, weak: 3, none: 0 } as const;
 const CONFIDENCE = { verified: 8, high: 6, medium: 3, low: -4, unknown: -6 } as const;
 
-/** Encaixe é a base; sinal de que compram criativos e um contacto em que se
+/** Encaixe é a base; sinal de que compram criativos e um contato em que se
  *  confia decidem os desempates. Bandeiras vermelhas descem, não eliminam. */
 export function rankScore(c: Rankable): number {
   return (

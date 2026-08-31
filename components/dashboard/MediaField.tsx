@@ -33,7 +33,7 @@ export function useUpload() {
   async function upload(input: File) {
     if (input.size > MAX_PICK) {
       setError(
-        `O ficheiro tem ${mb(input.size)} MB e o limite é ${mb(MAX_PICK)} MB.`,
+        `O arquivo tem ${mb(input.size)} MB e o limite é ${mb(MAX_PICK)} MB.`,
       );
       return null;
     }
@@ -55,8 +55,8 @@ export function useUpload() {
       setNote(null);
       setError(
         file === input
-          ? `O ficheiro tem ${mb(file.size)} MB e o limite é ${mb(MAX_UPLOAD)} MB.`
-          : `Mesmo comprimido o ficheiro fica com ${mb(file.size)} MB e o limite é ${mb(MAX_UPLOAD)} MB. Corta o vídeo e tenta de novo.`,
+          ? `O arquivo tem ${mb(file.size)} MB e o limite é ${mb(MAX_UPLOAD)} MB.`
+          : `Mesmo comprimido o arquivo fica com ${mb(file.size)} MB e o limite é ${mb(MAX_UPLOAD)} MB. Corta o vídeo e tenta de novo.`,
       );
       return null;
     }
@@ -69,7 +69,7 @@ export function useUpload() {
     setBusy(false);
     setNote(null);
     if (err) {
-      setError(`Não foi possível carregar o ficheiro. ${err.message}`);
+      setError(`Não foi possível carregar o arquivo. ${err.message}`);
       return null;
     }
     const { publicUrl } = supabase.storage.from('media').getPublicUrl(path).data;
@@ -113,8 +113,8 @@ export default function MediaField({
     const up = await upload(file);
     if (!up) return;
     onChange(up.url);
-    /* Tudo o que sobe fica na Biblioteca, venha do ecrã Biblioteca ou daqui.
-       Sem isto o ficheiro só existia dentro deste campo. */
+    /* Tudo o que sobe fica na Biblioteca, venha da tela Biblioteca ou daqui.
+       Sem isto o arquivo só existia dentro deste campo. */
     const r = await addMedia({
       kind: isVideo(up.url) ? 'video' : 'photo',
       url: up.url,
@@ -122,7 +122,7 @@ export default function MediaField({
       niche: '',
       title: file.name,
     });
-    if (r.error) setWarn('O ficheiro entrou, mas não foi para a Biblioteca.');
+    if (r.error) setWarn('O arquivo entrou, mas não foi para a Biblioteca.');
   }
 
   return (
@@ -155,7 +155,7 @@ export default function MediaField({
               disabled={busy}
               onClick={() => input.current?.click()}
             >
-              {busy ? `${note}…` : 'Escolher ficheiro'}
+              {busy ? `${note}…` : 'Escolher arquivo'}
             </button>
             <button
               type="button"
@@ -186,7 +186,7 @@ export default function MediaField({
           <input
             type="text"
             value={value}
-            placeholder="Endereço do ficheiro"
+            placeholder="Endereço do arquivo"
             onChange={(e) => onChange(e.target.value)}
           />
           {error ?? warn ? (

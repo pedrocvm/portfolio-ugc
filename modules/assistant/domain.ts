@@ -28,7 +28,7 @@ const BUSINESS = [
   'faturacao', 'pagamento', 'receber', 'contrato', 'direitos', 'licenca', 'usage',
   'permuta', 'barter', 'briefing', 'brief', 'guiao', 'roteiro', 'entrega', 'deliverable',
   'oportunidade', 'negociacao', 'follow', 'followup', 'email', 'inbox', 'gmail', 'cliente',
-  'clientes', 'contacto', 'portfolio', 'case', 'metrica', 'metricas', 'performance',
+  'clientes', 'contato', 'portfolio', 'case', 'metrica', 'metricas', 'performance',
   'anuncio', 'anuncios', 'ads', 'instagram', 'tiktok', 'colaboracao', 'gravar', 'gravacao',
   'producao', 'shot', 'upsell', 'retainer', 'nicho', 'saas', 'app', 'tech', 'pet',
   'exclusividade', 'whitelisting', 'perpetuidade', 'carolos', 'negocio', 'trabalho',
@@ -110,7 +110,7 @@ export function classifyDomain(
 export const shouldUseTools = (gate: Gate) => gate !== 'off_topic';
 
 export const OFF_TOPIC_REPLY =
-  'Eu fico focada no teu negócio de UGC e no CarolOS. Se isso tiver alguma ligação com trabalho, conta-me o contexto que eu ajudo.';
+  'Eu fico focada no seu negócio de UGC e no CarolOS. Se isso tiver alguma ligação com trabalho, conta-me o contexto que eu ajudo.';
 
 /* ── Janela de contexto ──────────────────────────────────────────────────── */
 
@@ -138,7 +138,7 @@ export type MemoryCandidate = {
   type: 'preference' | 'policy' | 'pricing_decision' | 'brand_preference' | 'goal' | 'constraint';
   content: string;
   /** Uma regra comercial nunca muda em silêncio: fica proposta à espera dela. */
-  needsConfirmation: boolean;
+  needsConfirmetion: boolean;
 };
 
 const PRICE = /(?:€|eur\b|euros?\b)\s?\d|(\d+\s?(?:€|eur\b|euros?\b))/i;
@@ -155,24 +155,24 @@ export function memoryCandidate(message: string): MemoryCandidate | null {
   const wants = ['quero', 'prefiro', 'gosto', 'objetivo', 'meta', 'foco'].some((w) => words.includes(w));
 
   if (PRICE.test(t) && (words.includes('minimo') || words.includes('cobro') || words.includes('preco') || words.includes('valor'))) {
-    return { type: 'pricing_decision', content: t, needsConfirmation: true };
+    return { type: 'pricing_decision', content: t, needsConfirmetion: true };
   }
 
   const nicheWords = ['skincare', 'haircare', 'suplemento', 'suplementos', 'nicho', 'marcas', 'moda', 'beleza'];
   if ((refuses || wants) && nicheWords.some((w) => words.includes(w))) {
-    return { type: 'brand_preference', content: t, needsConfirmation: false };
+    return { type: 'brand_preference', content: t, needsConfirmetion: false };
   }
 
   if (wants && (words.includes('objetivo') || words.includes('meta'))) {
-    return { type: 'goal', content: t, needsConfirmation: false };
+    return { type: 'goal', content: t, needsConfirmetion: false };
   }
 
-  if (refuses || wants) return { type: 'preference', content: t, needsConfirmation: false };
+  if (refuses || wants) return { type: 'preference', content: t, needsConfirmetion: false };
 
   return null;
 }
 
-/* ── Acções sensíveis ────────────────────────────────────────────────────── */
+/* ── Ações sensíveis ────────────────────────────────────────────────────── */
 
 /** Ler não pergunta. Escrever pouco pergunta. Sair para fora, mexer em dinheiro
  *  ou apagar pergunta sempre. */
@@ -181,4 +181,4 @@ export const HIGH_RISK = new Set([
   'delete_data', 'update_contract', 'publish_case', 'publish_portfolio', 'send_proposal',
 ]);
 
-export const needsConfirmation = (tool: string) => HIGH_RISK.has(tool);
+export const needsConfirmetion = (tool: string) => HIGH_RISK.has(tool);

@@ -153,7 +153,7 @@ test('uma afirmação sem fonte reprova o email', () => {
     ...goodEmail,
     claims: [
       { text: 'lançou o Conga Windroid', sourceId: 'src1' },
-      { text: 'estão a investir muito em TikTok', sourceId: null },
+      { text: 'estão investindo muito em TikTok', sourceId: null },
     ],
   });
   assert.equal(r.pass, false);
@@ -186,7 +186,7 @@ test('quem anuncia a sério sobe', () => {
   assert.ok(rankScore(cand({ paidMediaSignal: 'strong' })) > rankScore(cand({ paidMediaSignal: 'none' })));
 });
 
-test('um contacto em que não se confia desce', () => {
+test('um contato em que não se confia desce', () => {
   assert.ok(rankScore(cand({ emailConfidence: 'verified' })) > rankScore(cand({ emailConfidence: 'unknown' })));
 });
 

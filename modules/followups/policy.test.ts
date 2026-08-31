@@ -45,7 +45,7 @@ test('segundo follow-up de abordagem fria: mais 5 dias úteis', () => {
   assert.equal(localDay(new Date((plan as { dueAt: string }).dueAt)), '2026-09-07');
 });
 
-test('a sequência activa acaba: o terceiro vira nurture, não terceiro lembrete', () => {
+test('a sequência ativa acaba: o terceiro vira nurture, não terceiro lembrete', () => {
   const plan = scheduleFollowUp({ situation: 'cold_outreach', since: MONDAY, sentCount: 2 });
   assert.equal(plan.kind, 'nurture');
   assert.match((plan as { reason: string }).reason, /ruído|esgotada/i);

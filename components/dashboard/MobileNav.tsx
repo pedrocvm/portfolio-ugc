@@ -62,7 +62,7 @@ const ICON = {
   ),
 };
 
-/* No telemóvel só cabem quatro. São as quatro que ela usa em movimento:
+/* No celular só cabem quatro. São as quatro que ela usa em movimento:
    decidir, ler, capturar e ver a marca. O editor do site vive no «Mais». */
 const TABS = [
   { href: '/dashboard', label: 'Hoje', icon: 'today' as const },

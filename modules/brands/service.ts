@@ -105,7 +105,7 @@ export async function brandIdentities(brandId: string) {
   return data ?? [];
 }
 
-/** Carrega o que é preciso para decidir se uma marca nova já existe. Sem isto,
+/** Envie o que é preciso para decidir se uma marca nova já existe. Sem isto,
  *  cada ingestão faria uma consulta por marca conhecida. */
 export async function knownBrands(db: Db): Promise<KnownBrand[]> {
   const [{ data: brands }, { data: ids }] = await Promise.all([

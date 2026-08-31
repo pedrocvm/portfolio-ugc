@@ -41,7 +41,7 @@ export const SECTIONS: Section[] = [
   {
     id: 'hero',
     title: 'Abertura',
-    note: 'O primeiro ecrã, com o vídeo de fundo e o teu nome.',
+    note: 'O primeira tela, com o vídeo de fundo e o teu nome.',
     fields: [
       { k: 'text', path: 'hero.top', label: 'Canto superior' },
       { k: 'text', path: 'hero.kicker', label: 'Linha acima do nome' },
@@ -56,7 +56,7 @@ export const SECTIONS: Section[] = [
       {
         k: 'image',
         path: 'hero.imagePortrait',
-        label: 'Imagem de fundo · telemóvel',
+        label: 'Imagem de fundo · celular',
       },
       { k: 'video', path: 'hero.video', label: 'Vídeo de fundo' },
     ],
@@ -75,7 +75,7 @@ export const SECTIONS: Section[] = [
         path: 'meet.niches',
         label: 'Nichos',
         title: 'Nicho',
-        hint: 'Cada nicho abre a gaveta com os registos. Os registos saem da Biblioteca.',
+        hint: 'Cada nicho abre a gaveta com os registros. Os registros saem da Biblioteca.',
         blank: { name: '', reel: [] },
         item: [
           { k: 'text', path: 'name', label: 'Nome do nicho' },
@@ -83,10 +83,10 @@ export const SECTIONS: Section[] = [
             k: 'list',
             path: 'reel',
             label: 'Registos deste nicho',
-            title: 'Registo',
-            hint: 'Sem registos, a gaveta mostra uma seleção automática das fotos do site.',
+            title: 'Registro',
+            hint: 'Sem registros, a gaveta mostra uma seleção automática das fotos do site.',
             blank: { src: '' },
-            item: [{ k: 'media', path: 'src', label: 'Ficheiro' }],
+            item: [{ k: 'media', path: 'src', label: 'Arquivo' }],
           },
         ],
       },
@@ -95,7 +95,7 @@ export const SECTIONS: Section[] = [
         k: 'text',
         path: 'meet.imageMainAlt',
         label: 'Descrição do retrato',
-        hint: 'Lida por leitores de ecrã e por motores de busca.',
+        hint: 'Lida por leitores de tela e por motores de busca.',
       },
       { k: 'text', path: 'meet.shelfEyebrow', label: 'Etiqueta da gaveta' },
       { k: 'text', path: 'meet.shelfFoot', label: 'Rodapé da gaveta' },
@@ -119,7 +119,7 @@ export const SECTIONS: Section[] = [
             k: 'text',
             path: 'label',
             label: 'Legenda deste vídeo',
-            hint: 'Escreve o que quiseres. Aparece antes do nicho.',
+            hint: 'Escreve o que quiser. Aparece antes do nicho.',
           },
           {
             k: 'text',
@@ -162,7 +162,7 @@ export const SECTIONS: Section[] = [
   {
     id: 'process',
     title: 'Processo',
-    note: 'Os passos, do primeiro contacto à entrega.',
+    note: 'Os passos, do primeiro contato à entrega.',
     fields: [
       ...chapter('process', 'processo'),
       {
@@ -194,7 +194,7 @@ export const SECTIONS: Section[] = [
         k: 'bool',
         path: 'plans.showPrices',
         label: 'Mostrar os preços no site',
-        hint: 'Desligado, os pacotes e os add-ons aparecem sem valores. Os preços continuam guardados aqui para quando quiseres voltar a mostrá-los.',
+        hint: 'Desligado, os pacotes e os add-ons aparecem sem valores. Os preços continuam salvos aqui para quando quiser voltar a mostrá-los.',
       },
       {
         k: 'list',
@@ -297,13 +297,13 @@ export const SECTIONS: Section[] = [
   },
   {
     id: 'contact',
-    title: 'Contactos',
-    note: 'Para onde vão os botões de contacto.',
+    title: 'Contatos',
+    note: 'Para onde vão os botões de contato.',
     fields: [
       {
         k: 'text',
         path: 'contact.phone',
-        label: 'Telemóvel para WhatsApp',
+        label: 'Celular para WhatsApp',
         hint: 'Só dígitos, com o indicativo do país. Exemplo: 351912345678.',
       },
       {

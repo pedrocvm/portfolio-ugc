@@ -115,7 +115,7 @@ export default function FollowUps({
         <section className="osSection">
           <h2>Nurture</h2>
           <p className="osNote">
-            Sequência activa encerrada. Voltam numa data futura, com contexto novo em vez de mais
+            Sequência ativa encerrada. Voltam numa data futura, com contexto novo em vez de mais
             uma insistência.
           </p>
           <div className="osRows">

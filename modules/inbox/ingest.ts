@@ -17,7 +17,7 @@ import { rightsRisks, BLANK_RIGHTS } from '@/modules/rights/engine';
 
 /** O coração do CRM passivo.
  *
- *  Uma mensagem entra; saem marca, contacto, oportunidade, eventos, etapa,
+ *  Uma mensagem entra; saem marca, contato, oportunidade, eventos, etapa,
  *  follow-up e fila do Hoje — sem a Carol abrir formulário nenhum.
  *
  *  Idempotente do princípio ao fim: o mesmo `externalMessageId` processado
@@ -56,7 +56,7 @@ export type IngestOutcome = {
 const MAX_BODY = 20_000;
 
 /** Nome provável da marca a partir do domínio ou do nome do remetente.
- *  Grosseiro de propósito: é um ponto de partida que a extracção depois afina,
+ *  Grosseiro de propósito: é um ponto de partida que a extração depois afina,
  *  e é melhor do que criar uma marca chamada "noreply". */
 function guessBrandName(msg: NormalizedMessage, counterpart: string | null): string {
   const domain = emailDomain(counterpart);
@@ -136,7 +136,7 @@ export async function ingestMessage(
     .select('id')
     .single();
 
-  if (!stored) return { status: 'error', detail: 'Não foi possível guardar a mensagem.' };
+  if (!stored) return { status: 'error', detail: 'Não foi possível salvar a mensagem.' };
 
   // ── 3. É comercial? ──────────────────────────────────────────────────────
   // Sinal barato primeiro: uma conversa já ligada a uma marca não precisa de
@@ -195,11 +195,11 @@ export async function ingestMessage(
       status: 'needs_review',
       messageId: stored.id,
       threadId: thread.id,
-      detail: 'Confiança insuficiente para criar registos sozinho.',
+      detail: 'Confiança insuficiente para criar registros sozinho.',
     };
   }
 
-  // ── 4. Extracção de factos ───────────────────────────────────────────────
+  // ── 4. Extração de fatos ───────────────────────────────────────────────
   let extraction: CommercialExtraction | null = null;
   let extractionRunId: string | null = null;
 
@@ -230,7 +230,7 @@ export async function ingestMessage(
     }
   }
 
-  // ── 5. Marca, contacto, oportunidade ─────────────────────────────────────
+  // ── 5. Marca, contato, oportunidade ─────────────────────────────────────
   let brandId = thread.brand_id;
   let mergeCandidate: { brandId: string; reason: string; confidence: number } | null = null;
 
@@ -270,7 +270,7 @@ export async function ingestMessage(
         brandId,
         contactId,
         actorType: 'system',
-        summary: `Contacto ${counterpart} encontrado em ${msg.provider}.`,
+        summary: `Contato ${counterpart} encontrado em ${msg.provider}.`,
         payload: { email: counterpart, role: extraction?.contact_role ?? null },
         dedupeKey: `contact:${counterpart}:discovered`,
       });
@@ -356,7 +356,7 @@ export async function ingestMessage(
       dedupeKey: dedupeKey(msg.provider, 'message', msg.externalMessageId, 'reply.classified'),
     });
 
-    // Um pedido concreto é um facto comercial por direito próprio, não uma
+    // Um pedido concreto é um fato comercial por direito próprio, não uma
     // linha dentro de um payload: é o que o planeador lê para saber o que fazer.
     const ASK_EVENTS: Record<string, EventType> = {
       portfolio_request: 'portfolio.requested',
@@ -453,7 +453,7 @@ export async function ingestMessage(
     opportunityId,
     detail: extraction
       ? `Processada: ${extraction.reply_types.join(', ')}.`
-      : 'Processada sem extracção de IA (classificação desligada).',
+      : 'Processada sem extração de IA (classificação desligada).',
   };
 }
 
@@ -509,7 +509,7 @@ export async function processPending(db: Db, flags: Flags, limit = 25) {
   return results;
 }
 
-/** Confirmação manual a partir da caixa de revisão: a Carol diz que a conversa
+/** Confirmeção manual a partir da caixa de revisão: a Carol diz que a conversa
  *  é (ou não é) comercial, e o processamento segue com essa certeza. */
 export async function resolveReview(
   db: Db,
@@ -522,7 +522,7 @@ export async function resolveReview(
     .update({
       classification: decision,
       classification_confidence: 1,
-      classification_reason: 'Confirmado à mão.',
+      classification_reason: 'Confirmedo à mão.',
     })
     .eq('id', threadId);
 

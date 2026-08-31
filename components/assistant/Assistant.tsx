@@ -112,7 +112,7 @@ export default function Assistant({ configured }: { configured: boolean }) {
         form.set('file', file);
         const res = await fetch('/api/assistant/upload', { method: 'POST', body: form });
         const body = await res.json().catch(() => ({ error: 'Falhou.' }));
-        if (!res.ok) setUploadError(body.error ?? 'Não consegui carregar o ficheiro.');
+        if (!res.ok) setUploadError(body.error ?? 'Não consegui carregar o arquivo.');
         else a.setFiles((f) => [...f, body]);
       }
     },
@@ -203,7 +203,7 @@ export default function Assistant({ configured }: { configured: boolean }) {
         a.setMessages((m) =>
           m.map((x) =>
             x.id === replyId
-              ? { ...x, streaming: false, error: aborted ? undefined : 'Falhou a meio. Tenta outra vez.' }
+              ? { ...x, streaming: false, error: aborted ? undefined : 'Falhou a meio. Tente de novo.' }
               : x,
           ),
         );
@@ -229,7 +229,7 @@ export default function Assistant({ configured }: { configured: boolean }) {
 
   if (!a.open) {
     const label = a.busy
-      ? 'Carol AI está a responder'
+      ? 'Carol AI está respondendo'
       : a.unread
         ? 'Carol AI tem uma resposta por ler'
         : 'Abrir a Carol AI';
@@ -274,7 +274,7 @@ export default function Assistant({ configured }: { configured: boolean }) {
       <header className="aiHead">
         <div>
           <b>Carol AI</b>
-          {a.entity.id ? <span className="aiCtx">no que estás a ver</span> : null}
+          {a.entity.id ? <span className="aiCtx">no que está vendo</span> : null}
         </div>
         <div className="aiHeadActs">
           <button
@@ -330,7 +330,7 @@ export default function Assistant({ configured }: { configured: boolean }) {
       <div className="aiScroll" ref={scroller} onScroll={onScroll}>
         {a.messages.length === 0 ? (
           <div className="aiEmpty">
-            <p>Pergunta-me o que quiseres sobre o teu negócio. Eu vou ver os dados antes de responder.</p>
+            <p>Pergunta-me o que quiser sobre o seu negócio. Eu vou ver os dados antes de responder.</p>
             <div className="aiChips">
               {suggestions.map((s) => (
                 <button key={s} className="aiChip" type="button" onClick={() => send(s)}>
@@ -350,8 +350,8 @@ export default function Assistant({ configured }: { configured: boolean }) {
                 </div>
                 {/* Três estados, e cada um diz uma coisa diferente:
                     a pensar (ainda nada), a consultar (foi buscar dados),
-                    a escrever (o texto está a sair). Um spinner só para os
-                    três não distingue «não percebeu» de «está a trabalhar». */}
+                    a escrever (o texto está saindo). Um spinner só para os
+                    três não distingue «não percebeu» de «está trabalhando». */}
                 {m.streaming ? (
                   <p className="aiState" data-kind={status ? 'tool' : m.content ? 'typing' : 'thinking'}>
                     {status ? (

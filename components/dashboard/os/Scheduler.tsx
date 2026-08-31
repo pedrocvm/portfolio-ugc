@@ -13,7 +13,7 @@ import {
  *
  *  Vive no Supabase e não na Vercel: o plano Hobby só permite um cron por dia,
  *  e o Gmail precisa de ser visto de quinze em quinze minutos. Aqui só se liga,
- *  se desliga e se vê se está a correr. */
+ *  se desliga e se vê se está rodando. */
 
 export default function Scheduler({ state }: { state: SchedulerState }) {
   const [, start] = useTransition();
@@ -26,7 +26,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
 
   const run = (id: 'apply' | 'stop', work: () => Promise<void>) => {
     // Ver a nota em Settings: dentro da transição o spinner nunca chega a
-    // aparecer, porque a transição mantém o ecrã anterior de pé.
+    // aparecer, porque a transição mantém a tela anterior de pé.
     setRunning(id);
     start(async () => {
       try {
@@ -43,7 +43,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
         <h2>Agendador</h2>
         <p className="osWarn" data-tone="info">
           {state.unavailableReason ??
-            'Não consigo falar com o agendador. Verifica as migrações e a chave de service role.'}
+            'Não consigo falar com o agendador. Verifique as migrações e a chave de service role.'}
         </p>
       </section>
     );
@@ -56,26 +56,26 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
       <h2>Agendador</h2>
       <p className="osNote">
         Os trabalhos correm no Supabase, não na Vercel — o plano Hobby só deixa um cron por dia, e o
-        Gmail precisa de ser visto muito mais vezes do que isso. Nada aqui depende de tu abrires a
+        Gmail precisa de ser visto muito mais vezes do que isso. Nada aqui depende de você abrir a
         aplicação.
       </p>
       {state.configured ? (
         <p className="osNote">
-          Já está a correr sozinho. Só precisas de voltar aqui quando o CarolOS tiver trabalhos
-          novos — «actualizar a lista» põe-nos no relógio.
+          Já está rodando sozinho. Só precisa voltar aqui quando o CarolOS tiver trabalhos
+          novos — «atualizar a lista» põe-nos no relógio.
         </p>
       ) : null}
 
       {!state.configured ? (
         <p className="osWarn" data-tone="info">
-          O agendador está montado mas ainda não sabe para onde ligar. Carrega em ligar: o endereço
+          O agendador está montado mas ainda não sabe para onde ligar. Clique em ligar: o endereço
           e o segredo saem do ambiente — o segredo vai para o cofre do Supabase e nunca mais sai de lá.
         </p>
       ) : (
         <div className="osStats" style={{ marginBottom: 18 }}>
           <div className="osStat">
             <b><em>{state.rows.filter((r) => r.active).length}</em></b>
-            <span>trabalhos activos</span>
+            <span>trabalhos ativos</span>
           </div>
           <div className="osStat">
             <b><em>{state.baseUrl?.replace(/^https?:\/\//, '') ?? '—'}</em></b>
@@ -116,7 +116,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
               O que o botão faz é pôr no relógio a lista de trabalhos que esta
               versão do CarolOS tem — e isso só interessa depois de haver
               trabalhos novos. */}
-          {state.configured ? 'Actualizar a lista de trabalhos' : 'Ligar o agendador'}
+          {state.configured ? 'Atualizar a lista de trabalhos' : 'Ligar o agendador'}
         </button>
         {state.configured ? (
           <button
@@ -148,7 +148,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
         </div>
       ) : (
         <p className="osRowSub" style={{ marginTop: 14 }}>
-          Nenhum trabalho agendado. Carrega em ligar.
+          Nenhum trabalho agendado. Clique em ligar.
         </p>
       )}
     </section>

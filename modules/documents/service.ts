@@ -8,9 +8,9 @@ import { USAGE_TERM_DAYS, USAGE_TERM_LABEL, type UsageTerm } from '@/modules/pri
 
 /** Ponte entre o CarolOS e o motor de documentos que já existia.
  *
- *  O motor não foi reescrito: continua a guardar JSON por template e a
+ *  O motor não foi reescrito: continua a salvar JSON por template e a
  *  renderizar da mesma forma. O que muda é que uma proposta passa a nascer da
- *  oportunidade e do orçamento — com o âmbito, o valor e os direitos já lá
+ *  oportunidade e do orçamento — com o escopo, o valor e os direitos já lá
  *  dentro — em vez de ser reconstruída à mão a partir da memória.
  *
  *  Reconstruir à mão é onde a Carol se engana: escreve um valor que já não é o
@@ -147,10 +147,10 @@ export async function proposalFromOpportunity(
   const deliverables = [
     `${videos} vídeo${videos > 1 ? 's' : ''} UGC em formato vertical`,
     'Uma ronda de comentários sobre a primeira versão',
-    ...(scope.rawFootage ? ['Ficheiros em bruto'] : []),
+    ...(scope.rawFootage ? ['Arquivos em bruto'] : []),
   ].join('\n');
 
-  // Os direitos vêm do âmbito do orçamento, escritos por extenso. É aqui que a
+  // Os direitos vêm do escopo do orçamento, escritos por extenso. É aqui que a
   // separação entre produção e licença aparece na proposta.
   const usage = scope.paidUsage && scope.usageTerm
     ? `Uso orgânico nas redes da marca, sem limite de tempo.`
@@ -296,7 +296,7 @@ export async function usageDocFromLicense(
   if (!days) {
     return {
       ok: false,
-      error: 'A licença não tem duração. Uma autorização sem prazo é perpetuidade por omissão.',
+      error: 'A licença não tem duração. Uma autorização sem prazo é perpetuidade por padrão.',
     };
   }
 

@@ -115,7 +115,7 @@ export default function Inbox({
     <>
       <div className="dashBar">
         <h1>Inbox</h1>
-        <span className="dashState">{waiting.length} à espera de ti</span>
+        <span className="dashState">{waiting.length} esperando por você</span>
       </div>
 
       {!gmailConnected ? (
@@ -127,7 +127,7 @@ export default function Inbox({
       ) : null}
 
       <section className="osSection">
-        <h2>À espera de ti</h2>
+        <h2>Esperando por você</h2>
         <p className="osNote">A marca falou por último. Enquanto não responderes, a bola é tua.</p>
         {waiting.length ? (
           <div className="osRows">

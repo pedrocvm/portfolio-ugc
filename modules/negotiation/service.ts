@@ -50,7 +50,7 @@ export async function buildContext(opportunityId: string): Promise<NegotiationCo
     db.from('quote').select('*').eq('opportunity_id', opportunityId).order('version', { ascending: false }).limit(1),
   ]);
 
-  // Os factos comerciais vêm da última classificação, não de prosa.
+  // Os fatos comerciais vêm da última classificação, não de prosa.
   const classified = (events ?? []).find((e) => e.event_type === 'reply.classified');
   const facts = (classified?.payload ?? {}) as Record<string, unknown>;
 
@@ -139,7 +139,7 @@ function describeQuote(quote: QuoteResult | null): string {
     `Política: ${quote.policyVersion}`,
     quote.recommendedCents !== null
       ? `Valor calculado: ${formatMoney(quote.recommendedCents)}`
-      : 'SEM VALOR CALCULÁVEL. Não podes indicar um número.',
+      : 'SEM VALOR CALCULÁVEL. Não pode indicar um número.',
     quote.minimumCents !== null ? `Piso: ${formatMoney(quote.minimumCents)}` : 'Piso não configurado.',
     lines.join('\n'),
     unresolved.length ? `Por resolver:\n${unresolved.join('\n')}` : '',
@@ -245,7 +245,7 @@ export async function draft(
   const forbidden = [
     'Qualquer valor que não esteja na lista de valores permitidos.',
     'Descontos, mesmo pequenos.',
-    'Uso perpétuo, buyout, exclusividade, whitelisting ou ficheiros em bruto.',
+    'Uso perpétuo, buyout, exclusividade, whitelisting ou arquivos em bruto.',
     'Revisões ilimitadas.',
     'Promessas de vendas, ROAS ou resultado de campanha.',
     'Aceitar permuta sem passar pela decisão da Carol.',

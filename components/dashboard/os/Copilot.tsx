@@ -21,7 +21,7 @@ const RECOMMENDATION_LABEL: Record<string, string> = {
 };
 
 const GOALS = [
-  'Responder ao pedido de valor sem fechar preço antes de saber o âmbito',
+  'Responder ao pedido de valor sem fechar preço antes de saber o escopo',
   'Perguntar período e canais do uso pago',
   'Enviar portfólio e o exemplo mais relevante',
   'Reenquadrar: a proposta é UGC, não influencer',
@@ -69,7 +69,7 @@ export default function Copilot({
       setMessage('');
       const result = await pushDraftToGmail(opportunityId, subject || 'Sobre a nossa conversa', text);
       if (result.error) return setError(result.error);
-      setMessage('Rascunho criado no Gmail. Lê, ajusta e envia de lá.');
+      setMessage('Rascunho criado no Gmail. Leia, ajuste e envie de lá.');
       if (recommendationId) await decideOnRecommendation(recommendationId, 'accepted');
     });
 
@@ -89,7 +89,7 @@ export default function Copilot({
     <div className="osPanel">
       <h3>Copiloto comercial</h3>
       <p className="osNote">
-        Lê a negociação toda, diz o que fazer e porquê, e só depois escreve. Preço e direitos vêm do
+        Leia a negociação toda, diz o que fazer e porquê, e só depois escreve. Preço e direitos vêm do
         motor determinístico — o modelo escolhe as palavras, não os números.
       </p>
 
@@ -202,7 +202,7 @@ export default function Copilot({
               </button>
             ) : (
               <span className="osRowSub">
-                Liga «Criar rascunho no Gmail» em Definições para mandar isto directamente para a
+                Liga «Criar rascunho no Gmail» em Definições para mandar isto diretamente para a
                 tua caixa. Até lá, copia daqui.
               </span>
             )}

@@ -18,7 +18,7 @@ import Scheduler from './Scheduler';
 const JOBS = [
   { id: 'gmail-sync', label: 'Sincronizar Gmail' },
   { id: 'process-pending', label: 'Processar pendentes' },
-  { id: 'followups', label: 'Actualizar follow-ups' },
+  { id: 'followups', label: 'Atualizar follow-ups' },
   { id: 'rights', label: 'Verificar licenças' },
   { id: 'metrics', label: 'Lembretes de métricas' },
   { id: 'upsell', label: 'Procurar upsell' },
@@ -55,8 +55,8 @@ export default function Settings({
   const [, start] = useTransition();
   const [local, setLocal] = useState(flags);
   const [message, setMessage] = useState('');
-  /** Qual acção está a correr. Um booleano partilhado desactivava tudo sem
-   *  dizer o que estava a acontecer, e sincronizar o Gmail demora o suficiente
+  /** Qual ação está rodando. Um booleano partilhado desativava tudo sem
+   *  dizer o que estava acontecendo, e sincronizar o Gmail demora o suficiente
    *  para parecer que o clique se perdeu. */
   const [running, setRunning] = useState<string | null>(null);
   const pending = running !== null;
@@ -97,7 +97,7 @@ export default function Settings({
       {notice === 'connected' ? (
         <p className="osWarn" data-tone="ok">Gmail ligado.</p>
       ) : notice === 'error' ? (
-        <p className="osWarn">A ligação ao Gmail não se completou. Tenta outra vez.</p>
+        <p className="osWarn">A ligação ao Gmail não se completou. Tente de novo.</p>
       ) : null}
 
       {missing.length ? (
@@ -111,7 +111,7 @@ export default function Settings({
         <h2>Gmail</h2>
         <p className="osNote">
           É a integração que torna o CRM passivo. Pede só leitura e criação de rascunhos: não há
-          permissão para enviar, por desenho. Podes ligar mais do que uma conta — as marcas nem
+          permissão para enviar, por desenho. Você pode ligar mais de uma conta — as marcas nem
           sempre escrevem para a mesma caixa.
         </p>
 
@@ -175,7 +175,7 @@ export default function Settings({
       <section className="osSection">
         <h2>Automação</h2>
         <p className="osNote">
-          Começa com o modo sombra. Só depois de veres o que o sistema propõe, e concordares, é que
+          Comece com o modo sombra. Só depois de ver o que o sistema propõe, e concordares, é que
           vale a pena deixá-lo aplicar sozinho.
         </p>
 
@@ -192,7 +192,7 @@ export default function Settings({
               disabled={pending}
               onClick={() => flip(key)}
             >
-              {running === `flag:${key}` ? <Spinner label="A guardar" /> : null}
+              {running === `flag:${key}` ? <Spinner label="A salvar" /> : null}
               {local[key] ? 'ligado' : 'desligado'}
             </button>
           </div>
@@ -219,7 +219,7 @@ export default function Settings({
       <section className="osSection">
         <h2>Correr agora</h2>
         <p className="osNote">
-          Os trabalhos já correm sozinhos pelo agendador. Estes botões são para quando não quiseres
+          Os trabalhos já correm sozinhos pelo agendador. Estes botões são para quando não quiser
           esperar pela próxima passagem.
         </p>
         <div className="osJobs">

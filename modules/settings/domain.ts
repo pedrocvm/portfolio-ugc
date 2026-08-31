@@ -2,7 +2,7 @@
  *
  *  Só os campos que podem ser mostrados: o que guarda tokens fica no service. */
 export type IntegrationHealth = {
-  /** Identifica a caixa nas acções da UI. Vazio no resumo agregado. */
+  /** Identifica a caixa nas ações da UI. Vazio no resumo agregado. */
   id: string;
   provider: string;
   account: string;

@@ -14,7 +14,7 @@ import { upsellScan } from '@/modules/ai/prompts/registry';
  *
  *  Valor de produto e dinheiro vivem em colunas separadas e nunca se somam:
  *  contar uma permuta como receita é a forma mais rápida de a Carol achar que
- *  está a ganhar mais do que ganha. */
+ *  está ganhando mais do que ganha. */
 
 export type PaymentRow = {
   id: string;
@@ -246,7 +246,7 @@ export async function listRelationships(): Promise<RelationshipRow[]> {
   }));
 }
 
-/** Um projecto não acaba na entrega. Depois de aprovado, avalia-se se há uma
+/** Um projeto não acaba na entrega. Depois de aprovado, avalia-se se há uma
  *  segunda oferta e quando propô-la — propor no próprio dia soa transacional,
  *  e nunca propor é deixar dinheiro em cima da mesa. */
 export async function scanUpsells(db: Db, flags: Flags) {

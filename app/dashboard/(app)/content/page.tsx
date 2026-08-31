@@ -89,7 +89,7 @@ export default async function ContentPage() {
       {content.filter((c) => !c.funnelRole).length ? (
         <section className="osSection">
           <h2>Sem função definida</h2>
-          <p className="osNote">Uma peça sem papel no funil é um ficheiro, não um argumento de venda.</p>
+          <p className="osNote">Uma peça sem papel no funil é um arquivo, não um argumento de venda.</p>
           <div className="osRows">
             {content.filter((c) => !c.funnelRole).map((c) => (
               <div className="osRow" key={c.id}>

@@ -9,7 +9,7 @@ import type { LinkedDocument } from '@/modules/documents/service';
 
 /** Os documentos desta oportunidade.
  *
- *  Uma proposta nasce da oportunidade e do orçamento — âmbito, valor e
+ *  Uma proposta nasce da oportunidade e do orçamento — escopo, valor e
  *  direitos já lá dentro. Reconstruí-la à mão é onde se escreve um valor que
  *  já não é o do orçamento, ou se esquece o período de uso que se negociou.
  *

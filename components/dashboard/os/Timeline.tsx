@@ -3,7 +3,7 @@ import type { TimelineEntry } from '@/modules/activity/service';
 
 /** A memória operacional. Cada linha diz o que aconteceu, quem o fez e —
  *  quando existe — a prova por baixo, fechada num `details` para não encher o
- *  ecrã com JSON. */
+ *  tela com JSON. */
 
 const ACTOR_LABEL: Record<string, string> = {
   carol: 'Carol',
@@ -13,7 +13,7 @@ const ACTOR_LABEL: Record<string, string> = {
   brand: 'marca',
 };
 
-/** O payload cru só interessa quando traz factos comerciais. Chaves de
+/** O payload cru só interessa quando traz fatos comerciais. Chaves de
  *  plumbing não valem uma gaveta. */
 const NOISE = new Set(['imported', 'applied', 'triggerEventId', 'signal', 'snippet']);
 

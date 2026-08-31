@@ -6,7 +6,7 @@ import type { Source } from '@/modules/assistant/domain';
 
 /** O estado do chat vive aqui, no layout privado, e não na página.
  *
- *  É o que faz a conversa sobreviver a mudar de ecrã: a Carol abre a Cecotec,
+ *  É o que faz a conversa sobreviver a mudar de tela: a Carol abre a Cecotec,
  *  pergunta uma coisa, vai ao preço, volta — e a conversa está onde estava,
  *  com o rascunho por enviar. */
 
@@ -31,8 +31,8 @@ type Ctx = {
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   draft: string;
   setDraft: (v: string) => void;
-  /** Ficheiros já carregados e ainda por enviar. Sobrevivem à navegação como o
-   *  rascunho: perder um anexo por mudar de ecrã seria inaceitável. */
+  /** Arquivos já carregados e ainda por enviar. Sobrevivem à navegação como o
+   *  rascunho: perder um anexo por mudar de tela seria inaceitável. */
   files: Attached[];
   setFiles: React.Dispatch<React.SetStateAction<Attached[]>>;
   busy: boolean;

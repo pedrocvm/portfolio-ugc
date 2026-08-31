@@ -1,4 +1,4 @@
-/** Insights proactivos, como regras puras.
+/** Insights proativos, como regras puras.
  *
  *  O assistente não pode existir só quando lhe perguntam. Isto olha para o
  *  estado do negócio e diz o que está prestes a custar dinheiro.

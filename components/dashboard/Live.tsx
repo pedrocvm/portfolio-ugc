@@ -5,7 +5,7 @@ import Site from '@/components/Site';
 import type { Content } from '@/lib/content';
 
 /** A janela do editor manda o que está no formulário; assim a pré-visualização
- *  mostra o que ainda não foi guardado. */
+ *  mostra o que ainda não foi salvo. */
 export default function Live({
   initial,
   media,

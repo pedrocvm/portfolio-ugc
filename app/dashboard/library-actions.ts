@@ -25,7 +25,7 @@ export async function addMedia(item: {
   title: string;
 }): Promise<Result> {
   await requireEditor();
-  if (!item.url) return { error: 'Falta o ficheiro.' };
+  if (!item.url) return { error: 'Falta o arquivo.' };
   const supabase = await supabaseServer();
   const { error } = await supabase.from('media_item').insert({
     kind: item.kind,
@@ -34,7 +34,7 @@ export async function addMedia(item: {
     niche: item.niche,
     title: item.title,
   });
-  if (error) return { error: 'Não foi possível guardar na biblioteca.' };
+  if (error) return { error: 'Não foi possível salvar na biblioteca.' };
   revalidatePath('/dashboard/library');
   updateTag(MEDIA_TAG);
   return { ok: true };
@@ -47,13 +47,13 @@ export async function updateMedia(
   await requireEditor();
   const supabase = await supabaseServer();
   const { error } = await supabase.from('media_item').update(patch).eq('id', id);
-  if (error) return { error: 'Não foi possível guardar a alteração.' };
+  if (error) return { error: 'Não foi possível salvar a alteração.' };
   revalidatePath('/dashboard/library');
   updateTag(MEDIA_TAG);
   return { ok: true };
 }
 
-/** Apaga o registo e também o ficheiro: deixar o ficheiro órfão no storage é
+/** Apaga o registro e também o arquivo: deixar o arquivo órfão no storage é
  *  como não apagar nada. */
 export async function removeMedia(id: string): Promise<Result> {
   await requireEditor();

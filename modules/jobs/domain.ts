@@ -1,6 +1,6 @@
 /** A parte pura do agendador: tipos e a explicação de cada trabalho.
  *
- *  Separada do serviço porque o ecrã de Definições corre no browser e precisa
+ *  Separada do serviço porque a tela de Definições corre no browser e precisa
  *  destas etiquetas. Se viessem do serviço, importá-las arrastava o cliente de
  *  service role para o pacote do cliente — que é exactamente o que o
  *  `server-only` no serviço está lá para impedir. */
@@ -43,12 +43,12 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
     why: 'De 30 em 30 minutos, todo o dia. Apanha mensagens por processar e repete a extração que falhou.',
   },
   'carolos-followups': {
-    label: 'Actualizar follow-ups',
+    label: 'Atualizar follow-ups',
     why: 'De hora a hora. Marca os vencidos e semeia os que faltam.',
   },
   'carolos-plan': {
     label: 'Recalcular a fila do Hoje',
-    why: 'De hora a hora. Acorda adiados e refaz as ações, sem depender de tu abrires a aplicação.',
+    why: 'De hora a hora. Acorda adiados e refaz as ações, sem depender de você abrir a aplicação.',
   },
   'carolos-rights': {
     label: 'Verificar licenças',

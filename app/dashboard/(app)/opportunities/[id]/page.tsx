@@ -163,7 +163,7 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
 
       {licenses.length ? (
         <div className="osPanel">
-          <h3>Direitos activos desta marca</h3>
+          <h3>Direitos ativos desta marca</h3>
           <div className="osRows">
             {licenses.map((l) => (
               <div className="osRow" key={l.id}>

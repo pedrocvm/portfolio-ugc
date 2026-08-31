@@ -60,7 +60,7 @@ export type Prompt<TInput, TOutput> = {
   tier: ModelTier;
   schema: z.ZodType<TOutput>;
   system: string;
-  /** Constrói a mensagem do utilizador a partir de dados já validados. */
+  /** Constrói a mensagem do usuário a partir de dados já validados. */
   render: (input: TInput) => string;
   maxTokens?: number;
 };

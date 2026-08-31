@@ -20,7 +20,7 @@ import { ensureOpportunity } from '@/modules/opportunities/service';
  *  mesmo CRM manual que este produto existe para não ser.
  *
  *  Funciona sem IA: um URL sozinho já dá domínio, handle e nome provável.
- *  A IA acrescenta contacto, produto e pedidos quando está ligada. */
+ *  A IA acrescenta contato, produto e pedidos quando está ligada. */
 
 export type CaptureKind = 'url' | 'text' | 'screenshot' | 'profile' | 'product' | 'conversation' | 'brief';
 
@@ -69,7 +69,7 @@ export async function listCaptures(): Promise<CaptureDraft[]> {
   return ((data ?? []) as RawCapture[]).map(toDraft);
 }
 
-/** Extracção sem modelo: só o que o texto contém de forma inequívoca.
+/** Extração sem modelo: só o que o texto contém de forma inequívoca.
  *  Não adivinha nome de marca a partir de prosa — para isso serve a IA. */
 function deterministicExtract(raw: string): Partial<CaptureExtraction> {
   const urls = raw.match(/https?:\/\/[^\s<>"']+/g) ?? [];
@@ -123,14 +123,14 @@ export async function createCapture(input: {
     .select('id')
     .single();
 
-  if (error || !data) return { ok: false, error: 'Não foi possível guardar a captura.' };
+  if (error || !data) return { ok: false, error: 'Não foi possível salvar a captura.' };
 
   await processCapture(db, data.id, input.flags);
   return { ok: true, id: data.id };
 }
 
 /** O print vive num bucket privado, nunca no `media` que o site serve. Vem
- *  daqui para o modelo em base64 e não é guardado outra vez em lado nenhum. */
+ *  daqui para o modelo em base64 e não é salvo outra vez em lado nenhum. */
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 async function loadScreenshot(db: Db, storagePath: string): Promise<ImageInput | null> {

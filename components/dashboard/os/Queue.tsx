@@ -7,8 +7,8 @@ import ActionCard from './ActionCard';
 /** A fila do dia, aos poucos.
  *
  *  Quarenta cartões de uma vez são um muro: a Carol abre o Hoje para fazer a
- *  primeira coisa, não para ler tudo. Cinco por omissão, e quem quiser ver mais
- *  escolhe — a escolha fica guardada, porque ninguém quer repeti-la todos os
+ *  primeira coisa, não para ler tudo. Cinco por padrão, e quem quiser ver mais
+ *  escolhe — a escolha fica salva, porque ninguém quer repeti-la todos os
  *  dias. */
 
 const SIZES = [5, 10, 20] as const;
@@ -50,7 +50,7 @@ export default function Queue({ actions }: { actions: ActionRow[] }) {
   const [page, setPage] = useState(0);
 
   const pages = Math.max(1, Math.ceil(actions.length / size));
-  // Mudar o tamanho pode deixar a página actual fora do fim da lista.
+  // Mudar o tamanho pode deixar a página atual fora do fim da lista.
   const current = Math.min(page, pages - 1);
   const from = current * size;
   const slice = actions.slice(from, from + size);
@@ -68,7 +68,7 @@ export default function Queue({ actions }: { actions: ActionRow[] }) {
       {urgent.length ? (
         <section className="osSection">
           <h2>{current === 0 ? 'Primeiro isto' : 'Ainda a arder'}</h2>
-          <p className="osNote">Alguém está à espera de ti, ou há dinheiro a arriscar-se.</p>
+          <p className="osNote">Alguém está esperando por você, ou há dinheiro a arriscar-se.</p>
           <div className="osQueue">
             {urgent.map((a, i) => (
               <ActionCard key={a.id} action={a} index={i} />

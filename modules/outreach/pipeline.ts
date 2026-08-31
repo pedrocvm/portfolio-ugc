@@ -34,7 +34,7 @@ export async function runDailyOutreach(
   const failures: string[] = [];
 
   const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
-  if (!me) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Sem utilizador.'] };
+  if (!me) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Sem usuário.'] };
 
   // Idempotente pelo dia: correr duas vezes não faz dois lotes.
   const { data: existing } = await db

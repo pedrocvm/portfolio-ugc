@@ -7,7 +7,7 @@ import { DECISION_LABEL, type BarterResult } from '@/modules/barter/engine';
 
 /** Avaliação de permuta.
  *
- *  A pergunta que muda tudo é «comprarias isto com o teu dinheiro?». Um
+ *  A pergunta que muda tudo é «comprarias isto com o seu dinheiro?». Um
  *  produto de 400 € que ela nunca usaria não vale 400 € — vale o tempo de
  *  produção que ocupa, que é negativo. */
 
@@ -72,7 +72,7 @@ export default function BarterCheck({ cashAlternativeCents }: { cashAlternativeC
           </label>
 
           <label className="osField">
-            <span>Comprarias isto com o teu dinheiro?</span>
+            <span>Comprarias isto com o seu dinheiro?</span>
             <select value={wouldBuy} onChange={(e) => setWouldBuy(e.target.value as typeof wouldBuy)}>
               <option value="unknown">Não sei / talvez</option>
               <option value="yes">Sim, já queria</option>
@@ -103,7 +103,7 @@ export default function BarterCheck({ cashAlternativeCents }: { cashAlternativeC
           </label>
           <label className="osCheck">
             <input type="checkbox" checked={rawFootage} onChange={(e) => setRawFootage(e.target.checked)} />
-            <span>Ficheiros em bruto</span>
+            <span>Arquivos em bruto</span>
           </label>
 
           <div className="osActs">

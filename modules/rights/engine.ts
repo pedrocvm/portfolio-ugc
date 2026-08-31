@@ -3,7 +3,7 @@
  *  anúncio, durante um tempo, em canais nomeados.
  *
  *  Nada aqui assume perpetuidade. Uma licença sem fim é sempre um sinal para
- *  revisão humana, nunca um valor por omissão. */
+ *  revisão humana, nunca um valor por padrão. */
 
 import { addDays, daysBetween } from '@/lib/time';
 
@@ -57,7 +57,7 @@ export function rightsRisks(scope: RightsScope): RiskFlag[] {
     flags.push({
       code: 'usage_no_period',
       severity: 'high',
-      message: 'Uso pago pedido sem duração. Uma licença sem fim é perpetuidade por omissão.',
+      message: 'Uso pago pedido sem duração. Uma licença sem fim é perpetuidade por padrão.',
       question: 'Durante quanto tempo pretendem usar o vídeo em anúncios pagos?',
     });
   }
@@ -84,7 +84,7 @@ export function rightsRisks(scope: RightsScope): RiskFlag[] {
     flags.push({
       code: 'whitelisting',
       severity: 'high',
-      message: 'Whitelisting: a marca corre anúncios a partir do perfil da Carol. Nunca incluído por omissão.',
+      message: 'Whitelisting: a marca corre anúncios a partir do perfil da Carol. Nunca incluído por padrão.',
       humanOnly: true,
     });
   }
@@ -96,7 +96,7 @@ export function rightsRisks(scope: RightsScope): RiskFlag[] {
       message: scope.exclusivityEndAt
         ? 'Exclusividade pedida: bloqueia marcas concorrentes durante o período.'
         : 'Exclusividade pedida sem prazo. Exclusividade indefinida não se concede.',
-      question: scope.exclusivityEndAt ? undefined : 'Qual é o âmbito e a duração da exclusividade?',
+      question: scope.exclusivityEndAt ? undefined : 'Qual é o escopo e a duração da exclusividade?',
       humanOnly: true,
     });
   }
@@ -105,7 +105,7 @@ export function rightsRisks(scope: RightsScope): RiskFlag[] {
     flags.push({
       code: 'raw_footage',
       severity: 'medium',
-      message: 'Ficheiros em bruto são uma entrega e uma licença à parte, não um extra grátis.',
+      message: 'Arquivos em bruto são uma entrega e uma licença à parte, não um extra grátis.',
       humanOnly: true,
     });
   }
@@ -166,7 +166,7 @@ export function expiryStatus(endAt: string | null, now = new Date()): ExpiryStat
 }
 
 /** Conflito de exclusividade: antes de aceitar uma marca nova, o sistema tem
- *  de saber se alguma licença activa a proíbe. */
+ *  de saber se alguma licença ativa a proíbe. */
 export function exclusivityConflicts(
   active: readonly { brandName: string; exclusivityScope: string | null; exclusivityEndAt: string | null }[],
   incomingCategory: string | null,
@@ -175,12 +175,12 @@ export function exclusivityConflicts(
   return active
     .filter((l) => !l.exclusivityEndAt || new Date(l.exclusivityEndAt) >= now)
     .filter((l) => {
-      if (!incomingCategory || !l.exclusivityScope) return true; // âmbito vago: avisa na mesma
+      if (!incomingCategory || !l.exclusivityScope) return true; // escopo vago: avisa na mesma
       return l.exclusivityScope.toLowerCase().includes(incomingCategory.toLowerCase());
     })
     .map(
       (l) =>
-        `${l.brandName} tem exclusividade activa${
+        `${l.brandName} tem exclusividade ativa${
           l.exclusivityEndAt ? ` até ${l.exclusivityEndAt}` : ' sem prazo'
         }${l.exclusivityScope ? ` (${l.exclusivityScope})` : ''}.`,
     );

@@ -172,7 +172,7 @@ export default async function AnalyticsPage() {
           </div>
           <div className="osStat">
             <b>{health.duplicatesPrevented}</b>
-            <span>mensagens guardadas</span>
+            <span>mensagens salvas</span>
           </div>
         </div>
 

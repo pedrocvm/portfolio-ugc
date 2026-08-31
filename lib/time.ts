@@ -1,4 +1,4 @@
-/** Datas do CarolOS. Guardadas em UTC, mostradas no fuso da Carol, e nunca
+/** Datas do CarolOS. Salvas em UTC, mostradas no fuso da Carol, e nunca
  *  comparadas como texto. O cálculo de dias úteis vive aqui e só aqui: um
  *  «+ 5 dias» espalhado por componentes é como as cadências de follow-up
  *  deixam de ser política e passam a ser folclore. */
@@ -20,7 +20,7 @@ export const localDay = (at: Date | string) =>
 
 /** Sábado e domingo. Feriados ficam de fora por decisão: são calendário
  *  nacional variável e a cadência de follow-up tolera um dia de folga melhor
- *  do que tolera uma tabela de feriados desactualizada.
+ *  do que tolera uma tabela de feriados desatualizada.
  *  ponytail: se um follow-up cair no Natal e isso incomodar, entra aqui uma
  *  lista de feriados PT — não uma biblioteca. */
 export function isBusinessDay(at: Date) {

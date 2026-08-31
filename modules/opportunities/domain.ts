@@ -19,7 +19,7 @@ export const STAGES = [
 
 export type Stage = (typeof STAGES)[number];
 
-/** Etiquetas são tradução de interface. O valor guardado é sempre o id estável. */
+/** Etiquetas são tradução de interface. O valor salvo é sempre o id estável. */
 export const STAGE_LABEL: Record<Stage, string> = {
   discovered: 'Descoberta',
   qualified: 'Qualificada',
@@ -72,7 +72,7 @@ export const MODEL_LABEL: Record<CommercialModel, string> = {
   unclear: 'Por esclarecer',
 };
 
-/** Os factos que um evento traz e que podem mover o estado. Tudo opcional:
+/** Os fatos que um evento traz e que podem mover o estado. Tudo opcional:
  *  o redutor só age sobre o que foi realmente observado. */
 export type StageSignal = {
   eventType: string;
@@ -101,7 +101,7 @@ const ASKS_COMMERCIAL = new Set([
   'affiliate_offer', 'media_kit_request', 'scope_question',
 ]);
 
-/** Dado o estado actual e um sinal, o que deve acontecer. `null` significa
+/** Dado o estado atual e um sinal, o que deve acontecer. `null` significa
  *  «nada muda», que é a resposta certa na maioria dos eventos. */
 export function reduceStage(current: Stage, signal: StageSignal): Transition | null {
   if (signal.explicitAcceptance) {
@@ -144,7 +144,7 @@ export function reduceStage(current: Stage, signal: StageSignal): Transition | n
       if (asks.length && current !== 'proposal' && current !== 'negotiation') {
         return {
           to: 'commercial_qualification',
-          reason: `A marca pediu ${asks.join(', ')}: falta fechar âmbito e direitos.`,
+          reason: `A marca pediu ${asks.join(', ')}: falta fechar escopo e direitos.`,
           autoApplicable: true,
         };
       }
@@ -208,7 +208,7 @@ export function violations(state: OpportunityState): string[] {
     !state.nextActionDueAt &&
     !state.nextActionText.trim()
   ) {
-    out.push('Uma oportunidade activa precisa de próxima ação ou de um estado de espera explícito.');
+    out.push('Uma oportunidade ativa precisa de próxima ação ou de um estado de espera explícito.');
   }
   return out;
 }

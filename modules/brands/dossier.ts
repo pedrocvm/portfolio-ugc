@@ -18,7 +18,7 @@ import type { FitCriterion, FitSignals } from './fit';
  *  vez de palpites.
  *
  *  Uma coisa que este dossiê NÃO faz: navegar a web. Sem recolha automática de
- *  evidência, o modelo só pode trabalhar com o que está no registo, e é isso
+ *  evidência, o modelo só pode trabalhar com o que está no registro, e é isso
  *  que ele é instruído a fazer. Tudo o que não conseguir verificar sai em
  *  `unknowns`, não numa afirmação — «não consegui confirmar que fazem anúncios»
  *  é honesto; «não fazem anúncios» sem prova não é. */
@@ -66,7 +66,7 @@ export async function buildDossier(brandId: string, flags: Flags): Promise<Dossi
       ? `Produtos conhecidos:\n${products.map((p) => `- ${p.name}${p.retail_price_cents ? ` (${p.retail_price_cents / 100} €)` : ''} ${p.notes}`).join('\n')}`
       : '',
     contacts?.length
-      ? `Contactos: ${contacts.map((c) => `${c.name || '(sem nome)'} ${c.role} ${c.email ?? ''}`).join('; ')}`
+      ? `Contatos: ${contacts.map((c) => `${c.name || '(sem nome)'} ${c.role} ${c.email ?? ''}`).join('; ')}`
       : '',
     events?.length
       ? `Histórico observado:\n${events.map((e) => `- ${e.occurred_at.slice(0, 10)} ${e.event_type}: ${e.summary}`).join('\n')}`

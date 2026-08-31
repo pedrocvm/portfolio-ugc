@@ -91,7 +91,7 @@ export async function verifyPayload(payload: string, signature: string): Promise
 }
 
 /** Impressão digital estável de um input, para deduplicar corridas de IA e
- *  detectar conteúdo repetido sem guardar o conteúdo outra vez. */
+ *  detectar conteúdo repetido sem salvar o conteúdo outra vez. */
 export async function hashContent(value: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
   return Buffer.from(digest).toString('hex').slice(0, 32);

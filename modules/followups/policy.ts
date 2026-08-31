@@ -48,7 +48,7 @@ export const CADENCE: Record<Exclude<Situation, 'nurture'>, Step[]> = {
   ],
 };
 
-/** Fim da sequência activa. Nurture não é insistência: é uma data futura para
+/** Fim da sequência ativa. Nurture não é insistência: é uma data futura para
  *  voltar a existir, não um terceiro «viste a minha mensagem?». */
 export const NURTURE_DAYS = 45;
 
@@ -120,7 +120,7 @@ export function scheduleFollowUp(input: ScheduleInput): Schedule {
   const steps = CADENCE[situation];
   if (sentCount >= steps.length) {
     return nurture(
-      'Sequência activa esgotada. Continuar a insistir passa a ruído — melhor voltar com contexto novo.',
+      'Sequência ativa esgotada. Continuar a insistir passa a ruído — melhor voltar com contexto novo.',
     );
   }
 

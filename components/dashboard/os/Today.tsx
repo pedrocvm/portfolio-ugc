@@ -59,11 +59,11 @@ export default function Today({ data, read }: { data: TodayData; read?: React.Re
           {integration.status === 'connected' ? (
             <>
               Se souberes de alguma coisa que o sistema não viu,{' '}
-              <Link href="/dashboard/capture">cola aqui</Link>.
+              <Link href="/dashboard/capture">cole aqui</Link>.
             </>
           ) : (
             <>
-              Podes <Link href="/dashboard/settings">ligar o Gmail</Link> para as conversas
+              Você pode <Link href="/dashboard/settings">ligar o Gmail</Link> para as conversas
               entrarem sozinhas, ou <Link href="/dashboard/capture">colar uma</Link> à mão.
             </>
           )}

@@ -9,7 +9,7 @@ import { formatDate } from '@/lib/time';
 
 /** A conversa inteira, sem sair do CarolOS.
  *
- *  A leitura vem da base — o corpo das mensagens é guardado na ingestão — por
+ *  A leitura vem da base — o corpo das mensagens é salvo na ingestão — por
  *  isso abre depressa e continua a funcionar com o Gmail em baixo. A resposta é
  *  que precisa do Gmail, e sai como rascunho: escrever e enviar são duas
  *  decisões, e a segunda é dela. */
@@ -55,7 +55,7 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
     setSending(false);
     if ('error' in r && r.error) setError(r.error);
     else {
-      setDone('Rascunho criado no Gmail, dentro desta conversa. Abre o Gmail para o rever e enviar.');
+      setDone('Rascunho criado no Gmail, dentro desta conversa. Abra o Gmail para revisar e enviar.');
       setReply('');
     }
   }
@@ -107,7 +107,7 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
                 </article>
               ))}
               {thread.messages.length === 0 ? (
-                <p className="osRowSub">Esta conversa não tem mensagens guardadas.</p>
+                <p className="osRowSub">Esta conversa não tem mensagens salvas.</p>
               ) : null}
             </div>
 
@@ -154,7 +154,7 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
                 ) : null}
               </div>
               <p className="osRowSub">
-                O CarolOS não envia emails sozinho. Isto deixa o rascunho na tua caixa, pronto para
+                O CarolOS não envia emails sozinho. Isto deixa o rascunho na sua caixa, pronto para
                 leres e enviares.
               </p>
             </div>

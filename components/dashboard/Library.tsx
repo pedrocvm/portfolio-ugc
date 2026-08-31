@@ -68,7 +68,7 @@ export default function Library({
   }
 
   function drop(item: MediaItem) {
-    if (!confirm(`Apagar "${item.title}"? O ficheiro também é removido.`)) return;
+    if (!confirm(`Apagar "${item.title}"? O arquivo também é removido.`)) return;
     start(async () => {
       const r = await removeMedia(item.id);
       setMsg(r.error ?? 'Apagado.');
@@ -92,7 +92,7 @@ export default function Library({
       <div className="libAdd">
         <div className="libAddRow">
           <Segmented
-            label="Tipo de ficheiro"
+            label="Tipo de arquivo"
             value={kind}
             onChange={setKind}
             options={[
@@ -120,7 +120,7 @@ export default function Library({
           />
           <label className="btn tiny">
             {busy ? <Spinner label="A carregar" /> : null}
-            {busy ? note : 'Carregar ficheiro'}
+            {busy ? note : 'Carregar arquivo'}
             <input
               type="file"
               accept={kind === 'video' ? 'video/*' : 'image/*'}
@@ -164,7 +164,7 @@ export default function Library({
 
       {shown.length === 0 ? (
         <p className="libEmpty">
-          Ainda não há {KIND_LABEL[kind].toLowerCase()}s aqui. Carrega o
+          Ainda não há {KIND_LABEL[kind].toLowerCase()}s aqui. Envie o
           primeiro acima.
         </p>
       ) : (

@@ -42,7 +42,7 @@ export default function Clients({ clients }: { clients: Client[] }) {
               <div className="cliBody">
                 <dl className="cliFicha">
                   <div>
-                    <dt>Contacto</dt>
+                    <dt>Contato</dt>
                     <dd>
                       {c.brand.contact || '—'}
                       <span className="sub">{channelLabel(c.brand.channel)}</span>

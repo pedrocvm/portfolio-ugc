@@ -70,8 +70,8 @@ export const PROPOSAL_BLANK = {
 
 export const PROPOSAL_FIELDS: Field[] = [
   { k: 'text', path: 'brand', label: 'Marca' },
-  { k: 'text', path: 'contactName', label: 'Pessoa de contacto' },
-  { k: 'text', path: 'contactEmail', label: 'E-mail de contacto' },
+  { k: 'text', path: 'contactName', label: 'Pessoa de contato' },
+  { k: 'text', path: 'contactEmail', label: 'E-mail de contato' },
   { k: 'text', path: 'date', label: 'Data da proposta', hint: 'No formato AAAA-MM-DD.' },
   { k: 'text', path: 'validDays', label: 'Validade em dias' },
   { k: 'text', path: 'packageName', label: 'Nome do pacote' },
@@ -214,7 +214,7 @@ export const CONTRACT_FIELDS: Field[] = [
   { k: 'text', path: 'deliveryDays', label: 'Prazo de entrega em dias úteis' },
   { k: 'text', path: 'price', label: 'Valor em euros' },
   { k: 'area', path: 'payment', label: 'Pagamento' },
-  { k: 'area', path: 'usageScope', label: 'Direitos · âmbito' },
+  { k: 'area', path: 'usageScope', label: 'Direitos · escopo' },
   { k: 'text', path: 'usageTerritory', label: 'Direitos · território' },
   { k: 'text', path: 'usageDuration', label: 'Direitos · duração' },
   { k: 'area', path: 'revisions', label: 'Revisões' },
@@ -289,7 +289,7 @@ function contract(d: Record<string, unknown>, author: Author): Rendered {
           { t: 'pair', label: 'Duração', value: ou(d.usageDuration, '—') },
           {
             t: 'p',
-            text: 'Qualquer utilização fora do âmbito, território ou duração acima carece de acordo escrito prévio e é orçamentada à parte. A primeira contraente mantém o direito de mostrar o trabalho no seu portfólio.',
+            text: 'Qualquer utilização fora do escopo, território ou duração acima carece de acordo escrito prévio e é orçamentada à parte. A primeira contraente mantém o direito de mostrar o trabalho no seu portfólio.',
           },
         ],
       },
@@ -360,9 +360,9 @@ export const USAGE_FIELDS: Field[] = [
     k: 'area',
     path: 'videoRef',
     label: 'Que vídeo é',
-    hint: 'Identifica-o sem margem para dúvida: nome do ficheiro, produto e duração.',
+    hint: 'Identifica-o sem margem para dúvida: nome do arquivo, produto e duração.',
   },
-  { k: 'text', path: 'videoLink', label: 'Ligação do ficheiro entregue' },
+  { k: 'text', path: 'videoLink', label: 'Ligação do arquivo entregue' },
   { k: 'text', path: 'deliveredOn', label: 'Data de entrega', hint: 'No formato AAAA-MM-DD.' },
   {
     k: 'text',
@@ -411,7 +411,7 @@ function usage(d: Record<string, unknown>, author: Author): Rendered {
           },
           { t: 'pair', label: 'Vídeo', value: ou(d.videoRef, '—') },
           ...(s(d.videoLink)
-            ? [{ t: 'pair' as const, label: 'Ficheiro', value: s(d.videoLink) }]
+            ? [{ t: 'pair' as const, label: 'Arquivo', value: s(d.videoLink) }]
             : []),
           ...(s(d.deliveredOn)
             ? [{ t: 'pair' as const, label: 'Entregue a', value: dataPt(d.deliveredOn) }]
@@ -486,7 +486,7 @@ function usage(d: Record<string, unknown>, author: Author): Rendered {
           {
             t: 'list',
             items: [
-              'Ficheiros em bruto, tomadas não usadas e projetos de edição.',
+              'Arquivos em bruto, tomadas não usadas e projetos de edição.',
               'Qualquer outro vídeo da criadora, presente ou futuro.',
               'Utilização por afiliados, revendedores ou parceiros, que carece de autorização própria.',
               'Cedência dos direitos de autor ou de utilização futura.',

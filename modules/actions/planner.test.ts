@@ -39,7 +39,7 @@ test('um pedido de preço vira a ação de enviar valor, não uma resposta gené
   assert.equal(action.type, 'send_rate');
   // A razão nomeia o pedido em português corrente: um id de máquina no meio de
   // uma frase é o sistema a falar consigo próprio à frente de quem o usa.
-  assert.match(action.reason, /A marca pediu o teu valor, e ainda não teve resposta\./);
+  assert.match(action.reason, /A marca pediu o seu valor, e ainda não teve resposta\./);
   assert.doesNotMatch(action.reason, /rate_request/);
 });
 
@@ -48,7 +48,7 @@ test('vários pedidos ficam numa lista que se lê em voz alta', () => {
     snap({ awaitingReplySince: daysAgo(1), openAsks: ['rate_request', 'ads_rights', 'portfolio_request'] }),
     NOW,
   );
-  assert.match(action.reason, /o teu valor, direitos para anúncios e o portfólio/);
+  assert.match(action.reason, /o seu valor, direitos para anúncios e o portfólio/);
 });
 
 test('um pedido de portfólio vira a ação de enviar portfólio', () => {
@@ -59,7 +59,7 @@ test('um pedido de portfólio vira a ação de enviar portfólio', () => {
   assert.equal(action.type, 'send_portfolio');
 });
 
-test('direitos para anúncios pedem âmbito antes de preço', () => {
+test('direitos para anúncios pedem escopo antes de preço', () => {
   const [action] = planForOpportunity(
     snap({ awaitingReplySince: daysAgo(1), openAsks: ['ads_rights'] }),
     NOW,
@@ -120,7 +120,7 @@ test('qualificada sem orçamento pede para preparar a oferta', () => {
   assert.ok(actions.some((a) => a.type === 'create_proposal'));
 });
 
-test('nenhuma oportunidade activa fica em silêncio: sem nada, aparece como sem próxima ação', () => {
+test('nenhuma oportunidade ativa fica em silêncio: sem nada, aparece como sem próxima ação', () => {
   const actions = planForOpportunity(snap({ stage: 'negotiation' }), NOW);
   assert.equal(actions.length, 1);
   assert.equal(actions[0].type, 'review');
@@ -142,10 +142,10 @@ test('o título não repete a marca, que já está no cabeçalho do cartão', ()
 
 test('a próxima ação legada do painel antigo é reaproveitada como motivo', () => {
   const actions = planForOpportunity(
-    snap({ stage: 'proposal', nextActionText: 'Aguardar análise da equipa.' }),
+    snap({ stage: 'proposal', nextActionText: 'Asalvar análise da equipe.' }),
     NOW,
   );
-  assert.equal(actions[0].reason, 'Aguardar análise da equipa.');
+  assert.equal(actions[0].reason, 'Asalvar análise da equipe.');
 });
 
 test('cada ação leva CTA, motivo e chave de deduplicação', () => {

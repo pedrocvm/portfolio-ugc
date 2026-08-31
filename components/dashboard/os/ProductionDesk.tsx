@@ -52,7 +52,7 @@ export default function ProductionDesk({
           Antes de gravar: {c.gateBlockers.join(' ')}
         </p>
       ) : (
-        <p className="osWarn" data-tone="ok">Nada por resolver. Podes gravar.</p>
+        <p className="osWarn" data-tone="ok">Nada por resolver. Pode gravar.</p>
       )}
 
       {error ? <p className="osWarn" role="alert">{error}</p> : null}
@@ -253,7 +253,7 @@ function BriefPanel({ collaborationId, briefs }: { collaborationId: string; brie
       <details className="osEvidence" style={{ marginTop: 16 }}>
         <summary>{latest ? 'Colar uma versão nova' : 'Colar o briefing'}</summary>
         <label className="osField" style={{ marginTop: 12 }}>
-          <span>Cola o e-mail, o documento ou a mensagem</span>
+          <span>Cole o e-mail, o documento ou a mensagem</span>
           <textarea value={raw} onChange={(e) => setRaw(e.target.value)} rows={10} />
         </label>
         <div className="osActs">
@@ -306,7 +306,7 @@ function DeliveryPanel({
                 </p>
                 {d.feedback_class && d.feedback_class !== 'in_scope' ? (
                   <p className="osRowSub">
-                    Esta revisão está fora do âmbito ({label('feedbackClass', d.feedback_class)}):
+                    Esta revisão está fora do escopo ({label('feedbackClass', d.feedback_class)}):
                     é uma negociação nova,
                     não uma correção incluída.
                   </p>
@@ -339,7 +339,7 @@ function DeliveryPanel({
 
       <div className="osInline" style={{ marginTop: 16 }}>
         <label className="osField">
-          <span>Ligação do ficheiro</span>
+          <span>Ligação do arquivo</span>
           <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} />
         </label>
         <label className="osField">
@@ -388,7 +388,7 @@ function FeedbackForm({ deliverableId, collaborationId }: { deliverableId: strin
         <input type="text" value={text} onChange={(e) => setText(e.target.value)} />
       </label>
       <label className="osField">
-        <span>Está no âmbito?</span>
+        <span>Está no escopo?</span>
         <select value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
           <option value="in_scope">Sim, correção incluída</option>
           <option value="subjective">Revisão subjectiva</option>
@@ -414,7 +414,7 @@ function FeedbackForm({ deliverableId, collaborationId }: { deliverableId: strin
   );
 }
 
-/** O encerramento. Um projecto não acaba na entrega: acaba quando estas seis
+/** O encerramento. Um projeto não acaba na entrega: acaba quando estas seis
  *  caixas estiverem respondidas, mesmo que a resposta seja «não se aplica». */
 function ClosePanel({ collaborationId, closeout }: { collaborationId: string; closeout: Closeout }) {
   const [pending, start] = useTransition();

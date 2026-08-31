@@ -138,7 +138,7 @@ export type Notification = {
   href: string | null;
 };
 
-/** Tudo o que precisa dela, num sítio só e alcançável de qualquer ecrã.
+/** Tudo o que precisa dela, num sítio só e alcançável de qualquer tela.
  *
  *  Junta duas coisas que ela vive como uma: o que já passou do prazo, que é
  *  trabalho concreto e por isso vem primeiro, e os avisos do negócio, que são

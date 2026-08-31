@@ -11,7 +11,7 @@ type Item = { id: string; label: string; group: string; run: () => void };
 const semAcento = (v: string) =>
   v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-/** Salto rápido para qualquer área ou secção. Abre com Ctrl+K ou ⌘K. */
+/** Salto rápido para qualquer área ou seção. Abre com Ctrl+K ou ⌘K. */
 export default function Command() {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
@@ -47,7 +47,7 @@ export default function Command() {
     const secs = SECTIONS.map((s) => ({
       id: `s-${s.id}`,
       label: s.title,
-      group: 'Secção do site',
+      group: 'Seção do site',
       run: () => {
         router.push('/dashboard');
         /* a rota renderiza depois do push: esperar pelo elemento em vez de

@@ -8,7 +8,7 @@ const DRAFT = {
   base: { single_video_cents: null, unresolved_reason: 'Ainda não há tabela.' },
   paid_usage: { model: 'percent_of_base' as const, terms: { '30d': null, '3m': null, '6m': null, '12m': null } },
   minimum_project_floor_cents: null,
-  buyout_perpetual: { allowed: false, reason: 'Nunca por omissão.' },
+  buyout_perpetual: { allowed: false, reason: 'Nunca por padrão.' },
 };
 
 /** Uma política hipotética já preenchida, para provar que o motor calcula
@@ -24,7 +24,7 @@ const FILLED = {
   extra_hook_cents: 2500,
 };
 
-test('dinheiro em cêntimos: percentagem arredonda ao cêntimo', () => {
+test('dinheiro em cêntimos: porcentagem arredonda ao cêntimo', () => {
   assert.equal(applyPercent(13000, 50), 6500);
   assert.equal(applyPercent(13000, 70), 9100);
   assert.equal(applyPercent(333, 33), 110);
@@ -71,7 +71,7 @@ test('com período e plataformas, o uso pago calcula sobre a produção', () => 
   assert.equal(q.complete, true);
 });
 
-test('seis meses a 70% dá o total correcto', () => {
+test('seis meses a 70% dá o total correto', () => {
   const q = calculateQuote(
     FILLED,
     { videos: 1, paidUsage: true, usageTerm: '6m', platforms: ['Meta'], territories: ['PT'] },
@@ -100,7 +100,7 @@ test('whitelisting e exclusividade entram como decisão humana', () => {
   assert.equal(q.recommendedCents, 13000 + 6500 + 9100);
 });
 
-test('ficheiros em bruto são item separado, nunca incluídos', () => {
+test('arquivos em bruto são item separado, nunca incluídos', () => {
   const semRaw = calculateQuote(FILLED, { videos: 1 }, 'test');
   const comRaw = calculateQuote(FILLED, { videos: 1, rawFootage: true }, 'test');
   assert.equal(comRaw.recommendedCents! - semRaw.recommendedCents!, 3900);

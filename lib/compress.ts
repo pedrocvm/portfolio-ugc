@@ -1,6 +1,6 @@
 /** Reencoda o vídeo no browser antes de subir. O Storage recusa acima de
- *  50 MB e um reel de telemóvel passa disso à vontade — comprimindo primeiro,
- *  o ficheiro grande nunca sai do telemóvel e não há nada para apagar depois. */
+ *  50 MB e um reel de celular passa disso à vontade — comprimindo primeiro,
+ *  o arquivo grande nunca sai do celular e não há nada para apagar depois. */
 
 const MAX_SHORT = 1080;
 const MAX_LONG = 1920;
@@ -63,7 +63,7 @@ export async function compressVideo(
 
     /* a imagem vem do canvas e o som do próprio elemento. Sem captureStream
        (Safari) não há como levar a faixa de som: sobe o original, que um
-       ficheiro pesado ainda se resolve e um vídeo mudo não. */
+       arquivo pesado ainda se resolve e um vídeo mudo não. */
     const comSom = video as HTMLVideoElement & {
       captureStream?: () => MediaStream;
     };

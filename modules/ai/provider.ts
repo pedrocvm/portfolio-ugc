@@ -123,7 +123,7 @@ function toGeminiSchema(node: unknown): unknown {
 const geminiParts = (attachments: Attachment[] = []): Part[] =>
   attachments.map((a) =>
     a.kind === 'text'
-      ? ({ text: `Ficheiro anexado «${a.fileName}»:\n\n${a.data}` } as Part)
+      ? ({ text: `Arquivo anexado «${a.fileName}»:\n\n${a.data}` } as Part)
       : ({
           inlineData: { mimeType: a.kind === 'pdf' ? 'application/pdf' : a.mediaType, data: a.data },
         } as Part),
@@ -357,7 +357,7 @@ function anthropic(apiKey: string): Provider {
         } else if (a.kind === 'pdf') {
           last.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: a.data } });
         } else {
-          last.push({ type: 'text', text: `Ficheiro anexado «${a.fileName}»:\n\n${a.data}` });
+          last.push({ type: 'text', text: `Arquivo anexado «${a.fileName}»:\n\n${a.data}` });
         }
       }
       if (last.length && messages.length) {

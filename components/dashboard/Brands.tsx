@@ -75,7 +75,7 @@ export default function Brands({ brands }: { brands: Brand[] }) {
             <thead>
               <tr>
                 <th>Marca</th>
-                <th>Contacto</th>
+                <th>Contato</th>
                 <th>Abordada</th>
                 <th>Etapa</th>
                 <th>Próximo passo</th>
@@ -91,7 +91,7 @@ export default function Brands({ brands }: { brands: Brand[] }) {
                       <span className="sub">{b.instagram}</span>
                     ) : null}
                   </td>
-                  <td data-l="Contacto">
+                  <td data-l="Contato">
                     {b.contact || '—'}
                     <span className="sub">{channelLabel(b.channel)}</span>
                   </td>
@@ -176,18 +176,18 @@ function BrandForm({
         </div>
         <div className="fld">
           <label>
-            Contacto
+            Contato
             <input
               type="text"
               name="contact"
               defaultValue={brand?.contact}
-              placeholder="E-mail, telemóvel ou nome de quem responde"
+              placeholder="E-mail, celular ou nome de quem responde"
             />
           </label>
         </div>
         <div className="fld">
           <label>
-            Canal do contacto
+            Canal do contato
             <select name="channel" defaultValue={brand?.channel ?? 'instagram'}>
               {CHANNELS.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -226,7 +226,7 @@ function BrandForm({
               type="text"
               name="next_step"
               defaultValue={brand?.next_step}
-              placeholder="O que tens de fazer a seguir, e quando"
+              placeholder="O que você precisa fazer a seguir, e quando"
             />
           </label>
         </div>
@@ -240,7 +240,7 @@ function BrandForm({
       {state.error ? <p className="loginErr">{state.error}</p> : null}
       <div className="mediaRow">
         <button className="btn solid" type="submit" disabled={pending}>
-          {pending ? 'A guardar…' : 'Guardar'}
+          {pending ? 'A salvar…' : 'Salvar'}
         </button>
         <button type="button" className="btn quiet" onClick={onDone}>
           Cancelar

@@ -125,7 +125,7 @@ export default async function BrandPage({ params }: { params: Promise<{ id: stri
 
       {(contacts.data ?? []).length ? (
         <div className="osPanel">
-          <h3>Contactos</h3>
+          <h3>Contatos</h3>
           <div className="osRows">
             {(contacts.data ?? []).map((c) => (
               <div className="osRow" key={c.id}>

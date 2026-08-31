@@ -17,7 +17,7 @@ import { accessTokenFor, listMailboxes, markError, updateCursor, type Mailbox } 
  *      janela e por número; as seguintes usam o histórico do fornecedor. */
 
 /** Fora da conversa comercial: promoções, redes sociais, fóruns, spam e lixo.
- *  Ingerir a caixa inteira seria guardar muito mais dados pessoais do que a
+ *  Ingerenciar a caixa inteira seria salvar muito mais dados pessoais do que a
  *  operação precisa. */
 const BASE_QUERY =
   '-in:spam -in:trash -in:draft -category:promotions -category:social -category:forums';
@@ -42,7 +42,7 @@ export type SyncReport = {
 
 /** Percorre todas as caixas ligadas. Sincronizar só a primeira era o que
  *  acontecia antes de haver duas, e deixaria a segunda conta muda sem nada no
- *  ecrã a dizer porquê. Uma caixa a falhar não impede as outras. */
+ *  tela a dizer porquê. Uma caixa a falhar não impede as outras. */
 export async function syncGmail(flags: Flags, options: { limit?: number } = {}): Promise<SyncReport> {
   if (!flags.gmail_ingestion) {
     return { ...EMPTY, detail: 'o interruptor «Ingestão do Gmail» está desligado.' };
@@ -117,7 +117,7 @@ async function syncMailbox(flags: Flags, mailbox: Mailbox, options: { limit?: nu
   const db = supabaseService();
   const started = new Date().toISOString();
   // A caixa entra na chave: sem ela, a segunda conta a correr no mesmo minuto
-  // colidia com a unicidade de job_run e ficava sem registo.
+  // colidia com a unicidade de job_run e ficava sem registro.
   const idempotencyKey = `gmail-sync:${mailbox.id}:${started.slice(0, 16)}`;
 
   const { data: connection } = await db

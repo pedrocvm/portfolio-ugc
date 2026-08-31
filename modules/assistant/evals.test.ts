@@ -1,17 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { classifyDomain, memoryCandidate, needsConfirmation, shouldUseTools } from './domain.ts';
+import { classifyDomain, memoryCandidate, needsConfirmetion, shouldUseTools } from './domain.ts';
 
 /** Evals do Carol AI.
  *
  *  Estes são os casos que o briefing exige, escritos como testes em vez de um
  *  documento. Só testam o que é determinístico — a porta de domínio, a promoção
- *  a memória, o portão das acções sensíveis. O que depende do modelo não se
+ *  a memória, o portão das ações sensíveis. O que depende do modelo não se
  *  afirma aqui: um teste que precisa da API para passar é um teste que falha
  *  quando a rede tosse, e deixa de ser lido.
  *
  *  O que o modelo faz com os dados está garantido por construção, não por
- *  asserção: preço só sai de `calculate_price`, factos só saem de ferramentas,
+ *  asserção: preço só sai de `calculate_price`, fatos só saem de ferramentas,
  *  e conteúdo externo só entra como resultado de ferramenta em JSON. */
 
 test('eval 1 · «Quanto cobro da AllMatters?» é do negócio e usa ferramentas', () => {
@@ -33,7 +33,7 @@ test('eval 4 · escolher vídeo do portfólio para uma marca SaaS é do negócio
 });
 
 test('eval 5 · notícias de futebol ficam de fora e não gastam ferramentas', () => {
-  const gate = classifyDomain('Diz-me as últimas notícias de futebol');
+  const gate = classifyDomain('Me diga as últimas notícias de futebol');
   assert.equal(gate, 'off_topic');
   assert.equal(shouldUseTools(gate), false);
 });
@@ -59,19 +59,19 @@ test('eval 7 · pergunta sobre marca inexistente é processada; é a ausência d
 test('eval 8 · «o meu preço agora é 250€» não muda política em silêncio', () => {
   const m = memoryCandidate('o meu preço agora é 250€');
   assert.equal(m?.type, 'pricing_decision');
-  assert.equal(m?.needsConfirmation, true, 'preço canónico não pode mudar sozinho');
+  assert.equal(m?.needsConfirmetion, true, 'preço canónico não pode mudar sozinho');
 });
 
-test('eval 9 · «não quero mais trabalhar com haircare» fica guardado', () => {
+test('eval 9 · «não quero mais trabalhar com haircare» fica salvo', () => {
   const m = memoryCandidate('não quero mais trabalhar com haircare');
   assert.equal(m?.type, 'brand_preference');
-  assert.equal(m?.needsConfirmation, false);
+  assert.equal(m?.needsConfirmetion, false);
 });
 
 test('eval 10 · enviar um email passa sempre por confirmação', () => {
-  assert.equal(needsConfirmation('send_email'), true);
-  assert.equal(needsConfirmation('send_proposal'), true);
-  assert.equal(needsConfirmation('update_rights'), true);
+  assert.equal(needsConfirmetion('send_email'), true);
+  assert.equal(needsConfirmetion('send_proposal'), true);
+  assert.equal(needsConfirmetion('update_rights'), true);
 });
 
 test('extra · «qual câmara vale mais para UGC» é permitido', () => {

@@ -52,7 +52,7 @@ export async function requireUser() {
 }
 
 /** Mantido porque metade da aplicação antiga chama por este nome. Devolve o
- *  utilizador do Supabase, como sempre devolveu. */
+ *  usuário do Supabase, como sempre devolveu. */
 export async function currentEditor() {
   return (await currentUser())?.auth ?? null;
 }

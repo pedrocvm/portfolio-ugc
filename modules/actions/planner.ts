@@ -1,6 +1,6 @@
 /** Next Best Action.
  *
- *  O ecrã Hoje não monta cartões: lê `action_item`. Este módulo é quem decide
+ *  A tela Hoje não monta cartões: lê `action_item`. Este módulo é quem decide
  *  o que entra nessa lista, porquê, com que urgência e com que CTA.
  *
  *  Determinístico por desenho. A IA pode explicar melhor e escrever o
@@ -27,7 +27,7 @@ export const ACTION_CTA: Record<ActionType, string> = {
   respond: 'Responder',
   follow_up: 'Enviar follow-up',
   send_portfolio: 'Enviar portfólio',
-  ask_scope: 'Perguntar âmbito',
+  ask_scope: 'Perguntar escopo',
   send_rate: 'Enviar valor',
   negotiate: 'Rever negociação',
   create_proposal: 'Criar proposta',
@@ -41,7 +41,7 @@ export const ACTION_CTA: Record<ActionType, string> = {
   close: 'Fechar oportunidade',
   review: 'Rever',
   wait_expired: 'A espera terminou',
-  integration_fix: 'Reparar ligação',
+  integration_fix: 'Reparer ligação',
   chase_payment: 'Cobrar',
 };
 
@@ -178,7 +178,7 @@ const ASK_TO_ACTION: Record<string, { type: ActionType; title: string }> = {
   barter_offer: { type: 'negotiate', title: 'Avaliar a permuta oferecida' },
   affiliate_offer: { type: 'negotiate', title: 'Reenquadrar: a proposta é UGC, não afiliação' },
   media_kit_request: { type: 'negotiate', title: 'Reenquadrar: UGC para os canais da marca' },
-  call_request: { type: 'respond', title: 'Marcar a call e preparar o âmbito' },
+  call_request: { type: 'respond', title: 'Marcar a call e preparar o escopo' },
   brief: { type: 'request_brief', title: 'Validar o briefing recebido' },
 };
 
@@ -190,7 +190,7 @@ const ASK_TO_ACTION: Record<string, { type: ActionType; title: string }> = {
  *  o usa. */
 const ASK_NOUN: Record<string, string> = {
   portfolio_request: 'o portfólio',
-  rate_request: 'o teu valor',
+  rate_request: 'o seu valor',
   ads_rights: 'direitos para anúncios',
   usage_request: 'direitos de uso',
   barter_offer: 'uma permuta',
@@ -206,7 +206,7 @@ const askNames = (asks: readonly string[]) => {
   return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`;
 };
 
-/** Gera as ações que uma oportunidade justifica agora. Uma oportunidade activa
+/** Gera as ações que uma oportunidade justifica agora. Uma oportunidade ativa
  *  sem nada aqui e sem estado de espera é um bug — o Hoje mostra-a como
  *  «sem próxima ação» em vez de a esconder. */
 export function planForOpportunity(
@@ -291,7 +291,7 @@ export function planForOpportunity(
     out.push({
       type: 'create_proposal',
       title: 'Preparar a oferta',
-      reason: 'A oportunidade está qualificada mas ainda não tem valor nem âmbito enviados.',
+      reason: 'A oportunidade está qualificada mas ainda não tem valor nem escopo enviados.',
       cta: ACTION_CTA.create_proposal,
       dueAt: null,
       risk,
@@ -302,7 +302,7 @@ export function planForOpportunity(
     });
   }
 
-  // 5. Activa e sem nada que a puxe: a fila tem de dizer isso em voz alta.
+  // 5. Ativa e sem nada que a puxe: a fila tem de dizer isso em voz alta.
   if (
     isOpen(opp.stage) &&
     out.length === 0 &&

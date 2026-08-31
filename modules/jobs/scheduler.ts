@@ -47,7 +47,7 @@ export async function schedulerState(): Promise<SchedulerState> {
     return {
       ...blank,
       unavailableReason:
-        'O pg_cron ainda não está activo neste projeto. Aplica as migrações do CarolOS.',
+        'O pg_cron ainda não está ativo neste projeto. Aplica as migrações do CarolOS.',
     };
   }
 
@@ -119,13 +119,13 @@ export async function configureScheduler(): Promise<ConfigureResult> {
   const db = supabaseService();
 
   const { error: secretError } = await db.rpc('carolos_set_cron_secret', { p_secret: secret });
-  if (secretError) return { ok: false, error: 'Não foi possível guardar o segredo no Vault.' };
+  if (secretError) return { ok: false, error: 'Não foi possível salvar o segredo no Vault.' };
 
   const { error: settingError } = await db.from('app_setting').upsert({
     key: 'scheduler',
     value: asJson({ base_url: baseUrl.replace(/\/$/, ''), configured_at: new Date().toISOString() }),
   });
-  if (settingError) return { ok: false, error: 'Não foi possível guardar a base do endereço.' };
+  if (settingError) return { ok: false, error: 'Não foi possível salvar a base do endereço.' };
 
   const { data, error } = await db.rpc('carolos_apply_schedule');
   if (error) return { ok: false, error: 'Não foi possível aplicar o horário no pg_cron.' };

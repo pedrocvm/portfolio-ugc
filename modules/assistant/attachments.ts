@@ -2,7 +2,7 @@ import 'server-only';
 
 import { supabaseServer } from '@/lib/supabase/server';
 
-/** Ficheiros no chat.
+/** Arquivos no chat.
  *
  *  Dois modos, de propósito: um print de uma DM serve esta conversa e morre com
  *  ela; um contrato pode passar a fonte de verdade. Tornar tudo conhecimento
@@ -11,7 +11,7 @@ import { supabaseServer } from '@/lib/supabase/server';
 
 export const MAX_BYTES = 10 * 1024 * 1024;
 
-/** Lista fechada: o que o Claude lê, e nada mais. Um ficheiro que o modelo não
+/** Lista fechada: o que o Claude lê, e nada mais. Um arquivo que o modelo não
  *  entende só serve para ocupar espaço privado. */
 const ACCEPTED: Record<string, 'image' | 'pdf' | 'text'> = {
   'image/png': 'image',
@@ -28,9 +28,9 @@ export const kindFor = (mediaType: string) => ACCEPTED[mediaType] ?? null;
 
 /** O nome vem do disco de outra pessoa: pode trazer barras, `..`, ou nada. */
 export function safeName(raw: string): string {
-  const base = raw.split(/[\\/]/).pop() ?? 'ficheiro';
+  const base = raw.split(/[\\/]/).pop() ?? 'arquivo';
   const clean = base.replace(/[^\w.\- ]+/g, '').trim().slice(0, 120);
-  return clean || 'ficheiro';
+  return clean || 'arquivo';
 }
 
 export type StoredAttachment = {
@@ -48,20 +48,20 @@ export async function storeAttachment(input: {
   mode: 'chat' | 'knowledge';
 }): Promise<StoredAttachment | { error: string }> {
   const kind = kindFor(input.file.type);
-  if (!kind) return { error: `Não sei ler ${input.file.type || 'este tipo de ficheiro'}.` };
-  if (input.file.size > MAX_BYTES) return { error: 'Ficheiro acima de 10 MB.' };
-  if (input.file.size === 0) return { error: 'Ficheiro vazio.' };
+  if (!kind) return { error: `Não sei ler ${input.file.type || 'este tipo de arquivo'}.` };
+  if (input.file.size > MAX_BYTES) return { error: 'Arquivo acima de 10 MB.' };
+  if (input.file.size === 0) return { error: 'Arquivo vazio.' };
 
   const db = await supabaseServer();
   const name = safeName(input.file.name);
   // O caminho leva a conversa: assim apagar uma conversa sabe o que apagar, e
-  // dois ficheiros com o mesmo nome não se pisam.
+  // dois arquivos com o mesmo nome não se pisam.
   const path = `${input.threadId}/${crypto.randomUUID()}-${name}`;
 
   const { error: upload } = await db.storage
     .from('assistant')
     .upload(path, input.file, { contentType: input.file.type, upsert: false });
-  if (upload) return { error: `Não consegui guardar o ficheiro: ${upload.message}` };
+  if (upload) return { error: `Não consegui salvar o arquivo: ${upload.message}` };
 
   const { data, error } = await db
     .from('assistant_attachment')
@@ -78,15 +78,15 @@ export async function storeAttachment(input: {
     .maybeSingle();
 
   if (error || !data) {
-    // Sem linha, o ficheiro fica órfão no balde. Limpa-se já.
+    // Sem linha, o arquivo fica órfão no balde. Limpa-se já.
     await db.storage.from('assistant').remove([path]);
-    return { error: 'Não consegui registar o ficheiro.' };
+    return { error: 'Não consegui registar o arquivo.' };
   }
 
   return { id: data.id, kind, mediaType: input.file.type, fileName: name, byteSize: input.file.size, storagePath: path };
 }
 
-/** Traz os ficheiros para o formato que a Messages API entende.
+/** Traz os arquivos para o formato que a Messages API entende.
  *
  *  Texto vai como texto — mandar um CSV como base64 seria pagar tokens por
  *  ruído. Imagem e PDF vão em base64, que é o que o modelo lê nativamente:
@@ -128,7 +128,7 @@ export async function threadAttachments(threadId: string) {
   return data ?? [];
 }
 
-/** Promover um ficheiro a fonte de verdade é uma decisão, não um efeito de o
+/** Promover um arquivo a fonte de verdade é uma decisão, não um efeito de o
  *  ter arrastado para o chat. */
 export async function promoteToKnowledge(attachmentId: string, title: string) {
   const db = await supabaseServer();
@@ -137,11 +137,11 @@ export async function promoteToKnowledge(attachmentId: string, title: string) {
     .select('id, kind, storage_path, file_name')
     .eq('id', attachmentId)
     .maybeSingle();
-  if (!att) return { error: 'Ficheiro não encontrado.' };
+  if (!att) return { error: 'Arquivo não encontrado.' };
   if (att.kind !== 'text') return { error: 'Por agora só indexo texto e Markdown.' };
 
   const { data: blob } = await db.storage.from('assistant').download(att.storage_path);
-  if (!blob) return { error: 'Não consegui ler o ficheiro.' };
+  if (!blob) return { error: 'Não consegui ler o arquivo.' };
   const text = await blob.text();
 
   const { data: source, error } = await db

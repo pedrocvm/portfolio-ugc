@@ -30,7 +30,7 @@ export type JobResult = {
   job: JobName;
   status: 'success' | 'error' | 'skipped';
   detail: Record<string, unknown>;
-  /** Quantas coisas o trabalho tocou. Vai para o registo do disparo. */
+  /** Quantas coisas o trabalho tocou. Vai para o registro do disparo. */
   processed?: number;
 };
 
@@ -157,7 +157,7 @@ export async function runJob(job: JobName, opts: { manual?: boolean } = {}): Pro
 }
 
 /** Corre a cadeia toda pela ordem certa: sincronizar, processar o que ficou,
- *  actualizar prazos, expirar licenças e replanear. Uma só entrada de cron. */
+ *  atualizar prazos, expirar licenças e replanear. Uma só entrada de cron. */
 export async function runAllJobs(opts: { manual?: boolean } = {}): Promise<JobResult[]> {
   const order: JobName[] = [
     'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'upsell', 'plan',

@@ -1,6 +1,6 @@
 /** A taxonomia canónica de eventos e as chaves que impedem duplicados.
  *
- *  Um evento não é um resumo bonito escrito por um modelo. É um facto
+ *  Um evento não é um resumo bonito escrito por um modelo. É um fato
  *  estruturado com origem: `requested_paid_usage=true` sobrevive a um
  *  reprocessamento e a uma mudança de prompt; «a marca pareceu interessada»
  *  não sobrevive a nada. */
@@ -43,7 +43,7 @@ export const EVENT_LABEL: Partial<Record<EventType, string>> = {
   'brand.qualified': 'Marca qualificada',
   'brand.enriched': 'Marca enriquecida',
   'brand.merged': 'Marcas fundidas',
-  'contact.discovered': 'Contacto encontrado',
+  'contact.discovered': 'Contato encontrado',
   'outreach.sent': 'Abordagem enviada',
   'reply.received': 'Resposta recebida',
   'reply.classified': 'Resposta classificada',

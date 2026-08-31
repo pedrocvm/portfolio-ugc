@@ -103,7 +103,7 @@ export async function listHistory(
 const decode = (data: string) => Buffer.from(data.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
 
 /** Preferimos texto simples. Só se não houver é que o HTML é limpo — e o
- *  resultado é texto normalizado, não a mensagem inteira com marcação: guardar
+ *  resultado é texto normalizado, não a mensagem inteira com marcação: salvar
  *  MIME cru seria armazenar muito mais dados pessoais do que a operação
  *  precisa. */
 function extractBody(part: Part | undefined, depth = 0): { text: string; html: string } {
@@ -143,7 +143,7 @@ const stripHtml = (html: string) =>
     .trim();
 
 /** Corta a citação da mensagem anterior. Sem isto, cada resposta reingeria a
- *  conversa toda e o extractor lia factos antigos como se fossem novos. */
+ *  conversa toda e o extractor lia fatos antigos como se fossem novos. */
 const QUOTE_MARKERS = [
   /^On .+ wrote:$/m,
   /^Em .+ escreveu:$/m,
@@ -217,7 +217,7 @@ export function parseMessage(raw: RawMessage): ParsedMessage {
 }
 
 /** Cria um rascunho na caixa da Carol. É o mais longe que a automação vai:
- *  a mensagem fica escrita, ela lê, corrige e carrega em enviar. */
+ *  a mensagem fica escrita, ela lê, corrige e clica em enviar. */
 export async function createDraft(
   token: string,
   input: { to: string; subject: string; body: string; threadId?: string; from: string },

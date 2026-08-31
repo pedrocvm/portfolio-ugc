@@ -51,8 +51,8 @@ export type BarterResult = {
   countsAsCashRevenue: false;
 };
 
-/** Um produto que a Carol não compraria vale uma fracção da etiqueta.
- *  Os multiplicadores são grosseiros de propósito: o objectivo é impedir a
+/** Um produto que a Carol não compraria vale uma fração da etiqueta.
+ *  Os multiplicadores são grosseiros de propósito: o objetivo é impedir a
  *  ilusão do MSRP, não simular um mercado secundário. */
 const utilityMultiplier = (wouldBuy: boolean | null, interest: number | null) => {
   if (wouldBuy === true) return 1;
@@ -153,7 +153,7 @@ export function decideBarter(input: BarterInput): BarterResult {
       reasons.push('Produto que ela não usaria ocupa tempo de produção sem devolver valor.');
     } else {
       decision = 'ASK_INFO';
-      reasons.push('Sem política de preço não há régua económica; falta perceber orçamento e objectivo.');
+      reasons.push('Sem política de preço não há régua económica; falta perceber orçamento e objetivo.');
     }
   } else if (effectiveValueCents >= estimatedCostCents) {
     decision = 'ACCEPT_BARTER';

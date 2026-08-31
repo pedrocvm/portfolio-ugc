@@ -125,7 +125,7 @@ export function measure(mails: readonly SentMail[]): StyleProfile['measured'] {
 }
 
 /** Constrói e guarda o perfil. Sem Gmail não se inventa um: devolve null e
- *  quem escreve o email fica a saber que não tem voz de referência. */
+ *  quem escreve o email fica sabendo que não tem voz de referência. */
 export async function buildStyleProfile(language: 'pt' | 'en' = 'pt'): Promise<StyleProfile | null> {
   const { mails, checked } = await fetchOutreachHistory();
   if (!checked || mails.length < 3) return null;

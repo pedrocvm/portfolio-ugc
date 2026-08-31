@@ -24,7 +24,7 @@ type PromptShape = {
   schema: z.ZodType<unknown>;
 };
 
-/** O registo exporta prompts com tipos de entrada diferentes; para inspecção
+/** O registro exporta prompts com tipos de entrada diferentes; para inspecção
  *  interessa só a forma comum. */
 const PROMPTS: PromptShape[] = (Object.values(registry) as unknown[]).filter(
   (v): v is PromptShape =>
@@ -52,7 +52,7 @@ test('nenhum prompt trata skincare ou haircare como oportunidade', () => {
     // Se menciona, tem de ser para os excluir.
     assert.match(
       system,
-      /não são nichos|nunca os sugerir|fora da estratégia/,
+      /não são nichos|nunca os sugerenciar|fora da estratégia/,
       `${p.task}: menciona skincare sem o excluir`,
     );
   }
@@ -87,7 +87,7 @@ test('todo o schema estruturado tem confiança', () => {
   }
 });
 
-test('a extracção rejeita um valor de dinheiro que não seja inteiro em cêntimos', () => {
+test('a extração rejeita um valor de dinheiro que não seja inteiro em cêntimos', () => {
   const base = {
     reply_types: ['rate_request'], brand_name: null, contact_name: null, contact_role: null,
     product_or_campaign: null, requested_actions: [], compensation_model: null,

@@ -91,7 +91,7 @@ export default function CreativeIdeas({
 
       {!aiEnabled ? (
         <p className="osRowSub" style={{ marginTop: 14 }}>
-          Liga a camada de IA e os rascunhos em Definições para gerar hipóteses a partir do
+          Ligue a camada de IA e os rascunhos em Definições para gerar hipóteses a partir do
           repertório que já tens.
         </p>
       ) : (

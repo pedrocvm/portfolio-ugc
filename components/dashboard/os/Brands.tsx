@@ -54,7 +54,7 @@ export default function Brands({ rows }: { rows: BrandListRow[] }) {
     <>
       <div className="dashBar">
         <h1>Marcas</h1>
-        <span className="dashState">{active.length} activas</span>
+        <span className="dashState">{active.length} ativas</span>
         <Link className="chip" href="/dashboard/capture">Adicionar por captura</Link>
       </div>
 
@@ -64,7 +64,7 @@ export default function Brands({ rows }: { rows: BrandListRow[] }) {
       </p>
 
       <section className="osSection">
-        {active.length ? group(active) : <p className="osEmpty">Ainda não há marcas activas.</p>}
+        {active.length ? group(active) : <p className="osEmpty">Ainda não há marcas ativas.</p>}
       </section>
 
       {nurture.length ? (

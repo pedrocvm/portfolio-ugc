@@ -120,7 +120,7 @@ export async function recentActivity(limit = 40): Promise<TimelineEntry[]> {
   return (data ?? []).map(toEntry);
 }
 
-/** Marca a actividade mais recente na marca e na oportunidade. Materializado
+/** Marca a atividade mais recente na marca e na oportunidade. Materializado
  *  de propósito: a alternativa é um MAX(occurred_at) em cada listagem. */
 export async function touchActivity(
   db: Db,

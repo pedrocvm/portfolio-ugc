@@ -15,7 +15,7 @@ const MENU = readFileSync(path.join(ROOT, 'components/dashboard/Menu.tsx'), 'utf
 const hrefs = [...MENU.matchAll(/href: '([^']+)'/g)].map((m) => m[1]);
 
 /** Restos anteriores ao CarolOS: continuam a responder, ninguém lhes chama.
- *  Ficam nomeados aqui para o teste não passar por distracção. */
+ *  Ficam nomeados aqui para o teste não passar por distração. */
 const UNLINKED = new Set(['/dashboard/funnel', '/dashboard/library', '/dashboard/links']);
 
 function routes(dir: string, prefix = ''): string[] {

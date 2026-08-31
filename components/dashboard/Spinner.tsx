@@ -1,5 +1,5 @@
 /** Um arco fino a girar. O traço encurta e alonga enquanto roda, o que dá a
- *  sensação de progresso sem fingir uma percentagem que não sabemos. */
+ *  sensação de progresso sem fingir uma porcentagem que não sabemos. */
 export default function Spinner({ label }: { label?: string }) {
   return (
     <span className="spin" role="status" aria-live="polite">

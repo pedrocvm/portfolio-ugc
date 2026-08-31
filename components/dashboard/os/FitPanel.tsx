@@ -180,10 +180,10 @@ export default function FitPanel({
                   })
                 }
               >
-                Guardar
+                Salvar
               </button>
             </div>
-            <p className="osRowSub">O cálculo original fica guardado ao lado. Nada é apagado.</p>
+            <p className="osRowSub">O cálculo original fica salvo ao lado. Nada é apagado.</p>
           </details>
         </>
       ) : null}

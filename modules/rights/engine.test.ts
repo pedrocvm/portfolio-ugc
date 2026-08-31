@@ -77,7 +77,7 @@ test('uma licença terminada diz há quantos dias', () => {
   assert.equal((s as { daysAgo: number }).daysAgo, 12);
 });
 
-test('a exclusividade activa de outra marca é conflito', () => {
+test('a exclusividade ativa de outra marca é conflito', () => {
   const conflitos = exclusivityConflicts(
     [{ brandName: 'Cecotec', exclusivityScope: 'home tech', exclusivityEndAt: '2027-01-01' }],
     'home tech',
@@ -96,7 +96,7 @@ test('exclusividade já expirada não conflitua', () => {
   assert.deepEqual(conflitos, []);
 });
 
-test('exclusividade de âmbito vago avisa na mesma', () => {
+test('exclusividade de escopo vago avisa na mesma', () => {
   const conflitos = exclusivityConflicts(
     [{ brandName: 'X', exclusivityScope: null, exclusivityEndAt: null }],
     'pet tech',

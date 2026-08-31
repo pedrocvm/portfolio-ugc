@@ -49,7 +49,7 @@ export default function LibraryPicker({
           <p className="hint">A carregar…</p>
         ) : shown.length === 0 ? (
           <p className="hint">
-            A biblioteca ainda não tem nada deste tipo. Carrega ficheiros no ecrã
+            A biblioteca ainda não tem nada deste tipo. Carrega arquivos na tela
             Biblioteca e volta aqui.
           </p>
         ) : (

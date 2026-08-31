@@ -61,7 +61,7 @@ export default async function AppLayout({
             </form>
           }
         />
-          {/* Fixo no topo, em todos os ecrãs. */}
+          {/* Fixo no topo, em todos as telas. */}
           <Notifications items={alerts} />
           <Command />
           {/* Só na área privada, e só com a bandeira aberta: o portfólio público

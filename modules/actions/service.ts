@@ -6,7 +6,7 @@ import { recordEvent, type Db } from '@/modules/activity/service';
 import { expiryStatus } from '@/modules/rights/engine';
 import { planForOpportunity, priorityScore, type ActionType, type OpportunitySnapshot, type PlannedAction, type Risk } from './planner';
 
-/** O planeador corre aqui e escreve em `action_item`. O ecrã Hoje só lê.
+/** O planeador corre aqui e escreve em `action_item`. A tela Hoje só lê.
  *
  *  Reentrante por desenho: correr duas vezes seguidas não duplica cartões
  *  (a `dedupe_key` trata disso) e fecha os que deixaram de fazer sentido. */
@@ -192,7 +192,7 @@ async function snapshotOpportunities(db: Db, opportunityIds?: string[]) {
     }
   }
 
-  // Pedidos e riscos em aberto vêm dos eventos de extracção mais recentes.
+  // Pedidos e riscos em aberto vêm dos eventos de extração mais recentes.
   const { data: extractions } = await db
     .from('activity_event')
     .select('opportunity_id, payload, occurred_at')
@@ -291,7 +291,7 @@ export async function replanGlobalActions(db: Db): Promise<number> {
         title: status.state === 'expired' ? 'Licença de uso expirada' : 'Licença de uso a expirar',
         reason:
           status.state === 'expired'
-            ? `A licença terminou há ${status.daysAgo} dias. Se ainda está a correr, é uso não autorizado.`
+            ? `A licença terminou há ${status.daysAgo} dias. Se ainda está rodando, é uso não autorizado.`
             : `Faltam ${status.daysLeft} dias. É o momento de propor renovação com contexto de campanha.`,
         evidence: asJson({ licenseId: l.id, endAt: l.end_at, platforms: l.platforms }),
         risk: 'medium' as const,

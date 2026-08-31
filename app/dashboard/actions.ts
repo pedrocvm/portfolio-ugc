@@ -14,7 +14,7 @@ export type Result = { ok?: true; error?: string };
 export async function signIn(_prev: Result, form: FormData): Promise<Result> {
   const id = String(form.get('id') ?? '').trim();
   const password = String(form.get('password') ?? '');
-  if (!id || !password) return { error: 'Preenche o utilizador e a palavra-passe.' };
+  if (!id || !password) return { error: 'Preenche o usuário e a palavra-passe.' };
 
   const email = id.includes('@')
     ? id
@@ -24,7 +24,7 @@ export async function signIn(_prev: Result, form: FormData): Promise<Result> {
 
   const supabase = await supabaseServer();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: 'Utilizador ou palavra-passe incorretos.' };
+  if (error) return { error: 'Usuário ou palavra-passe incorretos.' };
   redirect('/dashboard');
 }
 
@@ -48,11 +48,11 @@ export async function saveDraft(patch: Record<string, unknown>): Promise<Result>
   await requireEditor();
   const current = await getDraft().catch(() => null);
   if (!current) {
-    return { error: 'Não foi possível guardar: o rascunho atual não pôde ser lido. Volta a tentar.' };
+    return { error: 'Não foi possível salvar: o rascunho atual não pôde ser lido. Volta a tentar.' };
   }
 
   const error = await write('draft', merge(DEFAULT_CONTENT, { ...current, ...patch }));
-  if (error) return { error: `Não foi possível guardar: ${error}` };
+  if (error) return { error: `Não foi possível salvar: ${error}` };
   revalidatePath('/preview');
   return { ok: true };
 }

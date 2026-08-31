@@ -13,7 +13,7 @@ import type { PaymentRow, RelationshipRow, RevenueSummary } from '@/modules/reve
  *
  *  Dinheiro e permuta aparecem sempre em colunas separadas. Somá-los daria à
  *  Carol a sensação de estar a ganhar mais do que ganha, que é exactamente o
- *  contrário do que este ecrã existe para fazer. */
+ *  contrário do que esta tela existe para fazer. */
 
 export default function Revenue({
   summary, payments, licenses, relationships, brands,
@@ -59,7 +59,7 @@ export default function Revenue({
       {noEnd.length ? (
         <p className="osWarn">
           {noEnd.length === 1 ? 'Uma licença de uso pago não tem' : `${noEnd.length} licenças de uso pago não têm`}{' '}
-          data de fim registada. Sem fim escrito, é perpetuidade por omissão.
+          data de fim registada. Sem fim escrito, é perpetuidade por padrão.
         </p>
       ) : null}
 
@@ -125,7 +125,7 @@ export default function Revenue({
         ) : (
           <p className="osEmpty">
             Ainda não há valores registados. O histórico anterior ao CarolOS não foi reconstruído —
-            a partir daqui fica tudo guardado.
+            a partir daqui fica tudo salvo.
           </p>
         )}
         <AddPayment brands={brands} />
@@ -291,7 +291,7 @@ function AddLicense({ brands }: { brands: { id: string; name: string }[] }) {
           </select>
         </label>
         <label className="osField">
-          <span>Começa a</span>
+          <span>Comece a</span>
           <input type="date" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
         </label>
         <label className="osField">

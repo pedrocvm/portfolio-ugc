@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-/** Os avisos proactivos no Hoje.
+/** Os avisos proativos no Hoje.
  *
  *  Não são notificações: não piscam, não interrompem, e cada um leva ao sítio
  *  onde se resolve. Ficam abaixo do resumo e acima da fila, que é a ordem em

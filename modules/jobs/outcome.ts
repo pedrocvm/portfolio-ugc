@@ -1,6 +1,6 @@
 /** O resultado de um trabalho, dito em português.
  *
- *  Antes isto era `JSON.stringify(detail)` no ecrã: a Carol carregava em
+ *  Antes isto era `JSON.stringify(detail)` na tela: a Carol carregava em
  *  «Sincronizar Gmail» e recebia `{"mailbox":null,"status":"success",
  *  "processed":0,...}`. É a máquina a falar consigo própria à frente de quem a
  *  usa — e num sítio onde ela só quer saber se aconteceu alguma coisa. */
@@ -56,7 +56,7 @@ export function jobOutcome(job: string, detail: unknown): string {
 
     case 'plan': {
       const bits = list([
-        n(d.created) ? `${plural(n(d.created), 'acção nova', 'acções novas')}` : '',
+        n(d.created) ? `${plural(n(d.created), 'ação nova', 'ações novas')}` : '',
         n(d.closed) ? `${plural(n(d.closed), 'fechada', 'fechadas')}` : '',
         n(d.woken) ? `${plural(n(d.woken), 'adiada acordou', 'adiadas acordaram')}` : '',
       ]);

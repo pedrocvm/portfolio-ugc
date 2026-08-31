@@ -17,7 +17,7 @@ const parada = (b: Brand) =>
 export default function Funnel({ brands }: { brands: Brand[] }) {
   const [pending, start] = useTransition();
 
-  /* a coluna muda no ecrã à frente do servidor: arrastar tem de responder no
+  /* a coluna muda na tela à frente do servidor: arrastar tem de responder no
      instante, não daqui a um pedido */
   const [moved, setMoved] = useState<Record<string, Stage>>({});
   const router = useRouter();
@@ -55,7 +55,7 @@ export default function Funnel({ brands }: { brands: Brand[] }) {
 
       {brands.length === 0 ? (
         <p className="libEmpty">
-          O funil enche-se sozinho à medida que registas marcas. Começa por
+          O funil enche-se sozinho à medida que registra marcas. Comece por
           registar a primeira em Marcas.
         </p>
       ) : (

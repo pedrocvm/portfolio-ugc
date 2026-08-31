@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { jobOutcome } from './outcome.ts';
 
-test('nunca sai JSON para o ecrã', () => {
+test('nunca sai JSON para a tela', () => {
   const casos: [string, unknown][] = [
     ['gmail-sync', { processed: 3, created: 1, duplicates: 2, needsReview: 0, irrelevant: 0 }],
     ['process-pending', { created: 2, duplicate: 1 }],

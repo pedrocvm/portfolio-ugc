@@ -9,7 +9,7 @@ import type { CaptureDraft } from '@/modules/capture/service';
 
 /** Captura rápida.
  *
- *  O objectivo é dez segundos: colar e confirmar. Não há campos obrigatórios,
+ *  O objetivo é dez segundos: colar e confirmar. Não há campos obrigatórios,
  *  não há formulário de marca. O que o sistema conseguir ler, lê; o que não
  *  conseguir, pergunta numa linha. */
 
@@ -37,7 +37,7 @@ export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
       setError('');
 
       // O print sobe primeiro, para o bucket privado; a captura guarda só o
-      // caminho. O ficheiro nunca passa por uma tabela.
+      // caminho. O arquivo nunca passa por uma tabela.
       let storagePath: string | null = null;
       if (file) {
         const form = new FormData();
@@ -62,7 +62,7 @@ export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
       </div>
 
       <p className="osCaptureHint">
-        Cola o que tiveres — o link do perfil, a mensagem que recebeste, a página do produto. O
+        Cole o que tiver — o link do perfil, a mensagem que recebeste, a página do produto. O
         sistema tira daí o que conseguir e pede-te só o que faltar.
       </p>
 
@@ -92,7 +92,7 @@ export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
         ) : null}
 
         <label className="osField">
-          <span>{kind === 'screenshot' ? 'Alguma coisa a acrescentar' : 'Cola aqui'}</span>
+          <span>{kind === 'screenshot' ? 'Alguma coisa a acrescentar' : 'Cole aqui'}</span>
           <textarea
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
@@ -105,7 +105,7 @@ export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
         </label>
 
         <label className="osField">
-          <span>Nota, se quiseres</span>
+          <span>Nota, se quiser</span>
           <input
             type="text"
             value={note}

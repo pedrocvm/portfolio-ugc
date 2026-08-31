@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { Notification } from '@/modules/assistant/service';
 
-/** O que precisa dela, em qualquer ecrã.
+/** O que precisa dela, em qualquer tela.
  *
  *  O Hoje é a casa da fila, mas ela passa o dia dentro de uma marca ou de um
  *  documento — e o que está atrasado não deixa de estar atrasado por ela ter
@@ -43,7 +43,7 @@ export default function Notifications({ items }: { items: Notification[] }) {
         aria-expanded={open}
         aria-label={
           items.length === 0
-            ? 'Nada precisa de ti'
+            ? 'Nada precisa de você'
             : `${items.length} ${items.length === 1 ? 'coisa precisa' : 'coisas precisam'} de ti`
         }
         onClick={() => setOpen((v) => !v)}
@@ -60,9 +60,9 @@ export default function Notifications({ items }: { items: Notification[] }) {
       </button>
 
       {open ? (
-        <div className="notifBox" role="dialog" aria-label="O que precisa de ti">
+        <div className="notifBox" role="dialog" aria-label="O que precisa de você">
           <header>
-            <b>Precisa de ti</b>
+            <b>Precisa de você</b>
             <Link href="/dashboard" onClick={() => setOpen(false)}>
               Ver o dia
             </Link>

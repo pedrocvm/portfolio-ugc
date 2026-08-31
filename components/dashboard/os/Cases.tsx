@@ -8,7 +8,7 @@ import type { CaseRow } from '@/modules/cases/service';
 
 /** Cases e ponte para o portfólio.
  *
- *  A verificação de permissão é feita no servidor. O botão desactivado aqui é
+ *  A verificação de permissão é feita no servidor. O botão desativado aqui é
  *  cortesia, não segurança: nada sai para o site sem a marca ter autorizado
  *  por escrito, e é o servidor que o garante. */
 
@@ -142,11 +142,11 @@ function CaseCard({
               onClick={() =>
                 start(async () => {
                   await saveCase(study.id, { title, challenge, hypothesis, result });
-                  setMessage('Guardado.');
+                  setMessage('Salvo.');
                 })
               }
             >
-              Guardar
+              Salvar
             </button>
           </div>
 
@@ -182,7 +182,7 @@ function CaseCard({
           ) : (
             <>
               <p className="osRowSub" style={{ marginTop: 16 }}>
-                Escolhe os ficheiros da biblioteca que vão para o site
+                Escolha os arquivos da biblioteca que vão para o site
               </p>
               <div className="osKinds">
                 {media.map((m) => (

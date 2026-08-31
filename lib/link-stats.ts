@@ -21,7 +21,7 @@ export type Resumo = {
   dias: number;
   visitas: number;
   cliques: number;
-  contactos: number;
+  contatos: number;
   partilhas: number;
   /** Por cada cem visitas, quantas tocaram nalguma coisa. */
   taxa: number;
@@ -59,7 +59,7 @@ export function resumir(rows: LinkEventRow[], dias: number, agora = new Date()):
   const doTipo = (t: LinkEventRow['type']) => dentro.filter((r) => r.type === t);
   const vistas = doTipo('view');
   const cliques = doTipo('click');
-  const contactos = doTipo('contact');
+  const contatos = doTipo('contact');
 
   /* a grelha tem de ter todos os dias, mesmo os que ninguém abriu: um gráfico
      que salta os dias vazios mente sobre o ritmo */
@@ -77,17 +77,17 @@ export function resumir(rows: LinkEventRow[], dias: number, agora = new Date()):
     if (r.type === 'click' || r.type === 'contact') casa.cliques++;
   }
 
-  const tocaram = cliques.length + contactos.length;
+  const tocaram = cliques.length + contatos.length;
 
   return {
     dias,
     visitas: vistas.length,
     cliques: cliques.length,
-    contactos: contactos.length,
+    contatos: contatos.length,
     partilhas: doTipo('share').length,
     taxa: vistas.length ? Math.round((tocaram / vistas.length) * 100) : 0,
     porDia: [...grelha].map(([dia, v]) => ({ dia, ...v })),
-    ligacoes: contar([...cliques, ...contactos].map((r) => r.target || '—')),
+    ligacoes: contar([...cliques, ...contatos].map((r) => r.target || '—')),
     origens: contar(
       vistas.map((r) => r.utm_source || r.referrer || 'Direto'),
     ),

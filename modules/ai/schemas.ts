@@ -294,7 +294,7 @@ export const OutreachResearchSchema = z.object({
       source: z.string().nullable(),
     })
     .nullable(),
-  /** Cada facto usado, com o sítio onde foi visto. */
+  /** Cada fato usado, com o sítio onde foi visto. */
   sources: z.array(z.object({ label: z.string(), url: z.string().nullable() })),
   /** Sinais para o motor de encaixe, de 0 a 5. Desconhecido é null, não zero. */
   fit_signals: z.record(z.string(), z.number().nullable()),

@@ -10,7 +10,7 @@ export default function LoginForm() {
     <form action={action}>
       <div className="fld">
         <label>
-          Utilizador
+          Usuário
           <input
             type="text"
             name="id"

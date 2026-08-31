@@ -96,7 +96,7 @@ const searchBrands = define(
 
 const getBrand = define(
   'get_brand',
-  'O dossier completo de uma marca: contactos, oportunidades, últimas actividades, direitos e trabalhos. Usa isto para «o que sabemos sobre X».',
+  'O dossier completo de uma marca: contatos, oportunidades, últimas atividades, direitos e trabalhos. Usa isto para «o que sabemos sobre X».',
   z.object({ brand_id: z.string().uuid() }),
   async ({ brand_id }) => {
     const db = await supabaseServer();
@@ -164,7 +164,7 @@ const searchOpportunities = define(
   'Lista oportunidades por etapa, ou as que estão paradas há N dias. Usa isto para «o que está parado» e «quais são tech».',
   z.object({
     stage: z.string().optional(),
-    stale_days: z.number().optional().describe('só as sem actividade há mais dias do que isto'),
+    stale_days: z.number().optional().describe('só as sem atividade há mais dias do que isto'),
     limit: z.number().optional(),
   }),
   async ({ stage, stale_days, limit }) => {
@@ -451,7 +451,7 @@ const searchPortfolio = define(
 
 const searchDocuments = define(
   'search_documents',
-  'Propostas, contratos e acordos de utilização guardados no CarolOS.',
+  'Propostas, contratos e acordos de utilização salvos no CarolOS.',
   z.object({ query: z.string().optional(), brand_id: z.string().uuid().optional(), limit: z.number().optional() }),
   async ({ query, brand_id, limit }) => {
     const db = await supabaseServer();
@@ -469,7 +469,7 @@ const searchDocuments = define(
 
 const getRights = define(
   'get_rights',
-  'Licenças de uso: âmbito, canais, início e fim. Usa isto para «quando expira o usage de X».',
+  'Licenças de uso: escopo, canais, início e fim. Usa isto para «quando expira o usage de X».',
   z.object({ brand_id: z.string().uuid().optional(), expiring_days: z.number().optional() }),
   async ({ brand_id, expiring_days }) => {
     const db = await supabaseServer();
@@ -498,7 +498,7 @@ const getRights = define(
 
 const searchBusinessMemory = define(
   'search_business_memory',
-  'As preferências, objectivos e decisões que a Carol já declarou. Consulta isto antes de recomendar seja o que for.',
+  'As preferências, objetivos e decisões que a Carol já declarou. Consulta isto antes de recomendar seja o que for.',
   z.object({ type: z.string().optional(), query: z.string().optional() }),
   async ({ type, query }) => {
     const db = await supabaseServer();
@@ -551,8 +551,8 @@ const createMemoryCandidate = define(
   async ({ type, subject, content }) => {
     const db = await supabaseServer();
     const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
-    if (!me) throw new Error('create_memory_candidate: sem utilizador');
-    // Preço e política nunca entram activos: esperam por uma pessoa.
+    if (!me) throw new Error('create_memory_candidate: sem usuário');
+    // Preço e política nunca entram ativos: esperam por uma pessoa.
     const status = type === 'pricing_decision' || type === 'policy' ? 'proposed' : 'active';
     const { data, error } = await db
       .from('business_memory')
@@ -560,7 +560,7 @@ const createMemoryCandidate = define(
       .select('id, status')
       .maybeSingle();
     if (error) throw new Error(`create_memory_candidate: ${error.message}`);
-    return { data: { id: data?.id, status: data?.status, needsConfirmation: status === 'proposed' }, sources: [] };
+    return { data: { id: data?.id, status: data?.status, needsConfirmetion: status === 'proposed' }, sources: [] };
   },
 );
 
@@ -620,7 +620,7 @@ const createFollowupDraft = define(
     const { error } = await db.from('follow_up').update({ draft_text: text }).eq('id', followup_id);
     if (error) throw new Error(`create_followup_draft: ${error.message}`);
     return {
-      data: { saved: true, sent: false, note: 'Rascunho guardado. O envio passa por ela.' },
+      data: { saved: true, sent: false, note: 'Rascunho salvo. O envio passa por ela.' },
       sources: [{ id: followup_id, type: 'followup' as const, label: 'Follow-up', at: null, href: '/dashboard/followups' }],
     };
   },
@@ -628,7 +628,7 @@ const createFollowupDraft = define(
 
 const createNote = define(
   'create_note',
-  'Deixa uma nota no registo de actividade de uma marca ou oportunidade, para não se perder o que se concluiu.',
+  'Deixa uma nota no registro de atividade de uma marca ou oportunidade, para não se perder o que se concluiu.',
   z.object({
     brand_id: z.string().uuid().optional(),
     opportunity_id: z.string().uuid().optional(),
@@ -668,7 +668,7 @@ const snoozeFollowupTool = define(
 
 const getInsights = define(
   'get_insights',
-  'Os avisos proactivos abertos: oportunidades paradas, licenças a expirar, dinheiro por receber, janelas de upsell.',
+  'Os avisos proativos abertos: oportunidades paradas, licenças a expirar, dinheiro por receber, janelas de upsell.',
   z.object({ limit: z.number().optional() }),
   async ({ limit }) => {
     const db = await supabaseServer();
@@ -693,7 +693,7 @@ const getInsights = define(
 
 const getDailyOutreach = define(
   'get_daily_outreach_batch',
-  'As marcas que a prospecção encontrou hoje, com encaixe, porquê, contacto e o email preparado.',
+  'As marcas que a prospecção encontrou hoje, com encaixe, porquê, contato e o email preparado.',
   z.object({ niche: z.string().optional(), limit: z.number().optional() }),
   async ({ niche, limit }) => {
     const db = await supabaseServer();
@@ -759,7 +759,7 @@ const updateOutreachDraftTool = define(
       })
       .eq('id', candidate_id);
     if (error) throw new Error(`update_outreach_draft: ${error.message}`);
-    return { data: { saved: true, sent: false, note: 'Guardado. O envio continua a passar por ela.' }, sources: [] };
+    return { data: { saved: true, sent: false, note: 'Salvo. O envio continua a passar por ela.' }, sources: [] };
   },
 );
 
@@ -777,7 +777,7 @@ const approveOutreachTool = define(
 
 const prepareOutreachSend = define(
   'prepare_outreach_send',
-  'Verifica se uma abordagem está pronta a sair e devolve exactamente o que sairia. NÃO envia — o envio é sempre uma acção da Carol na interface.',
+  'Verifica se uma abordagem está pronta a sair e devolve exactamente o que sairia. NÃO envia — o envio é sempre uma ação da Carol na interface.',
   z.object({ candidate_id: z.string().uuid() }),
   async ({ candidate_id }) => {
     const db = await supabaseServer();
@@ -801,7 +801,7 @@ const prepareOutreachSend = define(
         subject: data.subject,
         body: data.body,
         emailConfidence: data.email_confidence,
-        note: 'Nada foi enviado. Para enviar, ela carrega em Enviar na tela de Prospecção.',
+        note: 'Nada foi enviado. Para enviar, ela clica em Enviar na tela de Prospecção.',
       },
       sources: [],
     };

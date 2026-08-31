@@ -22,7 +22,7 @@ const REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
  *  que existe é envio a pedido de uma pessoa. Nenhum trabalho de fundo envia —
  *  a prospecção diária pesquisa, escreve e prepara, e pára. A regra 3 do
  *  CarolOS é que nada sai sozinho, e continua a ser verdade: sai quando ela
- *  carrega em enviar. */
+ *  clica em enviar. */
 export const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/gmail.compose',
@@ -45,7 +45,7 @@ export function googleConfig(): GoogleConfig | null {
 
 export const googleConfigured = () => googleConfig() !== null;
 
-/** O `state` é assinado e amarrado ao id do utilizador da sessão. Sem isto,
+/** O `state` é assinado e amarrado ao id do usuário da sessão. Sem isto,
  *  qualquer pessoa podia mandar a Carol a um callback preparado e ligar a
  *  conta de Gmail dela a outro sítio. */
 export async function buildState(appUserId: string): Promise<string> {
@@ -149,7 +149,7 @@ export async function saveConnection(input: {
   const db = supabaseService();
 
   // Numa reautorização o Google pode não reenviar o refresh token. Sobrepor o
-  // que está guardado com `null` matava a ligação em silêncio.
+  // que está salvo com `null` matava a ligação em silêncio.
   const encryptedRefresh = input.refreshToken ? await encryptSecret(input.refreshToken) : undefined;
 
   const { error } = await db.from('integration_connection').upsert(

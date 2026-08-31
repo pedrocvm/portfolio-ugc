@@ -42,7 +42,7 @@ const STATUS: Record<string, string> = {
   get_rights: 'A verificar direitos…',
   search_business_memory: 'A lembrar-me…',
   search_knowledge: 'A consultar as fontes…',
-  create_memory_candidate: 'A guardar…',
+  create_memory_candidate: 'A salvar…',
   get_daily_outreach_batch: 'A ver as marcas de hoje…',
   get_outreach_candidate: 'A ler a pesquisa da marca…',
   update_outreach_draft: 'A reescrever o email…',
@@ -142,7 +142,7 @@ export async function* runAssistant(input: {
   const conversation: ProviderTurn[] = recent.map((t) => ({ role: t.role, text: t.content }));
   conversation.push({ role: 'user', text: input.userMessage });
 
-  // Ficheiros que ela anexou. Imagem e PDF vão nativos; texto vai como texto.
+  // Arquivos que ela anexou. Imagem e PDF vão nativos; texto vai como texto.
   const files = await loadForModel(input.attachmentIds ?? []);
   const attachments = files.map((f) =>
     f.kind === 'image'
@@ -175,7 +175,7 @@ export async function* runAssistant(input: {
           }),
         },
         turns: conversation,
-        // Os ficheiros só vão na primeira volta: repeti-los a cada ronda de
+        // Os arquivos só vão na primeira volta: repeti-los a cada ronda de
         // ferramentas era pagar o mesmo PDF quatro vezes.
         attachments: rounds === 0 ? attachments : undefined,
         tools: rounds < cfg.maxToolRounds && shouldUseTools(gate) ? toolSpecs() : undefined,
@@ -272,7 +272,7 @@ export async function* runAssistant(input: {
       }).eq('id', run.id);
     }
 
-    // A conversa cresceu: guarda-se tudo, mas o que vai para o modelo passa a
+    // A conversa cresceu: salva-se tudo, mas o que vai para o modelo passa a
     // ser resumo + fim. Sem isto pagava-se o princípio da conversa para sempre.
     await summariseThread(input.threadId).catch(() => {});
 
@@ -287,7 +287,7 @@ export async function* runAssistant(input: {
           content: candidate.content.slice(0, 600),
           source: 'conversation',
           source_message_id: userRow?.id ?? null,
-          status: candidate.needsConfirmation ? 'proposed' : 'active',
+          status: candidate.needsConfirmetion ? 'proposed' : 'active',
         });
       }
     }

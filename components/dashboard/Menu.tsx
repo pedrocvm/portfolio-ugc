@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
  *  dobrado.
  *
  *  Eram dezoito destinos abertos ao mesmo tempo — mais alto do que qualquer
- *  ecrã, e a barra transbordava. */
+ *  tela, e a barra transbordava. */
 export const PINNED = [
   { href: '/dashboard', label: 'Hoje' },
   { href: '/dashboard/capture', label: 'Captura' },
@@ -67,7 +67,7 @@ export const MENU = [
   ),
 ];
 
-/** «/dashboard» só está activo em si mesmo; as outras rotas contam também os
+/** «/dashboard» só está ativo em si mesmo; as outras rotas contam também os
  *  filhos, para uma oportunidade aberta manter «Oportunidades» aceso. */
 const isCurrent = (path: string, href: string) =>
   href === '/dashboard' ? path === href : path === href || path.startsWith(`${href}/`);

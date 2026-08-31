@@ -4,7 +4,7 @@ import { relativeDays } from '@/lib/time';
 import { STAGES, STAGE_LABEL, isClosed, type Stage } from '@/modules/opportunities/domain';
 import type { OpportunityRow } from '@/modules/opportunities/service';
 
-/** O funil existe para ver excepções, não para arrastar cartões o dia todo.
+/** O funil existe para ver exceções, não para arrastar cartões o dia todo.
  *  A coluna que interessa é a que tem oportunidades sem próxima ação. */
 
 const OPEN: Stage[] = [
@@ -48,7 +48,7 @@ export default function Opportunities({ rows }: { rows: OpportunityRow[] }) {
 
       {stuck.length ? (
         <p className="osWarn">
-          {stuck.length === 1 ? 'Uma oportunidade activa está' : `${stuck.length} oportunidades activas estão`}{' '}
+          {stuck.length === 1 ? 'Uma oportunidade ativa está' : `${stuck.length} oportunidades ativas estão`}{' '}
           sem próxima ação nem estado de espera. É assim que um lead morno morre.
         </p>
       ) : null}
@@ -85,7 +85,7 @@ export default function Opportunities({ rows }: { rows: OpportunityRow[] }) {
       {nurture.length ? (
         <section className="osSection">
           <h2>Nurture</h2>
-          <p className="osNote">Sem sequência activa. Voltam quando houver contexto novo.</p>
+          <p className="osNote">Sem sequência ativa. Voltam quando houver contexto novo.</p>
           <div className="osRows">
             {nurture.map((o) => (
               <Link className="osRow" key={o.id} href={`/dashboard/opportunities/${o.id}`}>

@@ -1,7 +1,7 @@
 /** Carol Brand Fit Score.
  *
  *  O score serve para ordenar atenção, não para descartar marcas: uma marca
- *  atractiva com score baixo continua abordável, e por isso existe override.
+ *  atrativa com score baixo continua abordável, e por isso existe override.
  *
  *  Três regras que o código tem de garantir e o prompt não garantiria:
  *   1. tech-first pesa a favor;
@@ -50,7 +50,7 @@ export const FIT_LABEL: Record<FitCriterion, string> = {
   economics: 'Economia da colaboração',
   recurring_demand: 'Procura criativa recorrente',
   aesthetic: 'Alinhamento estético',
-  contact_access: 'Contacto acessível',
+  contact_access: 'Contato acessível',
   logistics: 'Logística e idioma',
   portfolio_value: 'Valor estratégico para o portfólio',
 };
@@ -60,7 +60,7 @@ export const FIT_LABEL: Record<FitCriterion, string> = {
  *  briefing proíbe. Um critério sem sinal fica em 3 (neutro) e é assinalado. */
 export type FitSignals = Partial<Record<FitCriterion, number>> & {
   nicheId?: string | null;
-  /** Sinais brutos que justificam as notas, guardados para explicabilidade. */
+  /** Sinais brutos que justificam as notas, salvos para explicabilidade. */
   evidence?: Record<string, string>;
 };
 
@@ -99,9 +99,9 @@ export function bandFor(score: number): FitBand {
 export const BAND_ACTION: Record<FitBand, string> = {
   A: 'Prioridade A — pesquisa profunda e abordagem muito personalizada.',
   B: 'Prioridade B — vale abordar com um ângulo concreto.',
-  C: 'Prioridade C — só com produto forte, timing ou contacto quente.',
+  C: 'Prioridade C — só com produto forte, timing ou contato quente.',
   low: 'Prioridade baixa — pouca energia até aparecer sinal novo.',
-  ignore: 'Sem prospecção activa — manter apenas em observação.',
+  ignore: 'Sem prospecção ativa — manter apenas em observação.',
 };
 
 const clamp = (v: number) => Math.max(0, Math.min(5, v));
@@ -161,7 +161,7 @@ export function scoreBrandFit(signals: FitSignals): FitResult {
 }
 
 /** Um override humano substitui o score, mas nunca apaga o cálculo: o motivo e
- *  o valor original ficam guardados ao lado. */
+ *  o valor original ficam salvos ao lado. */
 export type FitOverride = { score: number; reason: string; at: string; by: string };
 
 export const effectiveFit = (computed: FitResult, override?: FitOverride | null) =>

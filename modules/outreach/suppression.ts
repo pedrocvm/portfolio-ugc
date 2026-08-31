@@ -81,7 +81,7 @@ export async function buildKnownSet(): Promise<KnownSet> {
   };
 }
 
-/** Pergunta directa ao Gmail, para uma marca concreta.
+/** Pergunta direta ao Gmail, para uma marca concreta.
  *
  *  A ingestão só guarda o que já sincronizou. Isto vai à caixa perguntar se
  *  existe qualquer mensagem — enviada ou recebida — com aquele domínio, que é
