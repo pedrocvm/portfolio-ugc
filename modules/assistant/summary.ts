@@ -1,7 +1,7 @@
 import 'server-only';
 
-import Anthropic from '@anthropic-ai/sdk';
 import { supabaseServer } from '@/lib/supabase/server';
+import { aiSetup } from '@/modules/ai/provider';
 import { assistantConfig } from './config';
 import { windowTurns } from './domain';
 
@@ -47,28 +47,24 @@ export async function summariseThread(threadId: string): Promise<{ updated: bool
   const older = turns.slice(0, cut + 1);
   if (older.length === 0) return { updated: false };
 
-  const client = new Anthropic({ apiKey: cfg.apiKey });
-  const reply = await client.messages.create({
-    model: cfg.models.fast,
-    max_tokens: 600,
-    system:
-      'Resumes uma conversa de trabalho entre a Carol e o assistente do negócio dela. ' +
-      'Escreve em português europeu, em tópicos curtos. Guarda: decisões tomadas, ' +
-      'valores e datas mencionados, marcas e oportunidades faladas, e o que ficou por ' +
-      'fazer. Não inventes nada que não esteja no texto. Não repitas cortesias.',
-    messages: [
-      {
-        role: 'user',
-        content: older.map((t) => `${t.role === 'user' ? 'Carol' : 'Assistente'}: ${t.content}`).join('\n\n').slice(0, 30000),
-      },
-    ],
-  });
+  const setup = aiSetup();
+  if (!setup.provider) return { updated: false };
 
-  const text = reply.content
-    .filter((c): c is Anthropic.TextBlock => c.type === 'text')
-    .map((c) => c.text)
-    .join('\n')
-    .trim();
+  const text = (
+    await setup.provider.text({
+      model: cfg.models.fast,
+      maxTokens: 600,
+      system:
+        'Resumes uma conversa de trabalho entre a Carol e o assistente do negócio dela. ' +
+        'Escreve em português europeu, em tópicos curtos. Guarda: decisões tomadas, ' +
+        'valores e datas mencionados, marcas e oportunidades faladas, e o que ficou por ' +
+        'fazer. Não inventes nada que não esteja no texto. Não repitas cortesias.',
+      user: older
+        .map((t) => `${t.role === 'user' ? 'Carol' : 'Assistente'}: ${t.content}`)
+        .join('\n\n')
+        .slice(0, 30000),
+    })
+  ).trim();
 
   if (!text) return { updated: false };
 

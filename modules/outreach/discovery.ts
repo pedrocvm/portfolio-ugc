@@ -1,8 +1,7 @@
 import 'server-only';
 
-import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import { assistantConfig } from '@/modules/assistant/config';
+import { aiSetup } from '@/modules/ai/provider';
 import { normalizeDomain, normalizeName } from '@/modules/brands/identity';
 import { guessNiche } from '@/modules/brands/niches';
 import type { Strategy } from './domain';
@@ -59,8 +58,8 @@ export async function discoverBrands(
   strategy: Strategy,
   extra?: string,
 ): Promise<{ found: Discovered[]; failure: string | null }> {
-  const cfg = assistantConfig();
-  if (!cfg.apiKey) return { found: [], failure: 'Falta ANTHROPIC_API_KEY.' };
+  const setup = aiSetup();
+  if (!setup.provider) return { found: [], failure: `Falta ${setup.missing ?? 'a credencial de IA'}.` };
 
   const ask = [
     `Nichos a procurar hoje: ${strategy.niches.join(', ')}.`,
@@ -72,44 +71,30 @@ export async function discoverBrands(
     .filter(Boolean)
     .join('\n');
 
-  const client = new Anthropic({ apiKey: cfg.apiKey });
-
   try {
-    // Primeira volta: procurar. O modelo usa a pesquisa do fornecedor.
-    const search = await client.messages.create({
-      model: cfg.models.chat,
-      max_tokens: 4000,
+    // Primeira volta: procurar, com o mecanismo nativo do fornecedor.
+    const prose = await setup.provider.search({
+      model: setup.models.chat,
       system: PROMPT,
-      messages: [{ role: 'user', content: ask }],
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 } as unknown as Anthropic.ToolUnion],
+      user: ask,
+      maxTokens: 4000,
     });
-
-    const prose = search.content
-      .filter((c): c is Anthropic.TextBlock => c.type === 'text')
-      .map((c) => c.text)
-      .join('\n');
 
     if (!prose.trim()) return { found: [], failure: 'A pesquisa não devolveu nada.' };
 
     // Segunda volta: arrumar em estrutura. Separado de propósito — pedir
-    // pesquisa e JSON no mesmo turno costuma dar JSON pior.
-    const shaped = await client.messages.create({
-      model: cfg.models.fast,
-      max_tokens: 4000,
+    // pesquisa e JSON no mesmo turno costuma dar JSON pior, e nem todos os
+    // fornecedores deixam combinar pesquisa com saída estruturada.
+    const shaped = await setup.provider.structured({
+      model: setup.models.fast,
       system: 'Extrais empresas do texto para o formato pedido. Não inventes nenhuma que não esteja lá.',
-      messages: [{ role: 'user', content: prose.slice(0, 30000) }],
-      tools: [
-        {
-          name: 'brands_found',
-          description: 'As empresas encontradas.',
-          input_schema: z.toJSONSchema(Found, { io: 'input', unrepresentable: 'any' }) as Anthropic.Tool.InputSchema,
-        },
-      ],
-      tool_choice: { type: 'tool', name: 'brands_found' },
+      user: prose.slice(0, 30000),
+      schema: Found,
+      jsonSchema: z.toJSONSchema(Found, { io: 'input', unrepresentable: 'any' }) as Record<string, unknown>,
+      maxTokens: 4000,
     });
 
-    const call = shaped.content.find((c): c is Anthropic.ToolUseBlock => c.type === 'tool_use');
-    const parsed = Found.safeParse(call?.input);
+    const parsed = Found.safeParse(shaped.raw);
     if (!parsed.success) return { found: [], failure: 'Não consegui estruturar o resultado.' };
 
     const found = parsed.data.brands.flatMap((b): Discovered[] => {

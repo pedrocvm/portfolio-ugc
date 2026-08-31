@@ -298,8 +298,8 @@ export default function Assistant({ configured }: { configured: boolean }) {
 
       {!configured ? (
         <p className="osWarn">
-          Falta a chave da Anthropic no ambiente. A Carol AI está montada, mas não fala até
-          <code> ANTHROPIC_API_KEY </code> estar configurada.
+          Falta a chave do fornecedor de IA no ambiente. A Carol AI está montada, mas não fala
+          até estar configurada.
         </p>
       ) : null}
 

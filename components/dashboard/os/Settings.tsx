@@ -36,7 +36,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function Settings({
   flags, mailboxes, jobs, googleConfigured, aiConfigured, serviceRole, encryptionKey,
-  policyVersion, policyStatus, notice, scheduler,
+  policyVersion, policyStatus, notice, scheduler, aiKeyName,
 }: {
   flags: Flags;
   mailboxes: IntegrationHealth[];
@@ -49,6 +49,8 @@ export default function Settings({
   policyVersion: string;
   policyStatus: string;
   notice: string | null;
+  /** Qual chave falta, que depende de qual fornecedor está escolhido. */
+  aiKeyName: string;
 }) {
   const [, start] = useTransition();
   const [local, setLocal] = useState(flags);
@@ -84,7 +86,7 @@ export default function Settings({
   if (!serviceRole) missing.push('SUPABASE_SERVICE_ROLE_KEY');
   if (!encryptionKey) missing.push('APP_ENCRYPTION_KEY');
   if (!googleConfigured) missing.push('GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET');
-  if (!aiConfigured) missing.push('ANTHROPIC_API_KEY');
+  if (!aiConfigured) missing.push(aiKeyName);
 
   return (
     <>

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { z } from 'zod';
+import { aiSetup } from './provider';
 import { hashContent } from '@/lib/crypto';
 import { asJson } from '@/lib/supabase/json';
 import { supabaseService } from '@/lib/supabase/service';
@@ -21,19 +22,21 @@ export type ModelTier = 'fast' | 'reasoning';
 export type AiConfig = {
   provider: string;
   models: Record<ModelTier, string>;
+  /** Só diz se há credencial. O segredo nunca sai da camada de fornecedor. */
   apiKey: string | null;
+  missing?: string | null;
 };
 
 /** Modelos vêm do ambiente. Nenhum nome de modelo aparece dentro de um módulo
  *  de negócio — trocar de modelo não pode ser um pull request no domínio. */
 export function aiConfig(): AiConfig {
+  // O gateway já não sabe qual é o fornecedor: pergunta à camada que sabe.
+  const setup = aiSetup();
   return {
-    provider: process.env.AI_PROVIDER ?? 'anthropic',
-    models: {
-      fast: process.env.AI_MODEL_FAST ?? 'claude-haiku-4-5-20251001',
-      reasoning: process.env.AI_MODEL_REASONING ?? 'claude-sonnet-5',
-    },
-    apiKey: process.env.ANTHROPIC_API_KEY ?? null,
+    provider: setup.id,
+    models: { fast: setup.models.fast, reasoning: setup.models.deep },
+    apiKey: setup.provider ? 'configurado' : null,
+    missing: setup.missing,
   };
 }
 
@@ -84,85 +87,6 @@ export type RunResult<T> =
 
 const DEFAULT_TIMEOUT = 45_000;
 
-type AnthropicResponse = {
-  content?: { type: string; text?: string; input?: unknown; name?: string }[];
-  usage?: { input_tokens?: number; output_tokens?: number };
-  error?: { type?: string; message?: string };
-};
-
-/** Saída estruturada por tool-use: o modelo é obrigado a chamar uma ferramenta
- *  cujo input é o schema. Muito mais fiável do que pedir JSON em prosa e depois
- *  tentar apanhá-lo com uma expressão regular. */
-async function callAnthropic(
-  cfg: AiConfig,
-  model: string,
-  system: string,
-  user: string,
-  images: readonly ImageInput[],
-  jsonSchema: Record<string, unknown>,
-  maxTokens: number,
-  timeoutMs: number,
-): Promise<{ raw: unknown; usage: unknown }> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': cfg.apiKey as string,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: maxTokens,
-        system,
-        messages: [
-          {
-            role: 'user',
-            // A imagem vem antes do texto: as instruções a seguir referem-se a
-            // ela, e o modelo lê melhor nesta ordem.
-            content: [
-              ...images.map((img) => ({
-                type: 'image' as const,
-                source: { type: 'base64' as const, media_type: img.mediaType, data: img.base64 },
-              })),
-              { type: 'text' as const, text: user },
-            ],
-          },
-        ],
-        tools: [
-          {
-            name: 'emit',
-            description: 'Devolve o resultado estruturado. É a única forma de responder.',
-            input_schema: jsonSchema,
-          },
-        ],
-        tool_choice: { type: 'tool', name: 'emit' },
-      }),
-    });
-
-    if (!res.ok) {
-      const detail = (await res.json().catch(() => null)) as AnthropicResponse | null;
-      throw new AiUnavailableError(
-        `http_${res.status}`,
-        detail?.error?.message ?? `O fornecedor respondeu ${res.status}.`,
-      );
-    }
-
-    const body = (await res.json()) as AnthropicResponse;
-    const tool = body.content?.find((c) => c.type === 'tool_use');
-    if (!tool || tool.input === undefined) {
-      throw new AiUnavailableError('no_structured_output', 'O modelo não devolveu saída estruturada.');
-    }
-    return { raw: tool.input, usage: body.usage ?? null };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 /** Zod v4 gera JSON Schema nativamente; sem isto seria preciso manter dois
  *  desenhos do mesmo contrato e vê-los divergir. */
 function toJsonSchema(schema: z.ZodType<unknown>): Record<string, unknown> {
@@ -183,7 +107,7 @@ export async function runPrompt<TInput, TOutput>(
     return {
       ok: false,
       code: 'not_configured',
-      message: 'Falta ANTHROPIC_API_KEY. A camada de IA está preparada mas sem credencial.',
+      message: `Falta ${cfg.missing ?? 'a credencial de IA'}. A camada está preparada mas sem chave.`,
       runId: null,
     };
   }
@@ -219,16 +143,26 @@ export async function runPrompt<TInput, TOutput>(
   let usage: unknown = null;
 
   try {
-    const call = await callAnthropic(
-      cfg,
-      model,
-      prompt.system,
-      user,
-      options.images ?? [],
-      toJsonSchema(prompt.schema as z.ZodType<unknown>),
-      prompt.maxTokens ?? 2048,
-      options.timeoutMs ?? DEFAULT_TIMEOUT,
-    );
+    const setup = aiSetup();
+    if (!setup.provider) throw new AiUnavailableError('not_configured', 'Sem credencial.');
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT);
+    let call;
+    try {
+      call = await setup.provider.structured({
+        model,
+        system: prompt.system,
+        user,
+        schema: prompt.schema as z.ZodType<unknown>,
+        jsonSchema: toJsonSchema(prompt.schema as z.ZodType<unknown>),
+        maxTokens: prompt.maxTokens ?? 2048,
+        images: options.images ? [...options.images] : undefined,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     raw = call.raw;
     usage = call.usage;
   } catch (error) {

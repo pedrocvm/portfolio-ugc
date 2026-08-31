@@ -22,7 +22,8 @@ export async function openAssistantThread(
   entityId: string | null,
 ): Promise<{ id: string } | { error: string }> {
   await requireUser();
-  if (!assistantReady()) return { error: 'Falta ANTHROPIC_API_KEY no ambiente.' };
+  const { aiSetup } = await import('@/modules/ai/provider');
+  if (!assistantReady()) return { error: `Falta ${aiSetup().missing} no ambiente.` };
 
   const type = entityType && Uuid.safeParse(entityId).success ? entityType : null;
   const id = await createThread(

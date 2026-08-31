@@ -2,6 +2,7 @@ import { requireUser } from '@/lib/auth';
 import { hasEncryptionKey } from '@/lib/crypto';
 import { hasServiceRole } from '@/lib/supabase/service';
 import { aiConfigured } from '@/modules/ai/gateway';
+import { aiSetup } from '@/modules/ai/provider';
 import { googleConfigured } from '@/modules/integrations/gmail/oauth';
 import { activePolicy } from '@/modules/pricing/service';
 import { schedulerState } from '@/modules/jobs/scheduler';
@@ -32,6 +33,7 @@ export default async function SettingsPage({
       jobs={jobs}
       googleConfigured={googleConfigured()}
       aiConfigured={aiConfigured()}
+      aiKeyName={aiSetup().missing ?? 'a chave de IA'}
       serviceRole={hasServiceRole()}
       encryptionKey={hasEncryptionKey()}
       policyVersion={policy.version}

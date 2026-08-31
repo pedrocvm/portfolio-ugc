@@ -1,7 +1,7 @@
 import 'server-only';
 
-import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
+import { aiSetup, type ToolCall, type ToolReply, type Turn as ProviderTurn } from '@/modules/ai/provider';
 import { supabaseServer } from '@/lib/supabase/server';
 import { classifyDomain, memoryCandidate, OFF_TOPIC_REPLY, shouldUseTools, windowTurns, type Gate, type Source } from './domain';
 import { assistantConfig } from './config';
@@ -50,11 +50,11 @@ const STATUS: Record<string, string> = {
   prepare_outreach_send: 'A verificar o envio…',
 };
 
-const toolSchemas = () =>
+const toolSpecs = () =>
   TOOLS.map((t) => ({
     name: t.name,
     description: t.description,
-    input_schema: z.toJSONSchema(t.input as z.ZodType, { io: 'input', unrepresentable: 'any' }) as Anthropic.Tool.InputSchema,
+    parameters: z.toJSONSchema(t.input as z.ZodType, { io: 'input', unrepresentable: 'any' }) as Record<string, unknown>,
   }));
 
 export async function* runAssistant(input: {
@@ -127,103 +127,90 @@ export async function* runAssistant(input: {
 
   const { data: run } = await db
     .from('assistant_run')
-    .insert({ thread_id: input.threadId, model: cfg.models.chat, prompt_version: PROMPT_VERSION, gate, status: 'running' })
+    .insert({ thread_id: input.threadId, model: `${aiSetup().id}:${cfg.models.chat}`, prompt_version: PROMPT_VERSION, gate, status: 'running' })
     .select('id')
     .maybeSingle();
 
-  const client = new Anthropic({ apiKey: cfg.apiKey });
+  const setup = aiSetup();
+  if (!setup.provider) {
+    yield { type: 'error', message: `Falta ${setup.missing ?? 'a credencial de IA'}.` };
+    return;
+  }
+
   const ctx: ToolContext = { entity: input.entity };
 
-  // Ficheiros entram no turno dela: imagem e PDF em base64, que é o que o
-  // modelo lê nativamente. Fazer OCR à parte seria trabalho a dobrar e pior.
-  const files = await loadForModel(input.attachmentIds ?? []);
-  const turnContent: Anthropic.ContentBlockParam[] = [];
-  for (const f of files) {
-    if (f.kind === 'image') {
-      turnContent.push({ type: 'image', source: { type: 'base64', media_type: f.mediaType as 'image/png', data: f.data } });
-    } else if (f.kind === 'pdf') {
-      turnContent.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.data } });
-    } else {
-      // Texto vai como texto: mandar um CSV em base64 é pagar tokens por ruído.
-      turnContent.push({ type: 'text', text: `Ficheiro anexado «${f.fileName}»:\n\n${f.data}` });
-    }
-  }
-  turnContent.push({ type: 'text', text: input.userMessage });
+  const conversation: ProviderTurn[] = recent.map((t) => ({ role: t.role, text: t.content }));
+  conversation.push({ role: 'user', text: input.userMessage });
 
-  const messages: Anthropic.MessageParam[] = [
-    ...recent.map((t) => ({ role: t.role, content: t.content }) as Anthropic.MessageParam),
-    { role: 'user', content: turnContent },
-  ];
+  // Ficheiros que ela anexou. Imagem e PDF vão nativos; texto vai como texto.
+  const files = await loadForModel(input.attachmentIds ?? []);
+  const attachments = files.map((f) =>
+    f.kind === 'image'
+      ? ({ kind: 'image' as const, mediaType: f.mediaType, data: f.data })
+      : f.kind === 'pdf'
+        ? ({ kind: 'pdf' as const, data: f.data })
+        : ({ kind: 'text' as const, fileName: f.fileName, data: f.data }),
+  );
 
   const sources: Source[] = [];
   let answer = '';
   let rounds = 0;
   let usage = { input: 0, output: 0, cached: 0 };
+  let priorCalls: ToolCall[] | undefined;
+  let toolReplies: ToolReply[] | undefined;
 
   try {
     for (;;) {
-      const stream = client.messages.stream(
-        {
-          model: cfg.models.chat,
-          max_tokens: cfg.maxOutputTokens,
-          system: [
-            // O bloco estável primeiro, marcado para cache: é o mesmo em todos
-            // os pedidos e não vale a pena pagá-lo de novo a cada mensagem.
-            { type: 'text', text: CORE_PROMPT, cache_control: { type: 'ephemeral' } },
-            {
-              type: 'text',
-              text: situationPrompt({
-                now: new Date().toLocaleDateString('pt-PT', { timeZone: 'Europe/Lisbon', dateStyle: 'full' }),
-                entity,
-                memories: memories.data ?? [],
-                summary: thread.data?.summary ?? '',
-              }),
-            },
-          ],
-          messages,
-          tools:
-            rounds < cfg.maxToolRounds && shouldUseTools(gate)
-              ? [
-                  ...toolSchemas(),
-                  // Pesquisa do lado do fornecedor, atrás de bandeira. Só entra
-                  // quando ela a liga: o Carol AI não é um chatbot da web.
-                  ...(input.webResearch
-                    ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 } as unknown as Anthropic.ToolUnion]
-                    : []),
-                ]
-              : undefined,
-        },
-        { signal: input.signal },
-      );
+      const calls: ToolCall[] = [];
 
-      for await (const event of stream) {
-        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-          answer += event.delta.text;
-          yield { type: 'delta', text: event.delta.text };
+      for await (const chunk of setup.provider.stream({
+        model: cfg.models.chat,
+        system: {
+          stable: CORE_PROMPT,
+          volatile: situationPrompt({
+            now: new Date().toLocaleDateString('pt-PT', { timeZone: 'Europe/Lisbon', dateStyle: 'full' }),
+            entity,
+            memories: memories.data ?? [],
+            summary: thread.data?.summary ?? '',
+          }),
+        },
+        turns: conversation,
+        // Os ficheiros só vão na primeira volta: repeti-los a cada ronda de
+        // ferramentas era pagar o mesmo PDF quatro vezes.
+        attachments: rounds === 0 ? attachments : undefined,
+        tools: rounds < cfg.maxToolRounds && shouldUseTools(gate) ? toolSpecs() : undefined,
+        toolReplies,
+        priorCalls,
+        maxTokens: cfg.maxOutputTokens,
+        webSearch: input.webResearch,
+        signal: input.signal,
+      })) {
+        if (chunk.type === 'text') {
+          answer += chunk.text;
+          yield { type: 'delta', text: chunk.text };
+        } else if (chunk.type === 'tool_calls') {
+          calls.push(...chunk.calls);
+        } else if (chunk.type === 'usage') {
+          usage = {
+            input: usage.input + chunk.input,
+            output: usage.output + chunk.output,
+            cached: usage.cached + chunk.cached,
+          };
         }
       }
 
-      const final = await stream.finalMessage();
-      usage = {
-        input: usage.input + (final.usage?.input_tokens ?? 0),
-        output: usage.output + (final.usage?.output_tokens ?? 0),
-        cached: usage.cached + (final.usage?.cache_read_input_tokens ?? 0),
-      };
-
-      const calls = final.content.filter((c): c is Anthropic.ToolUseBlock => c.type === 'tool_use');
       if (calls.length === 0 || rounds >= cfg.maxToolRounds) break;
 
       rounds += 1;
-      messages.push({ role: 'assistant', content: final.content });
+      const replies: ToolReply[] = [];
 
-      const results: Anthropic.ToolResultBlockParam[] = [];
       for (const call of calls) {
         yield { type: 'status', label: STATUS[call.name] ?? 'A consultar…' };
         const t0 = Date.now();
         const tool = byName.get(call.name);
 
         if (!tool) {
-          results.push({ type: 'tool_result', tool_use_id: call.id, is_error: true, content: 'Ferramenta desconhecida.' });
+          replies.push({ id: call.id, name: call.name, output: 'Ferramenta desconhecida.', isError: true });
           continue;
         }
 
@@ -231,12 +218,12 @@ export async function* runAssistant(input: {
           const args = tool.input.parse(call.input ?? {});
           const out = await tool.run(args as never, ctx);
           sources.push(...out.sources);
-          results.push({
-            type: 'tool_result',
-            tool_use_id: call.id,
+          replies.push({
+            id: call.id,
+            name: call.name,
             // JSON, não prosa: assim o modelo lê isto como dado e não como
             // instrução, e é a mesma barreira para o que vem de emails.
-            content: JSON.stringify(out.data).slice(0, 24000),
+            output: JSON.stringify(out.data).slice(0, 24000),
           });
           if (run) {
             await db.from('assistant_tool_call').insert({
@@ -247,7 +234,7 @@ export async function* runAssistant(input: {
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'falhou';
-          results.push({ type: 'tool_result', tool_use_id: call.id, is_error: true, content: `Falhou: ${message}` });
+          replies.push({ id: call.id, name: call.name, output: `Falhou: ${message}`, isError: true });
           if (run) {
             await db.from('assistant_tool_call').insert({
               run_id: run.id, tool: call.name, arguments: {},
@@ -257,7 +244,8 @@ export async function* runAssistant(input: {
         }
       }
 
-      messages.push({ role: 'user', content: results });
+      priorCalls = calls;
+      toolReplies = replies;
     }
 
     // Fontes sem repetições: o modelo cruza marca e emails e vê a mesma duas vezes.
