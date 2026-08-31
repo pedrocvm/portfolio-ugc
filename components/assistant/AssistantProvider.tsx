@@ -37,6 +37,11 @@ type Ctx = {
   setFiles: React.Dispatch<React.SetStateAction<Attached[]>>;
   busy: boolean;
   setBusy: (v: boolean) => void;
+  /** Uma resposta que acabou enquanto o painel estava fechado. Ela fez a
+   *  pergunta, foi fazer outra coisa, e tem de haver forma de saber que já
+   *  está — senão espera a olhar para um botão que não muda. */
+  unread: boolean;
+  setUnread: (v: boolean) => void;
   abort: React.MutableRefObject<AbortController | null>;
   reset: () => void;
 };
@@ -69,6 +74,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const [draft, setDraft] = useState('');
   const [files, setFiles] = useState<Attached[]>([]);
   const [busy, setBusy] = useState(false);
+  const [unread, setUnread] = useState(false);
   const abort = useRef<AbortController | null>(null);
 
   const entity = useMemo(() => entityFromPath(path), [path]);
@@ -81,11 +87,12 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     setDraft('');
     setFiles([]);
     setBusy(false);
+    setUnread(false);
   }, []);
 
   const value = useMemo(
-    () => ({ open, setOpen, entity, threadId, setThreadId, messages, setMessages, draft, setDraft, files, setFiles, busy, setBusy, abort, reset }),
-    [open, entity, threadId, messages, draft, files, busy, reset],
+    () => ({ open, setOpen, entity, threadId, setThreadId, messages, setMessages, draft, setDraft, files, setFiles, busy, setBusy, unread, setUnread, abort, reset }),
+    [open, entity, threadId, messages, draft, files, busy, unread, reset],
   );
 
   return <AssistantCtx.Provider value={value}>{children}</AssistantCtx.Provider>;

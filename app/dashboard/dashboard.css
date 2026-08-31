@@ -4227,6 +4227,9 @@ a.osRow:hover .osRowName {
 /* O painel abre por cima sem tirar o CarolOS de baixo: ela continua a navegar
    com a conversa aberta, que é metade do ponto. */
 
+/* O botão é a marca dela: a inicial na mesma letra manuscrita do nome, dentro
+   de um traço fechado à mão. Um balão de conversa dizia «chatbot» e não dizia
+   nada sobre a Carol. */
 .aiLauncher {
   position: fixed;
   right: clamp(14px, 2vw, 26px);
@@ -4234,9 +4237,8 @@ a.osRow:hover .osRowName {
   z-index: var(--z-fab);
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  min-height: 46px;
-  padding: 11px 18px;
+  gap: 11px;
+  padding: 8px 20px 8px 8px;
   border: 0;
   border-radius: 999px;
   background: var(--ferro);
@@ -4248,17 +4250,100 @@ a.osRow:hover .osRowName {
   cursor: pointer;
   box-shadow: 0 10px 30px rgba(25, 23, 20, 0.22);
   transition:
-    transform 0.24s var(--exp),
-    background 0.24s var(--quart);
+    transform 0.28s var(--exp),
+    background 0.24s var(--quart),
+    box-shadow 0.28s var(--exp);
 }
 .aiLauncher:hover {
   background: var(--ferro2);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 38px rgba(25, 23, 20, 0.28);
 }
-.aiLauncher svg {
-  width: 19px;
-  height: 19px;
-  fill: currentColor;
+.aiLauncher:active {
+  transform: translateY(0);
+}
+.aiLauncherText {
+  white-space: nowrap;
+}
+
+.aiMark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+}
+.aiMark svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.aiMarkRing {
+  fill: none;
+  stroke: rgba(247, 243, 238, 0.55);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  /* Desenha-se ao aparecer, como a caneta a fechar o círculo. */
+  stroke-dasharray: 118;
+  stroke-dashoffset: 118;
+  animation: aiDraw 0.9s var(--exp) 0.1s forwards;
+  transform-origin: 50% 50%;
+}
+@keyframes aiDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+/* A pensar, a caneta continua a andar: o traço roda devagar em vez de piscar. */
+.aiMark[data-state='busy'] .aiMarkRing {
+  animation:
+    aiDraw 0.9s var(--exp) forwards,
+    aiSpin 2.6s linear 0.4s infinite;
+  stroke: var(--papel);
+}
+@keyframes aiSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.aiLauncher:hover .aiMarkRing {
+  stroke: var(--papel);
+}
+.aiMark b {
+  font-family: var(--script);
+  font-variation-settings: normal;
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 1;
+  /* A letra manuscrita assenta alto na caixa; isto centra-a de facto. */
+  transform: translate(0.5px, 2px);
+  color: var(--papel);
+}
+
+/* A bolinha é uma resposta por ler. O número são avisos do negócio. */
+.aiDot {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--jade);
+  box-shadow: 0 0 0 2px var(--ferro);
+  animation: aiPulse 2s var(--quart) infinite;
+}
+@keyframes aiPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.22);
+    opacity: 0.75;
+  }
 }
 
 .aiPanel {
@@ -4505,13 +4590,26 @@ a.aiSource:hover {
     border-left: 0;
   }
   .aiLauncher {
+    /* Acima da barra de separadores, que ocupa o fundo do ecrã. */
     bottom: calc(env(safe-area-inset-bottom) + 74px);
+    /* Só a marca. `span` genérico escondia também a marca e a bolinha, que
+       também são spans — o botão colapsava para 26px. */
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
   }
-  .aiLauncher span {
+  .aiLauncherText {
     display: none;
   }
-  .aiLauncher {
-    padding: 13px;
+  .aiMark {
+    width: 40px;
+    height: 40px;
+  }
+  .aiDot {
+    top: 8px;
+    right: 8px;
   }
 }
 
@@ -4649,4 +4747,41 @@ a.aiSource:hover {
   min-width: 22ch;
   font-size: 13.5px;
   color: var(--tinta3);
+}
+
+/* ── Carol AI: estados ─────────────────────────────────────────────────── */
+.aiState {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--tinta3);
+  min-height: 20px;
+}
+.aiState[data-kind='tool'] {
+  color: var(--umbra);
+}
+/* O cursor a piscar diz «está a sair texto» sem ocupar uma linha de prosa. */
+.aiCaret {
+  display: inline-block;
+  width: 2px;
+  height: 16px;
+  background: var(--umbra);
+  animation: aiBlink 1s steps(2, start) infinite;
+}
+@keyframes aiBlink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aiMarkRing,
+  .aiDot,
+  .aiCaret {
+    animation: none;
+  }
+  .aiMarkRing {
+    stroke-dashoffset: 0;
+  }
 }

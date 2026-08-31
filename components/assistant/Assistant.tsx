@@ -10,6 +10,7 @@ import {
 } from '@/app/dashboard/assistant-actions';
 import Spinner from '@/components/dashboard/Spinner';
 import type { Source } from '@/modules/assistant/domain';
+import AssistantMark from './AssistantMark';
 import { useAssistant, type ChatMessage } from './AssistantProvider';
 
 /** A Carol AI. Botão à direita, painel que abre por cima sem tirar o CarolOS
@@ -52,6 +53,10 @@ export default function Assistant({ configured, pending = 0 }: { configured: boo
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const stick = useRef(true);
+  // Lido dentro do `send`, que é assíncrono: `a.open` ali seria o valor de
+  // quando o pedido começou, não o de quando acabou.
+  const openRef = useRef(a.open);
+  openRef.current = a.open;
 
   // Só cola ao fundo se ela já lá estava: a ler uma resposta antiga, o scroll
   // automático seria a coisa mais irritante possível.
@@ -67,6 +72,7 @@ export default function Assistant({ configured, pending = 0 }: { configured: boo
 
   useEffect(() => {
     if (!a.open) return;
+    if (a.unread) a.setUnread(false);
     assistantSuggestions(a.entity.id ? a.entity.type : null).then(setSuggestions);
     input.current?.focus();
     const onKey = (e: KeyboardEvent) => {
@@ -176,6 +182,8 @@ export default function Assistant({ configured, pending = 0 }: { configured: boo
           }
         }
         a.setMessages((m) => m.map((x) => (x.id === replyId ? { ...x, streaming: false } : x)));
+        // Se ela fechou o painel a meio, a resposta ficou por ler.
+        if (!openRef.current) a.setUnread(true);
       } catch (error) {
         const aborted = error instanceof DOMException && error.name === 'AbortError';
         a.setMessages((m) =>
@@ -206,16 +214,27 @@ export default function Assistant({ configured, pending = 0 }: { configured: boo
   }
 
   if (!a.open) {
+    const label = a.busy
+      ? 'Carol AI está a responder'
+      : a.unread
+        ? 'Carol AI tem uma resposta por ler'
+        : 'Abrir a Carol AI';
     return (
-      <button className="aiLauncher" type="button" style={{ position: 'fixed' }} onClick={() => a.setOpen(true)} aria-label="Abrir a Carol AI">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 3.4c4.6 0 8.3 3.1 8.3 7s-3.7 7-8.3 7c-.9 0-1.8-.1-2.6-.4l-4 1.6 1.2-3.2c-1.8-1.3-2.9-3.1-2.9-5C3.7 6.5 7.4 3.4 12 3.4Z" />
-        </svg>
-        <span>Carol AI</span>
-        {pending > 0 ? (
-          <span className="aiBadge" aria-label={`${pending} avisos por ver`}>
-            {pending > 9 ? '9+' : pending}
-          </span>
+      <button
+        className="aiLauncher"
+        type="button"
+        onClick={() => a.setOpen(true)}
+        aria-label={label}
+        data-busy={a.busy || undefined}
+        data-unread={a.unread || undefined}
+      >
+        <AssistantMark state={a.busy ? 'busy' : 'idle'} />
+        <span className="aiLauncherText">{a.busy ? 'A responder…' : 'Carol AI'}</span>
+        {/* A bolinha é a resposta que ficou à espera dela; o número são os
+            avisos do negócio. Coisas diferentes, sinais diferentes. */}
+        {a.unread ? <span className="aiDot" /> : null}
+        {!a.unread && pending > 0 ? (
+          <span className="aiBadge">{pending > 9 ? '9+' : pending}</span>
         ) : null}
       </button>
     );
@@ -316,10 +335,24 @@ export default function Assistant({ configured, pending = 0 }: { configured: boo
                 <div className="aiBody">
                   <Markdown remarkPlugins={[remarkGfm]}>{m.content}</Markdown>
                 </div>
-                {m.streaming && !m.content ? (
-                  <p className="osRowSub">
-                    <Spinner label="A pensar" />
-                    {status || 'A pensar…'}
+                {/* Três estados, e cada um diz uma coisa diferente:
+                    a pensar (ainda nada), a consultar (foi buscar dados),
+                    a escrever (o texto está a sair). Um spinner só para os
+                    três não distingue «não percebeu» de «está a trabalhar». */}
+                {m.streaming ? (
+                  <p className="aiState" data-kind={status ? 'tool' : m.content ? 'typing' : 'thinking'}>
+                    {status ? (
+                      <>
+                        <Spinner label={status} />
+                        {status}
+                      </>
+                    ) : m.content ? (
+                      <span className="aiCaret" aria-label="a escrever" />
+                    ) : (
+                      <>
+                        <Spinner label="A pensar" />A pensar…
+                      </>
+                    )}
                   </p>
                 ) : null}
                 {m.error ? <p className="osWarn">{m.error}</p> : null}
