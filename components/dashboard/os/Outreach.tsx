@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import {
-  approveOutreach, discoverNow, sendApprovedOutreach, sendOutreach, skipOutreach,
+  approveOutreach, discoverNow, draftOutreach, sendApprovedOutreach, sendOutreach, skipOutreach,
   suppressBrand, updateOutreachDraft,
 } from '@/app/dashboard/outreach-actions';
 import Spinner from '@/components/dashboard/Spinner';
 import { formatDate } from '@/lib/time';
 import { CONF_LABEL, PAID_LABEL, UGC_LABEL } from '@/modules/outreach/history';
+import { LIMITS } from '@/modules/outreach/domain';
 
 /** A revisão diária.
  *
@@ -37,6 +38,9 @@ function Card({ c }: { c: Candidate }) {
   const [body, setBody] = useState(c.body);
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState(c.status);
+  // Abaixo do corte de encaixe: pesquisada, guardada, sem email escrito. O
+  // email custa uma chamada ao modelo e só se escreve se ela quiser esta marca.
+  const semEmail = !subject && !body;
 
   if (gone) return null;
 
@@ -57,7 +61,11 @@ function Card({ c }: { c: Candidate }) {
       <header className="osCardTop">
         <span className="osBrand">{c.name}</span>
         <div className="osCardFlags">
-          {c.fit_score ? <span className="osTag" data-tone="hot">encaixe {c.fit_score}</span> : null}
+          {c.fit_score ? (
+            <span className="osTag" data-tone={c.fit_score >= LIMITS.minFitScore ? 'hot' : 'mute'}>
+              encaixe {c.fit_score}
+            </span>
+          ) : null}
           {c.paid_media_signal ? (
             <span className="osTag" data-tone={c.paid_media_signal === 'strong' ? 'ok' : 'mute'}>
               {PAID_LABEL[c.paid_media_signal]}
@@ -123,7 +131,14 @@ function Card({ c }: { c: Candidate }) {
         </div>
       </details>
 
-      <details className="outDetail" open={status === 'ready' || status === 'edited'}>
+      {semEmail ? (
+        <p className="osRowSub">
+          Ficou abaixo do corte de encaixe, por isso não escrevi o email. Se
+          gostar da marca, peça e eu escrevo.
+        </p>
+      ) : null}
+
+      <details className="outDetail" open={status === 'ready' || status === 'edited'} hidden={semEmail}>
         <summary>O email</summary>
         <div className="outMail">
           <label className="visually-hidden" htmlFor={`s-${c.id}`}>Assunto</label>
@@ -142,6 +157,26 @@ function Card({ c }: { c: Candidate }) {
       <footer className="osCardActs">
         {status === 'sent' ? (
           <span className="osTag" data-tone="ok">enviado {c.sent_at ? formatDate(c.sent_at) : ''}</span>
+        ) : semEmail ? (
+          <button
+            className="osGo"
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              run('draft', async () => {
+                const r = await draftOutreach(c.id);
+                if (r.subject) {
+                  setSubject(r.subject);
+                  setBody(r.body ?? '');
+                  setStatus('needs_review');
+                }
+                return r;
+              })
+            }
+          >
+            {running === 'draft' ? <Spinner label="A escrever" /> : null}
+            Escrever o email
+          </button>
         ) : confirming ? (
           <>
             <span className="osRowSub">Enviar para {c.contact_email}?</span>

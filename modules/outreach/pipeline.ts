@@ -3,7 +3,7 @@ import 'server-only';
 import { supabaseService } from '@/lib/supabase/service';
 import { scoreBrandFit, type FitSignals } from '@/modules/brands/fit';
 import { localDay } from '@/lib/time';
-import { dedupe, LIMITS, scoreEmail, selectDaily, strategyFor, suppress, enoughToChooseFrom } from './domain';
+import { dedupe, LIMITS, partitionDaily, scoreEmail, strategyFor, suppress, enoughToChooseFrom } from './domain';
 import { discoverBrands, type Discovered } from './discovery';
 import { buildKnownSet, gmailHasHistory } from './suppression';
 import { latestStyleProfile } from './style';
@@ -21,6 +21,8 @@ export type RunResult = {
   screened: number;
   researched: number;
   selected: number;
+  /** Pesquisadas que não chegaram ao corte mas foram guardadas na mesma. */
+  below: number;
   failures: string[];
   /** Porque é que a corrida não chegou a andar. Zero marcas porque a pesquisa
    *  não devolveu nada é uma coisa; zero porque a IA nem foi chamada é outra, e
@@ -42,7 +44,7 @@ export async function runDailyOutreach(
   const failures: string[] = [];
 
   const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
-  if (!me) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Sem usuário.'], blocked: 'Sem usuário.' };
+  if (!me) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, below: 0, failures: ['Sem usuário.'], blocked: 'Sem usuário.' };
 
   // A corrida diária é idempotente pelo dia: o cron pode disparar duas vezes e
   // não faz dois lotes. Uma busca que ela pediu é outra coisa — pedir duas no
@@ -58,7 +60,7 @@ export async function runDailyOutreach(
       .maybeSingle();
 
     if (existing && existing.status !== 'error') {
-      return { runId: existing.id, status: 'success', discovered: 0, screened: 0, researched: 0, selected: 0, failures: [], blocked: 'A procura de hoje já correu. As marcas que ela achou estão na lista.' };
+      return { runId: existing.id, status: 'success', discovered: 0, screened: 0, researched: 0, selected: 0, below: 0, failures: [], blocked: 'A procura de hoje já correu. As marcas que ela achou estão na lista.' };
     }
   }
 
@@ -72,7 +74,7 @@ export async function runDailyOutreach(
     .maybeSingle();
 
   const runId = run?.id ?? null;
-  if (!runId) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, failures: ['Não consegui abrir a corrida.'], blocked: 'Não consegui começar a procura.' };
+  if (!runId) return { runId: null, status: 'error', discovered: 0, screened: 0, researched: 0, selected: 0, below: 0, failures: ['Não consegui abrir a corrida.'], blocked: 'Não consegui começar a procura.' };
 
   const finish = async (r: Omit<RunResult, 'runId'>) => {
     await db
@@ -94,7 +96,7 @@ export async function runDailyOutreach(
   const { found, failure } = await discoverBrands(strategy, opts.ask);
   if (failure) failures.push(failure);
   if (found.length === 0) {
-    return finish({ status: failure ? 'error' : 'empty', discovered: 0, screened: 0, researched: 0, selected: 0, failures, blocked: failure });
+    return finish({ status: failure ? 'error' : 'empty', discovered: 0, screened: 0, researched: 0, selected: 0, below: 0, failures, blocked: failure });
   }
 
   // ── 2. Triar: barato antes de caro ──────────────────────────────────────
@@ -117,7 +119,7 @@ export async function runDailyOutreach(
     screened.push(c);
   }
 
-  if (screened.length === 0) return finish({ status: 'empty', discovered: found.length, screened: 0, researched: 0, selected: 0, failures, blocked: null });
+  if (screened.length === 0) return finish({ status: 'empty', discovered: found.length, screened: 0, researched: 0, selected: 0, below: 0, failures, blocked: null });
 
   // ── 3. Pesquisar a fundo, só as finalistas ──────────────────────────────
   //     O encaixe calcula-se aqui dentro: é o que diz quando já chega.
@@ -143,7 +145,7 @@ export async function runDailyOutreach(
   const researched = scored;
 
   // ── 5. Escrever, só para quem passa o corte ─────────────────────────────
-  const shortlist = selectDaily(
+  const { ready: shortlist, below } = partitionDaily(
     scored.map((s) => ({
       ...s,
       fitScore: s.fit.score,
@@ -154,7 +156,9 @@ export async function runDailyOutreach(
     })),
   );
 
-  if (shortlist.length === 0) return finish({ status: 'empty', discovered: found.length, screened: screened.length, researched: researched.length, selected: 0, failures, blocked: null });
+  if (shortlist.length === 0 && below.length === 0) {
+    return finish({ status: 'empty', discovered: found.length, screened: screened.length, researched: researched.length, selected: 0, below: 0, failures, blocked: null });
+  }
 
   const { writeOutreachEmail } = await import('./email');
   const { checkEmail } = await import('./mailcheck-dns');
@@ -193,8 +197,19 @@ export async function runDailyOutreach(
 
   // Um email que não passa a porta não desaparece: fica para ela decidir, mas
   // marcado. Esconder um lead sem dizer porquê é pior do que mostrá-lo com um
-  // aviso.
-  const rows = ready.map((r, i) => ({
+  // aviso — e o mesmo vale para quem não chegou ao corte de encaixe, cuja
+  // pesquisa já foi paga na mesma.
+  type Escrito = (typeof ready)[number];
+  // Só estes três campos: `quality` chama-se igual nas duas listas e quer dizer
+  // coisas diferentes — a nota de ordenação numa, a nota do email na outra.
+  type Base = Pick<(typeof shortlist)[number], 'candidate' | 'research' | 'fit'>;
+  const toRow = (
+    r: Base,
+    rank: number,
+    written: Escrito['written'] | null,
+    quality: Escrito['quality'] | null,
+    check: Escrito['check'] | null,
+  ) => ({
     run_id: runId,
     name: r.candidate.name,
     normalized_name: r.candidate.normalizedName,
@@ -203,7 +218,7 @@ export async function runDailyOutreach(
     country: r.research.country ?? r.candidate.country,
     niche_id: r.candidate.nicheId,
     socials: {} as never,
-    rank: i + 1,
+    rank,
     fit_score: r.fit.score,
     fit_band: r.fit.band,
     fit_breakdown: r.fit.lines as never,
@@ -223,19 +238,26 @@ export async function runDailyOutreach(
     contact_role: r.research.contact?.role ?? null,
     contact_email: r.research.contact?.email ?? null,
     // A verificação real ganha ao que o modelo achou.
-    email_confidence: r.check?.confidence ?? r.research.contact?.confidence ?? 'unknown',
-    contact_source: r.check
-      ? `${r.research.contact?.source ?? 'pesquisa'} · ${r.check.reason}`
+    email_confidence: check?.confidence ?? r.research.contact?.confidence ?? 'unknown',
+    contact_source: check
+      ? `${r.research.contact?.source ?? 'pesquisa'} · ${check.reason}`
       : (r.research.contact?.source ?? null),
-    portfolio_match: r.written.portfolio as never,
-    language: r.written.language,
-    subject: r.written.subject,
-    body: r.written.body,
-    ai_subject: r.written.subject,
-    ai_body: r.written.body,
-    quality: r.quality as never,
-    status: r.quality.pass ? 'ready' : 'needs_review',
-  }));
+    portfolio_match: (written?.portfolio ?? null) as never,
+    language: written?.language ?? 'pt',
+    subject: written?.subject ?? '',
+    body: written?.body ?? '',
+    ai_subject: written?.subject ?? '',
+    ai_body: written?.body ?? '',
+    quality: (quality ?? null) as never,
+    // Sem email escrito fica em `researched`: é uma marca pesquisada à espera
+    // de uma decisão dela, não um rascunho por rever.
+    status: written ? (quality?.pass ? 'ready' : 'needs_review') : 'researched',
+  });
+
+  const rows = [
+    ...ready.map((r, i) => toRow(r, i + 1, r.written, r.quality, r.check)),
+    ...below.map((r, i) => toRow(r, ready.length + i + 1, null, null, null)),
+  ];
 
   if (rows.length) {
     const { error } = await db.from('outreach_candidate').insert(rows);
@@ -245,6 +267,7 @@ export async function runDailyOutreach(
   return finish({
     status: failures.length ? 'partial' : 'success',
     blocked: null,
+    below: below.length,
     discovered: found.length,
     screened: screened.length,
     researched: researched.length,

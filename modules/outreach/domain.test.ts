@@ -13,6 +13,7 @@ import {
   runMessage,
   type RunSummary,
   enoughToChooseFrom,
+  partitionDaily,
 } from './domain.ts';
 
 const known = (over: Partial<Known> = {}): Known => ({
@@ -235,6 +236,7 @@ const run = (over: Partial<RunSummary> = {}): RunSummary => ({
   selected: 0,
   failures: [],
   blocked: null,
+  below: 0,
   ...over,
 });
 
@@ -281,4 +283,55 @@ test('para de pesquisar quando já há mais boas do que cabem no dia', () => {
   // menos do que o combinado.
   assert.equal(enoughToChooseFrom(LIMITS.min), false, 'parou com o mínimo, e o mínimo não é o alvo');
   assert.equal(enoughToChooseFrom(LIMITS.target), false, 'parou no alvo, sem folga para o corte de qualidade');
+});
+
+test('as que não chegam ao corte não se perdem: ficam à parte, para ela ver', () => {
+  const { ready, below } = partitionDaily([
+    cand({ fitScore: 85 }),
+    cand({ fitScore: 68 }),
+    cand({ fitScore: 40 }),
+  ]);
+  assert.equal(ready.length, 1);
+  assert.equal(below.length, 2, 'uma pesquisa já paga foi deitada fora');
+});
+
+test('o corte continua a decidir quem leva email escrito', () => {
+  const { ready } = partitionDaily([cand({ fitScore: LIMITS.minFitScore - 1 })]);
+  assert.deepEqual(ready, [], 'baixar a régua não era o pedido');
+});
+
+test('as de baixo também vêm ordenadas: a melhor das piores aparece primeiro', () => {
+  const { below } = partitionDaily([cand({ fitScore: 40 }), cand({ fitScore: 66 }), cand({ fitScore: 55 })]);
+  assert.deepEqual(below.map((c) => c.fitScore), [66, 55, 40]);
+});
+
+test('um dia sem nenhuma acima do corte ainda tem o que mostrar', () => {
+  const { ready, below } = partitionDaily([cand({ fitScore: 60 }), cand({ fitScore: 50 })]);
+  assert.equal(ready.length, 0);
+  assert.equal(below.length, 2);
+});
+
+test('a lista de baixo também tem tecto: não se despeja o funil inteiro', () => {
+  const muitas = Array.from({ length: 30 }, () => cand({ fitScore: 50 }));
+  assert.equal(partitionDaily(muitas).below.length, LIMITS.max);
+});
+
+test('nenhuma acima do corte já não quer dizer nada para ver', () => {
+  const { ok, message } = runMessage(run({ discovered: 6, screened: 6, researched: 6, selected: 0, below: 6 }));
+  assert.equal(ok, true);
+  assert.match(message, /6 marcas para você decidir/);
+  // A frase antiga dava o assunto por encerrado: «Melhor assim do que encher a
+  // lista» é o sistema a decidir por ela sobre trabalho que já foi pago.
+  assert.doesNotMatch(message, /Melhor assim/);
+});
+
+test('as de baixo também se contam quando houve escolhidas', () => {
+  const { message } = runMessage(run({ status: 'success', discovered: 9, selected: 2, below: 3 }));
+  assert.match(message, /2 marcas novas/);
+  assert.match(message, /3 abaixo do corte/);
+});
+
+test('sem nenhuma abaixo do corte, não se promete o que não há', () => {
+  const { message } = runMessage(run({ status: 'success', discovered: 9, selected: 2, below: 0 }));
+  assert.doesNotMatch(message, /abaixo do corte/);
 });

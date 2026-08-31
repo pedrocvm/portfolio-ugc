@@ -198,3 +198,92 @@ export async function outreachHistory(status?: string) {
 
   return { rows: rows ?? [], runs: runs ?? [] };
 }
+
+/** Escreve o email de uma marca que ficou abaixo do corte.
+ *
+ *  A corrida diária só escreve para quem passa o encaixe mínimo — escrever para
+ *  todas gastava a cota em emails que ninguém ia mandar. Quando ela olha para
+ *  uma das outras e decide que vale a pena, é aqui que o email nasce: uma
+ *  chamada, pedida por ela, e não vinte por dia à espera de serem lidas. */
+export async function draftOutreach(id: string): Promise<Result & { subject?: string; body?: string }> {
+  await requireUser();
+  const db = await supabaseServer();
+
+  const { data: c } = await db.from('outreach_candidate').select('*').eq('id', id).maybeSingle();
+  if (!c) return { error: 'Não encontrei essa marca.' };
+  if (c.subject) return { error: 'O email desta marca já está escrito.' };
+
+  const [{ writeOutreachEmail }, { scoreEmail }, { latestStyleProfile }] = await Promise.all([
+    import('@/modules/outreach/email'),
+    import('@/modules/outreach/domain'),
+    import('@/modules/outreach/style'),
+  ]);
+
+  const written = await writeOutreachEmail(
+    {
+      candidate: {
+        name: c.name,
+        normalizedName: c.normalized_name,
+        website: c.website,
+        domain: c.domain,
+        country: c.country,
+        nicheId: c.niche_id,
+        description: c.product ?? '',
+        why: c.why_fit,
+        source: null,
+      } as never,
+      research: {
+        product: c.product,
+        country: c.country,
+        why_fit: c.why_fit,
+        why_now: c.why_now,
+        why_may_pay: c.why_may_pay,
+        risk: c.risk,
+        paid_media_signal: c.paid_media_signal,
+        ugc_signal: c.ugc_signal,
+        creative_opportunity: c.creative_opportunity,
+        content_ideas: c.content_ideas,
+        red_flags: c.red_flags,
+        sources: c.sources,
+        contact: c.contact_email
+          ? {
+              name: c.contact_name,
+              role: c.contact_role,
+              email: c.contact_email,
+              confidence: c.email_confidence,
+              source: c.contact_source,
+            }
+          : null,
+      } as never,
+    },
+    await latestStyleProfile(c.language === 'en' ? 'en' : 'pt'),
+  );
+
+  if (!written) return { error: 'Não consegui escrever este email agora.' };
+
+  const quality = scoreEmail({
+    subject: written.subject,
+    body: written.body,
+    brandName: c.name,
+    product: c.product,
+    claims: written.claims.map((x) => ({ text: x.text, sourceId: x.source })),
+  });
+
+  const { error } = await db
+    .from('outreach_candidate')
+    .update({
+      subject: written.subject,
+      body: written.body,
+      ai_subject: written.subject,
+      ai_body: written.body,
+      language: written.language,
+      portfolio_match: written.portfolio as never,
+      quality: quality as never,
+      status: quality.pass ? 'ready' : 'needs_review',
+    })
+    .eq('id', id);
+  if (error) return { error: 'Escrevi o email mas não o consegui guardar.' };
+
+  revalidatePath('/dashboard/outreach');
+  return { ok: true, subject: written.subject, body: written.body };
+}

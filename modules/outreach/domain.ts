@@ -268,10 +268,25 @@ export function selectDaily<T extends Rankable>(
   candidates: readonly T[],
   limits: { minFitScore: number; max: number } = LIMITS,
 ): T[] {
-  return [...candidates]
-    .filter((c) => c.fitScore >= limits.minFitScore)
-    .sort((a, b) => rankScore(b) - rankScore(a))
-    .slice(0, limits.max);
+  return partitionDaily(candidates, limits).ready;
+}
+
+/** Separa em duas listas em vez de deitar uma fora.
+ *
+ *  O corte de encaixe decide quem leva email escrito, e continua a decidir. O
+ *  que mudou é o que acontece às outras: eram descartadas depois de a pesquisa
+ *  já estar paga, e num dia em que nenhuma chegasse ao corte a corrida acabava
+ *  a dizer «nenhuma chegou ao mínimo» sem mostrar nenhuma. Quem decide se uma
+ *  marca de 68 vale a pena é ela, não a régua — a régua serve para ordenar. */
+export function partitionDaily<T extends Rankable>(
+  candidates: readonly T[],
+  limits: { minFitScore: number; max: number } = LIMITS,
+): { ready: T[]; below: T[] } {
+  const ranked = [...candidates].sort((a, b) => rankScore(b) - rankScore(a));
+  return {
+    ready: ranked.filter((c) => c.fitScore >= limits.minFitScore).slice(0, limits.max),
+    below: ranked.filter((c) => c.fitScore < limits.minFitScore).slice(0, limits.max),
+  };
 }
 
 /** Já há de onde escolher?
@@ -295,6 +310,8 @@ export type RunSummary = {
   screened: number;
   researched: number;
   selected: number;
+  /** Pesquisadas abaixo do corte, guardadas para ela decidir. */
+  below?: number;
   failures: string[];
   blocked: string | null;
 };
@@ -304,9 +321,22 @@ export function runMessage(r: RunSummary): { ok: boolean; message: string } {
   if (r.blocked) return { ok: r.status !== 'error', message: r.blocked };
   if (r.status === 'error') return { ok: false, message: r.failures[0] ?? 'A procura falhou.' };
 
+  const abaixo = r.below ?? 0;
+
   if (r.selected > 0) {
     const marcas = r.selected === 1 ? 'marca nova' : 'marcas novas';
-    return { ok: true, message: `${r.selected} ${marcas}, de ${r.discovered} encontradas.` };
+    const extra = abaixo ? ` Mais ${abaixo} abaixo do corte, para você ver.` : '';
+    return { ok: true, message: `${r.selected} ${marcas}, de ${r.discovered} encontradas.${extra}` };
+  }
+
+  // Nenhuma passou o corte, mas as pesquisas ficaram guardadas. Dizer só «nenhuma
+  // chegou ao mínimo» escondia trabalho já feito e pago, e tirava-lhe a decisão.
+  if (abaixo > 0) {
+    const plural = abaixo === 1 ? 'marca' : 'marcas';
+    return {
+      ok: true,
+      message: `Nenhuma chegou ao mínimo de encaixe, mas guardei ${abaixo} ${plural} para você decidir.`,
+    };
   }
 
   const why =
@@ -316,7 +346,7 @@ export function runMessage(r: RunSummary): { ok: boolean; message: string } {
         ? `Encontrei ${r.discovered}, mas já as conhecia todas — ou já falou com elas por email.`
         : r.researched === 0
           ? `Encontrei ${r.discovered} novas, mas a pesquisa de cada uma falhou.`
-          : `Pesquisei ${r.researched} e nenhuma chegou ao mínimo de encaixe. Melhor assim do que encher a lista.`;
+          : `Pesquisei ${r.researched} e nenhuma deu.`;
 
   const extra = r.failures.length ? ` ${r.failures.slice(0, 2).join(' ')}` : '';
   return { ok: true, message: why + extra };
