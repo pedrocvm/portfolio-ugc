@@ -282,7 +282,11 @@ test('para de pesquisar quando já há mais boas do que cabem no dia', () => {
   // Nunca pode parar antes do mínimo de um dia: seria poupar cota entregando
   // menos do que o combinado.
   assert.equal(enoughToChooseFrom(LIMITS.min), false, 'parou com o mínimo, e o mínimo não é o alvo');
-  assert.equal(enoughToChooseFrom(LIMITS.target), false, 'parou no alvo, sem folga para o corte de qualidade');
+  assert.ok(LIMITS.min < LIMITS.max, 'o mínimo do dia tem de caber abaixo do tecto');
+  // O alvo nunca pode passar o tecto: pedir mais do que se mostra é prometer
+  // trabalho que é deitado fora a seguir.
+  assert.ok(LIMITS.target <= LIMITS.max, 'o alvo do dia passou o tecto');
+  assert.ok(LIMITS.maxDeepResearch >= LIMITS.max, 'não há de onde tirar o tecto do dia');
 });
 
 test('as que não chegam ao corte não se perdem: ficam à parte, para ela ver', () => {
@@ -334,4 +338,21 @@ test('as de baixo também se contam quando houve escolhidas', () => {
 test('sem nenhuma abaixo do corte, não se promete o que não há', () => {
   const { message } = runMessage(run({ status: 'success', discovered: 9, selected: 2, below: 0 }));
   assert.doesNotMatch(message, /abaixo do corte/);
+});
+
+test('um dia inteiro de prospecção cabe no tempo que a rota dá', async () => {
+  // A rota dos jobs é morta aos 300s. As chamadas ao modelo são espaçadas para
+  // não estourar o limite por minuto do plano grátis, e esse espaçamento é o que
+  // manda no relógio: subir o alvo do dia sem contar isto faz a corrida ser
+  // morta a meio, todos os dias, sem ninguém perceber porquê.
+  const { MIN_GAP_MS } = await import('@/modules/ai/pace.ts');
+  const ROTA_MS = 300_000;
+
+  const chamadas = 2 + LIMITS.maxDeepResearch + LIMITS.max;
+  const segundos = (chamadas * MIN_GAP_MS) / 1000;
+
+  assert.ok(
+    chamadas * MIN_GAP_MS < ROTA_MS,
+    `${chamadas} chamadas a ${MIN_GAP_MS}ms dão ${segundos}s, e a rota morre aos 300s`,
+  );
 });

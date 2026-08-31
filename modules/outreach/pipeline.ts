@@ -6,7 +6,7 @@ import { localDay } from '@/lib/time';
 import { dedupe, LIMITS, partitionDaily, scoreEmail, strategyFor, suppress, enoughToChooseFrom } from './domain';
 import { discoverBrands, type Discovered } from './discovery';
 import { buildKnownSet, gmailHasHistory } from './suppression';
-import { latestStyleProfile } from './style';
+import { styleProfileFresh } from './style';
 
 /** A corrida diária.
  *
@@ -37,7 +37,7 @@ export async function runDailyOutreach(
   const kind = opts.kind ?? 'daily';
   // A rota morre aos 300s e leva com ela tudo o que a corrida já fez. Parar por
   // decisão própria antes disso guarda o que há e diz o que ficou por fazer.
-  const deadline = Date.now() + 4 * 60 * 1000;
+  const deadline = Date.now() + 4.5 * 60 * 1000;
   const semTempo = () => Date.now() > deadline;
   const now = opts.date ?? new Date();
   const runDate = localDay(now);
@@ -162,7 +162,10 @@ export async function runDailyOutreach(
 
   const { writeOutreachEmail } = await import('./email');
   const { checkEmail } = await import('./mailcheck-dns');
-  const style = await latestStyleProfile('pt');
+  // Sem perfil, o email sai sem a voz dela — correto mas de ninguém. Construí-lo
+  // custa uma chamada e umas leituras do Gmail, uma vez por semana; deixá-lo a
+  // um botão que ninguém carrega custou todos os emails escritos até aqui.
+  const style = await styleProfileFresh('pt');
   const ready = [];
 
   for (const s of shortlist) {

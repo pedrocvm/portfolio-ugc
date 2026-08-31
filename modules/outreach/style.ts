@@ -183,3 +183,33 @@ export async function latestStyleProfile(language: 'pt' | 'en' = 'pt'): Promise<
     .maybeSingle();
   return (data?.profile as StyleProfile | undefined) ?? null;
 }
+
+/** Quantos dias um perfil serve antes de valer a pena reler o Gmail. A voz dela
+ *  não muda de terça para quarta; muda ao longo de meses, à medida que ela
+ *  aprende o que funciona. */
+const STALE_DAYS = 7;
+
+/** O perfil de estilo, construído se não houver ou se estiver velho.
+ *
+ *  Existia só atrás de um botão em Definições, e por isso nunca existiu: todos
+ *  os emails até aqui foram escritos sem voz de referência. Uma coisa que tem de
+ *  acontecer para o produto funcionar não pode depender de alguém se lembrar. */
+export async function styleProfileFresh(language: 'pt' | 'en' = 'pt'): Promise<StyleProfile | null> {
+  const db = supabaseService();
+  const { data } = await db
+    .from('outreach_style_profile')
+    .select('built_at')
+    .eq('language', language)
+    .order('built_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const fresco =
+    data?.built_at && Date.now() - new Date(data.built_at).getTime() < STALE_DAYS * 86400000;
+  if (fresco) return latestStyleProfile(language);
+
+  // Se a reconstrução falhar — Gmail em baixo, poucas amostras — usa-se o
+  // perfil velho. Velho é melhor do que nenhum.
+  const built = await buildStyleProfile(language);
+  return built ?? latestStyleProfile(language);
+}

@@ -10,14 +10,15 @@ import { normalizeDomain, normalizeName } from '@/modules/brands/identity';
 /* ── Quantidade ──────────────────────────────────────────────────────────── */
 
 export const LIMITS = {
-  min: 5,
-  target: 8,
-  max: 10,
+  min: 10,
+  target: 20,
+  max: 20,
   /** Abaixo disto não vale a pena mostrar. Nem para encher a lista. */
   minFitScore: 70,
-  /** Quantas se pesquisam a fundo. Pesquisar cem para escolher oito é dinheiro
-   *  queimado; o funil aperta antes de a pesquisa ficar cara. */
-  maxDeepResearch: 24,
+  /** Quantas se pesquisam a fundo. Pesquisar cem para escolher vinte é dinheiro
+   *  queimado; o funil aperta antes de a pesquisa ficar cara. Metade a mais do
+   *  que o alvo dá folga para as que não passam sem esvaziar o dia. */
+  maxDeepResearch: 30,
 } as const;
 
 /* ── Estratégia de procura ───────────────────────────────────────────────── */

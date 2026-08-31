@@ -13,7 +13,7 @@ import { failureKind, quotaWindow, retryAfterMs } from './failure';
 
 /** 15 pedidos por minuto é um a cada 4s. A margem é para o relógio deles não
  *  coincidir com o nosso. */
-const MIN_GAP_MS = 4_500;
+export const MIN_GAP_MS = 4_500;
 const MAX_ATTEMPTS = 3;
 const BACKOFF_MS = [6_000, 20_000];
 
