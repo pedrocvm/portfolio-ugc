@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import {
   Archivo,
   Instrument_Sans,
-  Instrument_Serif,
+  Lora,
   Space_Mono,
   Tangerine,
 } from 'next/font/google';
@@ -23,10 +23,13 @@ const sans = Instrument_Sans({
   display: 'swap',
   preload: false,
 });
-const serif = Instrument_Serif({
+/* A Instrument Serif é uma fonte de cartaz: linda a 60px, ilegível a 15.
+ * A Lora é uma serifa de texto, desenhada para corpo em ecrã, e o itálico
+ * continua a existir onde o design o pede — mas agora lê-se. */
+const serif = Lora({
   subsets: ['latin'],
-  weight: '400',
-  style: 'italic',
+  weight: ['400', '500'],
+  style: ['normal', 'italic'],
   variable: '--font-serif',
   display: 'swap',
   preload: false,
