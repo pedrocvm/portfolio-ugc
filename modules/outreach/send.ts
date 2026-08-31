@@ -42,6 +42,12 @@ export async function sendCandidate(candidateId: string): Promise<SendResult> {
   const invalid = validateSend({ to: c.contact_email, subject: c.subject, body: c.body, status: c.status });
   if (invalid) return { ok: false, error: invalid };
 
+  // Última verificação antes do irreversível. Um domínio sem servidor de email
+  // devolve a mensagem, e uma devolução estraga a reputação da caixa dela.
+  const { checkEmail } = await import('./mailcheck-dns');
+  const check = await checkEmail(c.contact_email as string, 'research');
+  if (!check.valid) return { ok: false, error: check.reason };
+
   const { accessTokenFor } = await import('@/modules/integrations/gmail/oauth');
   const { sendMessage } = await import('@/modules/integrations/gmail/client');
   const auth = await accessTokenFor();

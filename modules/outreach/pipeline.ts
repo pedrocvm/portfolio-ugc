@@ -142,10 +142,21 @@ export async function runDailyOutreach(
   if (shortlist.length === 0) return finish({ status: 'empty', discovered: found.length, screened: screened.length, researched: researched.length, selected: 0, failures });
 
   const { writeOutreachEmail } = await import('./email');
+  const { checkEmail } = await import('./mailcheck-dns');
   const style = await latestStyleProfile('pt');
   const ready = [];
 
   for (const s of shortlist) {
+    // O nível de confiança que o modelo declarou é um palpite. Isto pergunta
+    // ao DNS se o domínio recebe email, que é a causa mais comum de devolução.
+    const contactEmail = s.research.contact?.email ?? null;
+    const check = contactEmail
+      ? await checkEmail(
+          contactEmail,
+          /site|website|página|homepage/i.test(s.research.contact?.source ?? '') ? 'website' : 'research',
+        )
+      : null;
+
     const written = await writeOutreachEmail(s, style);
     if (!written) {
       failures.push(`email falhou: ${s.candidate.name}`);
@@ -158,7 +169,7 @@ export async function runDailyOutreach(
       product: s.research.product,
       claims: written.claims.map((c) => ({ text: c.text, sourceId: c.source })),
     });
-    ready.push({ ...s, written, quality });
+    ready.push({ ...s, written, quality, check });
   }
 
   // Um email que não passa a porta não desaparece: fica para ela decidir, mas
@@ -192,8 +203,11 @@ export async function runDailyOutreach(
     contact_name: r.research.contact?.name ?? null,
     contact_role: r.research.contact?.role ?? null,
     contact_email: r.research.contact?.email ?? null,
-    email_confidence: r.research.contact?.confidence ?? 'unknown',
-    contact_source: r.research.contact?.source ?? null,
+    // A verificação real ganha ao que o modelo achou.
+    email_confidence: r.check?.confidence ?? r.research.contact?.confidence ?? 'unknown',
+    contact_source: r.check
+      ? `${r.research.contact?.source ?? 'pesquisa'} · ${r.check.reason}`
+      : (r.research.contact?.source ?? null),
     portfolio_match: r.written.portfolio as never,
     language: r.written.language,
     subject: r.written.subject,

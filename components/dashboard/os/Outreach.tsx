@@ -33,7 +33,7 @@ export type Candidate = {
   creative_opportunity: string; content_ideas: { title: string; angle: string }[];
   red_flags: string[]; sources: { label: string; url: string | null }[];
   contact_name: string | null; contact_role: string | null; contact_email: string | null;
-  email_confidence: string | null; subject: string; body: string;
+  email_confidence: string | null; contact_source: string | null; subject: string; body: string;
   quality: { pass: boolean; score: number; failures: string[] } | null;
   status: string; sent_at: string | null;
 };
@@ -103,7 +103,9 @@ function Card({ c }: { c: Candidate }) {
       ) : null}
       {c.email_confidence === 'low' || c.email_confidence === 'unknown' ? (
         <p className="osWarn">
-          Não consegui confirmar este endereço. Vale a pena olhar antes de enviar.
+          {/* A razão vem da verificação, não de uma frase genérica: «o domínio
+              não recebe email» e «foi deduzido» pedem coisas diferentes. */}
+          {c.contact_source?.split(' · ')[1] ?? 'Não consegui confirmar este endereço.'}
         </p>
       ) : null}
       {msg ? <p className="osWarn">{msg}</p> : null}
