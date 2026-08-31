@@ -21,16 +21,30 @@ export function failureKind(error: unknown): FailureKind {
   return 'unknown';
 }
 
-/** Uma cota gasta por minuto passa sozinha; a do dia não. Quando o erro não diz
- *  qual foi, a frase cobre as duas em vez de escolher a errada. */
+/** Uma cota gasta por minuto passa sozinha; a do dia não. A diferença decide a
+ *  frase e decide se vale a pena repetir o pedido. */
+export function quotaWindow(error: unknown): 'day' | 'minute' | 'unknown' {
+  const t = raw(error);
+  if (/per.?day|daily|requests_per_day/.test(t)) return 'day';
+  if (/per.?minute|requests_per_minute/.test(t)) return 'minute';
+  return 'unknown';
+}
+
+/** O Gemini às vezes diz quanto esperar. Quando diz, é melhor palpite que o nosso. */
+export function retryAfterMs(error: unknown): number | null {
+  const m = /retrydelay["':\s]+(\d+(?:\.\d+)?)s/i.exec(raw(error));
+  return m ? Math.round(Number(m[1]) * 1000) : null;
+}
+
 function quotaSentence(t: string): string {
-  if (/per.?day|daily|requests_per_day/.test(t)) {
-    return 'A IA chegou ao limite de pedidos de hoje. Recomeça amanhã de manhã.';
+  switch (quotaWindow(t)) {
+    case 'day':
+      return 'A IA chegou ao limite de pedidos de hoje. Recomece amanhã de manhã.';
+    case 'minute':
+      return 'Pedidos a mais em pouco tempo. Esperei um minuto e mesmo assim não passou.';
+    default:
+      return 'A IA chegou a um limite de uso. Tente outra vez daqui a um minuto; se continuar, é o limite do dia e recomeça amanhã.';
   }
-  if (/per.?minute|requests_per_minute/.test(t)) {
-    return 'Pedidos a mais em pouco tempo. Espera um minuto e tenta outra vez.';
-  }
-  return 'A IA chegou a um limite de uso. Espera um minuto e tenta outra vez; se continuar, é o limite do dia e recomeça amanhã.';
 }
 
 export function aiFailure(error: unknown): string {

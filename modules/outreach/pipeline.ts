@@ -33,6 +33,10 @@ export async function runDailyOutreach(
 ): Promise<RunResult> {
   const db = supabaseService();
   const kind = opts.kind ?? 'daily';
+  // A rota morre aos 300s e leva com ela tudo o que a corrida já fez. Parar por
+  // decisão própria antes disso guarda o que há e diz o que ficou por fazer.
+  const deadline = Date.now() + 4 * 60 * 1000;
+  const semTempo = () => Date.now() > deadline;
   const now = opts.date ?? new Date();
   const runDate = localDay(now);
   const failures: string[] = [];
@@ -119,6 +123,10 @@ export async function runDailyOutreach(
   const { researchCandidate } = await import('./research');
   const researched = [];
   for (const c of screened.slice(0, LIMITS.maxDeepResearch)) {
+    if (semTempo()) {
+      failures.push(`Faltou tempo: parei depois de pesquisar ${researched.length}.`);
+      break;
+    }
     const r = await researchCandidate(c);
     if (!r) {
       failures.push(`Não consegui pesquisar a ${c.name}.`);
@@ -153,6 +161,10 @@ export async function runDailyOutreach(
   const ready = [];
 
   for (const s of shortlist) {
+    if (semTempo()) {
+      failures.push(`Faltou tempo: escrevi ${ready.length} de ${shortlist.length} emails.`);
+      break;
+    }
     // O nível de confiança que o modelo declarou é um palpite. Isto pergunta
     // ao DNS se o domínio recebe email, que é a causa mais comum de devolução.
     const contactEmail = s.research.contact?.email ?? null;
