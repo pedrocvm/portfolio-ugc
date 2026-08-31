@@ -274,6 +274,16 @@ export function selectDaily<T extends Rankable>(
     .slice(0, limits.max);
 }
 
+/** Já há de onde escolher?
+ *
+ *  A corrida pesquisava as 24 sempre, e depois cortava em `max`. Nos dias em que
+ *  as primeiras dez já passam o corte, as catorze seguintes só podiam reordenar
+ *  uma lista que ia ser cortada na mesma — catorze chamadas ao modelo por uma
+ *  troca de posições. Nos dias maus não pára: continua até às 24. */
+export function enoughToChooseFrom(qualified: number, limits: { max: number } = LIMITS): boolean {
+  return qualified >= limits.max;
+}
+
 /** O que dizer à Carol depois de uma procura.
  *
  *  Estava na action, misturado com o acesso a dados, e por isso sem teste. Foi

@@ -3,7 +3,7 @@ import 'server-only';
 import { supabaseService } from '@/lib/supabase/service';
 import { scoreBrandFit, type FitSignals } from '@/modules/brands/fit';
 import { localDay } from '@/lib/time';
-import { dedupe, LIMITS, scoreEmail, selectDaily, strategyFor, suppress } from './domain';
+import { dedupe, LIMITS, scoreEmail, selectDaily, strategyFor, suppress, enoughToChooseFrom } from './domain';
 import { discoverBrands, type Discovered } from './discovery';
 import { buildKnownSet, gmailHasHistory } from './suppression';
 import { latestStyleProfile } from './style';
@@ -120,26 +120,27 @@ export async function runDailyOutreach(
   if (screened.length === 0) return finish({ status: 'empty', discovered: found.length, screened: 0, researched: 0, selected: 0, failures, blocked: null });
 
   // ── 3. Pesquisar a fundo, só as finalistas ──────────────────────────────
+  //     O encaixe calcula-se aqui dentro: é o que diz quando já chega.
   const { researchCandidate } = await import('./research');
-  const researched = [];
+  const scored = [];
+  let qualified = 0;
   for (const c of screened.slice(0, LIMITS.maxDeepResearch)) {
     if (semTempo()) {
-      failures.push(`Faltou tempo: parei depois de pesquisar ${researched.length}.`);
+      failures.push(`Faltou tempo: parei depois de pesquisar ${scored.length}.`);
       break;
     }
+    if (enoughToChooseFrom(qualified)) break;
+
     const r = await researchCandidate(c);
     if (!r) {
       failures.push(`Não consegui pesquisar a ${c.name}.`);
       continue;
     }
-    researched.push(r);
-  }
-
-  // ── 4. Encaixe, com o motor real ────────────────────────────────────────
-  const scored = researched.map((r) => {
     const fit = scoreBrandFit(r.research.fit_signals as FitSignals);
-    return { ...r, fit };
-  });
+    if (fit.score >= LIMITS.minFitScore) qualified++;
+    scored.push({ ...r, fit });
+  }
+  const researched = scored;
 
   // ── 5. Escrever, só para quem passa o corte ─────────────────────────────
   const shortlist = selectDaily(

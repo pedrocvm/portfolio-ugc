@@ -12,6 +12,7 @@ import {
   type Rankable,
   runMessage,
   type RunSummary,
+  enoughToChooseFrom,
 } from './domain.ts';
 
 const known = (over: Partial<Known> = {}): Known => ({
@@ -271,4 +272,13 @@ test('zero por a pesquisa não achar nada não é zero por a IA falhar', () => {
 test('a procura repetida do dia não é um erro', () => {
   const { ok } = runMessage(run({ status: 'success', blocked: 'A procura de hoje já correu.' }));
   assert.equal(ok, true);
+});
+
+test('para de pesquisar quando já há mais boas do que cabem no dia', () => {
+  assert.equal(enoughToChooseFrom(LIMITS.max - 1), false);
+  assert.equal(enoughToChooseFrom(LIMITS.max), true);
+  // Nunca pode parar antes do mínimo de um dia: seria poupar cota entregando
+  // menos do que o combinado.
+  assert.equal(enoughToChooseFrom(LIMITS.min), false, 'parou com o mínimo, e o mínimo não é o alvo');
+  assert.equal(enoughToChooseFrom(LIMITS.target), false, 'parou no alvo, sem folga para o corte de qualidade');
 });
