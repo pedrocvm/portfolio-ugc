@@ -5,8 +5,11 @@
  *  metade dela.
  *
  *  Uso:
- *    SUPABASE_SERVICE_ROLE_KEY=... node scripts/ingest-knowledge.mjs \
+ *    SUPABASE_SERVICE_ROLE_KEY=... npm run ingest -- \
  *      docs.local/ficheiro.pdf "Título do documento" 90
+ *
+ *  `npm run ingest` lê o resto do .env.local. Junta `--dry` para ver os pedaços
+ *  sem gravar nada.
  *
  *  A autoridade (0-100) é quem ganha quando duas fontes discordam.
  */
@@ -27,9 +30,16 @@ if (!file || !title) {
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!dry && (!url || !key)) {
-  console.error('faltam NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY');
-  process.exit(1);
+if (!dry) {
+  const missing = [
+    !url && 'NEXT_PUBLIC_SUPABASE_URL',
+    !key && 'SUPABASE_SERVICE_ROLE_KEY',
+  ].filter(Boolean);
+  if (missing.length) {
+    console.error(`falta ${missing.join(' e ')}`);
+    console.error('a service key está em Supabase → Project Settings → API Keys');
+    process.exit(1);
+  }
 }
 
 async function readDocument(path) {
