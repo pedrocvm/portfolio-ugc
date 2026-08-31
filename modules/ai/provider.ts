@@ -12,6 +12,7 @@ import type { z } from 'zod';
  *
  *  Duas implementações, e a escolha é do ambiente. */
 
+import { toGeminiSchema } from './gemini-schema';
 import { humanizeErrors } from './failure';
 import { paced } from './pace';
 import { routeSearch, withFallback } from './fallback';
@@ -88,41 +89,6 @@ export type Provider = {
 
 /** O Gemini recusa `additionalProperties`, `$schema` e `const`, e quer os
  *  tipos em maiúsculas. O Zod produz JSON Schema padrão; isto traduz. */
-function toGeminiSchema(node: unknown): unknown {
-  if (Array.isArray(node)) return node.map(toGeminiSchema);
-  if (!node || typeof node !== 'object') return node;
-
-  const src = node as Record<string, unknown>;
-  const out: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(src)) {
-    if (key === 'additionalProperties' || key === '$schema' || key === 'default') continue;
-    if (key === 'type' && typeof value === 'string') {
-      out.type = value.toUpperCase();
-      continue;
-    }
-    // `type: ['string','null']` vira nullable, que é como o Gemini o diz.
-    if (key === 'type' && Array.isArray(value)) {
-      const real = value.find((v) => v !== 'null');
-      out.type = String(real ?? 'string').toUpperCase();
-      if (value.includes('null')) out.nullable = true;
-      continue;
-    }
-    if (key === 'anyOf' || key === 'oneOf') {
-      const list = (value as unknown[]).filter(
-        (v) => !(v && typeof v === 'object' && (v as Record<string, unknown>).type === 'null'),
-      );
-      if (list.length === 1) {
-        Object.assign(out, toGeminiSchema(list[0]) as Record<string, unknown>, { nullable: true });
-        continue;
-      }
-      out.anyOf = list.map(toGeminiSchema);
-      continue;
-    }
-    out[key] = toGeminiSchema(value);
-  }
-  return out;
-}
 
 const geminiParts = (attachments: Attachment[] = []): Part[] =>
   attachments.map((a) =>

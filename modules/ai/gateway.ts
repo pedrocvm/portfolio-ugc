@@ -168,7 +168,13 @@ export async function runPrompt<TInput, TOutput>(
   } catch (error) {
     const code = error instanceof AiUnavailableError ? error.code : 'provider_error';
     const message = error instanceof Error ? error.message : 'Falha desconhecida no fornecedor.';
-    const runId = await record(db, prompt, model, cfg, inputHash, options, null, 'error', started, null, code, message);
+    // A frase é para quem lê a tela; o registo leva também o erro do fornecedor,
+    // que a tradução tinha apagado. Sete pesquisas falharam com «A IA falhou e
+    // não disse porquê» gravado sete vezes, e a causa — um campo de schema que o
+    // Gemini não conhece — só apareceu ao reproduzir a chamada à mão.
+    const cause = error instanceof Error && error.cause instanceof Error ? error.cause.message : null;
+    const logged = cause ? `${message} | ${cause}` : message;
+    const runId = await record(db, prompt, model, cfg, inputHash, options, null, 'error', started, null, code, logged);
     return { ok: false, code, message, runId };
   }
 

@@ -105,3 +105,17 @@ test('saldo esgotado não é cota: uma passa por esperar, a outra não', () => {
   assert.doesNotMatch(frase, /amanhã|daqui a um minuto/);
   assert.doesNotMatch(frase, /[{}"[\]]|https?:/);
 });
+
+test('a causa crua fica no cause: a tradução é para a tela, não para o registo', async () => {
+  const cru = new Error('{"error":{"code":400,"message":"Unknown name \\"propertyNames\\""}}');
+  const p = humanizeErrors({
+    async structured() {
+      throw cru;
+    },
+  });
+  await assert.rejects(p.structured(), (e: Error) => {
+    assert.doesNotMatch(e.message, /propertyNames/, 'a tela recebeu o erro do fornecedor');
+    assert.match((e.cause as Error).message, /propertyNames/, 'o registo perdeu a única pista que havia');
+    return true;
+  });
+});
