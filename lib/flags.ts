@@ -13,6 +13,7 @@ export const FLAG_KEYS = [
   'external_send',
   'auto_apply_low_risk',
   'background_jobs',
+  'assistant_enabled',
   'shadow_mode',
 ] as const;
 
@@ -28,6 +29,7 @@ export const FLAG_LABEL: Record<FlagKey, string> = {
   external_send: 'Envio externo automático',
   auto_apply_low_risk: 'Aplicar mudanças de baixo risco',
   background_jobs: 'Trabalhos em segundo plano',
+  assistant_enabled: 'Carol AI',
   shadow_mode: 'Modo sombra',
 };
 
@@ -42,6 +44,8 @@ export const FLAG_NOTE: Record<FlagKey, string> = {
   auto_apply_low_risk:
     'Deixar o sistema aplicar mudanças de estado óbvias em vez de as propor.',
   background_jobs: 'Correr sincronizações e verificações sem ninguém abrir o painel.',
+  assistant_enabled:
+    'O assistente que lê os teus dados e responde. Sem isto o botão não aparece.',
   shadow_mode: 'Observar e recomendar sem mexer no estado. Liga isto primeiro.',
 };
 
@@ -54,6 +58,7 @@ export const DEFAULT_FLAGS: Flags = {
   external_send: false,
   auto_apply_low_risk: false,
   background_jobs: false,
+  assistant_enabled: false,
   shadow_mode: true,
 };
 

@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { signOut } from '@/app/dashboard/actions';
+import Assistant from '@/components/assistant/Assistant';
+import { AssistantProvider } from '@/components/assistant/AssistantProvider';
 import Command from '@/components/dashboard/Command';
 import Logo from '@/components/dashboard/Logo';
 import Menu from '@/components/dashboard/Menu';
 import MobileNav from '@/components/dashboard/MobileNav';
 import SideToggle from '@/components/dashboard/SideToggle';
 import { requireEditor } from '@/lib/auth';
+import { assistantReady } from '@/modules/assistant/config';
 import { getDraft } from '@/lib/content-store';
 
 export const metadata: Metadata = {
@@ -31,7 +34,8 @@ export default async function AppLayout({
             "try{if(localStorage.getItem('side')==='off')document.documentElement.dataset.side='off'}catch(e){}",
         }}
       />
-      <div className="shell">
+      <AssistantProvider>
+        <div className="shell">
         <aside className="side">
           <Link className="sideName" href="/">
             <Logo first={hero.firstName} last={hero.lastName} />
@@ -54,8 +58,11 @@ export default async function AppLayout({
             </form>
           }
         />
-        <Command />
-      </div>
+          <Command />
+          {/* Só na área privada: o portfólio público não conhece a Carol AI. */}
+          <Assistant configured={assistantReady()} />
+        </div>
+      </AssistantProvider>
     </>
   );
 }

@@ -426,6 +426,228 @@ export type Database = {
         }
         Relationships: []
       }
+      assistant_message: {
+        Row: {
+          cached_tokens: number | null
+          content: string
+          created_at: string
+          error: string | null
+          id: string
+          input_tokens: number | null
+          model: string | null
+          output_tokens: number | null
+          prompt_version: string | null
+          role: string
+          sources: Json
+          status: string
+          thread_id: string
+        }
+        Insert: {
+          cached_tokens?: number | null
+          content?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          input_tokens?: number | null
+          model?: string | null
+          output_tokens?: number | null
+          prompt_version?: string | null
+          role: string
+          sources?: Json
+          status?: string
+          thread_id: string
+        }
+        Update: {
+          cached_tokens?: number | null
+          content?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          input_tokens?: number | null
+          model?: string | null
+          output_tokens?: number | null
+          prompt_version?: string | null
+          role?: string
+          sources?: Json
+          status?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_message_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_thread"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_run: {
+        Row: {
+          cached_tokens: number | null
+          error: string | null
+          finished_at: string | null
+          gate: string | null
+          id: string
+          input_tokens: number | null
+          latency_ms: number | null
+          message_id: string | null
+          model: string
+          output_tokens: number | null
+          prompt_version: string
+          started_at: string
+          status: string
+          thread_id: string
+          tool_rounds: number
+        }
+        Insert: {
+          cached_tokens?: number | null
+          error?: string | null
+          finished_at?: string | null
+          gate?: string | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          message_id?: string | null
+          model?: string
+          output_tokens?: number | null
+          prompt_version?: string
+          started_at?: string
+          status?: string
+          thread_id: string
+          tool_rounds?: number
+        }
+        Update: {
+          cached_tokens?: number | null
+          error?: string | null
+          finished_at?: string | null
+          gate?: string | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          message_id?: string | null
+          model?: string
+          output_tokens?: number | null
+          prompt_version?: string
+          started_at?: string
+          status?: string
+          thread_id?: string
+          tool_rounds?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_run_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_message"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_run_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_thread"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_thread: {
+        Row: {
+          app_user_id: string
+          archived_at: string | null
+          context_id: string | null
+          context_type: string | null
+          created_at: string
+          id: string
+          last_message_at: string | null
+          summary: string
+          summary_through_id: string | null
+          summary_version: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          app_user_id: string
+          archived_at?: string | null
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          summary?: string
+          summary_through_id?: string | null
+          summary_version?: number
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          app_user_id?: string
+          archived_at?: string | null
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          summary?: string
+          summary_through_id?: string | null
+          summary_version?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_thread_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_tool_call: {
+        Row: {
+          arguments: Json
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          id: string
+          result_summary: string
+          run_id: string
+          status: string
+          tool: string
+        }
+        Insert: {
+          arguments?: Json
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          result_summary?: string
+          run_id: string
+          status?: string
+          tool: string
+        }
+        Update: {
+          arguments?: Json
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          result_summary?: string
+          run_id?: string
+          status?: string
+          tool?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_tool_call_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_run"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand: {
         Row: {
           approached_on: string | null
@@ -683,6 +905,79 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_memory: {
+        Row: {
+          app_user_id: string
+          confidence: number | null
+          content: string
+          created_at: string
+          effective_from: string
+          id: string
+          normalized_value: Json | null
+          source: string
+          source_message_id: string | null
+          status: string
+          subject: string
+          superseded_by: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          app_user_id: string
+          confidence?: number | null
+          content: string
+          created_at?: string
+          effective_from?: string
+          id?: string
+          normalized_value?: Json | null
+          source?: string
+          source_message_id?: string | null
+          status?: string
+          subject?: string
+          superseded_by?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          app_user_id?: string
+          confidence?: number | null
+          content?: string
+          created_at?: string
+          effective_from?: string
+          id?: string
+          normalized_value?: Json | null
+          source?: string
+          source_message_id?: string | null
+          status?: string
+          subject?: string
+          superseded_by?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_memory_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_memory_source_message_id_fkey"
+            columns: ["source_message_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_message"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_memory_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "business_memory"
             referencedColumns: ["id"]
           },
         ]
@@ -1568,6 +1863,86 @@ export type Database = {
           job_type?: string
           started_at?: string
           status?: string
+        }
+        Relationships: []
+      }
+      knowledge_chunk: {
+        Row: {
+          content: string
+          created_at: string
+          heading: string
+          id: string
+          ordinal: number
+          search: unknown
+          source_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          heading?: string
+          id?: string
+          ordinal?: number
+          search?: unknown
+          source_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          heading?: string
+          id?: string
+          ordinal?: number
+          search?: unknown
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_chunk_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_source"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_source: {
+        Row: {
+          authority: number
+          checksum: string | null
+          created_at: string
+          effective_date: string | null
+          id: string
+          source_type: string
+          status: string
+          storage_path: string | null
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          authority?: number
+          checksum?: string | null
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          source_type: string
+          status?: string
+          storage_path?: string | null
+          title: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          authority?: number
+          checksum?: string | null
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          source_type?: string
+          status?: string
+          storage_path?: string | null
+          title?: string
+          updated_at?: string
+          version?: string
         }
         Relationships: []
       }
