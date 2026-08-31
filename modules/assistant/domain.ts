@@ -32,6 +32,11 @@ const BUSINESS = [
   'anuncio', 'anuncios', 'ads', 'instagram', 'tiktok', 'colaboracao', 'gravar', 'gravacao',
   'producao', 'shot', 'upsell', 'retainer', 'nicho', 'saas', 'app', 'tech', 'pet',
   'exclusividade', 'whitelisting', 'perpetuidade', 'carolos', 'negocio', 'trabalho',
+  // Os verbos com que ela fala do trabalho. Sem isto, «o que respondo à X?» —
+  // que é literalmente a pergunta mais frequente — não era reconhecida.
+  'responder', 'respondo', 'resposta', 'escrever', 'escrevo', 'mandar', 'mando',
+  'enviar', 'envio', 'dizer', 'digo', 'sabemos', 'sei', 'aceito', 'aceitar',
+  'recusar', 'fechar', 'fecho', 'propor', 'proposta', 'insistir', 'pedir',
 ];
 
 /** Coisas que só são do negócio com contexto. «Que tripé compro?» é trabalho

@@ -18,6 +18,8 @@ const Body = z.object({
     })
     .nullable()
     .optional(),
+  attachmentIds: z.array(z.string().uuid()).max(6).optional(),
+  webResearch: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -37,6 +39,8 @@ export async function POST(request: NextRequest) {
           threadId: parsed.data.threadId,
           userMessage: parsed.data.message,
           entity: parsed.data.entity ?? null,
+          attachmentIds: parsed.data.attachmentIds ?? [],
+          webResearch: parsed.data.webResearch ?? false,
           signal: request.signal,
         })) {
           send(event);

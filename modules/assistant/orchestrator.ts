@@ -8,6 +8,8 @@ import { assistantConfig } from './config';
 import { CORE_PROMPT, PROMPT_VERSION, situationPrompt } from './prompt';
 import { byName, TOOLS, type ToolContext } from './tools';
 import { resolveEntity } from './context';
+import { loadForModel } from './attachments';
+import { summariseThread } from './summary';
 
 /** O laço: mensagem → porta de domínio → contexto → modelo → ferramentas →
  *  resposta. Escrito à mão de propósito. Um framework de agentes esconderia
@@ -54,6 +56,8 @@ export async function* runAssistant(input: {
   threadId: string;
   userMessage: string;
   entity: { type: string; id: string | null } | null;
+  attachmentIds?: string[];
+  webResearch?: boolean;
   signal?: AbortSignal;
 }): AsyncGenerator<StreamEvent> {
   const cfg = assistantConfig();
@@ -125,9 +129,25 @@ export async function* runAssistant(input: {
   const client = new Anthropic({ apiKey: cfg.apiKey });
   const ctx: ToolContext = { entity: input.entity };
 
+  // Ficheiros entram no turno dela: imagem e PDF em base64, que é o que o
+  // modelo lê nativamente. Fazer OCR à parte seria trabalho a dobrar e pior.
+  const files = await loadForModel(input.attachmentIds ?? []);
+  const turnContent: Anthropic.ContentBlockParam[] = [];
+  for (const f of files) {
+    if (f.kind === 'image') {
+      turnContent.push({ type: 'image', source: { type: 'base64', media_type: f.mediaType as 'image/png', data: f.data } });
+    } else if (f.kind === 'pdf') {
+      turnContent.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.data } });
+    } else {
+      // Texto vai como texto: mandar um CSV em base64 é pagar tokens por ruído.
+      turnContent.push({ type: 'text', text: `Ficheiro anexado «${f.fileName}»:\n\n${f.data}` });
+    }
+  }
+  turnContent.push({ type: 'text', text: input.userMessage });
+
   const messages: Anthropic.MessageParam[] = [
     ...recent.map((t) => ({ role: t.role, content: t.content }) as Anthropic.MessageParam),
-    { role: 'user', content: input.userMessage },
+    { role: 'user', content: turnContent },
   ];
 
   const sources: Source[] = [];
@@ -156,7 +176,17 @@ export async function* runAssistant(input: {
             },
           ],
           messages,
-          tools: rounds < cfg.maxToolRounds && shouldUseTools(gate) ? toolSchemas() : undefined,
+          tools:
+            rounds < cfg.maxToolRounds && shouldUseTools(gate)
+              ? [
+                  ...toolSchemas(),
+                  // Pesquisa do lado do fornecedor, atrás de bandeira. Só entra
+                  // quando ela a liga: o Carol AI não é um chatbot da web.
+                  ...(input.webResearch
+                    ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 } as unknown as Anthropic.ToolUnion]
+                    : []),
+                ]
+              : undefined,
         },
         { signal: input.signal },
       );
@@ -248,6 +278,10 @@ export async function* runAssistant(input: {
         latency_ms: Date.now() - started, finished_at: new Date().toISOString(),
       }).eq('id', run.id);
     }
+
+    // A conversa cresceu: guarda-se tudo, mas o que vai para o modelo passa a
+    // ser resumo + fim. Sem isto pagava-se o princípio da conversa para sempre.
+    await summariseThread(input.threadId).catch(() => {});
 
     // Uma preferência declarada não pode morrer com a conversa.
     const candidate = memoryCandidate(input.userMessage);

@@ -5,6 +5,7 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { todayQueue, wakeSnoozed } from '@/modules/actions/service';
 import { markDue } from '@/modules/followups/service';
 import { getFlags, integrationHealth } from '@/modules/settings/service';
+import { openInsights } from '@/modules/assistant/service';
 import { dailyBrief } from '@/modules/actions/brief';
 import DailyRead from '@/components/dashboard/os/DailyRead';
 import Today from '@/components/dashboard/os/Today';
@@ -22,11 +23,12 @@ export default async function TodayPage() {
 
   await Promise.all([wakeSnoozed(db), markDue(db)]);
 
-  const [actions, flags, integration, counts] = await Promise.all([
+  const [actions, flags, integration, counts, insights] = await Promise.all([
     todayQueue(),
     getFlags(),
     integrationHealth(),
     loadCounts(),
+    openInsights(),
   ]);
 
   const now = new Date();
@@ -55,6 +57,7 @@ export default async function TodayPage() {
         greeting: app.displayName,
         counts,
         brief,
+        insights,
         flags,
         integration: {
           status: integration.status,

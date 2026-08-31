@@ -20,6 +20,7 @@ import { requestPendingMetrics } from '@/modules/cases/service';
 
 export const JOBS = [
   'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'plan', 'upsell',
+  'insights',
 ] as const;
 export type JobName = (typeof JOBS)[number];
 
@@ -95,6 +96,11 @@ export async function runJob(job: JobName): Promise<JobResult> {
         const scanned = await scanUpsells(db, flags);
         return { job, status: 'success', detail: scanned };
       }
+
+      case 'insights': {
+        const { refreshInsights } = await import('@/modules/assistant/insights-service');
+        return { job, status: 'success', detail: await refreshInsights() };
+      }
     }
   } catch (error) {
     const summary = error instanceof Error ? error.message : 'Falha desconhecida.';
@@ -138,6 +144,7 @@ export async function runJob(job: JobName): Promise<JobResult> {
 export async function runAllJobs(): Promise<JobResult[]> {
   const order: JobName[] = [
     'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'upsell', 'plan',
+    'insights',
   ];
   const results: JobResult[] = [];
   for (const job of order) results.push(await runJob(job));

@@ -23,6 +23,7 @@ const JOBS = [
   { id: 'metrics', label: 'Lembretes de métricas' },
   { id: 'upsell', label: 'Procurar upsell' },
   { id: 'plan', label: 'Recalcular a fila' },
+  { id: 'insights', label: 'Procurar avisos' },
 ];
 
 const STATUS_LABEL: Record<string, string> = {

@@ -4494,3 +4494,134 @@ a.aiSource:hover {
     padding: 13px;
   }
 }
+
+/* ── Carol AI: anexos, web e avisos ────────────────────────────────────── */
+.aiPanel[data-dragging] {
+  outline: 2px dashed var(--umbra);
+  outline-offset: -8px;
+}
+.aiFiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 9px;
+}
+.aiFile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 6px 4px 10px;
+  border: 1px solid var(--areia2);
+  border-radius: 7px;
+  background: var(--areia);
+  font-size: 12.5px;
+  color: var(--tinta2);
+  overflow-wrap: anywhere;
+}
+.aiFile button {
+  border: 0;
+  background: none;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 4px;
+  color: var(--tinta3);
+  cursor: pointer;
+}
+.aiFile button:hover {
+  color: var(--alerta);
+}
+.aiAttach,
+.aiWeb {
+  min-height: 32px;
+  padding: 6px 11px;
+  border: 1px solid var(--areia2);
+  border-radius: 8px;
+  background: var(--papel);
+  font: inherit;
+  font-size: 13px;
+  color: var(--tinta2);
+  cursor: pointer;
+}
+.aiAttach input {
+  display: none;
+}
+.aiAttach:hover,
+.aiWeb:hover {
+  border-color: var(--pedra);
+  background: var(--areia);
+}
+.aiWeb[aria-pressed='true'] {
+  background: var(--umbra);
+  border-color: var(--umbra);
+  color: var(--papel);
+}
+.aiSpacer {
+  flex: 1;
+}
+.aiComposerActs {
+  justify-content: flex-start;
+}
+
+/* Aviso por cima do botão flutuante: quantos, e o pior primeiro. */
+.aiBadge {
+  position: absolute;
+  top: -5px;
+  right: -3px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--alerta);
+  color: var(--papel);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+}
+.aiLauncher {
+  position: fixed;
+}
+
+/* Os avisos no Hoje. Uma lista curta, e cada um leva a um sítio. */
+.osInsights {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0 0;
+}
+.osInsight {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--areia2);
+  border-left-width: 3px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.2s var(--quart),
+    background 0.2s var(--quart);
+}
+.osInsight:hover {
+  background: var(--areia);
+}
+.osInsight[data-sev='urgent'] {
+  border-left-color: var(--alerta);
+}
+.osInsight[data-sev='warn'] {
+  border-left-color: var(--pedra);
+}
+.osInsight[data-sev='info'] {
+  border-left-color: var(--areia2);
+}
+.osInsight b {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 15px;
+}
+.osInsight span {
+  font-size: 13.5px;
+  color: var(--tinta3);
+}

@@ -426,6 +426,140 @@ export type Database = {
         }
         Relationships: []
       }
+      assistant_attachment: {
+        Row: {
+          byte_size: number
+          created_at: string
+          file_name: string
+          id: string
+          kind: string
+          knowledge_source_id: string | null
+          media_type: string
+          message_id: string | null
+          mode: string
+          storage_path: string
+          thread_id: string
+        }
+        Insert: {
+          byte_size?: number
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind: string
+          knowledge_source_id?: string | null
+          media_type: string
+          message_id?: string | null
+          mode?: string
+          storage_path: string
+          thread_id: string
+        }
+        Update: {
+          byte_size?: number
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind?: string
+          knowledge_source_id?: string | null
+          media_type?: string
+          message_id?: string | null
+          mode?: string
+          storage_path?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_attachment_knowledge_source_id_fkey"
+            columns: ["knowledge_source_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_source"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_attachment_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_message"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_attachment_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_thread"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_insight: {
+        Row: {
+          app_user_id: string
+          brand_id: string | null
+          created_at: string
+          dedupe_key: string
+          detail: string
+          href: string | null
+          id: string
+          kind: string
+          opportunity_id: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          app_user_id: string
+          brand_id?: string | null
+          created_at?: string
+          dedupe_key: string
+          detail?: string
+          href?: string | null
+          id?: string
+          kind: string
+          opportunity_id?: string | null
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          app_user_id?: string
+          brand_id?: string | null
+          created_at?: string
+          dedupe_key?: string
+          detail?: string
+          href?: string | null
+          id?: string
+          kind?: string
+          opportunity_id?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_insight_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_insight_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_insight_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistant_message: {
         Row: {
           cached_tokens: number | null
@@ -1870,6 +2004,8 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          embedding: string | null
+          embedding_model: string | null
           heading: string
           id: string
           ordinal: number
@@ -1879,6 +2015,8 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          embedding?: string | null
+          embedding_model?: string | null
           heading?: string
           id?: string
           ordinal?: number
@@ -1888,6 +2026,8 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          embedding?: string | null
+          embedding_model?: string | null
           heading?: string
           id?: string
           ordinal?: number

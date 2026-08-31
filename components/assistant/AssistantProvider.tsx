@@ -10,6 +10,8 @@ import type { Source } from '@/modules/assistant/domain';
  *  pergunta uma coisa, vai ao preço, volta — e a conversa está onde estava,
  *  com o rascunho por enviar. */
 
+export type Attached = { id: string; kind: string; fileName: string; byteSize: number };
+
 export type ChatMessage = {
   id: string;
   role: 'user' | 'assistant';
@@ -29,6 +31,10 @@ type Ctx = {
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   draft: string;
   setDraft: (v: string) => void;
+  /** Ficheiros já carregados e ainda por enviar. Sobrevivem à navegação como o
+   *  rascunho: perder um anexo por mudar de ecrã seria inaceitável. */
+  files: Attached[];
+  setFiles: React.Dispatch<React.SetStateAction<Attached[]>>;
   busy: boolean;
   setBusy: (v: boolean) => void;
   abort: React.MutableRefObject<AbortController | null>;
@@ -61,6 +67,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
+  const [files, setFiles] = useState<Attached[]>([]);
   const [busy, setBusy] = useState(false);
   const abort = useRef<AbortController | null>(null);
 
@@ -72,12 +79,13 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     setThreadId(null);
     setMessages([]);
     setDraft('');
+    setFiles([]);
     setBusy(false);
   }, []);
 
   const value = useMemo(
-    () => ({ open, setOpen, entity, threadId, setThreadId, messages, setMessages, draft, setDraft, busy, setBusy, abort, reset }),
-    [open, entity, threadId, messages, draft, busy, reset],
+    () => ({ open, setOpen, entity, threadId, setThreadId, messages, setMessages, draft, setDraft, files, setFiles, busy, setBusy, abort, reset }),
+    [open, entity, threadId, messages, draft, files, busy, reset],
   );
 
   return <AssistantCtx.Provider value={value}>{children}</AssistantCtx.Provider>;

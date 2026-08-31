@@ -564,6 +564,130 @@ const createMemoryCandidate = define(
   },
 );
 
+
+/* ── Instagram, com a honestidade do que existe ──────────────────────────── */
+
+const getInstagramContext = define(
+  'get_instagram_context',
+  'O que o CarolOS tem do Instagram de uma marca. NÃO há integração com a API do Instagram: isto é só o que a Carol capturou à mão. Diz sempre há quanto tempo foi capturado.',
+  z.object({ brand_id: z.string().uuid().optional(), query: z.string().optional() }),
+  async ({ brand_id, query }) => {
+    const db = await supabaseServer();
+    let q = db
+      .from('capture_item')
+      .select('id, kind, raw_input, note, extracted, created_at, brand_id')
+      .in('kind', ['profile', 'conversation', 'screenshot'])
+      .order('created_at', { ascending: false })
+      .limit(12);
+    if (brand_id) q = q.eq('brand_id', brand_id);
+    if (query) q = q.or(`raw_input.ilike.%${query}%,note.ilike.%${query}%`);
+
+    const { data } = await q;
+    const rows = data ?? [];
+
+    // Um dado do Instagram sem data é uma afirmação sobre o passado disfarçada
+    // de presente. A idade vai sempre junto.
+    const now = Date.now();
+    return {
+      data: {
+        integration: 'none',
+        note: 'Não existe ligação à API do Instagram. Isto é captura manual do CarolOS.',
+        items: rows.map((c) => ({
+          kind: c.kind,
+          note: c.note,
+          content: (c.raw_input ?? '').slice(0, 1500),
+          extracted: c.extracted,
+          capturedAt: c.created_at,
+          ageDays: Math.floor((now - new Date(c.created_at).getTime()) / 86400000),
+        })),
+      },
+      sources: rows.map((c) => ({
+        id: c.id, type: 'knowledge' as const,
+        label: `Captura · ${c.kind}`, at: c.created_at, href: '/dashboard/capture',
+      })),
+    };
+  },
+);
+
+/* ── Escrita: preparar, nunca disparar ───────────────────────────────────── */
+
+const createFollowupDraft = define(
+  'create_followup_draft',
+  'Escreve o texto de um follow-up já agendado. Guarda como rascunho — não envia nada.',
+  z.object({ followup_id: z.string().uuid(), text: z.string().min(10).max(4000) }),
+  async ({ followup_id, text }) => {
+    const db = await supabaseServer();
+    const { error } = await db.from('follow_up').update({ draft_text: text }).eq('id', followup_id);
+    if (error) throw new Error(`create_followup_draft: ${error.message}`);
+    return {
+      data: { saved: true, sent: false, note: 'Rascunho guardado. O envio passa por ela.' },
+      sources: [{ id: followup_id, type: 'followup' as const, label: 'Follow-up', at: null, href: '/dashboard/followups' }],
+    };
+  },
+);
+
+const createNote = define(
+  'create_note',
+  'Deixa uma nota no registo de actividade de uma marca ou oportunidade, para não se perder o que se concluiu.',
+  z.object({
+    brand_id: z.string().uuid().optional(),
+    opportunity_id: z.string().uuid().optional(),
+    summary: z.string().min(4).max(400),
+  }),
+  async ({ brand_id, opportunity_id, summary }) => {
+    if (!brand_id && !opportunity_id) throw new Error('create_note: indica a marca ou a oportunidade');
+    const db = await supabaseServer();
+    const { error } = await db.from('activity_event').insert({
+      event_type: 'note.added',
+      actor_type: 'system',
+      brand_id: brand_id ?? null,
+      opportunity_id: opportunity_id ?? null,
+      summary,
+      payload: { via: 'carol-ai' },
+    });
+    if (error) throw new Error(`create_note: ${error.message}`);
+    return { data: { saved: true }, sources: [] };
+  },
+);
+
+const snoozeFollowupTool = define(
+  'snooze_followup',
+  'Adia um follow-up por alguns dias, quando a Carol disser que ainda não é altura.',
+  z.object({ followup_id: z.string().uuid(), days: z.number().int().min(1).max(60) }),
+  async ({ followup_id, days }) => {
+    const db = await supabaseServer();
+    const due = new Date(Date.now() + days * 86400000).toISOString();
+    const { error } = await db
+      .from('follow_up')
+      .update({ due_at: due, status: 'scheduled' })
+      .eq('id', followup_id);
+    if (error) throw new Error(`snooze_followup: ${error.message}`);
+    return { data: { dueAt: due }, sources: [] };
+  },
+);
+
+const getInsights = define(
+  'get_insights',
+  'Os avisos proactivos abertos: oportunidades paradas, licenças a expirar, dinheiro por receber, janelas de upsell.',
+  z.object({ limit: z.number().optional() }),
+  async ({ limit }) => {
+    const db = await supabaseServer();
+    const { data } = await db
+      .from('assistant_insight')
+      .select('id, kind, severity, title, detail, href, created_at')
+      .eq('status', 'open')
+      .order('severity')
+      .limit(cap(limit, 20));
+    const rows = data ?? [];
+    return {
+      data: rows,
+      sources: rows.filter((r) => r.href).map((r) => ({
+        id: r.id, type: 'followup' as const, label: r.title.slice(0, 60), at: r.created_at, href: r.href,
+      })),
+    };
+  },
+);
+
 export const TOOLS: Tool[] = [
   searchBrands, getBrand, getBrandActivity,
   searchOpportunities, getOpportunity,
@@ -572,6 +696,8 @@ export const TOOLS: Tool[] = [
   calculatePrice, getPricingPolicy, getRevenueSummary,
   searchPortfolio, searchDocuments, getRights,
   searchBusinessMemory, searchKnowledge, createMemoryCandidate,
+  getInstagramContext, getInsights,
+  createFollowupDraft, createNote, snoozeFollowupTool,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));

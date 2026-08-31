@@ -110,3 +110,22 @@ export async function activeMemories(limit = 20) {
     .limit(limit);
   return data ?? [];
 }
+
+/** Os avisos abertos, os piores primeiro. */
+export async function openInsights(limit = 6) {
+  const db = await supabaseServer();
+  const { data } = await db
+    .from('assistant_insight')
+    .select('id, severity, title, detail, href')
+    .eq('status', 'open')
+    .order('severity')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return (data ?? []).map((i) => ({
+    id: i.id,
+    severity: i.severity as 'info' | 'warn' | 'urgent',
+    title: i.title,
+    detail: i.detail,
+    href: i.href,
+  }));
+}

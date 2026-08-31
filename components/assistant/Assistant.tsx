@@ -40,12 +40,15 @@ function Sources({ sources }: { sources: Source[] }) {
   );
 }
 
-export default function Assistant({ configured }: { configured: boolean }) {
+export default function Assistant({ configured, pending = 0 }: { configured: boolean; pending?: number }) {
   const a = useAssistant();
   const [status, setStatus] = useState('');
   const [threads, setThreads] = useState<{ id: string; title: string }[]>([]);
   const [showList, setShowList] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [uploadError, setUploadError] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const [web, setWeb] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const stick = useRef(true);
@@ -73,12 +76,37 @@ export default function Assistant({ configured }: { configured: boolean }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [a.open, a.entity.type, a.entity.id, a]);
 
+  const upload = useCallback(
+    async (list: FileList | File[]) => {
+      let id = a.threadId;
+      if (!id) {
+        const created = await openAssistantThread(a.entity.id ? a.entity.type : null, a.entity.id);
+        if ('error' in created) return setUploadError(created.error);
+        id = created.id;
+        a.setThreadId(id);
+      }
+      setUploadError('');
+      for (const file of Array.from(list).slice(0, 5)) {
+        const form = new FormData();
+        form.set('threadId', id);
+        form.set('file', file);
+        const res = await fetch('/api/assistant/upload', { method: 'POST', body: form });
+        const body = await res.json().catch(() => ({ error: 'Falhou.' }));
+        if (!res.ok) setUploadError(body.error ?? 'Não consegui carregar o ficheiro.');
+        else a.setFiles((f) => [...f, body]);
+      }
+    },
+    [a],
+  );
+
   const send = useCallback(
     async (text: string) => {
       const message = text.trim();
       if (!message || a.busy) return;
 
+      const attachmentIds = a.files.map((f) => f.id);
       a.setDraft('');
+      a.setFiles([]);
       a.setBusy(true);
       setStatus('');
 
@@ -109,7 +137,12 @@ export default function Assistant({ configured }: { configured: boolean }) {
         const res = await fetch('/api/assistant/chat', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ threadId, message, entity: a.entity.id ? a.entity : null }),
+          body: JSON.stringify({
+            threadId, message,
+            entity: a.entity.id ? a.entity : null,
+            attachmentIds,
+            webResearch: web,
+          }),
           signal: controller.signal,
         });
         if (!res.ok || !res.body) throw new Error('A Carol AI não respondeu.');
@@ -158,7 +191,7 @@ export default function Assistant({ configured }: { configured: boolean }) {
         setStatus('');
       }
     },
-    [a],
+    [a, web],
   );
 
   async function pickThread(id: string) {
@@ -174,17 +207,38 @@ export default function Assistant({ configured }: { configured: boolean }) {
 
   if (!a.open) {
     return (
-      <button className="aiLauncher" type="button" onClick={() => a.setOpen(true)} aria-label="Abrir a Carol AI">
+      <button className="aiLauncher" type="button" style={{ position: 'fixed' }} onClick={() => a.setOpen(true)} aria-label="Abrir a Carol AI">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 3.4c4.6 0 8.3 3.1 8.3 7s-3.7 7-8.3 7c-.9 0-1.8-.1-2.6-.4l-4 1.6 1.2-3.2c-1.8-1.3-2.9-3.1-2.9-5C3.7 6.5 7.4 3.4 12 3.4Z" />
         </svg>
         <span>Carol AI</span>
+        {pending > 0 ? (
+          <span className="aiBadge" aria-label={`${pending} avisos por ver`}>
+            {pending > 9 ? '9+' : pending}
+          </span>
+        ) : null}
       </button>
     );
   }
 
   return (
-    <aside className="aiPanel" role="dialog" aria-modal="false" aria-label="Carol AI">
+    <aside
+      className="aiPanel"
+      role="dialog"
+      aria-modal="false"
+      aria-label="Carol AI"
+      data-dragging={dragging || undefined}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        if (e.dataTransfer.files.length) void upload(e.dataTransfer.files);
+      }}
+    >
       <header className="aiHead">
         <div>
           <b>Carol AI</b>
@@ -300,6 +354,14 @@ export default function Assistant({ configured }: { configured: boolean }) {
           value={a.draft}
           placeholder="Pergunta sobre marcas, preços, emails…"
           onChange={(e) => a.setDraft(e.target.value)}
+          onPaste={(e) => {
+            // Colar um print é como a maior parte das capturas acontece.
+            const files = [...e.clipboardData.files];
+            if (files.length) {
+              e.preventDefault();
+              void upload(files);
+            }
+          }}
           onKeyDown={(e) => {
             // Enter envia, Shift+Enter muda de linha. É o que os dedos esperam.
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -308,7 +370,47 @@ export default function Assistant({ configured }: { configured: boolean }) {
             }
           }}
         />
+        {a.files.length ? (
+          <div className="aiFiles">
+            {a.files.map((f) => (
+              <span className="aiFile" key={f.id}>
+                {f.fileName}
+                <button
+                  type="button"
+                  aria-label={`Tirar ${f.fileName}`}
+                  onClick={() => a.setFiles((list) => list.filter((x) => x.id !== f.id))}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
+        {uploadError ? <p className="osWarn">{uploadError}</p> : null}
+
         <div className="aiComposerActs">
+          <label className="aiAttach">
+            <input
+              type="file"
+              multiple
+              accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,text/markdown,text/csv"
+              onChange={(e) => {
+                if (e.target.files?.length) void upload(e.target.files);
+                e.target.value = '';
+              }}
+            />
+            Anexar
+          </label>
+          <button
+            className="aiWeb"
+            type="button"
+            aria-pressed={web}
+            onClick={() => setWeb((v) => !v)}
+            title="Deixar procurar na web para pesquisa de marcas e produtos"
+          >
+            Web
+          </button>
+          <span className="aiSpacer" />
           {a.busy ? (
             <button className="chip" type="button" onClick={() => a.abort.current?.abort()}>
               Parar

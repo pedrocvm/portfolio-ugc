@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ActionRow } from '@/modules/actions/service';
 import type { Flags } from '@/lib/flags';
+import Insights, { type InsightRow } from './Insights';
 import Queue from './Queue';
 import Replan from './Replan';
 
@@ -16,6 +17,7 @@ export type TodayData = {
   /** O dia dito por extenso. Substitui os contadores: «13» não é informação
    *  até alguém dizer 13 de quê e se isso é bom ou mau. */
   brief: string;
+  insights: InsightRow[];
   flags: Flags;
   integration: { status: string; lastSuccessAt: string | null; account: string };
 };
@@ -47,6 +49,8 @@ export default function Today({ data, read }: { data: TodayData; read?: React.Re
 
       <p className="osBrief">{data.brief}</p>
       {read}
+
+      <Insights insights={data.insights} />
 
       {/* O motivo do silêncio já está no resumo acima; aqui fica só o que ela
           pode fazer a seguir. */}
