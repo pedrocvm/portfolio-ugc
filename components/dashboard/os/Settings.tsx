@@ -33,11 +33,11 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function Settings({
-  flags, integration, jobs, googleConfigured, aiConfigured, serviceRole, encryptionKey,
+  flags, mailboxes, jobs, googleConfigured, aiConfigured, serviceRole, encryptionKey,
   policyVersion, policyStatus, notice, scheduler,
 }: {
   flags: Flags;
-  integration: IntegrationHealth;
+  mailboxes: IntegrationHealth[];
   jobs: JobSummary[];
   scheduler: SchedulerState;
   googleConfigured: boolean;
@@ -88,56 +88,61 @@ export default function Settings({
         <h2>Gmail</h2>
         <p className="osNote">
           É a integração que torna o CRM passivo. Pede só leitura e criação de rascunhos: não há
-          permissão para enviar, por desenho.
+          permissão para enviar, por desenho. Podes ligar mais do que uma conta — as marcas nem
+          sempre escrevem para a mesma caixa.
         </p>
 
-        <div className="osStats">
-          <div className="osStat">
-            <b><em>{STATUS_LABEL[integration.status] ?? integration.status}</em></b>
-            <span>{integration.account || 'sem conta ligada'}</span>
+        {mailboxes.length === 0 ? (
+          <p className="osRowSub">Nenhuma conta ligada.</p>
+        ) : (
+          <div className="osRows">
+            {mailboxes.map((m) => (
+              <div className="osRow" key={m.id || m.account}>
+                <div>
+                  <b>{m.account || 'conta por identificar'}</b>
+                  <span className="osRowSub">
+                    {STATUS_LABEL[m.status] ?? m.status}
+                    {' · '}
+                    {m.lastSuccessAt
+                      ? `sincronizada a ${formatDate(m.lastSuccessAt)}`
+                      : 'ainda sem sincronização'}
+                    {m.lastErrorCode ? ` · último erro: ${m.lastErrorCode}` : ''}
+                  </span>
+                </div>
+                {m.id ? (
+                  <button
+                    className="chip"
+                    type="button"
+                    disabled={pending}
+                    onClick={() =>
+                      start(async () => {
+                        await fetch('/api/integrations/google/disconnect', {
+                          method: 'POST',
+                          headers: { 'content-type': 'application/json' },
+                          body: JSON.stringify({ connectionId: m.id }),
+                        });
+                        setMessage(`${m.account} desligada e autorização revogada no Google.`);
+                      })
+                    }
+                  >
+                    Desligar
+                  </button>
+                ) : null}
+              </div>
+            ))}
           </div>
-          <div className="osStat">
-            <b><em>{integration.lastSuccessAt ? formatDate(integration.lastSuccessAt) : '—'}</em></b>
-            <span>última sincronização</span>
-          </div>
-          <div className="osStat">
-            <b><em>{integration.cursor ? `${integration.cursor.slice(0, 10)}…` : '—'}</em></b>
-            <span>cursor</span>
-          </div>
-        </div>
-
-        {integration.lastErrorCode ? (
-          <p className="osWarn">
-            Último erro: {integration.lastErrorCode}
-            {integration.lastErrorAt ? ` (${formatDate(integration.lastErrorAt)})` : ''}.
-          </p>
-        ) : null}
+        )}
 
         <div className="osActs">
           {googleConfigured ? (
             <a className="btn" href="/api/integrations/google/oauth/start">
-              {integration.status === 'connected' ? 'Voltar a autorizar' : 'Ligar o Gmail'}
+              {mailboxes.length === 0 ? 'Ligar o Gmail' : 'Ligar outra conta'}
             </a>
           ) : (
             <span className="osRowSub">
               Sem GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET no ambiente, o botão de ligar não faz nada.
             </span>
           )}
-          {integration.status === 'connected' ? (
-            <button
-              className="chip"
-              type="button"
-              disabled={pending}
-              onClick={() =>
-                start(async () => {
-                  await fetch('/api/integrations/google/disconnect', { method: 'POST' });
-                  setMessage('Ligação removida e autorização revogada no Google.');
-                })
-              }
-            >
-              Desligar
-            </button>
-          ) : null}
         </div>
       </section>
 

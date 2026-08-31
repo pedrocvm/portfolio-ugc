@@ -160,7 +160,7 @@ export async function saveConnection(input: {
       last_error_code: null,
       last_error_at: null,
     },
-    { onConflict: 'provider,app_user_id' },
+    { onConflict: 'provider,app_user_id,account_identifier' },
   );
 
   // O cliente do Supabase devolve o erro, não o lança. Sem isto uma escrita
@@ -172,7 +172,28 @@ export async function saveConnection(input: {
 /** Devolve um access token válido, renovando-o quando falta menos de um minuto.
  *  O token nunca sai desta camada para cima com o valor em claro senão dentro
  *  do cabeçalho de um pedido. */
-export async function accessTokenFor(appUserId?: string): Promise<{ token: string; connectionId: string; account: string } | null> {
+/** As caixas ligadas, por ordem de ligação. Sem argumento devolve as de toda a
+ *  gente, que hoje é só a Carol — o filtro existe para o dia em que não for. */
+export async function listMailboxes(appUserId?: string): Promise<Mailbox[]> {
+  let query = supabaseService()
+    .from('integration_connection')
+    .select('id, account_identifier, status')
+    .eq('provider', 'google_gmail')
+    .neq('status', 'revoked')
+    .order('created_at');
+  if (appUserId) query = query.eq('app_user_id', appUserId);
+
+  const { data, error } = await query;
+  if (error) throw new Error(`list_mailboxes_failed: ${error.code ?? error.message}`);
+  return (data ?? []).map((r) => ({ id: r.id, account: r.account_identifier, status: r.status }));
+}
+
+export type Mailbox = { id: string; account: string; status: string };
+
+/** Sem `connectionId` devolve a primeira caixa. Isso serve para um pedido
+ *  avulso; quem sincroniza percorre `listMailboxes` e nomeia a caixa, senão
+ *  lia sempre a mesma e a segunda conta nunca era vista. */
+export async function accessTokenFor(connectionId?: string): Promise<{ token: string; connectionId: string; account: string } | null> {
   const cfg = googleConfig();
   if (!cfg) return null;
 
@@ -180,8 +201,9 @@ export async function accessTokenFor(appUserId?: string): Promise<{ token: strin
   let query = db
     .from('integration_connection')
     .select('id, app_user_id, account_identifier, status, encrypted_access_token, encrypted_refresh_token, token_expires_at')
-    .eq('provider', 'google_gmail');
-  if (appUserId) query = query.eq('app_user_id', appUserId);
+    .eq('provider', 'google_gmail')
+    .order('created_at');
+  if (connectionId) query = query.eq('id', connectionId);
 
   const { data } = await query.limit(1).maybeSingle();
   if (!data || data.status === 'revoked') return null;
@@ -247,13 +269,16 @@ export async function updateCursor(connectionId: string, cursor: string) {
     .eq('id', connectionId);
 }
 
-export async function disconnect(appUserId: string) {
+/** Desliga uma caixa concreta. O id é obrigatório desde que há mais do que uma:
+ *  sem ele, desligar a segunda conta revogava a primeira que aparecesse. */
+export async function disconnect(appUserId: string, connectionId: string) {
   const db = supabaseService();
   const { data } = await db
     .from('integration_connection')
     .select('id, encrypted_refresh_token')
     .eq('provider', 'google_gmail')
     .eq('app_user_id', appUserId)
+    .eq('id', connectionId)
     .maybeSingle();
 
   if (!data) return;

@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { blankHealth, summariseHealth, type IntegrationHealth } from './domain';
+
 import { cache } from 'react';
 import { DEFAULT_FLAGS, readFlags, type FlagKey, type Flags } from '@/lib/flags';
 import { asJson } from '@/lib/supabase/json';
@@ -33,60 +35,40 @@ export async function setFlag(key: FlagKey, value: boolean): Promise<Flags> {
   return next;
 }
 
-/** Estado de saúde das integrações. Passa pelo service role porque
- *  `integration_connection` guarda tokens e não tem policy nenhuma — e devolve
- *  só os campos que podem ser mostrados. */
-export type IntegrationHealth = {
-  provider: string;
-  account: string;
-  status: 'connected' | 'error' | 'revoked' | 'paused' | 'disconnected';
-  scopes: string[];
-  cursor: string | null;
-  lastSyncAt: string | null;
-  lastSuccessAt: string | null;
-  lastErrorCode: string | null;
-  lastErrorAt: string | null;
-};
+export type { IntegrationHealth };
 
-export async function integrationHealth(provider = 'google_gmail'): Promise<IntegrationHealth> {
-  const blank: IntegrationHealth = {
-    provider,
-    account: '',
-    status: 'disconnected',
-    scopes: [],
-    cursor: null,
-    lastSyncAt: null,
-    lastSuccessAt: null,
-    lastErrorCode: null,
-    lastErrorAt: null,
-  };
-  if (!hasServiceRole()) return blank;
+export async function integrationHealths(provider = 'google_gmail'): Promise<IntegrationHealth[]> {
+  if (!hasServiceRole()) return [];
 
   const { data, error } = await supabaseService()
     .from('integration_connection')
-    .select('account_identifier, status, scopes, cursor, last_sync_at, last_success_at, last_error_code, last_error_at')
+    .select('id, account_identifier, status, scopes, cursor, last_sync_at, last_success_at, last_error_code, last_error_at')
     .eq('provider', provider)
-    .maybeSingle();
+    .neq('status', 'revoked')
+    .order('created_at');
 
-  // Não conseguir ler não é o mesmo que não estar ligado. Dizer «desligado»
-  // quando a resposta certa é «não sei» manda-a ligar outra vez uma coisa que
-  // talvez já esteja ligada, e esconde a avaria real.
   if (error) {
-    return { ...blank, status: 'error', lastErrorCode: error.code ?? 'read_failed' };
+    return [{ ...blankHealth(provider), status: 'error', lastErrorCode: error.code ?? 'read_failed' }];
   }
 
-  if (!data) return blank;
-  return {
+  return (data ?? []).map((row) => ({
+    id: row.id,
     provider,
-    account: data.account_identifier,
-    status: data.status as IntegrationHealth['status'],
-    scopes: data.scopes ?? [],
-    cursor: data.cursor,
-    lastSyncAt: data.last_sync_at,
-    lastSuccessAt: data.last_success_at,
-    lastErrorCode: data.last_error_code,
-    lastErrorAt: data.last_error_at,
-  };
+    account: row.account_identifier,
+    status: row.status as IntegrationHealth['status'],
+    scopes: row.scopes ?? [],
+    cursor: row.cursor,
+    lastSyncAt: row.last_sync_at,
+    lastSuccessAt: row.last_success_at,
+    lastErrorCode: row.last_error_code,
+    lastErrorAt: row.last_error_at,
+  }));
+}
+
+
+/** Resumo de todas as caixas. A regra de qual manda vive no domínio. */
+export async function integrationHealth(provider = 'google_gmail'): Promise<IntegrationHealth> {
+  return summariseHealth(await integrationHealths(provider), provider);
 }
 
 export type JobSummary = {

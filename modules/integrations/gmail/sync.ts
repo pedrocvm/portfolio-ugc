@@ -5,7 +5,7 @@ import { asJson } from '@/lib/supabase/json';
 import { supabaseService } from '@/lib/supabase/service';
 import { ingestMessage, type NormalizedMessage } from '@/modules/inbox/ingest';
 import { GmailError, getMessage, getProfile, listHistory, listMessages, parseMessage } from './client';
-import { accessTokenFor, markError, updateCursor } from './oauth';
+import { accessTokenFor, listMailboxes, markError, updateCursor, type Mailbox } from './oauth';
 
 /** Sincronização incremental do Gmail.
  *
@@ -27,6 +27,8 @@ const FIRST_RUN_LIMIT = 120;
 const INCREMENTAL_LIMIT = 60;
 
 export type SyncReport = {
+  /** Qual caixa. Null no relatório agregado, que fala de todas. */
+  mailbox: string | null;
   status: 'success' | 'error' | 'skipped';
   processed: number;
   created: number;
@@ -38,8 +40,60 @@ export type SyncReport = {
   detail: string;
 };
 
+/** Percorre todas as caixas ligadas. Sincronizar só a primeira era o que
+ *  acontecia antes de haver duas, e deixaria a segunda conta muda sem nada no
+ *  ecrã a dizer porquê. Uma caixa a falhar não impede as outras. */
 export async function syncGmail(flags: Flags, options: { limit?: number } = {}): Promise<SyncReport> {
+  if (!flags.gmail_ingestion) {
+    return { ...EMPTY, detail: 'A bandeira gmail_ingestion está fechada.' };
+  }
+
+  const mailboxes = await listMailboxes();
+  if (mailboxes.length === 0) {
+    return { ...EMPTY, status: 'error', detail: 'Sem ligação válida ao Gmail.' };
+  }
+
+  const reports: SyncReport[] = [];
+  for (const mailbox of mailboxes) {
+    reports.push(await syncMailbox(flags, mailbox, options));
+  }
+
+  const sum = (pick: (r: SyncReport) => number) => reports.reduce((t, r) => t + pick(r), 0);
+
+  return {
+    mailbox: null,
+    status: reports.some((r) => r.status === 'error')
+      ? 'error'
+      : reports.some((r) => r.status === 'success')
+        ? 'success'
+        : 'skipped',
+    processed: sum((r) => r.processed),
+    created: sum((r) => r.created),
+    duplicates: sum((r) => r.duplicates),
+    needsReview: sum((r) => r.needsReview),
+    irrelevant: sum((r) => r.irrelevant),
+    cursorBefore: null,
+    cursorAfter: null,
+    detail: reports.map((r) => `${r.mailbox}: ${r.detail || r.status}`).join(' · '),
+  };
+}
+
+const EMPTY: SyncReport = {
+  mailbox: null,
+  status: 'skipped',
+  processed: 0,
+  created: 0,
+  duplicates: 0,
+  needsReview: 0,
+  irrelevant: 0,
+  cursorBefore: null,
+  cursorAfter: null,
+  detail: '',
+};
+
+async function syncMailbox(flags: Flags, mailbox: Mailbox, options: { limit?: number } = {}): Promise<SyncReport> {
   const blank: SyncReport = {
+    mailbox: mailbox.account,
     status: 'skipped',
     processed: 0,
     created: 0,
@@ -55,14 +109,16 @@ export async function syncGmail(flags: Flags, options: { limit?: number } = {}):
     return { ...blank, detail: 'A bandeira gmail_ingestion está fechada.' };
   }
 
-  const auth = await accessTokenFor();
+  const auth = await accessTokenFor(mailbox.id);
   if (!auth) {
-    return { ...blank, status: 'error', detail: 'Sem ligação válida ao Gmail.' };
+    return { ...blank, status: 'error', detail: 'Sem token válido.' };
   }
 
   const db = supabaseService();
   const started = new Date().toISOString();
-  const idempotencyKey = `gmail-sync:${started.slice(0, 16)}`;
+  // A caixa entra na chave: sem ela, a segunda conta a correr no mesmo minuto
+  // colidia com a unicidade de job_run e ficava sem registo.
+  const idempotencyKey = `gmail-sync:${mailbox.id}:${started.slice(0, 16)}`;
 
   const { data: connection } = await db
     .from('integration_connection')
@@ -176,6 +232,7 @@ export async function syncGmail(flags: Flags, options: { limit?: number } = {}):
     await updateCursor(auth.connectionId, nextCursor);
 
     return finish({
+      mailbox: mailbox.account,
       status: 'success',
       processed: refs.length,
       created,
