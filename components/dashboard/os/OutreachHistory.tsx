@@ -1,7 +1,6 @@
 import Link from 'next/link';
-import { formatDate } from '@/lib/time';
 import {
-  CONF_LABEL, PAID_LABEL, UGC_LABEL,
+  CONF_LABEL, PAID_LABEL, UGC_LABEL, countryLabel, dayLabel,
   groupByDay, statusLabel, summarize, summarySentence, type HistoryRow,
 } from '@/modules/outreach/history';
 
@@ -13,6 +12,7 @@ import {
 
 export type HistoryCandidate = HistoryRow & {
   website: string | null;
+  socials: Record<string, string | null> | null;
   product: string | null;
   why_fit: string | null;
   why_now: string | null;
@@ -53,6 +53,31 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <dt>{label}</dt>
       <dd>{children}</dd>
     </div>
+  );
+}
+
+const SOCIALS: [string, string, (v: string) => string][] = [
+  ['instagram', 'Instagram', (v) => `https://instagram.com/${v.replace(/^@/, '')}`],
+  ['tiktok', 'TikTok', (v) => `https://tiktok.com/@${v.replace(/^@/, '')}`],
+  ['youtube', 'YouTube', (v) => `https://youtube.com/${v.replace(/^@/, '@')}`],
+  ['linkedin', 'LinkedIn', (v) => `https://linkedin.com/company/${v}`],
+];
+
+function Socials({ socials }: { socials: HistoryCandidate['socials'] }) {
+  const links = SOCIALS.flatMap(([key, label, build]) => {
+    const v = socials?.[key]?.trim();
+    // O modelo tanto devolve `@marca` como o URL inteiro; os dois têm de abrir.
+    return v ? [{ key, label, url: v.startsWith('http') ? v : build(v) }] : [];
+  });
+  if (links.length === 0) return null;
+  return (
+    <>
+      {links.map((l) => (
+        <a className="histSocial" key={l.key} href={l.url} target="_blank" rel="noopener noreferrer">
+          {l.label}
+        </a>
+      ))}
+    </>
   );
 }
 
@@ -97,6 +122,12 @@ function Detail({ c }: { c: HistoryCandidate }) {
         </Field>
       ) : null}
 
+      {/* Ver o que já publicam é metade da decisão, e é o primeiro sítio onde
+          ela vai olhar antes de escrever seja o que for. */}
+      <Field label="Onde publicam">
+        <Socials socials={c.socials} />
+      </Field>
+
       <Field label="Contacto">
         {c.contact_email ? (
           <>
@@ -129,14 +160,21 @@ function Detail({ c }: { c: HistoryCandidate }) {
         </Field>
       ) : null}
 
-      {c.subject ? (
-        <Field label="Email">
+      <Field label="Email">
+        {c.subject ? (
           <div className="histMail">
             <b>{c.subject}</b>
             <p>{c.body}</p>
           </div>
-        </Field>
-      ) : null}
+        ) : (
+          // Um campo vazio faz a pessoa procurar o que não existe. Dizer porquê
+          // custa uma frase e poupa a procura.
+          <span className="histNone">
+            Não escrevi o email: ficou abaixo do corte de encaixe. Pode pedi-lo
+            em <Link href="/dashboard/outreach">Prospecção</Link>.
+          </span>
+        )}
+      </Field>
 
       {c.quality && !c.quality.pass ? (
         <Field label="Qualidade">
@@ -224,18 +262,25 @@ export default function OutreachHistory({
         </p>
       ) : null}
 
-      {days.map(({ day, rows: doDia }) => {
+      {days.map(({ day, rows: doDia }, i) => {
         const run = runByDay.get(day);
+        const enviadas = doDia.filter((c) => c.status === 'sent').length;
         return (
-          <section className="histDay" key={day}>
-            <h2>
-              {formatDate(day)}
+          // Os dias antigos ficam fechados: com um mês de corridas, a lista
+          // aberta é uma parede por onde ela tem de rolar até ao que interessa.
+          <details className="histDay" key={day} open={i < 2}>
+            <summary>
+              <span className="histDayName">{dayLabel(day)}</span>
+              <span className="histDayCount">
+                {doDia.length} {doDia.length === 1 ? 'marca' : 'marcas'}
+                {enviadas ? `, ${enviadas} enviada${enviadas === 1 ? '' : 's'}` : ''}
+              </span>
               {run ? (
-                <span>
-                  {run.discovered} encontradas, {run.researched} pesquisadas, {run.selected} escolhidas
+                <span className="histDayRun">
+                  {run.discovered} encontradas · {run.researched} pesquisadas · {run.selected} escolhidas
                 </span>
               ) : null}
-            </h2>
+            </summary>
 
             {doDia.map((c) => (
               <details className="histRow" key={c.id}>
@@ -245,12 +290,14 @@ export default function OutreachHistory({
                   <span className="histStatus" data-status={c.status}>
                     {statusLabel(c.status)}
                   </span>
-                  {c.country ? <span className="histWhere">{c.country}</span> : null}
+                  {countryLabel(c.country) ? (
+                    <span className="histWhere">{countryLabel(c.country)}</span>
+                  ) : null}
                 </summary>
                 <Detail c={c} />
               </details>
             ))}
-          </section>
+          </details>
         );
       })}
     </>

@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { groupByDay, statusLabel, summarize, summarySentence, type HistoryRow } from './history.ts';
+import {
+  groupByDay,
+  statusLabel,
+  summarize,
+  summarySentence,
+  type HistoryRow,
+  dayLabel,
+  countryLabel,
+} from './history.ts';
 
 const row = (over: Partial<HistoryRow> = {}): HistoryRow => ({
   id: crypto.randomUUID(),
@@ -101,4 +109,36 @@ test('nenhum estado chega à tela como está na base', () => {
     assert.notEqual(label, s, `«${s}» não tem tradução`);
     assert.doesNotMatch(label, /_/, `«${label}» ainda parece um identificador`);
   }
+});
+
+test('hoje e ontem dizem-se por extenso, não por data', () => {
+  const agora = new Date('2026-08-31T12:00:00Z');
+  assert.equal(dayLabel('2026-08-31', agora), 'Hoje');
+  assert.equal(dayLabel('2026-08-30', agora), 'Ontem');
+  assert.equal(dayLabel('2026-08-22', agora), '22 de agosto');
+  // Ano diferente precisa do ano; o mesmo ano não precisa.
+  assert.equal(dayLabel('2025-12-04', agora), '4 de dezembro de 2025');
+});
+
+test('nenhum cabeçalho de dia sai como data crua', () => {
+  const agora = new Date('2026-08-31T12:00:00Z');
+  for (const d of ['2026-08-31', '2026-08-30', '2026-08-01', '2024-01-15']) {
+    assert.doesNotMatch(dayLabel(d, agora), /\d{4}-\d{2}-\d{2}/);
+  }
+});
+
+test('o mesmo país escrito de três maneiras vira um só', () => {
+  assert.equal(countryLabel('Germany'), 'Alemanha');
+  assert.equal(countryLabel('Alemanha'), 'Alemanha');
+  assert.equal(countryLabel('DE'), 'Alemanha');
+  // Foi o que apareceu na tela: dois países numa string.
+  assert.equal(countryLabel('Alemanha / Brasil'), 'Alemanha · Brasil');
+  assert.equal(countryLabel('Germany / Brazil'), 'Alemanha · Brasil');
+  assert.equal(countryLabel('Alemanha / Germany'), 'Alemanha', 'o mesmo país repetiu-se');
+});
+
+test('um país que não conheço passa como veio, não desaparece', () => {
+  assert.equal(countryLabel('Estónia'), 'Estónia');
+  assert.equal(countryLabel(null), null);
+  assert.equal(countryLabel('   '), null);
 });

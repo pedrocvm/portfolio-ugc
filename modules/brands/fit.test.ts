@@ -112,3 +112,12 @@ test('um override humano substitui o score sem apagar o cálculo', async () => {
   assert.equal(withOverride.overridden, true);
   assert.notEqual(computed.score, 90, 'o cálculo original continua intacto');
 });
+
+test('o que a pesquisa devolve é exatamente o que o motor pontua', async () => {
+  // Um critério novo aqui sem o campo lá, ou o contrário, e a marca sai com a
+  // nota neutra desse critério sem ninguém reparar.
+  const { OutreachResearchSchema } = await import('@/modules/ai/schemas');
+  const doSchema = Object.keys(OutreachResearchSchema.shape.fit_signals.shape).sort();
+  const doMotor = Object.keys(FIT_WEIGHTS).sort();
+  assert.deepEqual(doSchema, doMotor);
+});

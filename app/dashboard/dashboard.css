@@ -5112,22 +5112,66 @@ a.aiSource:hover {
 }
 
 .dash .histDay {
-  margin-top: 34px;
+  margin-top: 30px;
 }
-.dash .histDay > h2 {
+/* O cabeçalho do dia acompanha a rolagem: com trinta marcas abertas, saber a
+   que dia pertence a que se está a ler não pode obrigar a subir. */
+.dash .histDay > summary {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 12px;
-  margin: 0 0 12px;
+  padding: 10px 2px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  list-style: none;
+  background: var(--papel);
+  border-bottom: 1px solid var(--areia2);
+}
+.dash .histDay > summary::-webkit-details-marker {
+  display: none;
+}
+.dash .histDayName {
   font-size: 15px;
   font-variation-settings: var(--wide);
   color: var(--tinta);
 }
-.dash .histDay > h2 span {
-  font-size: 13px;
-  font-variation-settings: normal;
+.dash .histDayName::before {
+  content: '▸';
+  display: inline-block;
+  width: 14px;
+  font-size: 11px;
   color: var(--tinta2);
+  transition: transform 0.18s var(--quart);
+}
+.dash .histDay[open] > summary .histDayName::before {
+  transform: rotate(90deg);
+}
+.dash .histDayCount {
+  font-size: 13px;
+  color: var(--tinta);
+}
+.dash .histDayRun {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--tinta2);
+}
+.dash .histNone {
+  color: var(--tinta2);
+}
+.dash .histSocial {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+@media (max-width: 640px) {
+  .dash .histDayRun {
+    margin-left: 0;
+    width: 100%;
+  }
 }
 
 .dash .histRow {

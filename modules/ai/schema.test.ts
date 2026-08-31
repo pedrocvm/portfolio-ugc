@@ -67,3 +67,26 @@ test('o que o Gemini precisa continua lá', () => {
   assert.match(json, /"nullable":true/, 'nullable é como o Gemini diz opcional');
   assert.match(json, /"required":/);
 });
+
+/** Um `z.record` sobrevive à tradução mas chega ao Gemini como um objeto sem
+ *  propriedades nenhumas. O pedido é aceite e a resposta vem vazia — pior que um
+ *  erro, porque parece que correu bem. Foi assim que oito marcas saíram todas
+ *  com a mesma nota neutra. */
+const objetosVazios = (node: unknown, caminho = '', achados: string[] = []): string[] => {
+  if (Array.isArray(node)) {
+    node.forEach((v, i) => objetosVazios(v, `${caminho}[${i}]`, achados));
+    return achados;
+  }
+  if (!node || typeof node !== 'object') return achados;
+  const o = node as Record<string, unknown>;
+  if (o.type === 'OBJECT' && !o.properties) achados.push(caminho || 'raiz');
+  for (const [k, v] of Object.entries(o)) objetosVazios(v, caminho ? `${caminho}.${k}` : k, achados);
+  return achados;
+};
+
+test('nenhum schema pede um objeto sem dizer o que vai dentro', () => {
+  for (const [nome, schema] of prompts) {
+    const vazios = objetosVazios(geminiSchemaFor(schema));
+    assert.deepEqual(vazios, [], `${nome} pede um objeto às cegas em: ${vazios.join(', ')}`);
+  }
+});

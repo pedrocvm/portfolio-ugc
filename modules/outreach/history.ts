@@ -136,3 +136,42 @@ export function summarySentence(s: Summary): string {
 
   return `${marcas}: ${fim}.${qualidade}`;
 }
+
+/** «Hoje» e «Ontem» leem-se sem contar nos dedos; o resto leva a data por
+ *  extenso. Um cabeçalho de dia que diga «2026-08-31» faz a pessoa converter. */
+export function dayLabel(day: string, now = new Date()): string {
+  const hoje = now.toISOString().slice(0, 10);
+  const ontem = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+  if (day === hoje) return 'Hoje';
+  if (day === ontem) return 'Ontem';
+
+  const [y, m, d] = day.split('-').map(Number);
+  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const mesmoAno = y === now.getFullYear();
+  return `${d} de ${meses[m - 1]}${mesmoAno ? '' : ` de ${y}`}`;
+}
+
+/** O modelo devolve o país como lhe apetece: «Germany», «Alemanha»,
+ *  «Alemanha / Brasil». Três grafias da mesma coisa numa lista fazem-na parecer
+ *  desarrumada e escondem que são o mesmo sítio. */
+const PAISES: Record<string, string> = {
+  germany: 'Alemanha', deutschland: 'Alemanha', de: 'Alemanha',
+  brazil: 'Brasil', br: 'Brasil',
+  portugal: 'Portugal', pt: 'Portugal',
+  spain: 'Espanha', españa: 'Espanha', es: 'Espanha',
+  'united states': 'EUA', usa: 'EUA', us: 'EUA',
+  'united kingdom': 'Reino Unido', uk: 'Reino Unido', gb: 'Reino Unido',
+  france: 'França', fr: 'França',
+  italy: 'Itália', it: 'Itália',
+  netherlands: 'Países Baixos', nl: 'Países Baixos',
+  austria: 'Áustria', at: 'Áustria',
+};
+
+export function countryLabel(raw: string | null): string | null {
+  if (!raw?.trim()) return null;
+  // Vários países numa string acontecem: normalizam-se um a um.
+  const partes = raw.split(/\s*[/,;]\s*|\s+e\s+/).filter(Boolean);
+  const limpos = partes.map((p) => PAISES[p.trim().toLowerCase()] ?? p.trim());
+  return [...new Set(limpos)].join(' · ');
+}

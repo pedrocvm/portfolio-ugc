@@ -170,6 +170,32 @@ export const BriefSchema = z.object({
 export type ParsedBrief = z.infer<typeof BriefSchema>;
 
 /** ── brand_dossier ─────────────────────────────────────────────────────── */
+/** Os sinais que o motor de encaixe pontua, um por critério e todos nomeados.
+ *
+ *  Era um `z.record` nos dois sítios que o usam. O Gemini não sabe o que pôr num
+ *  objeto sem propriedades declaradas: aceitava o pedido e devolvia `{}`, todos
+ *  os critérios ficavam por saber, e como desconhecido conta como neutro todas
+ *  as marcas saíam com a mesma nota. Um erro seria melhor do que isto, porque
+ *  pelo menos aparecia.
+ *
+ *  Nulo é «não sei», e é diferente de zero. O teste em `fit.test.ts` garante que
+ *  estes campos são exatamente os critérios que o motor pesa. */
+const fitSignal = (o: string) => z.number().nullable().describe(o);
+
+export const FitSignalsSchema = z.object({
+  category: fitSignal('0-5: quão tech-first é a categoria'),
+  paid_maturity: fitSignal('0-5: maturidade em paid media e criativos'),
+  demo_potential: fitSignal('0-5: dá para demonstrar problema e solução em vídeo'),
+  budget_signals: fitSignal('0-5: sinais de orçamento de marketing'),
+  authentic_context: fitSignal('0-5: cabe na vida real dela, em casa'),
+  economics: fitSignal('0-5: a colaboração paga-se'),
+  recurring_demand: fitSignal('0-5: precisam de criativos de forma recorrente'),
+  aesthetic: fitSignal('0-5: alinhamento estético'),
+  contact_access: fitSignal('0-5: dá para chegar a quem decide'),
+  logistics: fitSignal('0-5: idioma, envio, fuso'),
+  portfolio_value: fitSignal('0-5: o que esta marca faz pelo portfólio dela'),
+});
+
 export const DossierSchema = z.object({
   what_they_sell: z.string(),
   why_it_fits: z.string(),
@@ -180,7 +206,7 @@ export const DossierSchema = z.object({
   contact_path: z.string().nullable(),
   risks: z.array(z.string()),
   niche_id: z.string().nullable(),
-  fit_signals: z.record(z.string(), z.number().min(0).max(5)),
+  fit_signals: FitSignalsSchema,
   evidence: z.array(z.object({ claim: z.string(), source: z.string() })),
   unknowns: z.array(z.string()),
   confidence,
@@ -296,8 +322,15 @@ export const OutreachResearchSchema = z.object({
     .nullable(),
   /** Cada fato usado, com o sítio onde foi visto. */
   sources: z.array(z.object({ label: z.string(), url: z.string().nullable() })),
-  /** Sinais para o motor de encaixe, de 0 a 5. Desconhecido é null, não zero. */
-  fit_signals: z.record(z.string(), z.number().nullable()),
+  /** Onde a marca publica. É por aqui que ela vê o que já fazem antes de falar. */
+  socials: z.object({
+    instagram: z.string().nullable().describe('@utilizador ou URL do perfil'),
+    tiktok: z.string().nullable(),
+    youtube: z.string().nullable(),
+    linkedin: z.string().nullable(),
+  }),
+  /** Sinais para o motor de encaixe. Desconhecido é null, não zero. */
+  fit_signals: FitSignalsSchema,
 });
 export type OutreachResearch = z.infer<typeof OutreachResearchSchema>;
 

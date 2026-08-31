@@ -217,7 +217,7 @@ export async function runDailyOutreach(
     domain: r.candidate.domain,
     country: r.research.country ?? r.candidate.country,
     niche_id: r.candidate.nicheId,
-    socials: {} as never,
+    socials: (r.research.socials ?? {}) as never,
     rank,
     fit_score: r.fit.score,
     fit_band: r.fit.band,
