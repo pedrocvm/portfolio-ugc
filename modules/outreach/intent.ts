@@ -183,6 +183,9 @@ export function parseManualIntent(rawQuery: string, country: string): ManualInte
   };
 }
 
+/** Abaixo disto, não é o que ela pediu. */
+export const RELEVANCE_GATE = 45;
+
 /* ── O portão ────────────────────────────────────────────────────────────── */
 
 export type Candidate = {
@@ -199,9 +202,6 @@ export type Relevance = {
   /** Porque entrou ou porque não entrou, em português. */
   reason: string;
 };
-
-/** Abaixo disto, não é o que ela pediu. */
-export const RELEVANCE_GATE = 45;
 
 /** Mede a distância entre a candidata e o pedido.
  *
@@ -220,8 +220,11 @@ export function relevanceFor(c: Candidate, intent: ManualIntent): Relevance {
     // ajuda-a a perceber porque a rejeitei; dizer «não bateu» não ajuda nada.
     const familia = familyFor(texto);
     return {
+      // O corte é quem decide, aqui como em todo o lado: devolver `false` à mão
+      // era uma segunda regra a decidir a mesma coisa, e uma delas ia ficar para
+      // trás no dia em que a outra mudasse.
       score: 0,
-      passes: false,
+      passes: 0 >= RELEVANCE_GATE,
       reason: familia
         ? `Não é ${intent.mainCategory}: parece outra coisa.`
         : `Não bate com «${intent.mainCategory}».`,
