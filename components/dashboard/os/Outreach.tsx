@@ -10,9 +10,11 @@ import Spinner from '@/components/dashboard/Spinner';
 import { watchDiscovery } from '@/components/dashboard/DiscoveryWatch';
 import { pushToast } from '@/components/dashboard/Toasts';
 import { formatDate } from '@/lib/time';
-import { CONF_LABEL, PAID_LABEL, UGC_LABEL } from '@/modules/outreach/history';
-import { LIMITS } from '@/modules/outreach/domain';
-import { nicheLabel } from '@/modules/brands/niches';
+import { CONF_LABEL, UGC_LABEL, countryLabel } from '@/modules/outreach/history';
+import {
+  LIMITS, SECTION_HINT, SECTION_TITLE, groupForReview,
+} from '@/modules/outreach/domain';
+import { nicheShort } from '@/modules/brands/niches';
 
 /** A revisão diária.
  *
@@ -47,6 +49,8 @@ function Card({ c }: { c: Candidate }) {
 
   if (gone) return null;
 
+  const pronta = status === 'ready' || status === 'approved' || status === 'edited';
+
   const run = (id: string, fn: () => Promise<{ error?: string }>, after?: () => void) => {
     setRunning(id);
     start(async () => {
@@ -60,31 +64,45 @@ function Card({ c }: { c: Candidate }) {
   const dirty = subject !== c.subject || body !== c.body;
 
   return (
-    <article className="osCard" data-risk={c.red_flags.length ? 'medium' : 'none'}>
-      <header className="osCardTop">
-        <span className="osBrand">{c.name}</span>
-        <div className="osCardFlags">
-          {c.fit_score ? (
-            <span className="osTag" data-tone={c.fit_score >= LIMITS.minFitScore ? 'hot' : 'mute'}>
-              encaixe {c.fit_score}
-            </span>
-          ) : null}
-          {nicheLabel(c.niche_id) ? (
-            <span className="osTag" data-tone="mute">{nicheLabel(c.niche_id)}</span>
-          ) : null}
-          {c.paid_media_signal ? (
-            <span className="osTag" data-tone={c.paid_media_signal === 'strong' ? 'ok' : 'mute'}>
-              {PAID_LABEL[c.paid_media_signal]}
-            </span>
-          ) : null}
-        </div>
-      </header>
+    <details className="revRow" data-status={status}>
+      <summary>
+        <span className="revName">{c.name}</span>
+        {nicheShort(c.niche_id) ? <span className="revNiche">{nicheShort(c.niche_id)}</span> : null}
 
-      <h3>{c.product ? `${c.product}` : c.name}</h3>
+        {/* Uma linha só, para ela saber se vale a pena abrir. */}
+        <span className="revWhy">{c.product ?? c.why_fit}</span>
+
+        <span className="revWho" data-weak={!c.contact_email || c.email_confidence === 'low' || c.email_confidence === 'unknown' ? '' : undefined}>
+          {c.contact_email ? (c.contact_name ?? 'contato') : 'sem contato'}
+        </span>
+
+        {c.fit_score !== null ? (
+          <span className="revFit" data-over={c.fit_score >= LIMITS.minFitScore ? '' : undefined}>
+            {c.fit_score}
+          </span>
+        ) : null}
+
+        <span className="revState">{pronta ? 'Ver e enviar' : semEmail ? 'Ver' : 'Ler'}</span>
+
+        {/* Dentro do summary: a barra serve para ler a linha fechada, e fora
+            dele só aparecia depois de ela já ter aberto. */}
+        {c.fit_score !== null ? (
+          <span
+            className="revBar"
+            data-over={c.fit_score >= LIMITS.minFitScore ? '' : undefined}
+            style={{ '--fit': `${Math.min(100, Math.max(0, c.fit_score))}%` } as React.CSSProperties}
+            aria-hidden="true"
+          />
+        ) : null}
+      </summary>
+
+
+      <div className="revBody">
+
       <p className="osWhy">{c.why_fit}</p>
 
       <div className="osMeta">
-        {c.country ? <span>{c.country}</span> : null}
+        {countryLabel(c.country) ? <span>{countryLabel(c.country)}</span> : null}
         {c.ugc_signal ? <span>{UGC_LABEL[c.ugc_signal]}</span> : null}
         {c.contact_email ? (
           <span>
@@ -256,8 +274,9 @@ function Card({ c }: { c: Candidate }) {
             </details>
           </>
         )}
-      </footer>
-    </article>
+        </footer>
+      </div>
+    </details>
   );
 }
 
@@ -374,11 +393,22 @@ export default function Outreach({
           lista com o que não presta.
         </p>
       ) : (
-        <div className="osQueue" data-air="" style={{ marginTop: 22 }}>
-          {candidates.map((c) => (
-            <Card key={c.id} c={c} />
-          ))}
-        </div>
+        groupForReview(candidates).map(({ section, rows }) => (
+          <section className="revSection" key={section}>
+            <header>
+              <h2>
+                {SECTION_TITLE[section]}
+                <span className="revCount">{rows.length}</span>
+              </h2>
+              <p>{SECTION_HINT[section]}</p>
+            </header>
+            <div className="revList">
+              {rows.map((c) => (
+                <Card key={c.id} c={c} />
+              ))}
+            </div>
+          </section>
+        ))
       )}
     </>
   );

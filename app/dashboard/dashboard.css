@@ -5386,3 +5386,180 @@ a.aiSource:hover {
   font-size: 12px;
   color: var(--tinta2);
 }
+
+/* ── A revisão de prospecção: vinte marcas, decididas às linhas ───────────── */
+
+.dash .revSection {
+  margin-top: 38px;
+}
+.dash .revSection > header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 12px 2px 10px;
+  background: var(--papel);
+  border-bottom: 1px solid var(--areia2);
+}
+.dash .revSection h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 16px;
+  font-variation-settings: var(--wide);
+  color: var(--tinta);
+}
+.dash .revCount {
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--tinta);
+  color: var(--papel);
+  font-size: 12px;
+  font-variation-settings: normal;
+}
+.dash .revSection > header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--tinta2);
+}
+.dash .revList {
+  margin-top: 12px;
+}
+
+.dash .revRow {
+  border: 1px solid var(--areia2);
+  border-radius: 12px;
+  background: var(--papel);
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s var(--quart);
+}
+.dash .revRow:hover {
+  border-color: var(--pedra);
+}
+.dash .revRow[open] {
+  border-color: var(--tinta);
+  margin-bottom: 18px;
+}
+/* Flex e não grid: o nicho e o encaixe podem faltar, e com colunas fixas a
+   linha inteira escorregava uma casa quando faltavam. */
+.dash .revRow > summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 18px;
+  min-height: 52px;
+  cursor: pointer;
+  list-style: none;
+}
+.dash .revName,
+.dash .revNiche,
+.dash .revWho,
+.dash .revFit,
+.dash .revState {
+  flex: none;
+}
+.dash .revWhy {
+  flex: 1;
+  min-width: 0;
+}
+.dash .revWho {
+  margin-left: auto;
+}
+.dash .revRow > summary::-webkit-details-marker {
+  display: none;
+}
+.dash .revName {
+  font-weight: 500;
+  color: var(--tinta);
+}
+.dash .revNiche {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--areia2) 55%, transparent);
+  font-size: 12px;
+  color: var(--tinta2);
+  white-space: nowrap;
+}
+/* Uma linha, cortada: se não cabe, não era para ser lida aqui. */
+.dash .revWhy {
+  font-size: 14px;
+  color: var(--tinta2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dash .revWho {
+  font-size: 13px;
+  color: var(--tinta2);
+  white-space: nowrap;
+}
+.dash .revWho[data-weak] {
+  color: var(--realce);
+}
+.dash .revFit {
+  font-size: 14px;
+  text-align: right;
+  color: var(--tinta2);
+  font-variant-numeric: tabular-nums;
+}
+.dash .revFit[data-over] {
+  color: var(--tinta);
+  font-weight: 500;
+}
+.dash .revState {
+  font-size: 13px;
+  color: var(--tinta2);
+  white-space: nowrap;
+}
+.dash .revRow[open] .revState::after {
+  content: ' ▴';
+}
+.dash .revRow:not([open]) .revState::after {
+  content: ' ▾';
+}
+
+/* O encaixe como comprimento. Vinte números lêem-se um a um; vinte barras
+   lêem-se de uma vez. */
+.dash .revBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: color-mix(in srgb, var(--areia2) 50%, transparent);
+}
+.dash .revBar::before {
+  content: '';
+  display: block;
+  width: var(--fit, 0%);
+  height: 100%;
+  background: var(--pedra);
+}
+.dash .revBar[data-over]::before {
+  background: var(--realce);
+}
+
+.dash .revBody {
+  padding: 16px 18px 18px;
+}
+.dash .revRow[data-status='sent'] {
+  opacity: 0.72;
+}
+
+@media (max-width: 860px) {
+  .dash .revRow > summary {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 12px 16px;
+  }
+  /* Numa linha estreita, o porquê ocupa a sua própria linha em vez de sumir. */
+  .dash .revWhy {
+    flex: 1 0 100%;
+    white-space: normal;
+  }
+  .dash .revWho {
+    margin-left: 0;
+  }
+}

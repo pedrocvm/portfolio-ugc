@@ -14,6 +14,11 @@ import {
   type RunSummary,
   enoughToChooseFrom,
   partitionDaily,
+  groupForReview,
+  sectionFor,
+  SECTION_TITLE,
+  SECTION_HINT,
+  SECTION_ORDER,
 } from './domain.ts';
 
 const known = (over: Partial<Known> = {}): Known => ({
@@ -367,5 +372,34 @@ test('a procura só vai a sítios onde ela pode escrever em português', () => {
       assert.doesNotMatch(pais, proibidos, `dia ${d}: foi procurar a ${pais}`);
       assert.match(pais, /portugal|brasil|portugu|lusófon/i, `${pais} não garante português`);
     }
+  }
+});
+
+test('cada estado cai numa secção, e nenhuma marca se perde', () => {
+  const estados = ['discovered', 'screened', 'researched', 'ready', 'needs_review',
+    'approved', 'edited', 'sent', 'failed'];
+  const groups = groupForReview(estados.map((status, i) => ({ status, id: String(i) })));
+  assert.equal(groups.reduce((t, g) => t + g.rows.length, 0), estados.length);
+});
+
+test('o trabalho vem antes do registo', () => {
+  const groups = groupForReview([{ status: 'sent' }, { status: 'ready' }, { status: 'needs_review' }]);
+  assert.deepEqual(groups.map((g) => g.section), ['ready', 'review', 'sent']);
+});
+
+test('sem marcas numa secção, a secção não aparece vazia', () => {
+  const groups = groupForReview([{ status: 'ready' }]);
+  assert.equal(groups.length, 1);
+});
+
+test('uma marca sem email fica na secção que explica porquê', () => {
+  assert.equal(sectionFor('researched'), 'below');
+  assert.match(SECTION_HINT.below, /sem email escrito/);
+});
+
+test('nenhum título ou dica de secção é um estado cru', () => {
+  for (const s of SECTION_ORDER) {
+    assert.doesNotMatch(SECTION_TITLE[s], /_|needs|ready|sent/, SECTION_TITLE[s]);
+    assert.ok(SECTION_HINT[s].endsWith('.'), `«${SECTION_HINT[s]}» não é uma frase`);
   }
 });

@@ -359,3 +359,46 @@ export function runMessage(r: RunSummary): { ok: boolean; message: string } {
   const extra = r.failures.length ? ` ${r.failures.slice(0, 2).join(' ')}` : '';
   return { ok: true, message: why + extra };
 }
+
+/* ── A revisão do dia, agrupada ──────────────────────────────────────────── */
+
+/** Em que secção da revisão cai cada marca.
+ *
+ *  Vinte cartões seguidos são um muro: ela abre a tela para fazer a primeira
+ *  coisa, não para ler tudo. As secções não são categorias — são o que ela faz a
+ *  seguir, e por isso a ordem delas é a ordem do trabalho: o que só precisa de
+ *  um sim, o que precisa de olhos, o que é decisão dela, e o que já saiu. */
+export type ReviewSection = 'ready' | 'review' | 'below' | 'sent';
+
+export function sectionFor(status: string): ReviewSection {
+  if (status === 'sent') return 'sent';
+  if (status === 'researched') return 'below';
+  if (status === 'needs_review') return 'review';
+  return 'ready';
+}
+
+export const SECTION_TITLE: Record<ReviewSection, string> = {
+  ready: 'Prontas para enviar',
+  review: 'Precisam de você',
+  below: 'Abaixo do corte',
+  sent: 'Já enviadas',
+};
+
+export const SECTION_HINT: Record<ReviewSection, string> = {
+  ready: 'O email está escrito e passou a revisão. Falta o seu sim.',
+  review: 'O email saiu, mas alguma coisa não convence. Leia antes de mandar.',
+  below: 'Pesquisadas, sem email escrito. Se gostar da marca, peça e eu escrevo.',
+  sent: 'Saíram hoje. Ficam aqui para você saber o que já foi.',
+};
+
+/** A ordem em que aparecem. Enviadas por último: são registo, não trabalho. */
+export const SECTION_ORDER: readonly ReviewSection[] = ['ready', 'review', 'below', 'sent'];
+
+export function groupForReview<T extends { status: string }>(
+  candidates: readonly T[],
+): { section: ReviewSection; rows: T[] }[] {
+  return SECTION_ORDER.map((section) => ({
+    section,
+    rows: candidates.filter((c) => sectionFor(c.status) === section),
+  })).filter((g) => g.rows.length > 0);
+}
