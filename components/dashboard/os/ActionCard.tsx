@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
-import { dismiss, doneAction, snooze } from '@/app/dashboard/carolos-actions';
+import { dismiss, doneAction, reopenAction, snooze } from '@/app/dashboard/carolos-actions';
+import { pushUndo } from '@/components/dashboard/Toasts';
 import Spinner from '@/components/dashboard/Spinner';
 import type { ActionRow } from '@/modules/actions/service';
 import { STAGE_LABEL, type Stage } from '@/modules/opportunities/domain';
@@ -43,13 +44,23 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
 
   if (gone) return null;
 
-  const run = (id: string, fn: () => Promise<{ error?: string }>) =>
+  /** Nenhuma destas três pergunta antes: são todas reversíveis, e nenhuma sai
+   *  cá para fora. O cartão sai da tela e fica um «desfazer» num aviso, que é
+   *  menos fricção do que uma janela por cartão e protege o mesmo. */
+  const run = (id: string, etiqueta: string, fn: () => Promise<{ error?: string }>) =>
     start(async () => {
       setRunning(id);
       const result = await fn();
       setRunning('');
-      if (result.error) setError(result.error);
-      else setGone(true);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setGone(true);
+      pushUndo(etiqueta, async () => {
+        await reopenAction(action.id);
+        setGone(false);
+      });
     });
 
   const when = due(action.dueAt);
@@ -80,14 +91,15 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
       <h3>{action.title}</h3>
       <p className="osWhy">{action.reason}</p>
 
-      {action.stage || action.requiresApproval ? (
+      {/* «Precisa da sua aprovação» saiu: estava em todos os cartões de uma
+          secção chamada «Precisa de si». Um rótulo que nunca varia não
+          distingue nada — só ocupa a linha por onde os olhos passam a caminho
+          do botão. */}
+      {action.stage ? (
         <div className="osMeta">
-          {action.stage ? (
-            <span>
-              etapa <b>{STAGE_LABEL[action.stage as Stage] ?? action.stage}</b>
-            </span>
-          ) : null}
-          {action.requiresApproval ? <span>precisa da sua aprovação</span> : null}
+          <span>
+            etapa <b>{STAGE_LABEL[action.stage as Stage] ?? action.stage}</b>
+          </span>
         </div>
       ) : null}
 
@@ -106,7 +118,7 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
           className="osPageBtn"
           type="button"
           disabled={pending}
-          onClick={() => run('done', () => doneAction(action.id))}
+          onClick={() => run('done', `«${action.title}» dado como feito.`, () => doneAction(action.id))}
         >
           {running === 'done' ? <Spinner label="A marcar" /> : null}
           Já está
@@ -122,7 +134,11 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
                 key={s.days}
                 type="button"
                 disabled={pending}
-                onClick={() => run(`snooze${s.days}`, () => snooze(action.id, s.days))}
+                onClick={() =>
+                  run(`snooze${s.days}`, `«${action.title}» volta ${s.label}.`, () =>
+                    snooze(action.id, s.days),
+                  )
+                }
               >
                 {s.label}
               </button>
@@ -130,7 +146,9 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
             <button
               type="button"
               disabled={pending}
-              onClick={() => run('dismiss', () => dismiss(action.id))}
+              onClick={() =>
+                run('dismiss', `«${action.title}» saiu da fila.`, () => dismiss(action.id))
+              }
             >
               Não é preciso
             </button>

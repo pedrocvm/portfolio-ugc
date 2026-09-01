@@ -1,9 +1,11 @@
 import 'server-only';
 
+import { localDay } from '@/lib/time';
 import { asJson } from '@/lib/supabase/json';
 import { supabaseServer } from '@/lib/supabase/server';
 import { recordEvent, type Db } from '@/modules/activity/service';
 import { expiryStatus } from '@/modules/rights/engine';
+import { describeBackground, type BackgroundItem } from './day';
 import {
   planForOpportunity,
   priorityScore,
@@ -90,6 +92,76 @@ export async function todayQueue(limit = 40): Promise<ActionRow[]> {
     .order('due_at', { ascending: true, nullsFirst: false })
     .limit(limit);
   return ((data ?? []) as unknown as RawAction[]).map(toAction);
+}
+
+/** O que o CarolOS está a tratar sozinho, e o que ela já fechou hoje.
+ *
+ *  Cinco leituras pequenas em paralelo, todas com contagem ou limite. Nenhuma
+ *  delas pede uma decisão: é de propósito, e é o que separa esta secção da
+ *  fila. Follow-ups vencidos e pagamentos em atraso ficam de fora — esses já
+ *  entraram na fila pelo planeador, e apareceriam duas vezes.
+ *
+ *  Correr isto nunca deve poder partir o Hoje: se uma das leituras falhar, a
+ *  secção fica mais curta e a fila continua de pé. */
+export async function dayBoard(): Promise<{ background: BackgroundItem[]; doneToday: number }> {
+  const db = await supabaseServer();
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const dayStart = `${localDay(now)}T00:00:00.000Z`;
+
+  const [followUps, snoozed, searches, payments, done, awaiting] = await Promise.all([
+    db.from('follow_up')
+      .select('due_at, opportunity:opportunity_id ( brand:brand_id ( name ) )')
+      .eq('status', 'scheduled').gt('due_at', nowIso)
+      .order('due_at').limit(8),
+    db.from('action_item')
+      .select('title, snoozed_until, brand:brand_id ( name )')
+      .eq('status', 'snoozed').gt('snoozed_until', nowIso)
+      .order('snoozed_until').limit(8),
+    db.from('outreach_run')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'running')
+      .gt('started_at', new Date(now.getTime() - 30 * 60_000).toISOString()),
+    db.from('payment')
+      .select('amount_cents, currency, due_at, brand:brand_id ( name )')
+      .in('status', ['due', 'invoiced']).eq('kind', 'cash')
+      .gt('due_at', localDay(now))
+      .order('due_at').limit(8),
+    db.from('action_item')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'done').gte('updated_at', dayStart),
+    db.from('opportunity')
+      .select('waiting_until, brand:brand_id ( name )')
+      .not('stage', 'in', '(won,lost)')
+      .not('waiting_until', 'is', null).gt('waiting_until', nowIso)
+      .order('waiting_until').limit(8),
+  ]);
+
+  const nome = (row: { brand?: { name: string } | null }) => row.brand?.name ?? 'uma marca';
+
+  const background = describeBackground({
+    waiting: ((awaiting.data ?? []) as unknown as
+      { waiting_until: string; brand: { name: string } | null }[])
+      .map((o) => ({ brandName: nome(o), until: o.waiting_until })),
+    scheduledFollowUps: ((followUps.data ?? []) as unknown as
+      { due_at: string; opportunity: { brand: { name: string } | null } | null }[])
+      .map((f) => ({ brandName: f.opportunity?.brand?.name ?? 'uma marca', dueAt: f.due_at })),
+    snoozed: ((snoozed.data ?? []) as unknown as
+      { title: string; snoozed_until: string; brand: { name: string } | null }[])
+      .map((a) => ({ brandName: nome(a), title: a.title, until: a.snoozed_until })),
+    runningSearches: searches.count ?? 0,
+    pendingPayments: ((payments.data ?? []) as unknown as
+      { amount_cents: number; currency: string; due_at: string; brand: { name: string } | null }[])
+      .map((p) => ({
+        brandName: nome(p),
+        amountCents: p.amount_cents,
+        currency: p.currency,
+        dueAt: p.due_at,
+      })),
+    now,
+  });
+
+  return { background, doneToday: done.count ?? 0 };
 }
 
 export async function snoozedQueue(): Promise<ActionRow[]> {
@@ -401,6 +473,15 @@ export async function snoozeAction(id: string, until: string, actorUserId: strin
 export async function dismissAction(id: string) {
   const db = await supabaseServer();
   await db.from('action_item').update({ status: 'cancelled' }).eq('id', id);
+}
+
+/** Volta a pôr um cartão na fila, venha ele de feito, adiado ou dispensado.
+ *
+ *  Um só caminho para os três, porque o desfazer não tem de saber o que foi
+ *  desfeito — e três caminhos era o mesmo `update` escrito três vezes. */
+export async function reopenAction(id: string) {
+  const db = await supabaseServer();
+  await db.from('action_item').update({ status: 'open', snoozed_until: null }).eq('id', id);
 }
 
 /** Um adiado cuja data já passou volta à fila. Corre no trabalho de fundo e

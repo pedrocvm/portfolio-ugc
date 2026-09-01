@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { requireUser } from '@/lib/auth';
 import type { FlagKey } from '@/lib/flags';
 import { supabaseServer } from '@/lib/supabase/server';
-import { completeAction, dismissAction, replanActions, snoozeAction } from '@/modules/actions/service';
+import { completeAction, dismissAction, reopenAction as reopen, replanActions, snoozeAction } from '@/modules/actions/service';
 import { applyCapture, createCapture, discardCapture, type CaptureKind } from '@/modules/capture/service';
 import { draftCase, publishToPortfolio, requestMetrics, setPermission, unpublishFromPortfolio, updateCase } from '@/modules/cases/service';
 import { generateHypotheses, saveContent, saveShotList, shotListFromScript, approveScript } from '@/modules/content/service';
@@ -65,6 +65,18 @@ export async function snooze(id: string, days: number): Promise<Result> {
 export async function dismiss(id: string): Promise<Result> {
   await requireUser();
   await dismissAction(id);
+  refreshOs();
+  return { ok: true };
+}
+
+/** O desfazer de «já está», «depois» e «não é preciso».
+ *
+ *  Estas três são reversíveis, e por isso não pedem confirmação: fazem-se, e
+ *  fica um «desfazer» à mão durante uns segundos. Uma janela a perguntar «tem
+ *  a certeza?» a cada cartão é o que faz uma fila de cinco parecer trabalho. */
+export async function reopenAction(id: string): Promise<Result> {
+  await requireUser();
+  await reopen(id);
   refreshOs();
   return { ok: true };
 }

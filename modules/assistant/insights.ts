@@ -8,6 +8,8 @@
  *  a sua chave de deduplicação, que é o que impede o mesmo aviso de voltar
  *  todos os dias até ela deixar de olhar. */
 
+import { STAGE_LABEL, type Stage } from '@/modules/opportunities/domain';
+
 export type Insight = {
   kind: string;
   severity: 'info' | 'warn' | 'urgent';
@@ -65,7 +67,9 @@ export function buildInsights(input: InsightInput): Insight[] {
       kind: 'opportunity_stale',
       severity: idle >= 21 ? 'urgent' : 'warn',
       title: `${o.brandName} está parada há ${idle} dias`,
-      detail: `Estava em ${o.stage}. Quanto mais tempo passa, mais caro é reabrir a conversa.`,
+      // `o.stage` é o identificador da base. «Estava em replied» é o sistema a
+      // falar consigo próprio à frente de quem o usa.
+      detail: `Estava em ${(STAGE_LABEL[o.stage as Stage] ?? o.stage).toLowerCase()}. Quanto mais tempo passa, mais caro é reabrir a conversa.`,
       href: `/dashboard/opportunities/${o.id}`,
       brandId: o.brandId,
       opportunityId: o.id,
@@ -75,22 +79,9 @@ export function buildInsights(input: InsightInput): Insight[] {
     });
   }
 
-  const due = input.followUps.filter((f) => new Date(f.dueAt) <= now);
-  if (due.length > 0) {
-    out.push({
-      kind: 'followups_due',
-      severity: due.length >= 3 ? 'warn' : 'info',
-      title:
-        due.length === 1
-          ? `${due[0].brandName} está à espera de um follow-up`
-          : `${due.length} marcas estão à espera de follow-up`,
-      detail: due.map((f) => f.brandName).slice(0, 5).join(', '),
-      href: '/dashboard/followups',
-      brandId: null,
-      opportunityId: null,
-      dedupeKey: `followups:${now.toISOString().slice(0, 10)}`,
-    });
-  }
+  // Follow-ups vencidos não geram insight nenhum: o planeador já lhes deu um
+  // cartão na fila, com a mesma marca e a mesma data. Dois avisos para a mesma
+  // coisa é o que faz uma lista deixar de se ler.
 
   for (const r of input.rights) {
     if (!r.endAt) continue;

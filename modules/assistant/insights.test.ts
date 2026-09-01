@@ -52,22 +52,29 @@ test('a chave de deduplicação muda de semana a semana, não de dia a dia', () 
   assert.notEqual(a.dedupeKey, c.dedupeKey, 'uma semana depois volta a valer a pena avisar');
 });
 
-test('follow-ups vencidos juntam-se num aviso só', () => {
-  const r = buildInsights(input({
+/** O planeador já dá um cartão na fila a cada follow-up vencido, com a mesma
+ *  marca e a mesma data. Um insight por cima disso é o mesmo aviso duas vezes —
+ *  e duas listas a dizer o mesmo é como uma delas deixa de se ler. */
+test('follow-ups não geram aviso nenhum: a fila já os tem', () => {
+  const vencidos = buildInsights(input({
     followUps: [
       { id: 'f1', brandName: 'A', dueAt: ago(1), opportunityId: null },
       { id: 'f2', brandName: 'B', dueAt: ago(2), opportunityId: null },
     ],
   }));
-  assert.equal(r.length, 1);
-  assert.match(r[0].title, /2 marcas/);
-});
+  assert.deepEqual(vencidos, []);
 
-test('um follow-up ainda por vencer não avisa', () => {
-  const r = buildInsights(input({
+  const porVencer = buildInsights(input({
     followUps: [{ id: 'f1', brandName: 'A', dueAt: ahead(2), opportunityId: null }],
   }));
-  assert.deepEqual(r, []);
+  assert.deepEqual(porVencer, []);
+});
+
+/** «Estava em replied» é o identificador da base a aparecer na tela. */
+test('a etapa aparece pelo nome dela, não pelo id da base', () => {
+  const [i] = buildInsights(input({ opportunities: [opp({ lastActivityAt: ago(10) })] }));
+  assert.doesNotMatch(i.detail, /replied|commercial_qualification|proposal|negotiation/);
+  assert.match(i.detail, /Estava em negociação/);
 });
 
 test('uma licença a acabar dentro de uma semana é urgente', () => {

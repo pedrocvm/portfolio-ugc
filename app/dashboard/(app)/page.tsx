@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { requireUser } from '@/lib/auth';
 import { daysBetween } from '@/lib/time';
 import { supabaseServer } from '@/lib/supabase/server';
-import { todayQueue, wakeSnoozed } from '@/modules/actions/service';
+import { dayBoard, todayQueue, wakeSnoozed } from '@/modules/actions/service';
 import { markDue } from '@/modules/followups/service';
 import { getFlags, integrationHealth } from '@/modules/settings/service';
 import { openInsights } from '@/modules/assistant/service';
@@ -23,12 +23,13 @@ export default async function TodayPage() {
 
   await Promise.all([wakeSnoozed(db), markDue(db)]);
 
-  const [actions, flags, integration, counts, insights] = await Promise.all([
+  const [actions, flags, integration, counts, insights, board] = await Promise.all([
     todayQueue(),
     getFlags(),
     integrationHealth(),
     loadCounts(),
     openInsights(),
+    dayBoard(),
   ]);
 
   const now = new Date();
@@ -57,6 +58,8 @@ export default async function TodayPage() {
         greeting: app.displayName,
         counts,
         brief,
+        background: board.background,
+        doneToday: board.doneToday,
         insights,
         flags,
         integration: {

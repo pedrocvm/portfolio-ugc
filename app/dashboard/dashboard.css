@@ -1928,6 +1928,307 @@
   }
 }
 
+/* ── o dia, em três estados ────────────────────────────────────────── */
+
+/* «Resolver agora». É o único botão desta escala na tela, e é de propósito:
+   se houver dois primários, não há primário. */
+.osLead {
+  margin: 26px 0 34px;
+}
+.osStart {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 26px;
+  font-family: var(--disp);
+  font-variation-settings: var(--wide);
+  font-weight: 560;
+  font-size: 18px;
+  color: var(--papel);
+  background: var(--umbra);
+  border: 0;
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease),
+    transform var(--t-instant) var(--ease);
+}
+.osStart:hover {
+  background: var(--tinta);
+}
+.osStart:active {
+  transform: translate3d(0, 1px, 0);
+}
+.osStart span {
+  transition: transform var(--t-normal) var(--exp);
+}
+.osStart:hover span {
+  transform: translate3d(4px, 0, 0);
+}
+
+.osCount {
+  margin-left: 8px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 0.62em;
+  color: var(--tinta3);
+  vertical-align: 0.28em;
+}
+
+/* O que o sistema trata sozinho. Deliberadamente sem cartão, sem botão e sem
+   contraste: é para ler de passagem e não voltar. */
+.osBg {
+  margin-top: 44px;
+}
+.osBg h2 {
+  font-size: 19px;
+  color: var(--tinta2);
+}
+.osBgList {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+.osBgList li {
+  padding: 11px 0 11px 18px;
+  position: relative;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--tinta2);
+  border-bottom: 1px solid var(--rule);
+}
+.osBgList li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 19px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--pedra);
+}
+
+.osDone {
+  margin-top: 30px;
+}
+.osDone > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 15px;
+  color: var(--tinta3);
+  cursor: pointer;
+  list-style: none;
+}
+.osDone > summary::-webkit-details-marker {
+  display: none;
+}
+.osDone > summary:hover {
+  color: var(--tinta);
+}
+.osQuiet h2 {
+  font-size: 26px;
+}
+
+/* Manutenção. No fim, e em voz baixa. */
+.osMaint {
+  margin-top: 56px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  opacity: 0.62;
+  transition: opacity var(--t-normal) var(--ease);
+}
+.osMaint:hover {
+  opacity: 1;
+}
+
+/* ── resolver o dia ────────────────────────────────────────────────── */
+
+.focus {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+@media (min-width: 760px) {
+  .focus {
+    align-items: center;
+  }
+}
+.focusBox {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(620px, 100%);
+  max-height: 92dvh;
+  padding: 20px 24px calc(24px + env(safe-area-inset-bottom));
+  background: var(--papel);
+  box-shadow: 0 24px 70px rgba(25, 23, 20, 0.24);
+  animation: focusIn var(--t-slow) var(--exp) both;
+}
+.focus[data-closing] .focusBox {
+  animation: focusOut var(--t-normal) var(--ease) both;
+}
+@keyframes focusIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+}
+@keyframes focusOut {
+  to {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+}
+.focusTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.focusAt {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.focusTop button {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 22px;
+  color: var(--tinta3);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease);
+}
+.focusTop button:hover {
+  color: var(--tinta);
+}
+/* A contagem real, não uma percentagem inventada. */
+.focusBar {
+  height: 2px;
+  margin: 6px 0 22px;
+  background: var(--areia);
+}
+.focusBar span {
+  display: block;
+  width: var(--p, 0%);
+  height: 100%;
+  background: var(--umbra);
+  transition: width var(--t-slow) var(--exp);
+}
+.focusOne {
+  min-height: 0;
+  overflow-y: auto;
+  animation: focusStep var(--t-normal) var(--ease) both;
+}
+@keyframes focusStep {
+  from {
+    opacity: 0;
+    transform: translate3d(10px, 0, 0);
+  }
+}
+.focusOne h2 {
+  margin: 8px 0 10px;
+  font-size: 30px;
+}
+.focusWhy {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--tinta2);
+  margin: 0;
+}
+.focusActs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+}
+.focusActs .osGo {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+}
+.focusSkip {
+  margin-left: auto;
+  min-height: 44px;
+  padding: 0 10px;
+  font-size: 15px;
+  color: var(--tinta3);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease);
+}
+.focusSkip:hover {
+  color: var(--tinta);
+}
+.focusDone {
+  padding: 26px 0 10px;
+  text-align: center;
+  animation: focusStep var(--t-normal) var(--ease) both;
+}
+.focusDone h2 {
+  font-size: 32px;
+}
+.focusDone p {
+  margin: 10px 0 24px;
+  color: var(--tinta2);
+}
+
+.toastUndo {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 15px;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  padding: 0 0 1px;
+  cursor: pointer;
+}
+
+/* No telemóvel a decisão fica ao alcance do polegar: a folha encosta em baixo
+   e os botões são a última coisa antes da borda. */
+@media (max-width: 759px) {
+  .focusBox {
+    max-height: 88dvh;
+  }
+  .focusActs {
+    position: sticky;
+    bottom: 0;
+    background: var(--papel);
+    padding-bottom: 4px;
+  }
+  .focusActs .osGo,
+  .focusActs .osPageBtn {
+    flex: 1;
+    justify-content: center;
+    min-height: 48px;
+  }
+  .focusSkip {
+    flex-basis: 100%;
+    margin-left: 0;
+    text-align: center;
+  }
+}
+
 /* ── movimento ─────────────────────────────────────────────────────── */
 /* Curvas exponenciais, sem ressalto: entra depressa e assenta devagar. O
    movimento é delicado de propósito — o que tem de se notar é a precisão,
