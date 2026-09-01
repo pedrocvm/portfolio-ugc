@@ -5978,3 +5978,48 @@ a.aiSource:hover {
   .dash .paisPick input { width: 100%; }
   .dash .paisPick { flex: 1 1 100%; }
 }
+
+/* Cada nicho com o que procurar lá dentro. */
+.dash .focoLista {
+  display: grid;
+  gap: 10px;
+}
+.dash .focoNicho {
+  padding: 12px 14px;
+  border: 1px solid var(--areia2);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--areia2) 14%, transparent);
+}
+.dash .focoNicho[data-fav] {
+  border-color: var(--tinta);
+}
+.dash .focoNichoTopo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash .focoNichoTopo b {
+  flex: 1;
+  font-weight: 500;
+  color: var(--tinta);
+}
+.dash .focoNota2 {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--areia2);
+  border-radius: 8px;
+  background: var(--papel);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--tinta);
+  resize: vertical;
+}
+.dash .focoNota2::placeholder {
+  color: var(--pedra);
+}
+.dash .focoNota2:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 1px;
+}

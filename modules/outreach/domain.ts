@@ -25,6 +25,9 @@ export const LIMITS = {
 
 export type Strategy = {
   niches: string[];
+  /** O que procurar dentro de cada nicho, quando ela escreveu. Sem isto o
+   *  nicho é só uma palavra e vem o exemplar mais genérico dele. */
+  notes: string[];
   countries: string[];
   angle: string;
   seed: string;
@@ -71,6 +74,7 @@ export function strategyFor(date: Date, recentNiches: readonly string[] = []): S
 
   return {
     niches,
+    notes: [],
     countries: [pick(COUNTRIES, 0), pick(COUNTRIES, 2)].filter(
       (v, i, a) => a.indexOf(v) === i,
     ),

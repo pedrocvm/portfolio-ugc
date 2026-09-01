@@ -65,3 +65,41 @@ test('um nicho escrito à mão nunca fica sem id', () => {
     assert.doesNotMatch(nicheIdFor(label), /[^a-z0-9_]/);
   }
 });
+
+test('um nicho pode dizer o que procurar lá dentro', () => {
+  // «Hotéis» é o rótulo; o que ela quer é mais estreito que isso.
+  const f = normalizeFocus({
+    niches: [{
+      id: '', label: 'Hotéis de luxo', favourite: true,
+      note: 'Que façam parcerias em troca de estadia e contratem creators de forma fixa.',
+    }],
+  });
+  assert.match(f.niches[0].note!, /troca de estadia/);
+});
+
+test('uma nota vazia não fica a ocupar espaço', () => {
+  const f = normalizeFocus({ niches: [{ id: '', label: 'Hotéis', favourite: false, note: '   ' }] });
+  assert.equal(f.niches[0].note, undefined);
+});
+
+test('a nota tem tecto: um ensaio dilui o pedido', () => {
+  const f = normalizeFocus({
+    niches: [{ id: '', label: 'Hotéis', favourite: false, note: 'x'.repeat(900) }],
+  });
+  assert.ok(f.niches[0].note!.length <= 400);
+});
+
+test('a nota do nicho chega à estratégia da corrida, não fica na tela', () => {
+  // Guardar a nota e não a usar era o pior dos casos: parece configurável e
+  // não muda nada no que aparece.
+  const focus = normalizeFocus({
+    niches: [
+      { id: '', label: 'Hotéis de luxo', favourite: true, note: 'Que contratem creators de forma fixa.' },
+      { id: '', label: 'SaaS', favourite: true },
+    ],
+  });
+  const doDia = nichesForDay(focus, 0, 2);
+  const notas = doDia.map((n) => n.note ?? '').filter(Boolean);
+  assert.equal(notas.length, 1);
+  assert.match(notas[0], /forma fixa/);
+});

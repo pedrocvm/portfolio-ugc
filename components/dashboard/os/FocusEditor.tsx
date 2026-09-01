@@ -43,30 +43,47 @@ export default function FocusEditor({ initial }: { initial: Focus }) {
 
       <div className="focoCampo">
         <span className="focoLabel">Nichos</span>
-        <div className="focoChips">
+        <div className="focoLista">
           {niches.map((n) => (
-            <span className="chipFoco" key={n.id} data-fav={n.favourite || undefined}>
-              <button
-                type="button"
-                className="chipFav"
-                aria-pressed={n.favourite}
-                title={n.favourite ? 'Sai dos favoritos' : 'Procurar este mais vezes'}
-                onClick={() =>
-                  mexeu(setNiches)(niches.map((x) => (x.id === n.id ? { ...x, favourite: !x.favourite } : x)))
+            <div className="focoNicho" key={n.id} data-fav={n.favourite || undefined}>
+              <div className="focoNichoTopo">
+                <button
+                  type="button"
+                  className="chipFav"
+                  aria-pressed={n.favourite}
+                  title={n.favourite ? 'Sai dos favoritos' : 'Procurar este mais vezes'}
+                  onClick={() =>
+                    mexeu(setNiches)(niches.map((x) => (x.id === n.id ? { ...x, favourite: !x.favourite } : x)))
+                  }
+                >
+                  {n.favourite ? '★' : '☆'}
+                </button>
+                <b>{n.label}</b>
+                <button
+                  type="button"
+                  className="chipX"
+                  aria-label={`Tirar ${n.label} do foco`}
+                  onClick={() => mexeu(setNiches)(niches.filter((x) => x.id !== n.id))}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* O rótulo diz o sector; isto diz o que ela quer lá dentro. Sem
+                  isto, «hotéis» traz o hotel genérico mais próximo. */}
+              <textarea
+                className="focoNota2"
+                rows={2}
+                value={n.note ?? ''}
+                placeholder="O que procurar aqui? Ex.: que façam parcerias em troca de estadia e contratem creators de forma fixa."
+                aria-label={`O que procurar em ${n.label}`}
+                onChange={(e) =>
+                  mexeu(setNiches)(
+                    niches.map((x) => (x.id === n.id ? { ...x, note: e.target.value } : x)),
+                  )
                 }
-              >
-                {n.favourite ? '★' : '☆'}
-              </button>
-              {n.label}
-              <button
-                type="button"
-                className="chipX"
-                aria-label={`Tirar ${n.label} do foco`}
-                onClick={() => mexeu(setNiches)(niches.filter((x) => x.id !== n.id))}
-              >
-                ×
-              </button>
-            </span>
+              />
+            </div>
           ))}
         </div>
 
@@ -94,7 +111,11 @@ export default function FocusEditor({ initial }: { initial: Focus }) {
             Acrescentar
           </button>
         </div>
-        <p className="focoNota">A estrela procura esse nicho mais vezes. Os outros entram por rotação.</p>
+        <p className="focoNota">
+          A estrela procura esse nicho mais vezes. Os outros entram por rotação.
+          A nota de cada um vai para a procura — quanto mais concreta, melhores
+          as marcas que aparecem.
+        </p>
       </div>
 
       <div className="focoCampo">

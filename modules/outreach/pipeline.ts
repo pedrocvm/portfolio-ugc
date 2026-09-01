@@ -65,7 +65,19 @@ export async function runDailyOutreach(
   }
 
   const recent = await recentNiches(db);
-  const strategy = strategyFor(now, recent);
+  // O foco que ela configurou manda; a rotação por nicho continua a existir
+  // dentro dele. Antes vinha de uma lista no código.
+  const { readFocus } = await import('./focus-service');
+  const { nichesForDay } = await import('./focus');
+  const focus = await readFocus();
+  const doDia = nichesForDay(focus, Math.floor(now.getTime() / 86400000));
+
+  const strategy = {
+    ...strategyFor(now, recent),
+    niches: doDia.map((n) => n.label),
+    notes: doDia.map((n) => n.note ?? '').filter(Boolean),
+    countries: focus.countries,
+  };
 
   const { data: run } = await db
     .from('outreach_run')

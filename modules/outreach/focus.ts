@@ -13,6 +13,12 @@ export type FocusNiche = {
   label: string;
   /** Favoritos saem primeiro e mais vezes. */
   favourite: boolean;
+  /** O que procurar dentro deste nicho.
+   *
+   *  «Hotéis» é o rótulo; «que fazem parcerias em troca de estadia e contratam
+   *  creators de forma fixa» é o que ela quer mesmo. Sem isto, um nicho é uma
+   *  palavra e a descoberta traz o hotel genérico mais próximo. */
+  note?: string;
 };
 
 export type Focus = {
@@ -61,6 +67,8 @@ export function normalizeFocus(input: Partial<Focus> | null | undefined): Focus 
       id: nicheIdFor(n.id || n.label || ''),
       label: (n.label || n.id || '').trim().slice(0, 60),
       favourite: Boolean(n.favourite),
+      // Um parágrafo cabe; um ensaio dilui o pedido e a descoberta perde o fio.
+      note: n.note?.trim().slice(0, 400) || undefined,
     }))
     .filter((n) => n.id && n.label && !vistos.has(n.id) && vistos.add(n.id))
     .slice(0, MAX_NICHES);
