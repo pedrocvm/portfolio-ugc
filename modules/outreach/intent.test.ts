@@ -148,3 +148,29 @@ test('a banda acompanha a nota', () => {
   assert.equal(sinais({ paidMedia: 'none', ugc: 'none', demonstrable: 0, creativeGap: 0, digitalPresence: 0, reachable: false }).band, 'Fraco');
   assert.equal(sinais().band, 'Excelente');
 });
+
+test('uma candidata que é tudo ao mesmo tempo não passa o corte', () => {
+  // Um diretório que fala de hotéis, apps, ginásios e restaurantes bate no
+  // pedido por acidente. Bater por acidente não é ser o que ela pediu.
+  const tudo = cand(
+    'Guia Braga',
+    'Diretório com hotéis, restaurantes, ginásios, clínicas, apps e lojas de mobiliário.',
+  );
+  const r = relevanceFor(tudo, intent('hotéis'));
+  assert.equal(r.passes, false, `entrou com ${r.score}`);
+});
+
+test('o corte é o que decide, e mexer nele muda o resultado', () => {
+  const ambigua = cand('Guia Braga', 'Hotéis, restaurantes, ginásios e apps numa só app.');
+  const r = relevanceFor(ambigua, intent('hotéis'));
+  assert.ok(r.score < RELEVANCE_GATE, `${r.score} devia ficar abaixo de ${RELEVANCE_GATE}`);
+});
+
+test('a família principal é a primeira nomeada, não a última', () => {
+  const software = parseManualIntent('software para hotéis', 'Portugal');
+  const juntas = software.expansions.join(' ').toLowerCase();
+  assert.match(juntas, /saas|aplica|plataforma/, `expandiu para: ${juntas}`);
+
+  const hotelaria = parseManualIntent('hotéis com software próprio', 'Portugal');
+  assert.match(hotelaria.expansions.join(' ').toLowerCase(), /hot[eé]|hotelaria|resort/);
+});

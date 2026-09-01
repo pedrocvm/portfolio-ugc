@@ -232,9 +232,10 @@ export function relevanceFor(c: Candidate, intent: ManualIntent): Relevance {
   const cobertura = Math.min(1, required.length / Math.max(1, Math.min(3, intent.requiredConcepts.length)));
   let score = Math.round(40 + cobertura * 50 + Math.min(10, optional.length * 5));
 
-  // Uma candidata que bate no pedido e também numa família excluída é ambígua,
-  // não errada: desce, não sai.
-  if (excluded.length) score = Math.max(RELEVANCE_GATE, score - 20);
+  // Uma candidata ambígua — bate no pedido e também noutras famílias — desce.
+  // Estava a descer até ao corte e a parar lá, o que garantia que passava
+  // sempre: um piso no valor exacto do corte é um corte que não corta.
+  if (excluded.length) score -= 20 * Math.min(3, excluded.length);
 
   return {
     score: Math.min(100, score),
