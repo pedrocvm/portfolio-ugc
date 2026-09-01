@@ -11,7 +11,7 @@ import Spinner from '@/components/dashboard/Spinner';
 import { watchDiscovery } from '@/components/dashboard/DiscoveryWatch';
 import { pushToast } from '@/components/dashboard/Toasts';
 import { formatDate } from '@/lib/time';
-import { CONF_LABEL, UGC_LABEL, countryLabel } from '@/modules/outreach/history';
+import { CONF_LABEL, UGC_LABEL, badgesFor, countryLabel } from '@/modules/outreach/history';
 import {
   LIMITS, SECTION_HINT, SECTION_TITLE, groupForReview,
 } from '@/modules/outreach/domain';
@@ -31,6 +31,7 @@ export type Candidate = {
   red_flags: string[]; sources: { label: string; url: string | null }[];
   contact_name: string | null; contact_role: string | null; contact_email: string | null;
   email_confidence: string | null; contact_source: string | null; subject: string; body: string;
+  socials: Record<string, string | null> | null;
   quality: { pass: boolean; score: number; failures: string[] } | null;
   status: string; sent_at: string | null;
 };
@@ -73,8 +74,12 @@ function Card({ c }: { c: Candidate }) {
         {/* Uma linha só, para ela saber se vale a pena abrir. */}
         <span className="revWhy">{c.product ?? c.why_fit}</span>
 
-        <span className="revWho" data-weak={!c.contact_email || c.email_confidence === 'low' || c.email_confidence === 'unknown' ? '' : undefined}>
-          {c.contact_email ? (c.contact_name ?? 'contato') : 'sem contato'}
+        <span className="revBadges">
+          {badgesFor(c as never).map((b) => (
+            <span className="revBadge" data-tone={b.tone} key={b.text}>
+              {b.text}
+            </span>
+          ))}
         </span>
 
         {c.fit_score !== null ? (

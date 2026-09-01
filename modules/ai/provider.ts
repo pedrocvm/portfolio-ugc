@@ -14,7 +14,7 @@ import type { z } from 'zod';
 
 import { toGeminiSchema } from './gemini-schema';
 import { humanizeErrors } from './failure';
-import { paced } from './pace';
+import { PAID_GAP_MS, paced } from './pace';
 import { routeSearch, withFallback } from './fallback';
 
 export type ProviderId = 'gemini' | 'anthropic';
@@ -449,7 +449,7 @@ export function aiSetup(): AiSetup {
               keys.map((k, i) => ({ provider: paced(gemini(k)), label: `chave ${i + 1}` })),
               (from, to) => console.warn(`[ai] ${from} sem cota, a passar para a ${to}`),
             ),
-            searchKey ? paced(gemini(searchKey)) : null,
+            searchKey ? paced(gemini(searchKey), PAID_GAP_MS) : null,
           ),
         )
       : null,

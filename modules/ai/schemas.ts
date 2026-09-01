@@ -311,11 +311,20 @@ export const OutreachResearchSchema = z.object({
   creative_opportunity: z.string(),
   content_ideas: z.array(z.object({ title: z.string(), angle: z.string() })),
   red_flags: z.array(z.string()),
+  /** Por onde se fala com eles.
+   *
+   *  O email vinha sempre nulo porque a pesquisa não tinha web e o prompt — bem
+   *  — proíbe inventar endereços. Agora tem, e pede-se mais do que email: o
+   *  WhatsApp é o canal que ela usa mesmo, e o Instagram serve quando não há
+   *  WhatsApp. Telefone fixo não interessa. */
   contact: z
     .object({
       name: z.string().nullable(),
       role: z.string().nullable(),
       email: z.string().nullable(),
+      /** Só se for mesmo WhatsApp: um fixo aqui é pior do que campo vazio. */
+      whatsapp: z.string().nullable().describe('número de WhatsApp com indicativo, ou null'),
+      instagram: z.string().nullable().describe('@utilizador do perfil da marca'),
       confidence: z.enum(['verified', 'high', 'medium', 'low', 'unknown']),
       source: z.string().nullable(),
     })

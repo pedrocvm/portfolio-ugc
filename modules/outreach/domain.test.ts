@@ -350,15 +350,18 @@ test('um dia inteiro de prospecção cabe no tempo que a rota dá', async () => 
   // não estourar o limite por minuto do plano grátis, e esse espaçamento é o que
   // manda no relógio: subir o alvo do dia sem contar isto faz a corrida ser
   // morta a meio, todos os dias, sem ninguém perceber porquê.
-  const { MIN_GAP_MS } = await import('@/modules/ai/pace.ts');
+  const { MIN_GAP_MS, PAID_GAP_MS } = await import('@/modules/ai/pace.ts');
   const ROTA_MS = 300_000;
 
-  const chamadas = 2 + LIMITS.maxDeepResearch + LIMITS.max;
-  const segundos = (chamadas * MIN_GAP_MS) / 1000;
+  // A pesquisa de cada marca são duas chamadas: uma à web, pela chave paga, e
+  // outra a estruturar o que ela trouxe, pela grátis.
+  const naWeb = 1 + LIMITS.maxDeepResearch;
+  const noGratis = 1 + LIMITS.maxDeepResearch + LIMITS.max;
+  const ms = naWeb * PAID_GAP_MS + noGratis * MIN_GAP_MS;
 
   assert.ok(
-    chamadas * MIN_GAP_MS < ROTA_MS,
-    `${chamadas} chamadas a ${MIN_GAP_MS}ms dão ${segundos}s, e a rota morre aos 300s`,
+    ms < ROTA_MS,
+    `${naWeb} chamadas à web e ${noGratis} ao modelo dão ${Math.round(ms / 1000)}s, e a rota morre aos 300s`,
   );
 });
 

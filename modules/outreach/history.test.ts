@@ -9,6 +9,8 @@ import {
   dayLabel,
   countryLabel,
   dayTotals,
+  badgesFor,
+  type BadgeInput,
 } from './history.ts';
 
 const row = (over: Partial<HistoryRow> = {}): HistoryRow => ({
@@ -158,4 +160,57 @@ test('um dia com várias corridas soma-as, em vez de escolher uma', () => {
 
 test('sem corridas nesse dia, não se inventa um total', () => {
   assert.equal(dayTotals([]).get('2026-08-31'), undefined);
+});
+
+/* ── Etiquetas ───────────────────────────────────────────────────────────── */
+
+const badgeBase: BadgeInput = {
+  country: 'Brasil',
+  paid_media_signal: 'strong',
+  ugc_signal: 'ugc',
+  contact_email: 'a@b.pt',
+  red_flags: [],
+};
+const textos = (o: Partial<BadgeInput> = {}) =>
+  badgesFor({ ...badgeBase, ...o }).map((b) => b.text);
+
+test('o canal mostrado é o mais útil que existir, e só um', () => {
+  // Ela usa WhatsApp; o email é o que o CarolOS envia; o Instagram é o resto.
+  assert.ok(textos({ contact: { whatsapp: '+351912345678' } }).includes('WhatsApp'));
+  assert.ok(!textos({ contact: { whatsapp: '+351912345678' } }).includes('email'));
+  assert.ok(textos({ contact_email: 'a@b.pt' }).includes('email'));
+  assert.ok(textos({ contact_email: null, socials: { instagram: '@marca' } }).includes('Instagram'));
+});
+
+test('sem contato nenhum, a etiqueta avisa em vez de faltar', () => {
+  const b = badgesFor({ ...badgeBase, contact_email: null });
+  const canal = b.find((x) => x.text === 'sem contato');
+  assert.ok(canal, 'uma marca sem forma de contacto parecia igual às outras');
+  assert.equal(canal!.tone, 'warn');
+});
+
+test('nenhuma etiqueta é um valor cru da base', () => {
+  const crus = /strong|medium|none|creator_program|product_only|ugc_signal|_/;
+  for (const sinal of ['strong', 'medium', 'weak', 'none']) {
+    for (const ugc of ['creator_program', 'ugc', 'influencers', 'product_only', 'none']) {
+      for (const b of badgesFor({ ...badgeBase, paid_media_signal: sinal, ugc_signal: ugc })) {
+        assert.doesNotMatch(b.text, crus, `«${b.text}» veio da base sem tradução`);
+      }
+    }
+  }
+});
+
+test('as bandeiras contam-se, e o singular concorda', () => {
+  assert.ok(textos({ red_flags: ['x'] }).includes('1 bandeira'));
+  assert.ok(textos({ red_flags: ['x', 'y'] }).includes('2 bandeiras'));
+  assert.ok(!textos({ red_flags: [] }).some((t) => t.includes('bandeira')));
+});
+
+test('a linha não fica coberta de etiquetas', () => {
+  const cheio = badgesFor({
+    country: 'Portugal', paid_media_signal: 'strong', ugc_signal: 'creator_program',
+    contact_email: 'a@b.pt', contact: { whatsapp: '+351', instagram: '@x' },
+    socials: { instagram: '@x' }, red_flags: ['a', 'b'],
+  });
+  assert.ok(cheio.length <= 5, `${cheio.length} etiquetas numa linha é uma parede`);
 });

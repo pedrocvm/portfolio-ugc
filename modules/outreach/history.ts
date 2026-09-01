@@ -207,3 +207,51 @@ export function dayTotals(runs: readonly RunLike[]): Map<string, {
   }
   return out;
 }
+
+/** As etiquetas de uma marca, prontas para a linha.
+ *
+ *  A linha tinha nicho e mais nada. O que ela precisa de saber num relance é se
+ *  vale a pena abrir: onde é, se compram criativos, se já trabalham com
+ *  creators, e — o que decide mesmo — se há por onde falar com eles. Puro para
+ *  ter teste: uma etiqueta a mentir é pior do que uma etiqueta a menos. */
+export type Badge = { text: string; tone: 'ok' | 'warn' | 'mute' };
+
+export type BadgeInput = {
+  country: string | null;
+  paid_media_signal: string | null;
+  ugc_signal: string | null;
+  contact_email: string | null;
+  contact?: { whatsapp?: string | null; instagram?: string | null } | null;
+  socials?: Record<string, string | null> | null;
+  red_flags?: string[] | null;
+};
+
+export function badgesFor(c: BadgeInput): Badge[] {
+  const out: Badge[] = [];
+
+  const pais = countryLabel(c.country);
+  if (pais) out.push({ text: pais, tone: 'mute' });
+
+  // Comprar criativos é o sinal que separa quem paga de quem admira.
+  if (c.paid_media_signal === 'strong') out.push({ text: 'compra criativos', tone: 'ok' });
+  else if (c.paid_media_signal === 'medium') out.push({ text: 'anuncia', tone: 'mute' });
+  else if (c.paid_media_signal === 'none') out.push({ text: 'sem anúncios', tone: 'warn' });
+
+  if (c.ugc_signal === 'creator_program') out.push({ text: 'programa de creators', tone: 'ok' });
+  else if (c.ugc_signal === 'ugc') out.push({ text: 'já usa UGC', tone: 'ok' });
+  else if (c.ugc_signal === 'product_only') out.push({ text: 'só produto', tone: 'mute' });
+
+  // Por ordem de utilidade para ela, e só uma: a linha não é um cartão de visita.
+  const whatsapp = c.contact?.whatsapp?.trim();
+  const instagram = c.contact?.instagram?.trim() || c.socials?.instagram?.trim();
+  if (whatsapp) out.push({ text: 'WhatsApp', tone: 'ok' });
+  else if (c.contact_email) out.push({ text: 'email', tone: 'ok' });
+  else if (instagram) out.push({ text: 'Instagram', tone: 'mute' });
+  else out.push({ text: 'sem contato', tone: 'warn' });
+
+  if (c.red_flags?.length) {
+    out.push({ text: `${c.red_flags.length} bandeira${c.red_flags.length === 1 ? '' : 's'}`, tone: 'warn' });
+  }
+
+  return out;
+}

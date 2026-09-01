@@ -14,6 +14,11 @@ import { failureKind, quotaWindow, retryAfterMs } from './failure';
 /** 15 pedidos por minuto é um a cada 4s. A margem é para o relógio deles não
  *  coincidir com o nosso. */
 export const MIN_GAP_MS = 4_500;
+
+/** A chave de pesquisa vem de um projeto com faturação ligada, onde o tecto por
+ *  minuto é outra ordem de grandeza. Espaçá-la como se fosse grátis punha 90
+ *  segundos de espera numa corrida que já tem pouca folga. */
+export const PAID_GAP_MS = 1_200;
 const MAX_ATTEMPTS = 3;
 const BACKOFF_MS = [6_000, 20_000];
 
@@ -27,13 +32,13 @@ const sleep = (ms: number, signal?: AbortSignal) =>
 // ponytail: uma fila por processo. Duas instâncias na Vercel podem passar o
 // dobro dos pedidos; se isso vier a doer, o contador tem de sair daqui para
 // fora (Postgres ou Redis). Para uma pessoa a usar isto, chega.
-type Gate = { queue: Promise<unknown>; lastStart: number };
+type Gate = { queue: Promise<unknown>; lastStart: number; gap: number };
 
 /** Uma fila por chave, não uma por processo. Cada chave tem a sua cota; com uma
  *  fila partilhada, duas chaves andariam ao ritmo de uma. */
 function scheduled<T>(gate: Gate, work: (signal?: AbortSignal) => Promise<T>, signal?: AbortSignal): Promise<T> {
   const turn = gate.queue.then(async () => {
-    const wait = gate.lastStart + MIN_GAP_MS - Date.now();
+    const wait = gate.lastStart + gate.gap - Date.now();
     if (wait > 0) await sleep(wait, signal);
     gate.lastStart = Date.now();
     return work(signal);
@@ -64,8 +69,8 @@ async function attempt<T>(gate: Gate, work: (signal?: AbortSignal) => Promise<T>
 
 /** Espaça as chamadas e repete as que valem a pena. Fica por dentro da tradução
  *  de erros, para ver o 429 em bruto antes de virar frase. */
-export function paced<T extends object>(provider: T): T {
-  const gate: Gate = { queue: Promise.resolve(), lastStart: 0 };
+export function paced<T extends object>(provider: T, gap = MIN_GAP_MS): T {
+  const gate: Gate = { queue: Promise.resolve(), lastStart: 0, gap };
   return new Proxy(provider, {
     get(target, prop, receiver) {
       const value = Reflect.get(target, prop, receiver);

@@ -18,7 +18,7 @@ export const LIMITS = {
   /** Quantas se pesquisam a fundo. Pesquisar cem para escolher vinte é dinheiro
    *  queimado; o funil aperta antes de a pesquisa ficar cara. Metade a mais do
    *  que o alvo dá folga para as que não passam sem esvaziar o dia. */
-  maxDeepResearch: 30,
+  maxDeepResearch: 26,
 } as const;
 
 /* ── Estratégia de procura ───────────────────────────────────────────────── */

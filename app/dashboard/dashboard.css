@@ -5654,3 +5654,40 @@ a.aiSource:hover {
     height: 9px;
   }
 }
+
+/* As etiquetas da linha: o que ela lê antes de decidir se abre. */
+.dash .revBadges {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.dash .revBadge {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--areia2) 45%, transparent);
+  color: var(--tinta2);
+}
+.dash .revBadge[data-tone='ok'] {
+  background: color-mix(in srgb, var(--realce) 12%, transparent);
+  color: var(--realce);
+}
+.dash .revBadge[data-tone='warn'] {
+  background: transparent;
+  border: 1px solid var(--realce);
+  color: var(--realce);
+}
+@media (max-width: 860px) {
+  .dash .revBadges {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+  /* Numa linha estreita as etiquetas de contexto saem; o canal fica, porque é o
+     que decide se ela consegue sequer falar com a marca. */
+  .dash .revBadge:not([data-tone='ok']):not([data-tone='warn']) {
+    display: none;
+  }
+}

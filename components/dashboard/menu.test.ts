@@ -90,3 +90,18 @@ test('a corrida a mostrar escolhe-se pelo instante, não pelo dia', () => {
     assert.equal(coluna, 'started_at', `ordenou outreach_run por «${coluna}»`);
   }
 });
+
+/** Lido como texto porque exercitar um hook precisava de um renderer que este
+ *  runner não tem. É mais fraco do que eu queria: garante a forma da correção,
+ *  não o comportamento. O bug real era o menu do celular abrir e fechar-se
+ *  sozinho a partir da segunda vez, e seis componentes partilhavam-no. */
+test('a animação de saída repõe-se, e não se reagenda a cada render', () => {
+  const hook = readFileSync(path.join(ROOT, 'components/dashboard/useExit.ts'), 'utf8');
+
+  assert.match(hook, /setClosing\(false\)/, 'o estado de saída fica preso e a próxima abertura nasce a fechar');
+
+  // `onDone` nas dependências reagenda o fecho a cada render enquanto fecha.
+  const deps = /\}, \[([^\]]*)\]\);/.exec(hook)?.[1] ?? '';
+  assert.doesNotMatch(deps, /onDone/, `onDone voltou às dependências: [${deps}]`);
+  assert.match(hook, /useRef\(onDone\)/, 'sem ref, o efeito volta a depender de uma função instável');
+});
