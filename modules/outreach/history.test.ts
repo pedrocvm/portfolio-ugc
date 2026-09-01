@@ -9,8 +9,9 @@ import {
   dayLabel,
   countryLabel,
   dayTotals,
-  badgesFor,
-  type BadgeInput,
+  signalsFor,
+  placeLabel,
+  type SignalInput,
 } from './history.ts';
 
 const row = (over: Partial<HistoryRow> = {}): HistoryRow => ({
@@ -162,55 +163,60 @@ test('sem corridas nesse dia, não se inventa um total', () => {
   assert.equal(dayTotals([]).get('2026-08-31'), undefined);
 });
 
-/* ── Etiquetas ───────────────────────────────────────────────────────────── */
+/* ── Sinais que se explicam sozinhos ─────────────────────────────────────── */
 
-const badgeBase: BadgeInput = {
-  country: 'Brasil',
-  paid_media_signal: 'strong',
-  ugc_signal: 'ugc',
-  contact_email: 'a@b.pt',
-  red_flags: [],
-};
-const textos = (o: Partial<BadgeInput> = {}) =>
-  badgesFor({ ...badgeBase, ...o }).map((b) => b.text);
-
-test('o canal mostrado é o mais útil que existir, e só um', () => {
-  // Ela usa WhatsApp; o email é o que o CarolOS envia; o Instagram é o resto.
-  assert.ok(textos({ contact: { whatsapp: '+351912345678' } }).includes('WhatsApp'));
-  assert.ok(!textos({ contact: { whatsapp: '+351912345678' } }).includes('email'));
-  assert.ok(textos({ contact_email: 'a@b.pt' }).includes('email'));
-  assert.ok(textos({ contact_email: null, socials: { instagram: '@marca' } }).includes('Instagram'));
+const sig = (o: Partial<SignalInput> = {}): SignalInput => ({
+  city: 'Porto', country: 'Portugal', paid_media_signal: 'strong',
+  ugc_signal: 'ugc', contact_email: 'a@b.pt', email_confidence: 'high',
+  red_flags: [], ...o,
 });
+const textos = (o: Partial<SignalInput> = {}) => signalsFor(sig(o)).map((s) => s.text);
 
-test('sem contato nenhum, a etiqueta avisa em vez de faltar', () => {
-  const b = badgesFor({ ...badgeBase, contact_email: null });
-  const canal = b.find((x) => x.text === 'sem contato');
-  assert.ok(canal, 'uma marca sem forma de contacto parecia igual às outras');
-  assert.equal(canal!.tone, 'warn');
-});
-
-test('nenhuma etiqueta é um valor cru da base', () => {
-  const crus = /strong|medium|none|creator_program|product_only|ugc_signal|_/;
-  for (const sinal of ['strong', 'medium', 'weak', 'none']) {
-    for (const ugc of ['creator_program', 'ugc', 'influencers', 'product_only', 'none']) {
-      for (const b of badgesFor({ ...badgeBase, paid_media_signal: sinal, ugc_signal: ugc })) {
-        assert.doesNotMatch(b.text, crus, `«${b.text}» veio da base sem tradução`);
-      }
-    }
+test('«2 bandeiras» desapareceu: um sinal diz o que é', () => {
+  const t = textos({ red_flags: ['Trabalha com agência de meios exclusiva.', 'Sede fora do país.'] });
+  for (const x of t) {
+    assert.doesNotMatch(x, /bandeira/i, `«${x}» ainda conta bandeiras em vez de as dizer`);
+    assert.doesNotMatch(x, /^\d+$|_/, `«${x}» não se explica sozinho`);
   }
 });
 
-test('as bandeiras contam-se, e o singular concorda', () => {
-  assert.ok(textos({ red_flags: ['x'] }).includes('1 bandeira'));
-  assert.ok(textos({ red_flags: ['x', 'y'] }).includes('2 bandeiras'));
-  assert.ok(!textos({ red_flags: [] }).some((t) => t.includes('bandeira')));
+test('o canal nunca cai da linha, mesmo com sinais a mais', () => {
+  // É o que decide se ela consegue falar com a marca. Sem ele o resto não serve.
+  const t = textos({
+    paid_media_signal: 'none', ugc_signal: 'product_only',
+    red_flags: ['uma', 'duas'], contact_email: null, whatsapp: null,
+  });
+  assert.ok(t.some((x) => /contacto|WhatsApp|Email|Instagram/i.test(x)), `sem canal: ${t.join(' · ')}`);
 });
 
-test('a linha não fica coberta de etiquetas', () => {
-  const cheio = badgesFor({
-    country: 'Portugal', paid_media_signal: 'strong', ugc_signal: 'creator_program',
-    contact_email: 'a@b.pt', contact: { whatsapp: '+351', instagram: '@x' },
-    socials: { instagram: '@x' }, red_flags: ['a', 'b'],
+test('o canal mostrado é o melhor que existir', () => {
+  assert.equal(signalsFor(sig({ whatsapp: '+351912345678' }))[0].text, 'WhatsApp encontrado');
+  assert.equal(signalsFor(sig())[0].text, 'Email verificado');
+  assert.equal(signalsFor(sig({ email_confidence: 'low' }))[0].text, 'Email por confirmar');
+  assert.equal(signalsFor(sig({ contact_email: null, instagram: '@x' }))[0].text, 'Só por Instagram');
+  assert.equal(signalsFor(sig({ contact_email: null }))[0].text, 'Sem contacto direto');
+});
+
+test('a linha não leva mais de três sinais', () => {
+  const t = textos({ paid_media_signal: 'none', ugc_signal: 'product_only', red_flags: ['a', 'b', 'c'] });
+  assert.ok(t.length <= 3, `${t.length} sinais numa linha`);
+});
+
+test('uma bandeira comprida corta-se sem ficar a meio de uma palavra', () => {
+  // Sem anúncios fortes nem creators, sobra espaço na linha para a bandeira.
+  const t = textos({
+    paid_media_signal: 'medium',
+    ugc_signal: 'influencers',
+    red_flags: ['Histórico forte com influenciadores corporativos tradicionais que pode gerar resistência.'],
   });
-  assert.ok(cheio.length <= 5, `${cheio.length} etiquetas numa linha é uma parede`);
+  const flag = t.find((x) => x.includes('…'));
+  assert.ok(flag, `nada foi cortado: ${t.join(' · ')}`);
+  assert.ok(flag!.length <= 36, `«${flag}» ficou comprida`);
+});
+
+test('o sítio lê-se como se diz', () => {
+  assert.equal(placeLabel({ city: 'Porto', country: 'Portugal' }), 'Porto, Portugal');
+  assert.equal(placeLabel({ city: null, country: 'Germany' }), 'Alemanha');
+  assert.equal(placeLabel({ city: 'Braga', country: null }), 'Braga');
+  assert.equal(placeLabel({ city: null, country: null }), null);
 });

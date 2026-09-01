@@ -3,19 +3,25 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import {
-  approveOutreach, discardMany, draftOutreach, sendApprovedOutreach, sendOutreach, skipOutreach,
-  startDiscovery,
+  approveOutreach, clearManualSearch, discardMany, draftOutreach, saveCandidates,
+  sendApprovedOutreach, sendOutreach, skipOutreach, startDiscovery, startManualSearch,
   suppressBrand, updateOutreachDraft,
 } from '@/app/dashboard/outreach-actions';
 import Spinner from '@/components/dashboard/Spinner';
 import { watchDiscovery } from '@/components/dashboard/DiscoveryWatch';
 import { pushToast } from '@/components/dashboard/Toasts';
 import { formatDate } from '@/lib/time';
-import { CONF_LABEL, UGC_LABEL, badgesFor, countryLabel } from '@/modules/outreach/history';
+import {
+  CONF_LABEL, UGC_LABEL, countryLabel, placeLabel, signalsFor,
+} from '@/modules/outreach/history';
 import {
   LIMITS, SECTION_HINT, SECTION_TITLE, groupForReview,
 } from '@/modules/outreach/domain';
 import { nicheShort } from '@/modules/brands/niches';
+import type { Focus } from '@/modules/outreach/focus';
+import CountryPicker from './CountryPicker';
+import FocusEditor from './FocusEditor';
+import ResultsBar, { type ManualRun } from './ResultsBar';
 
 /** A revisão diária.
  *
@@ -32,9 +38,28 @@ export type Candidate = {
   contact_name: string | null; contact_role: string | null; contact_email: string | null;
   email_confidence: string | null; contact_source: string | null; subject: string; body: string;
   socials: Record<string, string | null> | null;
+  city: string | null;
+  instagram: string | null;
+  whatsapp: string | null;
+  phone: string | null;
+  search_relevance: number | null;
+  ugc_opportunity: number | null;
+  saved: boolean;
   quality: { pass: boolean; score: number; failures: string[] } | null;
   status: string; sent_at: string | null;
 };
+
+/** O que o número quer dizer. Numa busca dirigida a pergunta é «corresponde ao
+ *  que pedi?»; na automática é «encaixa no que faço?». São perguntas
+ *  diferentes e não podem partilhar o mesmo rótulo. */
+function scoreFor(c: Candidate): { n: number | null; label: string } {
+  // O número e a banda têm de vir do mesmo valor. Mostrar o dígito de um e a
+  // palavra de outro dava «61 · Excelente», que é pior do que não dizer nada.
+  const manual = c.search_relevance !== null;
+  const n = manual ? (c.ugc_opportunity ?? c.fit_score) : c.fit_score;
+  const banda = n === null ? '' : n >= 80 ? 'Excelente' : n >= 65 ? 'Bom' : n >= 45 ? 'Razoável' : 'Fraco';
+  return { n, label: `${manual ? 'Potencial' : 'Encaixe'} · ${banda}` };
+}
 
 function Card({ c }: { c: Candidate }) {
   const [pending, start] = useTransition();
@@ -51,6 +76,7 @@ function Card({ c }: { c: Candidate }) {
 
   if (gone) return null;
 
+  const score = scoreFor(c);
   const pronta = status === 'ready' || status === 'approved' || status === 'edited';
 
   const run = (id: string, fn: () => Promise<{ error?: string }>, after?: () => void) => {
@@ -74,17 +100,22 @@ function Card({ c }: { c: Candidate }) {
         {/* Uma linha só, para ela saber se vale a pena abrir. */}
         <span className="revWhy">{c.product ?? c.why_fit}</span>
 
+        {placeLabel(c) ? <span className="revWhere">{placeLabel(c)}</span> : null}
+
         <span className="revBadges">
-          {badgesFor(c as never).map((b) => (
-            <span className="revBadge" data-tone={b.tone} key={b.text}>
-              {b.text}
+          {signalsFor(c).map((sig) => (
+            <span className="revBadge" data-tone={sig.tone} key={sig.text}>
+              {sig.text}
             </span>
           ))}
         </span>
 
-        {c.fit_score !== null ? (
-          <span className="revFit" data-over={c.fit_score >= LIMITS.minFitScore ? '' : undefined}>
-            {c.fit_score}
+        {score.n !== null ? (
+          // Um número nu obriga a perguntar «84 de quê?». O rótulo e a banda
+          // respondem antes de ela perguntar.
+          <span className="revFit" data-over={score.n >= LIMITS.minFitScore ? '' : undefined}>
+            <b>{score.n}</b>
+            <small>{score.label}</small>
           </span>
         ) : null}
 
@@ -110,11 +141,11 @@ function Card({ c }: { c: Candidate }) {
 
         {/* Dentro do summary: a barra serve para ler a linha fechada, e fora
             dele só aparecia depois de ela já ter aberto. */}
-        {c.fit_score !== null ? (
+        {score.n !== null ? (
           <span
             className="revBar"
-            data-over={c.fit_score >= LIMITS.minFitScore ? '' : undefined}
-            style={{ '--fit': `${Math.min(100, Math.max(0, c.fit_score))}%` } as React.CSSProperties}
+            data-over={score.n >= LIMITS.minFitScore ? '' : undefined}
+            style={{ '--fit': `${Math.min(100, Math.max(0, score.n))}%` } as React.CSSProperties}
             aria-hidden="true"
           />
         ) : null}
@@ -308,15 +339,23 @@ export default function Outreach({
   candidates,
   runDate,
   enabled,
+  focus,
+  manualRun,
 }: {
   candidates: Candidate[];
   runDate: string | null;
   enabled: boolean;
+  focus: Focus;
+  manualRun: ManualRun | null;
 }) {
   const [pending, start] = useTransition();
   const [running, setRunning] = useState('');
   const [msg, setMsg] = useState('');
-  const [ask, setAsk] = useState('');
+  const [ask, setAsk] = useState(manualRun?.raw_query ?? '');
+  const [pais, setPais] = useState(manualRun?.countries?.[0] ?? 'Portugal');
+  // Um modo de cada vez, e não dois conjuntos de controlos na mesma tela: a
+  // busca dirigida obedece ao que ela escreve, a automática ao foco guardado.
+  const [modo, setModo] = useState<'manual' | 'auto'>('manual');
 
   const approved = candidates.filter((c) => c.status === 'approved').length;
 
@@ -339,75 +378,141 @@ export default function Outreach({
         </Link>
       </div>
 
-      {!enabled ? (
+      <p className="osBrief">
+        Procure uma coisa concreta, ou deixe o CarolOS trazer marcas todas as manhãs.
+      </p>
+
+      <div className="modos" role="tablist" aria-label="Modo de procura">
+        <button
+          role="tab"
+          type="button"
+          aria-selected={modo === 'manual'}
+          onClick={() => setModo('manual')}
+        >
+          Procurar agora
+        </button>
+        <button
+          role="tab"
+          type="button"
+          aria-selected={modo === 'auto'}
+          onClick={() => setModo('auto')}
+        >
+          Busca automática
+        </button>
+      </div>
+
+      {modo === 'auto' && !enabled ? (
         <p className="osWarn" data-tone="info">
           A prospecção diária está desligada. Ligue em Definições para o CarolOS procurar marcas
           novas todas as manhãs — nunca envia nada sozinho.
         </p>
       ) : null}
 
-      <div className="osJobs">
-        <button
-          className="osJob"
-          data-primary=""
-          type="button"
-          disabled={pending}
-          onClick={() =>
-            // Não se espera pela corrida: são minutos. Arranca, avisa, e o
-            // resto da aplicação continua a responder.
-            run('now', async () => {
-              const r = await startDiscovery();
-              if (r.since) {
-                watchDiscovery(r.since);
-                pushToast('Procura começada. Aviso quando acabar — pode continuar a trabalhar.');
+      {modo === 'auto' ? (
+        <>
+          <FocusEditor initial={focus} />
+          <div className="osJobs">
+            <button
+              className="osJob"
+              data-primary=""
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                // Não se espera pela corrida: são minutos. Arranca, avisa, e o
+                // resto da aplicação continua a responder.
+                run('now', async () => {
+                  const r = await startDiscovery();
+                  if (r.since) {
+                    watchDiscovery(r.since);
+                    pushToast('Procura começada. Aviso quando acabar — pode continuar a trabalhar.');
+                  }
+                  return r;
+                })
               }
-              return r;
-            })
-          }
-        >
-          {running === 'now' ? <Spinner label="A começar" /> : null}
-          Procurar marcas agora
-        </button>
-        {approved > 0 ? (
-          <button
-            className="osJob"
-            type="button"
-            disabled={pending}
-            onClick={() => run('bulk', () => sendApprovedOutreach())}
-          >
-            {running === 'bulk' ? <Spinner label="A enviar" /> : null}
-            Enviar os {approved} aprovados
-          </button>
-        ) : null}
-      </div>
+            >
+              {running === 'now' ? <Spinner label="A começar" /> : null}
+              Procurar agora com este foco
+            </button>
+            {approved > 0 ? (
+              <button
+                className="osJob"
+                type="button"
+                disabled={pending}
+                onClick={() => run('bulk', () => sendApprovedOutreach())}
+              >
+                {running === 'bulk' ? <Spinner label="A enviar" /> : null}
+                Enviar os {approved} aprovados
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
 
-      <form
-        className="osSearch"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!ask.trim()) return;
-          run('ask', async () => {
-            const r = await startDiscovery(ask.trim());
-            if (r.since) {
-              watchDiscovery(r.since);
-              pushToast(`A procurar «${ask.trim()}». Aviso quando acabar.`);
-              setAsk('');
-            }
-            return r;
-          });
-        }}
-      >
-        <input
-          value={ask}
-          onChange={(e) => setAsk(e.target.value)}
-          placeholder="Ou peça uma busca: «SaaS portugueses», «robôs aspiradores»…"
-          aria-label="Busca dirigida"
-        />
-        <button type="submit" disabled={pending || !ask.trim()}>
-          {running === 'ask' ? <Spinner label="Procurando" /> : null}
-          Procurar
-        </button>
-      </form>
+      {modo === 'manual' ? (
+        <>
+          <form
+            className="buscaBox"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!ask.trim()) return;
+              run('ask', async () => {
+                const r = await startManualSearch(ask.trim(), pais);
+                if (r.since) {
+                  watchDiscovery(r.since);
+                  pushToast(`A procurar «${ask.trim()}» em ${pais}. Aviso quando acabar.`);
+                }
+                return r;
+              });
+            }}
+          >
+            <label className="buscaLabel" htmlFor="busca-q">
+              O que quer procurar?
+            </label>
+            <div className="buscaLinha">
+              <input
+                id="busca-q"
+                value={ask}
+                onChange={(e) => setAsk(e.target.value)}
+                placeholder="hotéis boutique, restaurantes italianos, clínicas dentárias…"
+              />
+              <CountryPicker value={pais} onChange={setPais} disabled={pending} />
+              <button className="osGo" type="submit" disabled={pending || !ask.trim()}>
+                {running === 'ask' ? <Spinner label="A procurar" /> : null}
+                Procurar
+              </button>
+            </div>
+            <p className="buscaNota">
+              O que escrever aqui manda. Se pedir hotéis, vêm hotéis — o seu foco
+              habitual serve só para ordenar os que aparecerem.
+            </p>
+          </form>
+
+          {manualRun ? (
+            <ResultsBar
+              run={manualRun}
+              count={candidates.length}
+              pending={pending}
+              onSaveAll={() =>
+                run('saveall', async () => {
+                  const r = await saveCandidates(candidates.map((c) => c.id));
+                  if (r.saved) pushToast(`${r.saved} guardadas no histórico.`);
+                  return r;
+                })
+              }
+              onClear={() =>
+                run('clear', async () => {
+                  const r = await clearManualSearch();
+                  pushToast(
+                    r.error ?? `Busca limpa. O que guardou fica no histórico.`,
+                    r.error ? 'warn' : 'ok',
+                  );
+                  return r;
+                })
+              }
+            />
+          ) : null}
+        </>
+      ) : null}
 
       {msg ? <p className="osWarn" data-tone="info">{msg}</p> : null}
 

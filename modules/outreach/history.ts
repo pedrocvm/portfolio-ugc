@@ -208,50 +208,81 @@ export function dayTotals(runs: readonly RunLike[]): Map<string, {
   return out;
 }
 
-/** As etiquetas de uma marca, prontas para a linha.
- *
- *  A linha tinha nicho e mais nada. O que ela precisa de saber num relance é se
- *  vale a pena abrir: onde é, se compram criativos, se já trabalham com
- *  creators, e — o que decide mesmo — se há por onde falar com eles. Puro para
- *  ter teste: uma etiqueta a mentir é pior do que uma etiqueta a menos. */
-export type Badge = { text: string; tone: 'ok' | 'warn' | 'mute' };
+/* ── Sinais que se explicam sozinhos ─────────────────────────────────────── */
 
-export type BadgeInput = {
+/** O que a linha diz sobre uma marca.
+ *
+ *  Isto mostrava «2 bandeiras», que obriga a perguntar o que é uma bandeira.
+ *  Um indicador que precisa de ser explicado não é um indicador — é um enigma
+ *  com número. Cada sinal aqui é uma frase curta que se entende à primeira, e
+ *  o que não couber vive na análise. */
+export type Signal = { text: string; tone: 'good' | 'watch' | 'plain' };
+
+export type SignalInput = {
+  city?: string | null;
   country: string | null;
   paid_media_signal: string | null;
   ugc_signal: string | null;
   contact_email: string | null;
-  contact?: { whatsapp?: string | null; instagram?: string | null } | null;
+  email_confidence?: string | null;
+  whatsapp?: string | null;
+  instagram?: string | null;
   socials?: Record<string, string | null> | null;
   red_flags?: string[] | null;
 };
 
-export function badgesFor(c: BadgeInput): Badge[] {
-  const out: Badge[] = [];
-
+/** Onde está, dito como se diz. */
+export function placeLabel(c: Pick<SignalInput, 'city' | 'country'>): string | null {
   const pais = countryLabel(c.country);
-  if (pais) out.push({ text: pais, tone: 'mute' });
+  const cidade = c.city?.trim();
+  if (cidade && pais) return `${cidade}, ${pais}`;
+  return cidade || pais || null;
+}
 
-  // Comprar criativos é o sinal que separa quem paga de quem admira.
-  if (c.paid_media_signal === 'strong') out.push({ text: 'compra criativos', tone: 'ok' });
-  else if (c.paid_media_signal === 'medium') out.push({ text: 'anuncia', tone: 'mute' });
-  else if (c.paid_media_signal === 'none') out.push({ text: 'sem anúncios', tone: 'warn' });
+/** O canal por onde ela consegue falar com eles, e só o melhor. */
+export function channelSignal(c: SignalInput): Signal {
+  const whatsapp = c.whatsapp?.trim();
+  const instagram = c.instagram?.trim() || c.socials?.instagram?.trim();
+  const emailFraco = c.email_confidence === 'low' || c.email_confidence === 'unknown';
 
-  if (c.ugc_signal === 'creator_program') out.push({ text: 'programa de creators', tone: 'ok' });
-  else if (c.ugc_signal === 'ugc') out.push({ text: 'já usa UGC', tone: 'ok' });
-  else if (c.ugc_signal === 'product_only') out.push({ text: 'só produto', tone: 'mute' });
+  if (whatsapp) return { text: 'WhatsApp encontrado', tone: 'good' };
+  if (c.contact_email && !emailFraco) return { text: 'Email verificado', tone: 'good' };
+  if (c.contact_email) return { text: 'Email por confirmar', tone: 'watch' };
+  if (instagram) return { text: 'Só por Instagram', tone: 'plain' };
+  return { text: 'Sem contacto direto', tone: 'watch' };
+}
 
-  // Por ordem de utilidade para ela, e só uma: a linha não é um cartão de visita.
-  const whatsapp = c.contact?.whatsapp?.trim();
-  const instagram = c.contact?.instagram?.trim() || c.socials?.instagram?.trim();
-  if (whatsapp) out.push({ text: 'WhatsApp', tone: 'ok' });
-  else if (c.contact_email) out.push({ text: 'email', tone: 'ok' });
-  else if (instagram) out.push({ text: 'Instagram', tone: 'mute' });
-  else out.push({ text: 'sem contato', tone: 'warn' });
+/** Dois ou três sinais na linha; o resto fica na análise.
+ *
+ *  Mostrar tudo era a razão por que não se lia nada: cinco etiquetas iguais
+ *  competem entre si e nenhuma ganha.
+ *
+ *  O canal vem primeiro e nunca cai — é o que decide se ela consegue falar com
+ *  a marca, e sem isso o resto não interessa. */
+export function signalsFor(c: SignalInput, limit = 3): Signal[] {
+  const resto: Signal[] = [];
 
-  if (c.red_flags?.length) {
-    out.push({ text: `${c.red_flags.length} bandeira${c.red_flags.length === 1 ? '' : 's'}`, tone: 'warn' });
+  if (c.paid_media_signal === 'strong') resto.push({ text: 'Anúncios ativos', tone: 'good' });
+  else if (c.paid_media_signal === 'none') resto.push({ text: 'Sem anúncios detectados', tone: 'watch' });
+
+  if (c.ugc_signal === 'creator_program' || c.ugc_signal === 'ugc') {
+    resto.push({ text: 'Trabalha com creators', tone: 'good' });
+  } else if (c.ugc_signal === 'product_only') {
+    resto.push({ text: 'Pouco conteúdo humano', tone: 'watch' });
   }
 
-  return out;
+  // As bandeiras contavam-se; agora dizem-se. Uma cabe na linha; as outras
+  // estão na análise, onde há espaço para as ler inteiras.
+  const flag = c.red_flags?.[0]?.trim();
+  if (flag) resto.push({ text: shorten(flag), tone: 'watch' });
+
+  return [channelSignal(c), ...resto].slice(0, limit);
+}
+
+/** Uma bandeira inteira não cabe numa etiqueta; o princípio dela cabe. */
+function shorten(text: string, max = 34): string {
+  const limpo = text.replace(/\s+/g, ' ').trim();
+  if (limpo.length <= max) return limpo;
+  const corte = limpo.slice(0, max);
+  return `${corte.slice(0, corte.lastIndexOf(' ') > 12 ? corte.lastIndexOf(' ') : max)}…`;
 }

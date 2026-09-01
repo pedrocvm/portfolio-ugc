@@ -385,3 +385,124 @@ export async function discardMany(ids: string[]): Promise<Result & { discarded?:
   revalidatePath('/dashboard/outreach');
   return { ok: true, discarded: count ?? validos.length };
 }
+
+/* ── Prospecção v2 ───────────────────────────────────────────────────────── */
+
+/** Começa uma busca dirigida. Devolve já; o trabalho segue depois da resposta. */
+export async function startManualSearch(
+  query: string,
+  country: string,
+): Promise<Result & { since?: string }> {
+  await requireUser();
+  const q = query.trim();
+  if (q.length < 2) return { error: 'Escreva o que quer procurar.' };
+
+  const db = await supabaseServer();
+  const { data: running } = await db
+    .from('outreach_run')
+    .select('id')
+    .eq('status', 'running')
+    .gt('started_at', new Date(Date.now() - 10 * 60_000).toISOString())
+    .limit(1)
+    .maybeSingle();
+  if (running) return { error: 'Já há uma procura a decorrer. Esta acaba primeiro.' };
+
+  const since = new Date().toISOString();
+  after(async () => {
+    const { runManualSearch } = await import('@/modules/outreach/manual');
+    await runManualSearch(q, country.trim() || 'Portugal');
+  });
+  return { ok: true, since };
+}
+
+/** Os resultados da última busca dirigida, com o que foi pedido e o que foi
+ *  descartado. Sem isto ela não tem como saber porque é que a lista é curta. */
+export async function latestManualRun() {
+  await requireUser();
+  const db = await supabaseServer();
+
+  const { data: run } = await db
+    .from('outreach_run')
+    .select('*')
+    .eq('kind', 'targeted')
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!run) return { run: null, candidates: [] };
+
+  const { data: candidates } = await db
+    .from('outreach_candidate')
+    .select('*')
+    .eq('run_id', run.id)
+    .not('status', 'in', '(rejected,skipped)')
+    .order('rank');
+
+  return { run, candidates: candidates ?? [] };
+}
+
+/** Guardar é o que faz um resultado de busca virar candidata a sério.
+ *  Sem isto, uma busca exploratória sujava o CRM com tudo o que apareceu. */
+export async function saveCandidates(ids: string[]): Promise<Result & { saved?: number }> {
+  await requireUser();
+  const validos = ids.filter((id) => Uuid.safeParse(id).success);
+  if (validos.length === 0) return { error: 'Nada para guardar.' };
+
+  const db = await supabaseServer();
+  const { error, count } = await db
+    .from('outreach_candidate')
+    .update({ saved: true, saved_at: new Date().toISOString() }, { count: 'exact' })
+    .in('id', validos);
+  if (error) return { error: 'Não consegui guardar.' };
+
+  revalidatePath('/dashboard/outreach');
+  return { ok: true, saved: count ?? validos.length };
+}
+
+/** Limpa os resultados desta busca do ecrã — não o histórico.
+ *  O que ela guardou fica; o resto era exploração e não tem de ficar. */
+export async function clearManualSearch(): Promise<Result & { cleared?: number }> {
+  await requireUser();
+  const db = await supabaseServer();
+
+  const { data: run } = await db
+    .from('outreach_run')
+    .select('id')
+    .eq('kind', 'targeted')
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!run) return { ok: true, cleared: 0 };
+
+  const { error, count } = await db
+    .from('outreach_candidate')
+    .delete({ count: 'exact' })
+    .eq('run_id', run.id)
+    .eq('saved', false);
+  if (error) return { error: 'Não consegui limpar.' };
+
+  revalidatePath('/dashboard/outreach');
+  return { ok: true, cleared: count ?? 0 };
+}
+
+export async function getFocus() {
+  await requireUser();
+  const { readFocus } = await import('@/modules/outreach/focus-service');
+  return readFocus();
+}
+
+export async function saveFocus(input: {
+  niches: { id: string; label: string; favourite: boolean }[];
+  countries: string[];
+  perDay: number;
+}): Promise<Result> {
+  await requireUser();
+  try {
+    const { writeFocus } = await import('@/modules/outreach/focus-service');
+    await writeFocus(input);
+    revalidatePath('/dashboard/outreach');
+    return { ok: true };
+  } catch {
+    return { error: 'Não consegui guardar o foco.' };
+  }
+}
