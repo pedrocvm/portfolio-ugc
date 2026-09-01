@@ -47,6 +47,23 @@
   --exp: cubic-bezier(0.16, 1, 0.3, 1);
   --quart: cubic-bezier(0.25, 1, 0.5, 1);
 
+  /* Escada de tempo. Havia trinta e seis durações diferentes no ficheiro,
+     escolhidas uma a uma; duas coisas iguais moviam-se a ritmos diferentes e
+     lia-se como falta de mão. São quatro degraus, e cada um tem um trabalho:
+
+     instant  o elemento reage ao dedo — hover, press, foco
+     fast     algo pequeno aparece ou sai — etiqueta, dica, toast
+     normal   a passagem entre dois estados — página, painel, lista
+     slow     uma entrada em cena, e só quando há distância a percorrer */
+  --t-instant: 0.1s;
+  --t-fast: 0.16s;
+  --t-normal: 0.22s;
+  --t-slow: 0.34s;
+
+  /* `--ease` é a curva por omissão: sai depressa, assenta devagar. `--exp` fica
+     para o que percorre distância, que é onde a cauda longa se justifica. */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
   /* nomes antigos, mantidos para não partir o resto do ficheiro */
   --ink: var(--tinta);
   --ink2: var(--tinta2);
@@ -236,55 +253,24 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(221, 210, 195, 0.22) transparent;
 }
-.railPin {
+.railMain {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-bottom: 12px;
 }
-/* Sem `display` próprio: sobrepor o display de um <details> parte o estado
-   fechado no Chrome — os filhos continuam desenhados, só ficam fora de vista.
-   O bloco por omissão é o que faz o elemento nativo funcionar. */
-.railLabel {
+/* Empurrado para baixo e mais discreto: definições e conta não são trabalho
+   dela, são manutenção do sistema. */
+.railUtil {
   display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 11px 16px;
-  font-family: var(--disp);
-  font-variation-settings: var(--narrow);
-  font-weight: 500;
-  font-size: 13px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  /* agora são botões, não legendas: 0.5 dava 3.78:1 sobre o ferro */
-  color: rgba(221, 210, 195, 0.72);
-  cursor: pointer;
-  list-style: none;
-  transition: color 0.25s;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(221, 210, 195, 0.16);
 }
-.railLabel::-webkit-details-marker {
-  display: none;
-}
-/* seta desenhada: a nativa não roda nem herda a cor */
-.railLabel::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(-45deg);
-  transition: transform 0.28s var(--exp);
-}
-.railGroup[open] > .railLabel::before {
-  transform: rotate(45deg);
-}
-.railLabel:hover {
-  color: var(--paper);
-}
-.railGroup > a {
-  /* alinhado com o texto do rótulo, não com a seta */
-  padding-left: 29px;
-  margin-top: 2px;
+.railUtil a {
+  font-size: 15px;
+  color: rgba(221, 210, 195, 0.58);
 }
 .rail a {
   display: block;
@@ -294,8 +280,8 @@
   text-decoration: none;
   color: rgba(247, 243, 238, 0.62);
   transition:
-    color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    background 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    color var(--t-normal) var(--ease),
+    background var(--t-normal) var(--ease);
 }
 .rail a:hover {
   color: var(--paper);
@@ -327,8 +313,8 @@
   border-bottom: 1px solid transparent;
   cursor: pointer;
   transition:
-    color 0.25s,
-    border-color 0.25s;
+    color var(--t-normal),
+    border-color var(--t-normal);
 }
 .sideOut:hover {
   color: var(--paper);
@@ -337,6 +323,115 @@
 .sheet {
   min-width: 0;
   padding: 0 22px 120px;
+}
+
+/* A barra da secção. Só existe onde há para onde ir dentro dela — o Hoje não
+   tem nenhuma, porque uma barra com um item só é uma linha a dizer onde já se
+   está. */
+.secBar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 -22px 4px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--rule);
+  /* rola dentro de si no telemóvel: seis sub-áreas não cabem em 390px, e a
+     alternativa era a página inteira andar de lado */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.secBar::-webkit-scrollbar {
+  display: none;
+}
+.secBarList {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.secBar a {
+  position: relative;
+  flex: none;
+  padding: 14px 12px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 15px;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--tinta3);
+  transition: color var(--t-fast) var(--ease);
+}
+.secBar a:hover {
+  color: var(--tinta);
+}
+.secBar a[aria-current='page'] {
+  color: var(--tinta);
+}
+/* O sublinhado desenha-se em vez de aparecer: dá continuidade entre duas
+   sub-áreas em vez de piscar de uma para a outra. */
+.secBar a::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 2px;
+  background: var(--tinta);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--t-normal) var(--ease);
+}
+.secBar a[aria-current='page']::after {
+  transform: scaleX(1);
+}
+.secMore {
+  flex: none;
+  position: relative;
+}
+.secMore > summary {
+  padding: 14px 10px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--tinta3);
+  cursor: pointer;
+  list-style: none;
+  white-space: nowrap;
+  transition: color var(--t-fast) var(--ease);
+}
+.secMore > summary::-webkit-details-marker {
+  display: none;
+}
+.secMore > summary:hover {
+  color: var(--tinta);
+}
+.secMoreBox {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  padding: 6px;
+  background: var(--papel);
+  border: 1px solid var(--rule);
+  box-shadow: 0 12px 32px rgba(25, 23, 20, 0.11);
+  animation: rise var(--t-fast) var(--ease) both;
+}
+.secMoreBox a {
+  padding: 10px 12px;
+  font-size: 15px;
+}
+.secMoreBox a::after {
+  display: none;
+}
+.secMoreBox a:hover {
+  background: var(--areia);
 }
 @media (min-width: 960px) {
   .shell {
@@ -373,7 +468,7 @@
 }
 @media (min-width: 960px) {
   .shell {
-    transition: grid-template-columns 0.42s var(--exp);
+    transition: grid-template-columns var(--t-slow) var(--exp);
   }
   .sideToggle {
     position: absolute;
@@ -390,8 +485,8 @@
     color: rgba(221, 210, 195, 0.55);
     cursor: pointer;
     transition:
-      color 0.25s,
-      background 0.25s;
+      color var(--t-normal),
+      background var(--t-normal);
   }
   .sideToggle svg {
     width: 20px;
@@ -497,7 +592,7 @@
   font-size: 15px;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: color var(--t-normal) cubic-bezier(0.22, 1, 0.36, 1);
 }
 .btn::after {
   content: '';
@@ -509,7 +604,7 @@
   background: currentColor;
   transform: scaleX(1);
   transform-origin: left;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--t-slow) cubic-bezier(0.22, 1, 0.36, 1);
 }
 .btn:hover:not(:disabled) {
   color: var(--accent);
@@ -562,7 +657,7 @@
   cursor: pointer;
   font-size: 15px;
   line-height: 1;
-  transition: color 0.2s;
+  transition: color var(--t-normal);
 }
 .icoBtn:hover:not(:disabled) {
   color: var(--ink);
@@ -607,7 +702,7 @@
   font-size: 14.5px;
   text-decoration: none;
   color: #6b6259;
-  transition: color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: color var(--t-slow) cubic-bezier(0.22, 1, 0.36, 1);
 }
 .secIndex a::before {
   content: '';
@@ -619,7 +714,7 @@
   background: currentColor;
   transform: scaleX(0.45);
   transform-origin: left;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--t-slow) cubic-bezier(0.22, 1, 0.36, 1);
 }
 .secIndex a:hover {
   color: var(--ink);
@@ -705,8 +800,8 @@
   letter-spacing: normal;
   color: var(--ink);
   transition:
-    border-color 0.22s,
-    box-shadow 0.22s;
+    border-color var(--t-normal),
+    box-shadow var(--t-normal);
 }
 .dash textarea {
   min-height: 92px;
@@ -877,8 +972,8 @@
   font-size: 15px;
   cursor: pointer;
   transition:
-    background 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    background var(--t-normal) cubic-bezier(0.22, 1, 0.36, 1),
+    transform var(--t-normal) cubic-bezier(0.22, 1, 0.36, 1);
 }
 .pvFab:hover {
   background: var(--accent);
@@ -932,7 +1027,7 @@
   overflow: hidden;
   background: var(--graphite);
   margin: 0 auto;
-  transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: max-width var(--t-slow) cubic-bezier(0.22, 1, 0.36, 1);
 }
 .pvFrame iframe {
   display: block;
@@ -993,7 +1088,7 @@
   border-right: 1.5px solid var(--rule2);
   border-bottom: 1.5px solid var(--rule2);
   transform: translateY(-3px) rotate(45deg);
-  transition: transform 0.32s var(--exp);
+  transition: transform var(--t-slow) var(--exp);
 }
 .cli[open] > summary::after {
   transform: translateY(1px) rotate(-135deg);
@@ -1205,8 +1300,8 @@
   color: var(--ink2);
   cursor: pointer;
   transition:
-    color 0.22s,
-    border-color 0.22s;
+    color var(--t-normal),
+    border-color var(--t-normal);
 }
 .chip:hover {
   color: var(--ink);
@@ -1272,7 +1367,7 @@
   border-radius: 50%;
   background: rgba(28, 26, 24, 0.62) center / 10px 12px no-repeat
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath d='M0 0l10 6-10 6z' fill='%23fff'/%3E%3C/svg%3E");
-  transition: transform 0.2s var(--quart);
+  transition: transform var(--t-normal) var(--quart);
 }
 .libThumb.play:hover::after,
 .mediaThumb.play:hover::after {
@@ -1540,7 +1635,7 @@
 .pickGrid .libThumb {
   display: block;
   aspect-ratio: 4 / 5;
-  transition: opacity 0.25s;
+  transition: opacity var(--t-normal);
 }
 .pickGrid button:hover .libThumb {
   opacity: 0.78;
@@ -1917,14 +2012,9 @@
 .side .logoName {
   animation: fade 0.5s var(--quart) both;
 }
-.railPin a,
-.railLabel {
-  animation: rise 0.5s var(--exp) calc(0.06s + var(--r, 0) * 0.03s) both;
-}
-/* Abrir um grupo é uma resposta a um clique, não uma entrada em cena: sem
-   atraso nenhum, senão os itens parecem lentos a chegar. */
-.railGroup > a {
-  animation: fade 0.14s var(--quart) both;
+.railMain a,
+.railUtil a {
+  animation: rise var(--t-slow) var(--exp) calc(0.06s + var(--r, 0) * 0.03s) both;
 }
 
 /* fio de trabalho */
@@ -1936,7 +2026,7 @@
   height: 1px;
   overflow: hidden;
   opacity: 0;
-  transition: opacity 0.3s var(--quart);
+  transition: opacity var(--t-slow) var(--quart);
   pointer-events: none;
 }
 .wire::before {
@@ -1991,7 +2081,7 @@
 .cardWrap {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.42s var(--exp);
+  transition: grid-template-rows var(--t-slow) var(--exp);
 }
 .cardWrap > .cardBody {
   overflow: hidden;
@@ -1999,8 +2089,8 @@
   padding-block: 0;
   opacity: 0;
   transition:
-    opacity 0.28s var(--quart),
-    padding 0.42s var(--exp);
+    opacity var(--t-slow) var(--quart),
+    padding var(--t-slow) var(--exp);
 }
 .cardWrap[data-open] {
   grid-template-rows: 1fr;
@@ -2030,7 +2120,7 @@
   background: var(--paper);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.42s var(--exp);
+  transition: transform var(--t-slow) var(--exp);
   z-index: -1;
 }
 .rail a[aria-current='page'] {
@@ -2074,8 +2164,8 @@
   background: #fff;
   box-shadow: 0 1px 2px rgba(25, 23, 20, 0.1);
   transition:
-    transform 0.42s var(--exp),
-    width 0.42s var(--exp);
+    transform var(--t-slow) var(--exp),
+    width var(--t-slow) var(--exp);
 }
 .seg button {
   position: relative;
@@ -2089,7 +2179,7 @@
   font-size: 14.5px;
   color: var(--tinta2);
   cursor: pointer;
-  transition: color 0.28s var(--quart);
+  transition: color var(--t-slow) var(--quart);
 }
 .seg button[aria-pressed='true'] {
   color: var(--tinta);
@@ -2103,7 +2193,7 @@
   padding: 2px 0;
   cursor: grab;
   opacity: 0;
-  transition: opacity 0.22s var(--quart);
+  transition: opacity var(--t-normal) var(--quart);
 }
 .grip i {
   height: 1px;
@@ -2125,7 +2215,7 @@
 .mvUp,
 .mvDown {
   opacity: 0;
-  transition: opacity 0.22s var(--quart);
+  transition: opacity var(--t-normal) var(--quart);
 }
 .card:hover .mvUp,
 .card:hover .mvDown,
@@ -2138,8 +2228,8 @@
 .fnCol {
   border-radius: 12px;
   transition:
-    background 0.28s var(--quart),
-    box-shadow 0.28s var(--quart);
+    background var(--t-slow) var(--quart),
+    box-shadow var(--t-slow) var(--quart);
 }
 .funnel[data-dragging] .fnCol {
   background: rgba(239, 231, 218, 0.5);
@@ -2156,9 +2246,9 @@
   border-radius: 10px;
   padding: 14px 12px;
   transition:
-    transform 0.28s var(--exp),
-    opacity 0.22s var(--quart),
-    box-shadow 0.28s var(--quart);
+    transform var(--t-slow) var(--exp),
+    opacity var(--t-normal) var(--quart),
+    box-shadow var(--t-slow) var(--quart);
 }
 .fnCard:hover {
   background: #fff;
@@ -2173,7 +2263,7 @@
 }
 .fnMove {
   opacity: 0;
-  transition: opacity 0.22s var(--quart);
+  transition: opacity var(--t-normal) var(--quart);
 }
 .fnCard:hover .fnMove,
 .fnMove:focus-within {
@@ -2315,7 +2405,7 @@
     rgba(255, 255, 255, 0.28),
     transparent 70%
   );
-  transition: opacity 0.3s var(--quart);
+  transition: opacity var(--t-slow) var(--quart);
 }
 
 /* ═══ TELEMÓVEL ══════════════════════════════════════════════════════
@@ -2398,7 +2488,7 @@
     color: var(--tinta3);
     text-decoration: none;
     cursor: pointer;
-    transition: color 0.22s var(--quart);
+    transition: color var(--t-normal) var(--quart);
   }
   .tabbar svg {
     width: 25px;
@@ -2411,8 +2501,8 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     transition:
-      fill-opacity 0.28s var(--quart),
-      opacity 0.12s linear;
+      fill-opacity var(--t-slow) var(--quart),
+      opacity var(--t-instant) linear;
   }
   /* O separador ativo troca de contorno para preenchido e escurece, e não se
      mexe um pixel: mover o ícone fazia a linha tremer a cada troca. */
@@ -2834,22 +2924,22 @@
   margin-bottom: 22px;
   background: var(--papel);
   transition:
-    padding 0.4s var(--exp),
-    box-shadow 0.4s var(--quart);
+    padding var(--t-slow) var(--exp),
+    box-shadow var(--t-slow) var(--quart);
 }
 .secHead h2 {
   transition:
-    font-size 0.4s var(--exp),
-    letter-spacing 0.4s var(--exp);
+    font-size var(--t-slow) var(--exp),
+    letter-spacing var(--t-slow) var(--exp);
 }
 .secHead .said {
   max-height: 4em;
   overflow: hidden;
   opacity: 1;
   transition:
-    max-height 0.42s var(--exp),
-    opacity 0.28s var(--quart),
-    margin 0.42s var(--exp);
+    max-height var(--t-slow) var(--exp),
+    opacity var(--t-slow) var(--quart),
+    margin var(--t-slow) var(--exp);
 }
 /* encostado ao topo: encolhe, guarda a nota e deixa um filete */
 .secHead[data-stuck] {
@@ -2886,13 +2976,13 @@
 }
 .dashSticky .dashBar {
   transition:
-    padding 0.4s var(--exp),
-    gap 0.4s var(--exp);
+    padding var(--t-slow) var(--exp),
+    gap var(--t-slow) var(--exp);
 }
 .dashSticky h1 {
   transition:
-    font-size 0.4s var(--exp),
-    letter-spacing 0.4s var(--exp);
+    font-size var(--t-slow) var(--exp),
+    letter-spacing var(--t-slow) var(--exp);
 }
 .dashSticky[data-stuck] .dashBar {
   padding-top: 14px;
@@ -3012,7 +3102,7 @@
   border-radius: 3px 3px 0 0;
   background: var(--areia2);
   display: block;
-  transition: background 0.3s ease;
+  transition: background var(--t-slow) ease;
 }
 .stBarra:hover i {
   background: var(--pedra);
@@ -3214,9 +3304,9 @@
   animation: rise 0.5s var(--exp) both;
   animation-delay: calc(var(--r, 0) * 45ms);
   transition:
-    border-color 0.22s var(--quart),
-    box-shadow 0.22s var(--quart),
-    transform 0.22s var(--exp);
+    border-color var(--t-normal) var(--quart),
+    box-shadow var(--t-normal) var(--quart),
+    transform var(--t-normal) var(--exp);
 }
 .osCard:hover {
   border-color: var(--pedra);
@@ -3324,7 +3414,7 @@
   font-weight: 500;
   font-size: 14px;
   text-decoration: none;
-  transition: background 0.2s var(--quart);
+  transition: background var(--t-normal) var(--quart);
 }
 .osGo:hover {
   background: var(--tinta);
@@ -3543,7 +3633,7 @@ a.osRow:hover .osRowName {
   font-weight: 560;
   font-size: 20px;
   letter-spacing: -0.015em;
-  transition: color 0.2s var(--quart);
+  transition: color var(--t-normal) var(--quart);
 }
 .osRowSub {
   display: block;
@@ -3931,9 +4021,9 @@ a.osRow:hover .osRowName {
   font-size: 14px;
   cursor: pointer;
   transition:
-    border-color 0.2s var(--quart),
-    background 0.2s var(--quart),
-    color 0.2s var(--quart);
+    border-color var(--t-normal) var(--quart),
+    background var(--t-normal) var(--quart),
+    color var(--t-normal) var(--quart);
 }
 .osPageBtn:hover:not(:disabled):not([aria-pressed='true']) {
   border-color: var(--pedra);
@@ -3973,9 +4063,9 @@ a.osRow:hover .osRowName {
   font-size: 14px;
   cursor: pointer;
   transition:
-    border-color 0.2s var(--quart),
-    background 0.2s var(--quart),
-    color 0.2s var(--quart);
+    border-color var(--t-normal) var(--quart),
+    background var(--t-normal) var(--quart),
+    color var(--t-normal) var(--quart);
 }
 .osJob:hover:not(:disabled) {
   border-color: var(--pedra);
@@ -4147,7 +4237,7 @@ a.osRow:hover .osRowName {
   font: inherit;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s var(--quart);
+  transition: all var(--t-normal) var(--quart);
 }
 .osKinds button[aria-pressed='true'] {
   background: var(--umbra);
@@ -4187,7 +4277,7 @@ a.osRow:hover .osRowName {
   color: var(--tinta3);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s var(--quart);
+  transition: all var(--t-normal) var(--quart);
 }
 .osSwitch[aria-pressed='true'] {
   background: var(--jade);
@@ -4275,9 +4365,9 @@ a.osRow:hover .osRowName {
   cursor: pointer;
   box-shadow: 0 10px 30px rgba(25, 23, 20, 0.24);
   transition:
-    transform 0.3s var(--exp),
-    background 0.24s var(--quart),
-    box-shadow 0.3s var(--exp);
+    transform var(--t-slow) var(--exp),
+    background var(--t-normal) var(--quart),
+    box-shadow var(--t-slow) var(--exp);
 }
 .aiLauncher:hover {
   background: var(--ferro2);
@@ -4445,8 +4535,8 @@ a.osRow:hover .osRowName {
   color: var(--tinta2);
   cursor: pointer;
   transition:
-    border-color 0.2s var(--quart),
-    background 0.2s var(--quart);
+    border-color var(--t-normal) var(--quart),
+    background var(--t-normal) var(--quart);
 }
 .aiChip:hover {
   border-color: var(--pedra);
@@ -4676,8 +4766,8 @@ a.aiSource:hover {
   text-decoration: none;
   color: inherit;
   transition:
-    border-color 0.2s var(--quart),
-    background 0.2s var(--quart);
+    border-color var(--t-normal) var(--quart),
+    background var(--t-normal) var(--quart);
 }
 .osInsight:hover {
   background: var(--areia);
@@ -4763,9 +4853,9 @@ a.aiSource:hover {
   cursor: pointer;
   box-shadow: 0 2px 10px rgba(25, 23, 20, 0.05);
   transition:
-    border-color 0.2s var(--quart),
-    background 0.2s var(--quart),
-    color 0.2s var(--quart);
+    border-color var(--t-normal) var(--quart),
+    background var(--t-normal) var(--quart),
+    color var(--t-normal) var(--quart);
 }
 .notifBell:hover,
 .notifBell[aria-expanded='true'] {
@@ -4997,8 +5087,8 @@ a.aiSource:hover {
   background: var(--papel);
   overflow: hidden;
   transition:
-    border-color 0.2s var(--quart),
-    box-shadow 0.2s var(--quart);
+    border-color var(--t-normal) var(--quart),
+    box-shadow var(--t-normal) var(--quart);
 }
 .osSearch:focus-within {
   border-color: var(--umbra);
@@ -5036,8 +5126,8 @@ a.aiSource:hover {
   color: var(--tinta);
   cursor: pointer;
   transition:
-    background 0.2s var(--quart),
-    color 0.2s var(--quart);
+    background var(--t-normal) var(--quart),
+    color var(--t-normal) var(--quart);
 }
 .osSearch button:hover:not(:disabled) {
   background: var(--areia2);
@@ -5145,7 +5235,7 @@ a.aiSource:hover {
   width: 14px;
   font-size: 11px;
   color: var(--tinta2);
-  transition: transform 0.18s var(--quart);
+  transition: transform var(--t-normal) var(--quart);
 }
 .dash .histDay[open] > summary .histDayName::before {
   transform: rotate(90deg);
@@ -5364,7 +5454,7 @@ a.aiSource:hover {
   line-height: 1;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s var(--quart);
+  transition: opacity var(--t-fast) var(--quart);
 }
 .dash .notifBox li:hover .notifX,
 .dash .notifX:focus-visible {
@@ -5432,7 +5522,7 @@ a.aiSource:hover {
   background: var(--papel);
   margin-bottom: 8px;
   overflow: hidden;
-  transition: border-color 0.2s var(--quart);
+  transition: border-color var(--t-normal) var(--quart);
 }
 .dash .revRow:hover {
   border-color: var(--pedra);
@@ -5588,8 +5678,8 @@ a.aiSource:hover {
   cursor: pointer;
   opacity: 0;
   transition:
-    opacity 0.15s var(--quart),
-    background-color 0.15s var(--quart);
+    opacity var(--t-fast) var(--quart),
+    background-color var(--t-fast) var(--quart);
 }
 .dash .revRow:hover .revX,
 .dash .revRow[open] .revX,
@@ -5722,7 +5812,7 @@ a.aiSource:hover {
   font-size: 14px;
   color: var(--tinta2);
   cursor: pointer;
-  transition: background-color 0.18s var(--quart), color 0.18s var(--quart);
+  transition: background-color var(--t-normal) var(--quart), color var(--t-normal) var(--quart);
 }
 .dash .modos button[aria-selected='true'] {
   background: var(--papel);

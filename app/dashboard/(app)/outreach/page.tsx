@@ -16,20 +16,14 @@ export default async function OutreachPage() {
   ]);
 
   // A busca dirigida mostra os seus próprios resultados; a automática mostra o
-  // lote do dia. Misturá-los era o que fazia parecer que uma busca por hotéis
-  // tinha devolvido os apps da corrida da manhã.
-  const manualFresco =
-    manual.run && Date.now() - new Date(manual.run.started_at).getTime() < 6 * 3600_000
-      ? manual
-      : null;
-
+  // lote do dia. `latestManualRun` já devolve nulo quando a dirigida caducou.
   return (
     <Outreach
-      candidates={(manualFresco?.candidates ?? candidates) as unknown as Candidate[]}
+      candidates={(manual.run ? manual.candidates : candidates) as unknown as Candidate[]}
       runDate={run?.run_date ?? null}
       enabled={flags.daily_outreach}
       focus={focus}
-      manualRun={(manualFresco?.run ?? null) as unknown as ManualRun | null}
+      manualRun={manual.run as unknown as ManualRun | null}
     />
   );
 }

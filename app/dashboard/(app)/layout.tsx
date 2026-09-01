@@ -10,6 +10,7 @@ import DiscoveryWatch from '@/components/dashboard/DiscoveryWatch';
 import Logo from '@/components/dashboard/Logo';
 import Menu from '@/components/dashboard/Menu';
 import MobileNav from '@/components/dashboard/MobileNav';
+import SectionNav from '@/components/dashboard/SectionNav';
 import SideToggle from '@/components/dashboard/SideToggle';
 import { requireEditor } from '@/lib/auth';
 import { assistantReady } from '@/modules/assistant/config';
@@ -53,8 +54,12 @@ export default async function AppLayout({
             </button>
           </form>
         </aside>
-        <main className="sheet">{children}</main>
+        <main className="sheet">
+          <SectionNav />
+          {children}
+        </main>
         <MobileNav
+          assistantEnabled={Boolean(flags.assistant_enabled)}
           onSignOut={
             <form action={signOut}>
               <button className="sideOut" type="submit">

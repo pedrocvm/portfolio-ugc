@@ -415,8 +415,18 @@ export async function startManualSearch(
   return { ok: true, since };
 }
 
+/** Quanto tempo uma busca dirigida continua a ser «a busca de agora». Passado
+ *  isto, o ecrã volta ao lote automático do dia. */
+const MANUAL_FRESH_MS = 6 * 3600_000;
+
 /** Os resultados da última busca dirigida, com o que foi pedido e o que foi
- *  descartado. Sem isto ela não tem como saber porque é que a lista é curta. */
+ *  descartado. Sem isto ela não tem como saber porque é que a lista é curta.
+ *
+ *  A validade decide-se aqui e não em quem mostra: ler o relógio durante o
+ *  render torna o resultado dependente de quando o React calhou re-renderizar,
+ *  e a busca dirigida é justamente a que não pode misturar-se com a automática
+ *  — era o que fazia uma procura por hotéis parecer ter devolvido os apps da
+ *  corrida da manhã. */
 export async function latestManualRun() {
   await requireUser();
   const db = await supabaseServer();
@@ -430,6 +440,9 @@ export async function latestManualRun() {
     .maybeSingle();
 
   if (!run) return { run: null, candidates: [] };
+  if (Date.now() - new Date(run.started_at).getTime() >= MANUAL_FRESH_MS) {
+    return { run: null, candidates: [] };
+  }
 
   const { data: candidates } = await db
     .from('outreach_candidate')

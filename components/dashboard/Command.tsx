@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MENU } from './Menu';
+import { ALL_DESTINATIONS } from './nav';
 import { SECTIONS } from '@/lib/schema';
 import { useExit } from './useExit';
 
@@ -38,7 +38,7 @@ export default function Command() {
   }, [open]);
 
   const items = useMemo<Item[]>(() => {
-    const areas = MENU.filter((m) => !m.soon).map((m) => ({
+    const areas = ALL_DESTINATIONS.map((m) => ({
       id: m.href,
       label: m.label,
       group: 'Ir para',

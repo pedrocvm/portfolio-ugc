@@ -3,21 +3,20 @@ import { readFileSync } from 'node:fs';
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
+import { SECTIONS, UTILITY, ALL_DESTINATIONS, sectionFor, isCurrent } from './nav';
 
-/** O menu é a única porta para a maior parte das telas: uma rota que fique de
- *  fora dele passa a existir só para quem souber o URL de cor. Isto lê o menu
- *  como texto de propósito — importá-lo puxava o React e o next/navigation
- *  para dentro do test runner. */
+/** A navegação é a única porta para a maior parte das telas: uma rota que fique
+ *  de fora dela passa a existir só para quem souber o URL de cor.
+ *
+ *  O `nav.ts` importa-se à vontade — é uma tabela, não um componente. O que se
+ *  continua a ler como texto são os ficheiros que puxavam o React e o
+ *  `next/navigation` para dentro do runner. */
 
 const ROOT = path.join(import.meta.dirname, '..', '..');
-const MENU = readFileSync(path.join(ROOT, 'components/dashboard/Menu.tsx'), 'utf8');
 
-const hrefs = [...MENU.matchAll(/href: '([^']+)'/g)].map((m) => m[1]);
-
-/** Nem tudo precisa de entrada no menu: uma sub-vista pertence ao ecrã que a
- *  abre, e enfiá-la no carril é como o menu deixa de caber. O que não pode
- *  existir é uma tela sem porta nenhuma — por isso vale também um link a partir
- *  de outra tela. */
+/** Nem tudo precisa de entrada na barra: uma sub-vista pertence ao ecrã que a
+ *  abre. O que não pode existir é uma tela sem porta nenhuma — por isso vale
+ *  também um link a partir de outra tela. */
 function linkedFromScreens(): string[] {
   const found: string[] = [];
   const walk = (dir: string) => {
@@ -34,9 +33,10 @@ function linkedFromScreens(): string[] {
   return found;
 }
 
-/** Restos anteriores ao CarolOS: continuam a responder, ninguém lhes chama.
- *  Ficam nomeados aqui para o teste não passar por distração. */
-const UNLINKED = new Set(['/dashboard/funnel', '/dashboard/library', '/dashboard/links']);
+/** Endereços antigos que só redirecionam para o sítio novo. Não levam a lado
+ *  nenhum próprio, por isso não pertencem a barra nenhuma — mas também não são
+ *  telas órfãs. */
+const REDIRECTS = new Set(['/dashboard/library', '/dashboard/links']);
 
 function routes(dir: string, prefix = ''): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -50,34 +50,80 @@ function routes(dir: string, prefix = ''): string[] {
 
 test('nenhuma tela do painel fica sem porta', () => {
   const all = routes(path.join(ROOT, 'app/dashboard/(app)'));
-  const reachable = new Set([...hrefs, ...linkedFromScreens()]);
-  const missing = all.filter((r) => !reachable.has(r) && !UNLINKED.has(r));
-  assert.deepEqual(missing, [], `sem menu e sem link: ${missing.join(', ')}`);
+  const reachable = new Set([...ALL_DESTINATIONS.map((d) => d.href), ...linkedFromScreens()]);
+  const missing = all.filter((r) => !reachable.has(r) && !REDIRECTS.has(r));
+  assert.deepEqual(missing, [], `sem barra e sem link: ${missing.join(', ')}`);
 });
 
 test('nenhum destino aparece duas vezes', () => {
+  const hrefs = ALL_DESTINATIONS.map((d) => d.href);
   assert.equal(new Set(hrefs).size, hrefs.length, `repetidos em ${hrefs.join(', ')}`);
 });
 
-test('«Hoje» e «Captura» ficam fora dos grupos, sempre à vista', () => {
-  const pinned = MENU.slice(MENU.indexOf('export const PINNED'), MENU.indexOf('export const GROUPS'));
-  assert.match(pinned, /'\/dashboard'/);
-  assert.match(pinned, /'\/dashboard\/capture'/);
+/** O ponto de toda a reorganização. Se isto crescer, cresceu por descuido. */
+test('o primeiro nível cabe de um olhar: cinco secções e duas utilidades', () => {
+  assert.equal(SECTIONS.length, 5, `${SECTIONS.length} secções no carril`);
+  assert.equal(UTILITY.length, 2, `${UTILITY.length} utilidades`);
 });
 
-test('o menu cabe: no máximo cinco grupos, nenhum com mais de seis entradas', () => {
-  // Seis e não cinco: com o acordeão só um grupo está aberto de cada vez, e
-  // medido a 1280x800 o carril ainda cabe com o maior grupo aberto. O limite
-  // existe para travar o crescimento, não para o proibir.
-  const groups = [...MENU.matchAll(/group: '([^']+)',\s*items: \[([\s\S]*?)\],/g)];
-  assert.ok(groups.length <= 5, `${groups.length} grupos`);
-  for (const [, name, body] of groups) {
-    const n = [...body.matchAll(/href:/g)].length;
-    assert.ok(n <= 6, `o grupo «${name}» tem ${n} entradas`);
+test('cada secção leva a uma sub-área sua, não a um índice à parte', () => {
+  for (const s of SECTIONS) {
+    if (!s.items.length) continue;
+    assert.ok(
+      s.items.some((i) => i.href === s.href),
+      `«${s.label}» aponta para ${s.href}, que não é nenhuma das suas sub-áreas`,
+    );
   }
 });
 
-/** Lido como texto pela mesma razão que o menu: importar a action puxa o
+test('o Hoje não abre barra de secção nenhuma', () => {
+  assert.equal(sectionFor('/dashboard')?.id, 'today');
+  assert.equal(SECTIONS.find((s) => s.id === 'today')?.items.length, 0);
+});
+
+/** `sectionFor` devolve a primeira secção que casa. Isso só está certo
+ *  enquanto nenhuma secção for prefixo de outra — a partir daí a ordem da
+ *  tabela decidia em silêncio qual das duas ganhava. */
+test('nenhuma secção é prefixo de outra', () => {
+  for (const a of SECTIONS) {
+    for (const b of SECTIONS) {
+      if (a.id === b.id || a.href === '/dashboard') continue;
+      const dentro = [b.href, ...b.items.map((i) => i.href)];
+      for (const href of dentro) {
+        assert.ok(
+          !isCurrent(href, a.href),
+          `«${b.label}» tem ${href}, que cai dentro de «${a.label}» (${a.href})`,
+        );
+      }
+    }
+  }
+});
+
+test('cada sub-área pertence à secção que a lista', () => {
+  assert.equal(sectionFor('/dashboard/site/links')?.id, 'site');
+  assert.equal(sectionFor('/dashboard/outreach/history')?.id, 'prospecting');
+  assert.equal(sectionFor('/dashboard/inbox')?.id, 'work');
+  assert.equal(sectionFor('/dashboard/revenue')?.id, 'money');
+});
+
+test('uma tela de detalhe mantém acesa a secção a que pertence', () => {
+  assert.equal(sectionFor('/dashboard/opportunities/abc-123')?.id, 'work');
+  assert.equal(sectionFor('/dashboard/brands/abc-123')?.id, 'work');
+  assert.equal(sectionFor('/dashboard/production/abc-123')?.id, 'work');
+});
+
+test('uma rota fora das secções não acende nenhuma', () => {
+  assert.equal(sectionFor('/dashboard/settings'), null);
+  assert.equal(sectionFor('/dashboard/capture'), null);
+});
+
+test('«/dashboard» só está ativo em si mesmo', () => {
+  assert.equal(isCurrent('/dashboard/inbox', '/dashboard'), false);
+  assert.equal(isCurrent('/dashboard', '/dashboard'), true);
+  assert.equal(isCurrent('/dashboard/site/links', '/dashboard/site'), true);
+});
+
+/** Lido como texto pela mesma razão de sempre: importar a action puxa o
  *  Supabase e o `next/cache` para dentro do runner. */
 test('a corrida a mostrar escolhe-se pelo instante, não pelo dia', () => {
   // Várias corridas partilham a mesma `run_date` — o cron da manhã e cada
@@ -104,4 +150,17 @@ test('a animação de saída repõe-se, e não se reagenda a cada render', () =>
   const deps = /\}, \[([^\]]*)\]\);/.exec(hook)?.[1] ?? '';
   assert.doesNotMatch(deps, /onDone/, `onDone voltou às dependências: [${deps}]`);
   assert.match(hook, /useRef\(onDone\)/, 'sem ref, o efeito volta a depender de uma função instável');
+});
+
+/** O ficheiro tinha trinta e seis durações escolhidas uma a uma. O teste não
+ *  julga o gosto: só impede que uma transição volte a nascer com um número
+ *  solto ao lado das que passaram a token. */
+test('nenhuma transição do painel traz duração à mão', () => {
+  const css = readFileSync(path.join(ROOT, 'app/dashboard/dashboard.css'), 'utf8');
+  const soltas: string[] = [];
+  for (const m of css.matchAll(/transition(?:-duration)?\s*:[^;}]*/g)) {
+    // `0.01ms` é o desligar do `prefers-reduced-motion`, e é para ficar.
+    if (/\b\d*\.?\d+s\b/.test(m[0])) soltas.push(m[0].trim());
+  }
+  assert.deepEqual(soltas, [], `fora da escada de tempo: ${soltas.join(' | ')}`);
 });
