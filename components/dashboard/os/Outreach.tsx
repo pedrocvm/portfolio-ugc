@@ -15,12 +15,13 @@ import {
   CONF_LABEL, UGC_LABEL, countryLabel, placeLabel, signalsFor,
 } from '@/modules/outreach/history';
 import {
-  LIMITS, SECTION_HINT, SECTION_TITLE, groupForReview,
+  LIMITS, SECTION_HINT, SECTION_TITLE, groupForReview, sectionFor,
 } from '@/modules/outreach/domain';
 import { nicheShort } from '@/modules/brands/niches';
 import type { Focus } from '@/modules/outreach/focus';
 import CountryPicker from './CountryPicker';
 import FocusEditor from './FocusEditor';
+import ReviewMode from './ReviewMode';
 import ResultsBar, { type ManualRun } from './ResultsBar';
 
 /** A revisão diária.
@@ -358,6 +359,9 @@ export default function Outreach({
   const [modo, setModo] = useState<'manual' | 'auto'>('manual');
 
   const approved = candidates.filter((c) => c.status === 'approved').length;
+  // As que já têm email escrito e passaram a revisão: são as únicas que a
+  // revisão sequencial consegue despachar sem abrir mais nada.
+  const prontas = candidates.filter((c) => sectionFor(c.status) === 'ready' && c.body);
 
   const run = (id: string, fn: () => Promise<{ error?: string; sent?: number; message?: string }>) => {
     setRunning(id);
@@ -515,6 +519,19 @@ export default function Outreach({
       ) : null}
 
       {msg ? <p className="osWarn" data-tone="info">{msg}</p> : null}
+
+      {/* O caminho curto, antes das listas. Quem quer despachar o dia carrega
+          aqui e nunca chega a ver a tabela. */}
+      {prontas.length ? (
+        <div className="osLead">
+          <ReviewMode candidates={prontas} />
+          <p className="osNote">
+            {prontas.length === 1
+              ? 'Uma marca com o email escrito e revisto. Falta o seu sim.'
+              : `${prontas.length} marcas com o email escrito e revisto. Falta o seu sim.`}
+          </p>
+        </div>
+      ) : null}
 
       {candidates.length === 0 ? (
         <p className="osEmpty">

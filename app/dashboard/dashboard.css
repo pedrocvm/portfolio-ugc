@@ -2301,6 +2301,67 @@
   color: var(--tinta);
 }
 
+/* ── rever os emails, um de cada vez ───────────────────────────────── */
+
+.revBox {
+  width: min(720px, 100%);
+}
+.revBody {
+  margin: 18px 0 0;
+  padding: 16px;
+  max-height: 40dvh;
+  overflow-y: auto;
+  background: var(--areia);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--tinta);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.revEdit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 18px;
+}
+.revEdit label {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.revEdit input,
+.revEdit textarea {
+  width: 100%;
+  padding: 11px 13px;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--tinta);
+  background: #fff;
+  border: 1px solid var(--rule2);
+  transition: border-color var(--t-fast) var(--ease);
+}
+.revEdit input:focus,
+.revEdit textarea:focus {
+  outline: none;
+  border-color: var(--umbra);
+}
+.revEdit textarea {
+  resize: vertical;
+  min-height: 200px;
+}
+.revConfirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
 /* ── movimento ─────────────────────────────────────────────────────── */
 /* Curvas exponenciais, sem ressalto: entra depressa e assenta devagar. O
    movimento é delicado de propósito — o que tem de se notar é a precisão,

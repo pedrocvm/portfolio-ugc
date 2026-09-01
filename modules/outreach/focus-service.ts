@@ -1,11 +1,19 @@
 import 'server-only';
 
-import { supabaseService } from '@/lib/supabase/service';
+import { hasServiceRole, supabaseService } from '@/lib/supabase/service';
 import { DEFAULT_FOCUS, normalizeFocus, type Focus } from './focus';
 
 /** Lê e grava o foco. Puro está em `focus.ts`; aqui só há base de dados. */
 
+/** Sem chave de serviço, o foco por omissão em vez de uma exceção.
+ *
+ *  Ler o foco é a primeira coisa que a tela de Prospecção faz, e a exceção
+ *  levava a tela inteira ao error boundary — a busca dirigida, o histórico e os
+ *  resultados desapareciam todos por causa de uma variável de ambiente que só
+ *  a escrita precisa. Ler falha em silêncio e mostra o que se sabe; gravar
+ *  continua a exigir a chave, e diz porquê. */
 export async function readFocus(): Promise<Focus> {
+  if (!hasServiceRole()) return DEFAULT_FOCUS;
   const db = supabaseService();
   const { data } = await db
     .from('outreach_focus')
@@ -22,6 +30,7 @@ export async function readFocus(): Promise<Focus> {
 }
 
 export async function writeFocus(input: Partial<Focus>): Promise<Focus> {
+  if (!hasServiceRole()) throw new Error('sem_chave_de_servico');
   const db = supabaseService();
   const focus = normalizeFocus(input);
 
