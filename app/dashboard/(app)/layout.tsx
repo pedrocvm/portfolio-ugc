@@ -11,6 +11,7 @@ import Logo from '@/components/dashboard/Logo';
 import Menu from '@/components/dashboard/Menu';
 import MobileNav from '@/components/dashboard/MobileNav';
 import SectionNav from '@/components/dashboard/SectionNav';
+import QuickCapture from '@/components/dashboard/QuickCapture';
 import SideToggle from '@/components/dashboard/SideToggle';
 import { requireEditor } from '@/lib/auth';
 import { assistantReady } from '@/modules/assistant/config';
@@ -71,6 +72,7 @@ export default async function AppLayout({
           {/* Fixo no topo, em todos as telas. */}
           <Notifications items={alerts} />
           <Toasts />
+          <QuickCapture />
           <DiscoveryWatch />
           <Command />
           {/* Só na área privada, e só com a bandeira aberta: o portfólio público

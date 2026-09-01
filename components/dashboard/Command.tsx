@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ALL_DESTINATIONS } from './nav';
 import { SECTIONS } from '@/lib/schema';
+import { searchEverything, type Hit } from '@/app/dashboard/search-actions';
 import { useExit } from './useExit';
 
 type Item = { id: string; label: string; group: string; run: () => void };
@@ -11,14 +12,46 @@ type Item = { id: string; label: string; group: string; run: () => void };
 const semAcento = (v: string) =>
   v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-/** Salto rápido para qualquer área ou seção. Abre com Ctrl+K ou ⌘K. */
+/** Ir a qualquer sítio, e encontrar qualquer coisa. Abre com Ctrl+K ou ⌘K.
+ *
+ *  Saltava só entre áreas do menu. Agora procura também marcas, negócios,
+ *  pessoas, documentos e conteúdo — que é o que torna possível terem saído do
+ *  primeiro nível da navegação: uma base de conhecimento não precisa de lugar
+ *  no menu, precisa de forma de lá chegar.
+ *
+ *  Os destinos filtram-se no browser, sem ida ao servidor. O resto é uma
+ *  leitura por pesquisa, atrasada para não disparar uma por tecla. */
 export default function Command() {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [at, setAt] = useState(0);
+  // O resultado guarda o termo que o produziu. Sem isso era preciso um segundo
+  // estado «a procurar» reposto dentro do efeito — e escrever estado no corpo
+  // de um efeito é o que faz um render puxar outro.
+  const [achado, setAchado] = useState<{ termo: string; hits: Hit[] }>({ termo: '', hits: [] });
   const input = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { closing, close } = useExit(() => setOpen(false), 180);
+
+  const termo = q.trim();
+  const podeProcurar = termo.length >= 2;
+  const procurando = podeProcurar && achado.termo !== termo;
+
+  // 180ms depois da última tecla. Escrever «Cecotec» são sete teclas e uma
+  // leitura, não sete leituras.
+  useEffect(() => {
+    const alvo = q.trim();
+    if (alvo.length < 2) return;
+    let vivo = true;
+    const t = setTimeout(async () => {
+      const r = await searchEverything(alvo);
+      if (vivo) setAchado({ termo: alvo, hits: r });
+    }, 180);
+    return () => {
+      vivo = false;
+      clearTimeout(t);
+    };
+  }, [q]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -67,11 +100,22 @@ export default function Command() {
     return [...areas, ...secs];
   }, [router]);
 
-  const hits = useMemo(() => {
-    const t = semAcento(q.trim());
-    if (!t) return items;
-    return items.filter((i) => semAcento(i.label).includes(t));
-  }, [items, q]);
+  const encontrados = useMemo<Item[]>(() => {
+    const t2 = q.trim();
+    const t = semAcento(t2);
+    const areas = t ? items.filter((i) => semAcento(i.label).includes(t)) : items;
+    const doServidor = (podeProcurar && achado.termo === t2 ? achado.hits : []).map((h) => ({
+      id: h.id,
+      label: h.label,
+      group: h.group,
+      run: () => router.push(h.href),
+    }));
+    // O que ela procurou vem antes de para onde pode ir: quem escreve «Cecotec»
+    // quer a Cecotec, não a área que por acaso tem essas letras.
+    return [...doServidor, ...areas];
+  }, [items, q, achado, podeProcurar, router]);
+
+  const lista = encontrados;
 
   if (!open) return null;
 
@@ -93,7 +137,7 @@ export default function Command() {
           if (e.key === 'Escape') close();
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setAt((v) => Math.min(v + 1, hits.length - 1));
+            setAt((v) => Math.min(v + 1, lista.length - 1));
           }
           if (e.key === 'ArrowUp') {
             e.preventDefault();
@@ -101,7 +145,7 @@ export default function Command() {
           }
           if (e.key === 'Enter') {
             e.preventDefault();
-            pick(hits[at]);
+            pick(lista[at]);
           }
         }}
       >
@@ -109,18 +153,20 @@ export default function Command() {
           ref={input}
           type="text"
           value={q}
-          placeholder="Escreve para onde queres ir"
+          placeholder="Procure uma marca, um negócio, ou uma área"
           aria-label="Procurar"
           onChange={(e) => {
             setQ(e.target.value);
             setAt(0);
           }}
         />
-        {hits.length === 0 ? (
-          <p className="cmdVazio">Nada com esse nome.</p>
+        {lista.length === 0 ? (
+          <p className="cmdVazio">
+            {procurando ? 'A procurar…' : 'Nada com esse nome.'}
+          </p>
         ) : (
           <ul className="cmdList">
-            {hits.map((i, k) => (
+            {lista.map((i, k) => (
               <li key={i.id}>
                 <button
                   type="button"

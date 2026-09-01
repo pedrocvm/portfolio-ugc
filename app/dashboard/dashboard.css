@@ -2362,6 +2362,157 @@
   gap: 10px;
 }
 
+/* ── capturar de qualquer sítio ────────────────────────────────────── */
+
+/* Ao lado do botão da Carol AI, e mais pequeno: é a ação secundária dos dois.
+   No telemóvel sobe acima da barra de baixo, senão fica por baixo dela. */
+.capFab {
+  position: fixed;
+  right: clamp(16px, 2vw, 28px);
+  bottom: calc(clamp(16px, 2vw, 28px) + 70px);
+  z-index: var(--z-fab);
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--papel);
+  color: var(--tinta);
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(25, 23, 20, 0.18);
+  transition:
+    transform var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease);
+}
+.capFab:hover {
+  transform: translate3d(0, -2px, 0);
+  background: #fff;
+}
+.capFab:active {
+  transform: translate3d(0, 1px, 0);
+}
+.capFab svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+@media (max-width: 959px) {
+  .capFab {
+    bottom: calc(72px + env(safe-area-inset-bottom) + 70px);
+  }
+}
+
+.capBox {
+  width: min(600px, 100%);
+}
+.capField {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--tinta);
+  background: #fff;
+  border: 1px solid var(--rule2);
+  resize: vertical;
+  transition: border-color var(--t-fast) var(--ease);
+}
+.capField:focus {
+  outline: none;
+  border-color: var(--umbra);
+}
+.capNote {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px 13px;
+  font-family: var(--sans);
+  font-size: 15px;
+  color: var(--tinta);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  transition: border-color var(--t-fast) var(--ease);
+}
+.capNote:focus {
+  outline: none;
+  border-bottom-color: var(--umbra);
+}
+.capFile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+  font-size: 15px;
+  color: var(--tinta2);
+}
+.capFile button {
+  font-size: 14px;
+  color: var(--tinta3);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  padding: 0;
+  cursor: pointer;
+}
+/* O palpite dito em voz alta, em vez de sete botões a perguntar. */
+.capGuess {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 15px;
+  color: var(--tinta2);
+  animation: fade var(--t-fast) var(--ease) both;
+}
+.capOther {
+  position: relative;
+}
+.capOther > summary {
+  font-size: 14px;
+  color: var(--tinta3);
+  cursor: pointer;
+  list-style: none;
+  border-bottom: 1px solid var(--rule2);
+}
+.capOther > summary::-webkit-details-marker {
+  display: none;
+}
+.capOtherBox {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  margin-top: 6px;
+  padding: 6px;
+  background: var(--papel);
+  border: 1px solid var(--rule);
+  box-shadow: 0 12px 32px rgba(25, 23, 20, 0.14);
+}
+.capOtherBox button {
+  padding: 9px 11px;
+  text-align: left;
+  font-size: 15px;
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: background var(--t-instant) var(--ease);
+}
+.capOtherBox button:hover,
+.capOtherBox button[aria-pressed='true'] {
+  background: var(--areia);
+}
+
 /* ── movimento ─────────────────────────────────────────────────────── */
 /* Curvas exponenciais, sem ressalto: entra depressa e assenta devagar. O
    movimento é delicado de propósito — o que tem de se notar é a precisão,
