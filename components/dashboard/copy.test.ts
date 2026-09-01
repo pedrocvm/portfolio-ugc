@@ -85,7 +85,11 @@ test('guarda-se, não se salva', () => {
 /** O outro lado do mesmo problema: tratar por tu numa tela e por si na
  *  seguinte. Sem sujeito não é preciso escolher. */
 test('a interface não trata por tu', () => {
-  const achados = procurar(/\b(tens|queres|podes|precisas|deixes|leres|enviares|responderes|escreves)\b/i);
+  // «de ti» entra na lista: estava num `aria-label`, que é texto de tela para
+  // quem usa leitor de ecrã e passou despercebido a olho.
+  const achados = procurar(
+    /\b(tens|queres|podes|precisas|deixes|leres|enviares|responderes|escreves)\b|\bde ti\b|\bteu\b|\btua\b/i,
+  );
   assert.deepEqual(achados, [], `tratamento por tu: ${achados.join(', ')}`);
 });
 

@@ -203,8 +203,8 @@ export default function Copilot({
               </button>
             ) : (
               <span className="osRowSub">
-                Liga «Criar rascunho no Gmail» em Definições para mandar isto diretamente para a
-                tua caixa. Até lá, copia daqui.
+                Ligue «Criar rascunho no Gmail» em Definições para isto ir direito à sua caixa.
+                Até lá, copie daqui.
               </span>
             )}
             <button

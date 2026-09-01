@@ -321,8 +321,13 @@
   border-bottom-color: rgba(247, 243, 238, 0.5);
 }
 .sheet {
+  /* A goteira num sítio só. A barra da secção precisa de sangrar exactamente
+     esta medida para tocar as duas margens, e três números escritos à mão em
+     três media queries é como ela ficou 4px mais larga do que o ecrã no
+     telemóvel. */
+  --gutter: 22px;
   min-width: 0;
-  padding: 0 22px 120px;
+  padding: 0 var(--gutter) 120px;
 }
 
 /* A barra da secção. Só existe onde há para onde ir dentro dela — o Hoje não
@@ -332,8 +337,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  margin: 0 -22px 4px;
-  padding: 0 22px;
+  margin: 0 calc(var(--gutter) * -1) 4px;
+  padding: 0 var(--gutter);
   border-bottom: 1px solid var(--rule);
   /* rola dentro de si no telemóvel: seis sub-áreas não cabem em 390px, e a
      alternativa era a página inteira andar de lado */
@@ -354,7 +359,10 @@
 .secBar a {
   position: relative;
   flex: none;
-  padding: 14px 12px;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
   font-family: var(--disp);
   font-variation-settings: var(--narrow);
   font-weight: 500;
@@ -392,7 +400,10 @@
   position: relative;
 }
 .secMore > summary {
-  padding: 14px 10px;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
   font-family: var(--disp);
   font-variation-settings: var(--narrow);
   font-weight: 500;
@@ -424,7 +435,8 @@
   animation: rise var(--t-fast) var(--ease) both;
 }
 .secMoreBox a {
-  padding: 10px 12px;
+  min-height: 44px;
+  padding: 0 12px;
   font-size: 15px;
 }
 .secMoreBox a::after {
@@ -455,7 +467,8 @@
     margin-left: -16px;
   }
   .sheet {
-    padding: 0 clamp(30px, 4vw, 64px) 130px;
+    --gutter: clamp(30px, 4vw, 64px);
+    padding: 0 var(--gutter) 130px;
   }
 }
 
@@ -2499,7 +2512,8 @@
   box-shadow: 0 12px 32px rgba(25, 23, 20, 0.14);
 }
 .capOtherBox button {
-  padding: 9px 11px;
+  min-height: 44px;
+  padding: 0 11px;
   text-align: left;
   font-size: 15px;
   color: var(--tinta);
@@ -3383,7 +3397,8 @@
 
   /* o conteúdo não pode ficar por baixo da barra nem do indicador */
   .sheet {
-    padding: 0 18px calc(96px + env(safe-area-inset-bottom));
+    --gutter: 18px;
+    padding: 0 var(--gutter) calc(96px + env(safe-area-inset-bottom));
   }
   .dashBar {
     padding: 16px 0 12px;
@@ -5740,8 +5755,10 @@ a.aiSource:hover {
     right: 14px;
   }
   .notifBell {
-    width: 38px;
-    height: 38px;
+    /* 44px, e não 38: no telemóvel isto é um alvo de dedo, e encolhê-lo para
+       ganhar seis pixels de barra é trocar a coisa certa pela mais pequena. */
+    width: 44px;
+    height: 44px;
   }
   .dashBar {
     padding-right: 0;

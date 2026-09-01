@@ -28,7 +28,7 @@ import { formatDate } from '@/lib/time';
  *  inbox são frases verbais e não colam depois de «pediu». */
 const ASK_NOUN: Record<string, string> = {
   portfolio_request: 'o portfólio',
-  rate_request: 'o teu valor',
+  rate_request: 'o seu valor',
   ads_rights: 'direitos para anúncios',
   usage_request: 'direitos de uso',
   barter_offer: 'uma permuta',

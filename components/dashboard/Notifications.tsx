@@ -89,7 +89,7 @@ export default function Notifications({ items: all }: { items: Notification[] })
         aria-label={
           items.length === 0
             ? 'Nada precisa de si'
-            : `${items.length} ${items.length === 1 ? 'coisa precisa' : 'coisas precisam'} de ti`
+            : `${items.length} ${items.length === 1 ? 'coisa precisa' : 'coisas precisam'} de si`
         }
         onClick={() => setOpen((v) => !v)}
       >
