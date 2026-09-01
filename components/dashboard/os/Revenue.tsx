@@ -13,7 +13,14 @@ import type { PaymentRow, RelationshipRow, RevenueSummary } from '@/modules/reve
  *
  *  Dinheiro e permuta aparecem sempre em colunas separadas. Somá-los daria à
  *  Carol a sensação de estar a ganhar mais do que ganha, que é exactamente o
- *  contrário do que esta tela existe para fazer. */
+ *  contrário do que esta tela existe para fazer.
+ *
+ *  A ordem é a de quem pergunta «como está o meu dinheiro»: primeiro o que
+ *  falta entrar, depois o que está atrasado, depois o que já entrou. «Recebido»
+ *  estava em primeiro e é a única das três que não pede nada.
+ *
+ *  Com tudo a zero, cinco zeros lado a lado não são um resumo — são cinco
+ *  formas de dizer a mesma coisa. Nesse caso sai uma frase. */
 
 export default function Revenue({
   summary, payments, licenses, relationships, brands,
@@ -24,6 +31,15 @@ export default function Revenue({
   relationships: RelationshipRow[];
   brands: { id: string; name: string }[];
 }) {
+  // Nada em lado nenhum: cinco zeros seguidos não informam, e a tela tem de
+  // dizer o que aconteceu em vez de mostrar o vazio formatado.
+  const vazio =
+    summary.paidCents === 0 &&
+    summary.outstandingCents === 0 &&
+    summary.overdueCents === 0 &&
+    summary.usageRevenueCents === 0 &&
+    summary.barterValueCents === 0;
+
   const expiring = licenses.filter((l) => l.expiry.state === 'expiring' || l.expiry.state === 'expired');
   const noEnd = licenses.filter((l) => l.expiry.state === 'no_end' && l.scope.paidAllowed);
 
@@ -33,28 +49,42 @@ export default function Revenue({
         <h1>Receita</h1>
       </div>
 
-      <div className="osStats">
-        <div className="osStat">
-          <b>{formatMoney(summary.paidCents)}</b>
-          <span>recebido</span>
+      {vazio ? (
+        <p className="osBrief">
+          Ainda não há dinheiro registado. Assim que um trabalho fechar com valor, ele aparece aqui
+          — e o que estiver em atraso vem ter consigo no Hoje, sem ser preciso vir cá ver.
+        </p>
+      ) : (
+        <div className="osStats">
+          <div className="osStat">
+            <b>{formatMoney(summary.outstandingCents)}</b>
+            <span>por receber</span>
+          </div>
+          {summary.overdueCents > 0 ? (
+            <div className="osStat" data-tone="bad">
+              <b>{formatMoney(summary.overdueCents)}</b>
+              <span>em atraso</span>
+            </div>
+          ) : null}
+          <div className="osStat">
+            <b>{formatMoney(summary.paidCents)}</b>
+            <span>já recebido</span>
+          </div>
+          {summary.usageRevenueCents > 0 ? (
+            <div className="osStat">
+              <b>{formatMoney(summary.usageRevenueCents)}</b>
+              <span>de licenças</span>
+            </div>
+          ) : null}
+          {/* Sempre separado, e nunca somado ao resto. */}
+          {summary.barterValueCents > 0 ? (
+            <div className="osStat" data-tone="mute">
+              <b>{formatMoney(summary.barterValueCents)}</b>
+              <span>em permuta <em>(não é dinheiro)</em></span>
+            </div>
+          ) : null}
         </div>
-        <div className="osStat">
-          <b>{formatMoney(summary.outstandingCents)}</b>
-          <span>por receber</span>
-        </div>
-        <div className="osStat">
-          <b>{formatMoney(summary.overdueCents)}</b>
-          <span>em atraso</span>
-        </div>
-        <div className="osStat">
-          <b>{formatMoney(summary.usageRevenueCents)}</b>
-          <span>de licenças</span>
-        </div>
-        <div className="osStat">
-          <b>{formatMoney(summary.barterValueCents)}</b>
-          <span>em permuta <em>(não é receita)</em></span>
-        </div>
-      </div>
+      )}
 
       {noEnd.length ? (
         <p className="osWarn">

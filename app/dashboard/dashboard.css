@@ -2513,6 +2513,175 @@
   background: var(--areia);
 }
 
+/* ── modo de gravação ──────────────────────────────────────────────── */
+
+.recLead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.recStart {
+  min-height: 46px;
+  padding: 0 20px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--papel);
+  background: var(--ferro);
+  border: 0;
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease),
+    transform var(--t-instant) var(--ease);
+}
+.recStart:hover {
+  background: var(--ferro2);
+}
+.recStart:active {
+  transform: translate3d(0, 1px, 0);
+}
+
+/* A gravar, o ecrã é só isto. Fundo escuro porque o telemóvel está apoiado e
+   ela olha de longe — e porque um ecrã claro num tripé reflecte no produto. */
+.rec {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: var(--ferro);
+  color: var(--papel);
+  animation: fade var(--t-normal) var(--ease) both;
+}
+.rec[data-closing] {
+  animation: fade var(--t-fast) var(--ease) reverse both;
+}
+.recBox {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: max(14px, env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));
+}
+.recTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 15px;
+  color: rgba(221, 210, 195, 0.7);
+}
+.recTop button {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 26px;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.recOne,
+.recDone {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-height: 0;
+  animation: recIn var(--t-normal) var(--ease) both;
+}
+@keyframes recIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+}
+.recCount {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  color: rgba(221, 210, 195, 0.6);
+}
+.recOne h2 {
+  font-size: clamp(30px, 7vw, 46px);
+  line-height: 1.06;
+  color: var(--papel);
+}
+.recNote {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.4;
+  color: rgba(221, 210, 195, 0.82);
+}
+.recBonus {
+  margin: 0;
+  font-size: 16px;
+  color: var(--jade);
+}
+.recActs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+/* Alvo grande e em baixo: é para se acertar com o polegar sem olhar. */
+.recGot {
+  min-height: 64px;
+  font-family: var(--disp);
+  font-variation-settings: var(--wide);
+  font-weight: 560;
+  font-size: 21px;
+  color: var(--ferro);
+  background: var(--papel);
+  border: 0;
+  cursor: pointer;
+  transition: transform var(--t-instant) var(--ease);
+}
+.recGot:active {
+  transform: scale(0.985);
+}
+.recActs .focusSkip {
+  color: rgba(221, 210, 195, 0.68);
+  align-self: center;
+}
+.recActs .focusSkip:hover {
+  color: var(--papel);
+}
+.recBar {
+  height: 3px;
+  margin-top: 14px;
+  background: rgba(221, 210, 195, 0.2);
+}
+.recBar span {
+  display: block;
+  width: var(--p, 0%);
+  height: 100%;
+  background: var(--papel);
+  transition: width var(--t-slow) var(--exp);
+}
+.recDone {
+  text-align: center;
+}
+.recDone h2 {
+  font-size: clamp(30px, 7vw, 44px);
+  color: var(--papel);
+}
+.recDone p {
+  margin: 0;
+  color: rgba(221, 210, 195, 0.82);
+}
+.recDoneActs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
 /* ── movimento ─────────────────────────────────────────────────────── */
 /* Curvas exponenciais, sem ressalto: entra depressa e assenta devagar. O
    movimento é delicado de propósito — o que tem de se notar é a precisão,

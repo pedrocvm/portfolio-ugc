@@ -2,6 +2,7 @@ import type { ActionRow } from '@/modules/actions/service';
 import Today from '@/components/dashboard/os/Today';
 import { dailyBrief } from '@/modules/actions/brief';
 import { describeBackground } from '@/modules/actions/day';
+import RecordingMode from '@/components/dashboard/os/RecordingMode';
 
 /** Dados de exemplo com a forma do esquema real. Nomes de marca inventados de
  *  propósito: uma bancada não devia conter conversa verdadeira de ninguém. */
@@ -94,7 +95,30 @@ const ACOES: ActionRow[] = [
 
 const CONTAS = { openOpportunities: 12, dueFollowUps: 3, needsReview: 2, overdue: 4 };
 
-export default function Harness() {
+const TOMADAS = [
+  { shot: 'Gancho: mostrar a janela suja', note: 'Plano fechado, 3-5s. Luz natural de lado.', required: true },
+  { shot: 'Produto a sair da caixa', note: 'Mãos em primeiro plano.', required: true },
+  { shot: 'A limpar, em movimento contínuo', note: '8-10s sem cortes.', required: true },
+  { shot: 'Antes e depois, lado a lado', required: true },
+  { shot: 'Reacção à cara', note: 'Sem falar. Só a expressão.', required: true },
+  { shot: 'Plano do detalhe do vidro', required: false },
+  { shot: 'Vista da sala com a janela limpa', required: false },
+];
+
+export default function Harness({ modo }: { modo?: string }) {
+  if (modo === 'gravacao') {
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <h1>Modo de gravação</h1>
+        <RecordingMode
+          contentId="harness-1"
+          title="Janela limpa em 30 segundos"
+          shots={TOMADAS}
+        />
+      </div>
+    );
+  }
+
   return (
     <Today
       data={{

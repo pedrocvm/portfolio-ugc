@@ -18,7 +18,12 @@ export const dynamic = 'force-dynamic';
  *  O que corre aqui são os componentes verdadeiros, com dados de exemplo com a
  *  forma do esquema real. O que não se exercita é a leitura de dados com
  *  sessão; isso fica dito no relatório e não fingido aqui. */
-export default function HarnessPage() {
+export default async function HarnessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ modo?: string }>;
+}) {
+  const { modo } = await searchParams;
   // Fora de desenvolvimento só existe se alguém a ligar de propósito. A Vercel
   // não tem `HARNESS` no ambiente, por isso lá não existe — e um build de
   // produção local, que é onde as capturas saem estáveis, consegue servi-la.
@@ -36,7 +41,7 @@ export default function HarnessPage() {
           </aside>
           <main className="sheet">
             <SectionNav />
-            <Harness />
+            <Harness modo={modo} />
           </main>
           <MobileNav assistantEnabled onSignOut={null} />
         </div>

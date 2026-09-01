@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { buildShotList, saveContentAsset, scriptApproved } from '@/app/dashboard/carolos-actions';
 import { label } from '@/lib/labels';
 import { CAPABILITIES, CAPABILITY_LABEL, FUNNEL_LABEL, FUNNEL_NOTE, type ContentRow, type FunnelRole } from '@/modules/content/domain';
+import RecordingMode from './RecordingMode';
 
 /** Roteiro e shot list.
  *
@@ -213,6 +214,16 @@ function ContentItem({ item, collaborationId }: { item: ContentRow; collaboratio
               </button>
             ) : null}
           </div>
+
+          {shots.length ? (
+            <div className="recLead">
+              <RecordingMode contentId={item.id} title={item.title} shots={shots} />
+              <span className="osNote">
+                {shots.length === 1 ? 'Uma tomada' : `${shots.length} tomadas`}, uma de cada vez, com
+                o sítio guardado.
+              </span>
+            </div>
+          ) : null}
 
           {shots.length ? (
             <ol className="osList" style={{ marginTop: 12 }}>
