@@ -48,7 +48,7 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
   },
   'carolos-plan': {
     label: 'Recalcular a fila do Hoje',
-    why: 'De hora a hora. Acorda adiados e refaz as ações, sem depender de você abrir a aplicação.',
+    why: 'De hora a hora. Acorda adiados e refaz as ações, sem depender de alguém abrir a aplicação.',
   },
   'carolos-rights': {
     label: 'Verificar licenças',
@@ -64,11 +64,11 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
   },
   'carolos-insights': {
     label: 'Procurar o que precisa de atenção',
-    why: 'Uma vez por dia, de manhã. Marcas paradas, licenças a acabar, dinheiro por receber e janelas de upsell — o que começa a doer antes de você reparar.',
+    why: 'Uma vez por dia, de manhã. Marcas paradas, licenças a acabar, dinheiro por receber e janelas de upsell — o que começa a doer antes de dar por isso.',
   },
   'carolos-outreach': {
     label: 'Procurar marcas novas',
-    why: 'Uma vez por dia, antes de você acordar. Pesquisa, qualifica e escreve o email. Nunca envia: isso é seu.',
+    why: 'Uma vez por dia, de madrugada. Pesquisa, qualifica e escreve o email. Nunca envia: isso é dela.',
   },
   'carolos-reconcile': {
     label: 'Reconciliar chamadas',

@@ -85,7 +85,7 @@ export default function QuoteBuilder({
       const final = manual.trim() ? parseMoneyToCents(manual) : null;
       const out = await saveQuote(opportunityId, scope, final, reason);
       if (out.error) return setError(out.error);
-      setSaved('Orçamento salvo. Fica congelado assim que o marcares como enviado.');
+      setSaved('Orçamento guardado. Fica congelado assim que o marcares como enviado.');
     });
 
   return (
@@ -260,7 +260,7 @@ export default function QuoteBuilder({
 
               {result.humanOnly.length ? (
                 <>
-                  <p className="osRowSub" style={{ marginTop: 16 }}>Só você pode decidir</p>
+                  <p className="osRowSub" style={{ marginTop: 16 }}>Só a Carol pode decidir</p>
                   <ul className="osList" data-tone="bad">
                     {result.humanOnly.map((h) => <li key={h}>{h}</li>)}
                   </ul>
@@ -285,7 +285,7 @@ export default function QuoteBuilder({
 
               <div className="osActs">
                 <button className="btn" type="button" disabled={pending} onClick={persist}>
-                  Salvar orçamento
+                  Guardar orçamento
                 </button>
               </div>
             </>

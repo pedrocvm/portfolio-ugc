@@ -156,7 +156,7 @@ export default function FitPanel({
             <summary>Discordo do score</summary>
             <div className="osInline" style={{ marginTop: 12 }}>
               <label className="osField">
-                <span>Score que queres</span>
+                <span>Potencial que quer dar</span>
                 <input
                   type="number"
                   min={0}
@@ -181,10 +181,10 @@ export default function FitPanel({
                   })
                 }
               >
-                Salvar
+                Guardar
               </button>
             </div>
-            <p className="osRowSub">O cálculo original fica salvo ao lado. Nada é apagado.</p>
+            <p className="osRowSub">O cálculo original fica guardado ao lado. Nada é apagado.</p>
           </details>
         </>
       ) : null}

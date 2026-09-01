@@ -42,7 +42,7 @@ export const STATUS_LABEL: Record<string, string> = {
   ready: 'pronta para enviar',
   needs_review: 'a precisar de olhos',
   approved: 'aprovada',
-  edited: 'editada por você',
+  edited: 'editada à mão',
   sent: 'enviada',
   skipped: 'posta de lado',
   rejected: 'recusada',
@@ -122,7 +122,7 @@ export function summarySentence(s: Summary): string {
   const marcas = `${s.total} ${s.total === 1 ? 'marca' : 'marcas'}`;
   const partes: string[] = [];
   if (s.sent) partes.push(`${s.sent} ${s.sent === 1 ? 'enviada' : 'enviadas'}`);
-  if (s.waiting) partes.push(`${s.waiting} à espera de você`);
+  if (s.waiting) partes.push(`${s.waiting} à espera`);
   if (s.discarded) partes.push(`${s.discarded} de lado`);
 
   const fim = partes.length

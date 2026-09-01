@@ -88,7 +88,7 @@ export default function Notifications({ items: all }: { items: Notification[] })
         aria-expanded={open}
         aria-label={
           items.length === 0
-            ? 'Nada precisa de você'
+            ? 'Nada precisa de si'
             : `${items.length} ${items.length === 1 ? 'coisa precisa' : 'coisas precisam'} de ti`
         }
         onClick={() => setOpen((v) => !v)}
@@ -105,9 +105,9 @@ export default function Notifications({ items: all }: { items: Notification[] })
       </button>
 
       {open ? (
-        <div className="notifBox" role="dialog" aria-label="O que precisa de você">
+        <div className="notifBox" role="dialog" aria-label="O que precisa de si">
           <header>
-            <b>Precisa de você</b>
+            <b>Precisa de si</b>
             <Link href="/dashboard" onClick={() => setOpen(false)}>
               Ver o dia
             </Link>

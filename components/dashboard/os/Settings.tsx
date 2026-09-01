@@ -111,7 +111,7 @@ export default function Settings({
         <h2>Gmail</h2>
         <p className="osNote">
           É a integração que torna o CRM passivo. Pede só leitura e criação de rascunhos: não há
-          permissão para enviar, por desenho. Você pode ligar mais de uma conta — as marcas nem
+          permissão para enviar, por desenho. Pode ligar mais de uma conta — as marcas nem
           sempre escrevem para a mesma caixa.
         </p>
 
@@ -192,7 +192,7 @@ export default function Settings({
               disabled={pending}
               onClick={() => flip(key)}
             >
-              {running === `flag:${key}` ? <Spinner label="A salvar" /> : null}
+              {running === `flag:${key}` ? <Spinner label="A guardar" /> : null}
               {local[key] ? 'ligado' : 'desligado'}
             </button>
           </div>
@@ -201,7 +201,7 @@ export default function Settings({
         {local.external_send ? (
           <p className="osWarn">
             O envio externo automático está ligado. Enquanto estiver assim, uma mensagem comercial
-            pode sair sem tu a leres. Só deixes assim se for mesmo o que queres.
+            pode sair sem passar pelos seus olhos. Só deixe assim se for mesmo isso que quer.
           </p>
         ) : null}
       </section>

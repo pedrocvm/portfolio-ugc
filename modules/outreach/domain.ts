@@ -337,7 +337,7 @@ export function runMessage(r: RunSummary): { ok: boolean; message: string } {
 
   if (r.selected > 0) {
     const marcas = r.selected === 1 ? 'marca nova' : 'marcas novas';
-    const extra = abaixo ? ` Mais ${abaixo} abaixo do corte, para você ver.` : '';
+    const extra = abaixo ? ` Mais ${abaixo} abaixo do corte, para ver.` : '';
     return { ok: true, message: `${r.selected} ${marcas}, de ${r.discovered} encontradas.${extra}` };
   }
 
@@ -347,7 +347,7 @@ export function runMessage(r: RunSummary): { ok: boolean; message: string } {
     const plural = abaixo === 1 ? 'marca' : 'marcas';
     return {
       ok: true,
-      message: `Nenhuma chegou ao mínimo de encaixe, mas guardei ${abaixo} ${plural} para você decidir.`,
+      message: `Nenhuma chegou ao mínimo de encaixe, mas guardei ${abaixo} ${plural} para decidir.`,
     };
   }
 
@@ -383,7 +383,7 @@ export function sectionFor(status: string): ReviewSection {
 
 export const SECTION_TITLE: Record<ReviewSection, string> = {
   ready: 'Prontas para enviar',
-  review: 'Precisam de você',
+  review: 'Precisam de si',
   below: 'Abaixo do corte',
   sent: 'Já enviadas',
 };
@@ -392,7 +392,7 @@ export const SECTION_HINT: Record<ReviewSection, string> = {
   ready: 'O email está escrito e passou a revisão. Falta o seu sim.',
   review: 'O email saiu, mas alguma coisa não convence. Leia antes de mandar.',
   below: 'Pesquisadas, sem email escrito. Se gostar da marca, peça e eu escrevo.',
-  sent: 'Saíram hoje. Ficam aqui para você saber o que já foi.',
+  sent: 'Saíram hoje. Ficam aqui para se saber o que já foi.',
 };
 
 /** A ordem em que aparecem. Enviadas por último: são registo, não trabalho. */

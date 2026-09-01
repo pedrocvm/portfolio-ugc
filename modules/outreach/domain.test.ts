@@ -328,7 +328,7 @@ test('a lista de baixo também tem tecto: não se despeja o funil inteiro', () =
 test('nenhuma acima do corte já não quer dizer nada para ver', () => {
   const { ok, message } = runMessage(run({ discovered: 6, screened: 6, researched: 6, selected: 0, below: 6 }));
   assert.equal(ok, true);
-  assert.match(message, /6 marcas para você decidir/);
+  assert.match(message, /6 marcas para decidir/);
   // A frase antiga dava o assunto por encerrado: «Melhor assim do que encher a
   // lista» é o sistema a decidir por ela sobre trabalho que já foi pago.
   assert.doesNotMatch(message, /Melhor assim/);

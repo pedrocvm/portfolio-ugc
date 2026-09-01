@@ -64,15 +64,15 @@ export default function RecordingMode({
   );
 
   const abrir = () => {
-    let salvo: number[] = [];
+    let guardado: number[] = [];
     try {
       const cru = localStorage.getItem(chave(contentId));
       const lido: unknown = cru ? JSON.parse(cru) : [];
-      if (Array.isArray(lido)) salvo = lido.filter((n): n is number => Number.isInteger(n));
+      if (Array.isArray(lido)) guardado = lido.filter((n): n is number => Number.isInteger(n));
     } catch {
       /* começa do princípio */
     }
-    setFeitas(salvo);
+    setFeitas(guardado);
     setOpen(true);
   };
 
@@ -119,7 +119,7 @@ export default function RecordingMode({
 
             {acabou ? (
               <div className="recDone">
-                <h2>Gravaste tudo.</h2>
+                <h2>Está tudo gravado.</h2>
                 <p>
                   {opcionais.length
                     ? 'As obrigatórias e as extras. Não falta nada.'
@@ -144,7 +144,7 @@ export default function RecordingMode({
                     falta já não é o trabalho, é o extra. */}
                 {soFaltamExtras ? (
                   <p className="recBonus">
-                    Já tens tudo o que era preciso. Se ainda tiveres energia, ficam{' '}
+                    Já tem tudo o que era preciso. Se ainda tiver energia, ficam{' '}
                     {opcionais.length === 1 ? 'mais uma' : `mais ${opcionais.filter((i) => !feitas.includes(i)).length}`}.
                   </p>
                 ) : null}

@@ -56,7 +56,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
       <h2>Agendador</h2>
       <p className="osNote">
         Os trabalhos correm no Supabase, não na Vercel — o plano Hobby só deixa um cron por dia, e o
-        Gmail precisa de ser visto muito mais vezes do que isso. Nada aqui depende de você abrir a
+        Gmail precisa de ser visto muito mais vezes do que isso. Nada aqui depende de abrir a
         aplicação.
       </p>
       {state.configured ? (

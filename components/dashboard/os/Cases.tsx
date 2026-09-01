@@ -142,11 +142,11 @@ function CaseCard({
               onClick={() =>
                 start(async () => {
                   await saveCase(study.id, { title, challenge, hypothesis, result });
-                  setMessage('Salvo.');
+                  setMessage('Guardado.');
                 })
               }
             >
-              Salvar
+              Guardar
             </button>
           </div>
 

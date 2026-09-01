@@ -51,7 +51,7 @@ export async function saveDoc(
       updated_at: new Date().toISOString(),
     })
     .eq('id', id);
-  if (error) return { error: 'Não foi possível salvar.' };
+  if (error) return { error: 'Não foi possível guardar.' };
   revalidatePath(PATH);
   return { ok: true };
 }

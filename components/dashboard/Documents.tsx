@@ -41,7 +41,7 @@ export default function Documents({
   /* trocar de separador fecha o que estiver aberto: o formulário é de outro
      tipo e os campos não têm nada a ver uns com os outros */
   function trocar(proximo: DocKind) {
-    if (dirty && !confirm('Você tem alterações não salvas. Sair mesmo assim?')) return;
+    if (dirty && !confirm('Há alterações por guardar. Sair mesmo assim?')) return;
     setKind(proximo);
     setOpenId(null);
     setDirty(false);
@@ -76,7 +76,7 @@ export default function Documents({
     if (!openId) return;
     start(async () => {
       const r = await saveDoc(openId, kind, data);
-      setMsg(r.error ?? 'Salvo.');
+      setMsg(r.error ?? 'Guardado.');
       if (!r.error) setDirty(false);
       router.refresh();
     });
@@ -97,10 +97,10 @@ export default function Documents({
       <div className="dashBar noPrint">
         <h1>Documentos</h1>
         <span className="dashState" data-tone={dirty ? 'dirty' : undefined}>
-          {pending ? <Spinner label="A salvar" /> : null}
+          {pending ? <Spinner label="A guardar" /> : null}
           {pending
             ? 'A processar'
-            : msg ?? (dirty ? 'Alterações por salvar' : `${rows.length} salvos`)}
+            : msg ?? (dirty ? 'Alterações por guardar' : `${rows.length} guardados`)}
         </span>
         {openId ? (
           <>
@@ -130,7 +130,7 @@ export default function Documents({
               onClick={save}
               disabled={pending || !dirty}
             >
-              Salvar
+              Guardar
             </button>
           </>
         ) : (

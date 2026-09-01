@@ -155,7 +155,7 @@ export default function Revenue({
         ) : (
           <p className="osEmpty">
             Ainda não há valores registados. O histórico anterior ao CarolOS não foi reconstruído —
-            a partir daqui fica tudo salvo.
+            a partir daqui fica tudo guardado.
           </p>
         )}
         <AddPayment brands={brands} />

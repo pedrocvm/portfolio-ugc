@@ -144,7 +144,7 @@ export async function updateOpportunity(
     })
     .eq('id', opportunityId);
 
-  if (error) return { error: 'Não foi possível salvar.' };
+  if (error) return { error: 'Não foi possível guardar.' };
   revalidatePath(`/dashboard/opportunities/${opportunityId}`);
   return { ok: true };
 }
@@ -428,7 +428,7 @@ export async function uploadScreenshot(form: FormData): Promise<Result & { path?
     upsert: false,
   });
 
-  if (error) return { error: 'Não foi possível salvar a imagem.' };
+  if (error) return { error: 'Não foi possível guardar a imagem.' };
   return { ok: true, path };
 }
 

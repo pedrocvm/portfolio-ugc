@@ -79,7 +79,7 @@ test('a frase conta o que aconteceu sem despejar números soltos', () => {
   );
   assert.match(frase, /3 marcas/);
   assert.match(frase, /1 enviada/);
-  assert.match(frase, /à espera de você/);
+  assert.match(frase, /à espera\b/);
   assert.doesNotMatch(frase, /\bready\b|\brejected\b/, 'um estado cru chegou à frase');
 });
 

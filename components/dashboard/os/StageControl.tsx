@@ -60,7 +60,7 @@ export default function StageControl({
             })
           }
         >
-          Salvar etapa
+          Guardar etapa
         </button>
       </div>
 

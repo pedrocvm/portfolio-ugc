@@ -226,7 +226,7 @@ function BrandForm({
               type="text"
               name="next_step"
               defaultValue={brand?.next_step}
-              placeholder="O que você precisa fazer a seguir, e quando"
+              placeholder="O que é preciso fazer a seguir, e quando"
             />
           </label>
         </div>
@@ -240,7 +240,7 @@ function BrandForm({
       {state.error ? <p className="loginErr">{state.error}</p> : null}
       <div className="mediaRow">
         <button className="btn solid" type="submit" disabled={pending}>
-          {pending ? 'A salvar…' : 'Salvar'}
+          {pending ? 'A guardar…' : 'Guardar'}
         </button>
         <button type="button" className="btn quiet" onClick={onDone}>
           Cancelar

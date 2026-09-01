@@ -121,7 +121,7 @@ export default function ScriptDesk({
                 })
               }
             >
-              Salvar peça
+              Guardar peça
             </button>
           </div>
           {error ? <p className="osWarn" role="alert">{error}</p> : null}

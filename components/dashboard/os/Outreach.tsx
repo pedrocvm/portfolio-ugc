@@ -295,8 +295,8 @@ function Card({ c }: { c: Candidate }) {
                 disabled={pending}
                 onClick={() => run('save', () => updateOutreachDraft(c.id, subject, body), () => setStatus('edited'))}
               >
-                {running === 'save' ? <Spinner label="A salvar" /> : null}
-                Salvar
+                {running === 'save' ? <Spinner label="A guardar" /> : null}
+                Guardar
               </button>
             ) : (
               <button

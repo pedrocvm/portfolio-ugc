@@ -173,7 +173,7 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
                   </article>
                 ))}
                 {thread.messages.length === 0 ? (
-                  <p className="osRowSub">Esta conversa não tem mensagens salvas.</p>
+                  <p className="osRowSub">Esta conversa não tem mensagens guardadas.</p>
                 ) : null}
               </details>
             </div>
