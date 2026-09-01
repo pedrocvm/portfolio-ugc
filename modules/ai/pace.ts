@@ -36,11 +36,21 @@ type Gate = { queue: Promise<unknown>; lastStart: number; gap: number };
 
 /** Uma fila por chave, não uma por processo. Cada chave tem a sua cota; com uma
  *  fila partilhada, duas chaves andariam ao ritmo de uma. */
-function scheduled<T>(gate: Gate, work: (signal?: AbortSignal) => Promise<T>, signal?: AbortSignal): Promise<T> {
+function scheduled<T>(
+  gate: Gate,
+  work: (signal?: AbortSignal) => Promise<T>,
+  signal?: AbortSignal,
+  resetTimeout?: () => void,
+): Promise<T> {
   const turn = gate.queue.then(async () => {
     const wait = gate.lastStart + gate.gap - Date.now();
     if (wait > 0) await sleep(wait, signal);
     gate.lastStart = Date.now();
+    // O tempo-limite mede o modelo, não a fila. Sem isto, uma chamada que
+    // esperou quarenta segundos pela vez chegava ao fornecedor com cinco
+    // segundos de orçamento e abortava sem ter feito nada — e numa corrida de
+    // cinquenta chamadas isso acontecia a quase todas.
+    resetTimeout?.();
     return work(signal);
   });
   // A fila não pode partir-se com uma falha: a chamada seguinte ainda espera vez.
@@ -56,10 +66,15 @@ function retryable(error: unknown): boolean {
   return kind === 'quota' && quotaWindow(error) !== 'day';
 }
 
-async function attempt<T>(gate: Gate, work: (signal?: AbortSignal) => Promise<T>, signal?: AbortSignal): Promise<T> {
+async function attempt<T>(
+  gate: Gate,
+  work: (signal?: AbortSignal) => Promise<T>,
+  signal?: AbortSignal,
+  resetTimeout?: () => void,
+): Promise<T> {
   for (let i = 0; ; i++) {
     try {
-      return await scheduled(gate, work, signal);
+      return await scheduled(gate, work, signal, resetTimeout);
     } catch (error) {
       if (i >= MAX_ATTEMPTS - 1 || !retryable(error)) throw error;
       await sleep(retryAfterMs(error) ?? BACKOFF_MS[i] ?? 20_000, signal);
@@ -77,19 +92,25 @@ export function paced<T extends object>(provider: T, gap = MIN_GAP_MS): T {
       if (typeof value !== 'function') return value;
 
       return (...args: unknown[]) => {
-        const signal = (args[0] as { signal?: AbortSignal } | undefined)?.signal;
+        const input = args[0] as { signal?: AbortSignal; resetTimeout?: () => void } | undefined;
+        const signal = input?.signal;
         const call = () => (value as (...a: unknown[]) => unknown).apply(target, args);
 
         // Um gerador já entregou pedaços quando falha: repeti-lo duplicava-os.
         // Espera a vez, mas não se repete.
-        if (prop === 'stream') return streamAfterTurn(gate, call, signal);
-        return attempt(gate, async () => call() as Promise<unknown>, signal);
+        if (prop === 'stream') return streamAfterTurn(gate, call, signal, input?.resetTimeout);
+        return attempt(gate, async () => call() as Promise<unknown>, signal, input?.resetTimeout);
       };
     },
   });
 }
 
-async function* streamAfterTurn(gate: Gate, call: () => unknown, signal?: AbortSignal) {
-  const source = await scheduled(gate, async () => call() as AsyncIterable<unknown>, signal);
+async function* streamAfterTurn(
+  gate: Gate,
+  call: () => unknown,
+  signal?: AbortSignal,
+  resetTimeout?: () => void,
+) {
+  const source = await scheduled(gate, async () => call() as AsyncIterable<unknown>, signal, resetTimeout);
   yield* source;
 }

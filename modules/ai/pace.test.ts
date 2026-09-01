@@ -172,3 +172,42 @@ test('sem saldo não se repete: esperar não carrega a conta', async () => {
   });
   assert.equal(n, 1, 'gastou tentativas numa conta sem saldo');
 });
+
+test('a espera na fila não consome o orçamento de tempo da chamada', async () => {
+  // Este era o defeito: o cronómetro arrancava antes da fila, por isso uma
+  // chamada que esperava quarenta segundos pela vez chegava ao fornecedor com
+  // cinco de orçamento e abortava sem ter feito nada. Numa corrida de cinquenta
+  // chamadas isso acontecia a quase todas.
+  const rearmadoEm: number[] = [];
+  const saiuEm: number[] = [];
+
+  const p = paced({
+    async text(_input?: { resetTimeout?: () => void }) {
+      // Só o espaçamento rearma; o fornecedor não sabe que isto existe.
+      saiuEm.push(Date.now());
+      return 'ok';
+    },
+  });
+
+  comRelogioFalso();
+  try {
+    const args = () => ({ resetTimeout: () => rearmadoEm.push(Date.now()) });
+    const todas = Promise.all([p.text(args()), p.text(args()), p.text(args())]);
+    for (let i = 0; i < 40; i++) {
+      await Promise.resolve();
+      mock.timers.tick(5_000);
+    }
+    await todas;
+  } finally {
+    mock.timers.reset();
+  }
+
+  assert.equal(saiuEm.length, 3);
+  // Cada chamada rearma o cronómetro no instante em que sai, não no instante em
+  // que entrou na fila.
+  assert.equal(rearmadoEm.length, 3);
+  for (let i = 0; i < 3; i++) {
+    assert.equal(rearmadoEm[i], saiuEm[i], `a chamada ${i + 1} não rearmou ao sair`);
+  }
+  assert.ok(saiuEm[2] - saiuEm[0] >= 8_000, 'as chamadas não chegaram sequer a ser espaçadas');
+});

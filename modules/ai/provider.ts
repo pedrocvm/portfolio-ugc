@@ -54,6 +54,9 @@ export type Provider = {
     maxTokens: number;
     images?: { mediaType: string; base64: string }[];
     signal?: AbortSignal;
+    /** Chamado quando a chamada sai mesmo, depois de esperar a vez. Quem tem
+     *  cronómetro rearma-o aqui: o tempo-limite mede o modelo, não a fila. */
+    resetTimeout?: () => void;
   }): Promise<{ raw: unknown; usage: { input: number; output: number; cached: number } }>;
 
   /** Texto simples, para resumos e coisas curtas. */
@@ -79,6 +82,7 @@ export type Provider = {
     maxTokens: number;
     webSearch?: boolean;
     signal?: AbortSignal;
+    resetTimeout?: () => void;
   }): AsyncGenerator<StreamChunk>;
 
   /** Pesquisa na web com o mecanismo nativo do fornecedor. */

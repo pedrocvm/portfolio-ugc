@@ -147,7 +147,16 @@ export async function runPrompt<TInput, TOutput>(
     if (!setup.provider) throw new AiUnavailableError('not_configured', 'Sem credencial.');
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT);
+    const budget = options.timeoutMs ?? DEFAULT_TIMEOUT;
+    // Armado já, para uma chamada sem espaçamento não ficar sem cronómetro; o
+    // espaçamento rearma-o quando a chamada sai mesmo, para a espera na fila
+    // não consumir o orçamento do modelo.
+    let timer = setTimeout(() => controller.abort(), budget);
+    const resetTimeout = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => controller.abort(), budget);
+    };
+
     let call;
     try {
       call = await setup.provider.structured({
@@ -159,6 +168,7 @@ export async function runPrompt<TInput, TOutput>(
         maxTokens: prompt.maxTokens ?? 2048,
         images: options.images ? [...options.images] : undefined,
         signal: controller.signal,
+        resetTimeout,
       });
     } finally {
       clearTimeout(timer);

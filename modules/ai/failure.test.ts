@@ -119,3 +119,22 @@ test('a causa crua fica no cause: a tradução é para a tela, não para o regis
     return true;
   });
 });
+
+/** O erro que apareceu na tela do Carol AI, colado do registo. */
+test('«This operation was aborted» é o nosso cronómetro, e diz-se assim', () => {
+  const abortado = new Error('This operation was aborted');
+  assert.equal(failureKind(abortado), 'timeout');
+
+  const frase = aiFailure(abortado);
+  assert.match(frase, /demorou|esperar/i);
+  // «A IA falhou e não disse porquê» era o que ela via, e não é verdade: o
+  // sistema sabia exactamente o que tinha acontecido.
+  assert.doesNotMatch(frase, /não disse porquê/);
+  assert.doesNotMatch(frase, /[{}"]|abort/i);
+});
+
+test('um abort não se confunde com o serviço estar em baixo', () => {
+  // São coisas diferentes: um é nosso, o outro é deles, e a ação é outra.
+  assert.notEqual(failureKind(new Error('This operation was aborted')), 'overloaded');
+  assert.equal(failureKind(new Error('503 UNAVAILABLE')), 'overloaded');
+});
