@@ -1,4 +1,5 @@
 import 'server-only';
+import { decodeEntities } from '@/lib/html';
 
 /** Cliente REST do Gmail. Só o que a operação precisa: perfil, histórico
  *  incremental, leitura de mensagem e criação de rascunho.
@@ -126,18 +127,14 @@ function extractBody(part: Part | undefined, depth = 0): { text: string; html: s
 }
 
 const stripHtml = (html: string) =>
-  html
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+  decodeEntities(
+    html
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<[^>]+>/g, ' '),
+  )
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
@@ -211,7 +208,7 @@ export function parseMessage(raw: RawMessage): ParsedMessage {
       ? new Date(Number(raw.internalDate)).toISOString()
       : new Date().toISOString(),
     bodyText: body,
-    snippet: raw.snippet ?? body.slice(0, 200),
+    snippet: decodeEntities(raw.snippet ?? body.slice(0, 200)).trim(),
     labels: raw.labelIds ?? [],
   };
 }

@@ -72,11 +72,9 @@ function ReviewThread({ thread, onOpen }: { thread: ThreadRow; onOpen: (id: stri
       <div className="osCardMain">
         <div className="osCardTop">
           <span className="osBrand">{thread.participants[0] ?? thread.provider}</span>
-          {typeof thread.confidence === 'number' ? (
-            <span className="osTag" data-tone="mute">
-              confiança {Math.round(thread.confidence * 100)}%
-            </span>
-          ) : null}
+          {/* A percentagem de confiança é o modelo a falar de si próprio. O
+              que ela precisa de saber é que a decisão é dela, e isso já está
+              dito no título da secção. */}
         </div>
         <h3>{thread.subject}</h3>
         <p className="osWhy">{thread.snippet.slice(0, 240) || 'Sem pré-visualização.'}</p>
@@ -115,7 +113,9 @@ export default function Inbox({
     <>
       <div className="dashBar">
         <h1>Inbox</h1>
-        <span className="dashState">{waiting.length} esperando por você</span>
+        <span className="dashState">
+          {waiting.length === 1 ? '1 à espera de resposta' : `${waiting.length} à espera de resposta`}
+        </span>
       </div>
 
       {!gmailConnected ? (
@@ -127,8 +127,8 @@ export default function Inbox({
       ) : null}
 
       <section className="osSection">
-        <h2>Esperando por você</h2>
-        <p className="osNote">A marca falou por último. Enquanto não responderes, a bola é tua.</p>
+        <h2>Precisam de resposta</h2>
+        <p className="osNote">A marca falou por último e está à espera.</p>
         {waiting.length ? (
           <div className="osRows">
             {waiting.map((t) => (
@@ -136,7 +136,7 @@ export default function Inbox({
             ))}
           </div>
         ) : (
-          <p className="osEmpty">Nenhuma conversa pendente.</p>
+          <p className="osEmpty">Nenhuma conversa à espera de resposta.</p>
         )}
       </section>
 
@@ -158,7 +158,7 @@ export default function Inbox({
       {quiet.length ? (
         <section className="osSection">
           <h2>À espera da marca</h2>
-          <p className="osNote">Já respondeste. O follow-up é agendado sozinho.</p>
+          <p className="osNote">Já foram respondidas. O follow-up marca-se sozinho.</p>
           <div className="osRows">
             {quiet.map((t) => (
               <Thread key={t.id} thread={t} onOpen={setOpenThread} />

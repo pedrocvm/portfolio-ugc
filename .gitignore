@@ -16,3 +16,6 @@ pnpm-workspace.yaml
 # CarolOS: diário de implementação local, nunca no repositório
 .carolos-devlog/
 .local-docs/
+
+# capturas da bancada de QA
+.playwright-mcp/

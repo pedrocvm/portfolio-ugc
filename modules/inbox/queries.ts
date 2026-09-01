@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { supabaseServer } from '@/lib/supabase/server';
+import { decodeEntities } from '@/lib/html';
 
 /** Leituras do Inbox. Uma conversa, não uma caixa de correio: o que interessa
  *  é o estado comercial dela, não a lista de mensagens. */
@@ -99,7 +100,10 @@ export async function inboxThreads(): Promise<{
       opportunityId: t.opportunity_id,
       stage: opportunity?.stage ?? null,
       lastDirection: last?.direction ?? null,
-      snippet: last?.snippet ?? '',
+      // Também na leitura, e não só na ingestão: as mensagens que já estão
+      // gravadas têm o escape do Gmail lá dentro, e reescrevê-las era uma
+      // migração de dados para resolver um problema de apresentação.
+      snippet: decodeEntities(last?.snippet ?? ''),
       replyTypes: t.opportunity_id ? (asksByOpp.get(t.opportunity_id) ?? []) : [],
     };
   });

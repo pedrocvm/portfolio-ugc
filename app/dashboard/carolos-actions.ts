@@ -6,6 +6,8 @@ import { requireUser } from '@/lib/auth';
 import type { FlagKey } from '@/lib/flags';
 import { supabaseServer } from '@/lib/supabase/server';
 import { completeAction, dismissAction, reopenAction as reopen, replanActions, snoozeAction } from '@/modules/actions/service';
+import { ACTION_CTA, type ActionType } from '@/modules/actions/planner';
+import { decodeEntities } from '@/lib/html';
 import { applyCapture, createCapture, discardCapture, type CaptureKind } from '@/modules/capture/service';
 import { draftCase, publishToPortfolio, requestMetrics, setPermission, unpublishFromPortfolio, updateCase } from '@/modules/cases/service';
 import { generateHypotheses, saveContent, saveShotList, shotListFromScript, approveScript } from '@/modules/content/service';
@@ -884,6 +886,16 @@ export type MailThread = {
   /** Para quem vai a resposta: o último remetente de fora. */
   replyTo: string | null;
   messages: MailMessage[];
+  /** O que a marca pediu, já classificado na ingestão. */
+  asks: string[];
+  /** O que o planeador decidiu que é o próximo passo desta oportunidade.
+   *
+   *  É a recomendação, e é determinística: sai das mesmas regras que enchem o
+   *  Hoje. Não depende de haver chave de modelo — o que dependia disso era a
+   *  frase escrita, não a decisão. */
+  next: { title: string; reason: string; cta: string } | null;
+  /** Há quantos dias a marca está à espera. Nulo se a bola não é dela. */
+  waitingDays: number | null;
 };
 
 /** O corpo das mensagens já está salvo na ingestão, por isso ler uma
@@ -915,11 +927,37 @@ export async function readMailThread(threadId: string): Promise<MailThread | { e
     fromAddress: m.from_address,
     fromName: m.from_name,
     subject: m.subject,
-    body: m.body_text,
+    body: decodeEntities(m.body_text ?? ''),
   }));
 
   const brand = thread.brand as { name: string } | { name: string }[] | null;
   const lastInbound = [...messages].reverse().find((m) => m.direction === 'inbound');
+  const last = messages[messages.length - 1];
+
+  // A recomendação e os pedidos, em duas leituras pequenas e em paralelo.
+  const [acoes, classificacao] = await Promise.all([
+    thread.opportunity_id
+      ? db
+          .from('action_item')
+          .select('title, reason, type')
+          .eq('opportunity_id', thread.opportunity_id)
+          .eq('status', 'open')
+          .order('priority_score', { ascending: false })
+          .limit(1)
+      : Promise.resolve({ data: null }),
+    thread.opportunity_id
+      ? db
+          .from('activity_event')
+          .select('payload')
+          .eq('opportunity_id', thread.opportunity_id)
+          .eq('event_type', 'reply.classified')
+          .order('occurred_at', { ascending: false })
+          .limit(1)
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const proxima = acoes.data?.[0] ?? null;
+  const payload = (classificacao.data?.[0]?.payload ?? {}) as { replyTypes?: string[] };
 
   return {
     id: thread.id,
@@ -929,6 +967,18 @@ export async function readMailThread(threadId: string): Promise<MailThread | { e
     opportunityId: thread.opportunity_id,
     replyTo: lastInbound?.fromAddress ?? null,
     messages,
+    asks: payload.replyTypes ?? [],
+    next: proxima
+      ? {
+          title: proxima.title,
+          reason: proxima.reason,
+          cta: ACTION_CTA[proxima.type as ActionType] ?? 'Abrir',
+        }
+      : null,
+    waitingDays:
+      last?.direction === 'inbound'
+        ? Math.max(0, Math.round((Date.now() - new Date(last.sentAt).getTime()) / 86400000))
+        : null,
   };
 }
 

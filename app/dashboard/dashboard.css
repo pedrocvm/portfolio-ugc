@@ -2229,6 +2229,78 @@
   }
 }
 
+/* ── a conversa, pela ordem que serve ──────────────────────────────── */
+
+.mailGist {
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background: var(--areia);
+}
+.mailGistAsk {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--tinta);
+}
+.mailGistWait {
+  margin: 6px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--tinta2);
+}
+.mailNext {
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-left: 2px solid var(--umbra);
+  background: var(--realceLeve);
+}
+.mailNextLabel {
+  display: block;
+  margin-bottom: 5px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.mailNext b {
+  font-size: 18px;
+}
+.mailNext p {
+  margin: 5px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--tinta2);
+}
+/* Catorze emails deixam de ser a primeira coisa. */
+.mailAll > summary {
+  padding: 11px 0;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 15px;
+  color: var(--tinta3);
+  cursor: pointer;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+  transition: color var(--t-fast) var(--ease);
+}
+.mailAll > summary::-webkit-details-marker {
+  display: none;
+}
+.mailAll > summary::before {
+  content: '＋ ';
+}
+.mailAll[open] > summary::before {
+  content: '－ ';
+}
+.mailAll > summary:hover {
+  color: var(--tinta);
+}
+
 /* ── movimento ─────────────────────────────────────────────────────── */
 /* Curvas exponenciais, sem ressalto: entra depressa e assenta devagar. O
    movimento é delicado de propósito — o que tem de se notar é a precisão,
