@@ -298,7 +298,10 @@ export const OutreachResearchSchema = z.object({
   /** O produto, plano ou funcionalidade concreta a nomear. Null se não houver. */
   product: z.string().nullable(),
   category: z.string().nullable(),
-  country: z.string().nullable(),
+  /** Onde estão, de verdade. Um site em português não faz uma empresa
+   *  portuguesa: só conta com prova — morada, registo, domínio nacional. */
+  city: z.string().nullable().describe('cidade da sede, se houver prova'),
+  country: z.string().nullable().describe('país da sede, com prova; null se não souberes'),
   why_fit: z.string(),
   why_now: z.string(),
   why_may_pay: z.string(),

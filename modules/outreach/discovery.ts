@@ -5,6 +5,7 @@ import { aiSetup } from '@/modules/ai/provider';
 import { normalizeDomain, normalizeName } from '@/modules/brands/identity';
 import { guessNiche } from '@/modules/brands/niches';
 import type { Strategy } from './domain';
+import type { ManualIntent } from './intent';
 
 /** Encontrar candidatas.
  *
@@ -54,6 +55,91 @@ Devolve entre 15 e 30 empresas. Prefere menos e boas a muitas e vagas.`;
 
 /** Uma passagem de pesquisa. Devolve lista crua: filtrar é a seguir, e é
  *  determinístico. */
+/** Do que o modelo devolveu para o que o resto do código conhece. Partilhado
+ *  pelas duas descobertas: duas cópias divergiam no dia em que uma mudasse. */
+function shapeFound(data: z.infer<typeof Found>): Discovered[] {
+  return data.brands.flatMap((b): Discovered[] => {
+    const normalizedName = normalizeName(b.name);
+    if (!normalizedName) return [];
+    return [
+      {
+        name: b.name.trim(),
+        normalizedName,
+        website: b.website,
+        domain: normalizeDomain(b.website),
+        country: b.country,
+        description: b.description,
+        why: b.why,
+        source: b.source,
+        nicheId: guessNiche(b.description, b.name)?.id ?? null,
+      },
+    ];
+  });
+}
+
+/** A busca dirigida: o que ela escreveu manda.
+ *
+ *  Separada da automática de propósito. A automática procura dentro do foco
+ *  configurado; esta procura o que foi pedido, e o perfil dela não entra na
+ *  conversa — era isso que fazia «hotéis» devolver apps. */
+export async function discoverForIntent(
+  intent: ManualIntent,
+): Promise<{ found: Discovered[]; failure: string | null; terms: string[] }> {
+  const setup = aiSetup();
+  if (!setup.provider) {
+    return { found: [], failure: 'A IA não está configurada, por isso não há como procurar.', terms: [] };
+  }
+
+  const terms = intent.expansions.map((e) => `${e} ${intent.country}`.trim());
+
+  const ask = [
+    `A Carol pediu: «${intent.rawQuery}».`,
+    `País: ${intent.country}.`,
+    `Procura na web por: ${terms.join(' | ')}.`,
+    '',
+    'REGRA QUE MANDA EM TUDO: devolve só empresas que correspondam ao que ela pediu.',
+    `Se não for ${intent.mainCategory}, não devolvas — mesmo que seja uma empresa excelente,`,
+    'mesmo que seja tecnologia, mesmo que pareça encaixar no trabalho dela.',
+    'Antes preencher menos do que preencher com outra coisa.',
+    '',
+    `A empresa tem de estar sediada em ${intent.country}, com prova (morada, domínio, registo).`,
+    'Um site traduzido para português não faz de uma empresa portuguesa.',
+  ]
+    .filter((l) => l !== undefined)
+    .join('\n');
+
+  try {
+    const prose = await setup.provider.search({
+      model: setup.models.chat,
+      system: PROMPT,
+      user: ask,
+      maxTokens: 4000,
+    });
+    if (!prose.trim()) return { found: [], failure: 'A pesquisa não devolveu nada.', terms };
+
+    const shaped = await setup.provider.structured({
+      model: setup.models.fast,
+      system:
+        'Extrais empresas do texto para o formato pedido. Não inventes nenhuma que não esteja lá. ' +
+        'A descrição tem de dizer o que a empresa faz, para se poder verificar se corresponde ao pedido.',
+      user: prose.slice(0, 30000),
+      schema: Found,
+      jsonSchema: z.toJSONSchema(Found, { io: 'input', unrepresentable: 'any' }) as Record<string, unknown>,
+      maxTokens: 4000,
+    });
+
+    const parsed = Found.safeParse(shaped.raw);
+    if (!parsed.success) return { found: [], failure: 'Não consegui estruturar o resultado.', terms };
+    return { found: shapeFound(parsed.data), failure: null, terms };
+  } catch (error) {
+    return {
+      found: [],
+      failure: error instanceof Error ? error.message : 'A descoberta falhou.',
+      terms,
+    };
+  }
+}
+
 export async function discoverBrands(
   strategy: Strategy,
   extra?: string,
@@ -100,25 +186,7 @@ export async function discoverBrands(
     const parsed = Found.safeParse(shaped.raw);
     if (!parsed.success) return { found: [], failure: 'Não consegui estruturar o resultado.' };
 
-    const found = parsed.data.brands.flatMap((b): Discovered[] => {
-      const normalizedName = normalizeName(b.name);
-      if (!normalizedName) return [];
-      return [
-        {
-          name: b.name.trim(),
-          normalizedName,
-          website: b.website,
-          domain: normalizeDomain(b.website),
-          country: b.country,
-          description: b.description,
-          why: b.why,
-          source: b.source,
-          nicheId: guessNiche(b.description, b.name)?.id ?? null,
-        },
-      ];
-    });
-
-    return { found, failure: null };
+    return { found: shapeFound(parsed.data), failure: null };
   } catch (error) {
     return { found: [], failure: error instanceof Error ? error.message : 'A descoberta falhou.' };
   }

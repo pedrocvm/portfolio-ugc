@@ -19,7 +19,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export function useExit(onDone: () => void, ms = 220) {
   const [closing, setClosing] = useState(false);
   const done = useRef(onDone);
-  done.current = onDone;
+  // Num efeito e não durante o render: escrever numa ref a meio do render é
+  // ilegal em React concorrente, onde um render pode ser deitado fora.
+  useEffect(() => {
+    done.current = onDone;
+  });
 
   const close = useCallback(() => setClosing(true), []);
 

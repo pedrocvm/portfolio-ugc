@@ -11,7 +11,6 @@ import {
   nextActionGroups,
   type ActionType,
   type OpportunitySnapshot,
-  type PlannedAction,
   type Risk,
 } from './planner';
 

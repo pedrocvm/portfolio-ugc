@@ -1,6 +1,3 @@
-// Generated from the live Supabase schema. Do not edit by hand.
-// Regenerate with: npm run db:types
-
 export type Json =
   | string
   | number
@@ -2257,6 +2254,7 @@ export type Database = {
           ai_subject: string
           body: string
           brand_id: string | null
+          city: string | null
           contact_email: string | null
           contact_name: string | null
           contact_role: string | null
@@ -2267,18 +2265,22 @@ export type Database = {
           creative_opportunity: string
           domain: string | null
           email_confidence: string | null
+          field_sources: Json
           fit_band: string | null
           fit_breakdown: Json | null
           fit_score: number | null
           gmail_message_id: string | null
           gmail_thread_id: string | null
           id: string
+          instagram: string | null
           language: string
+          linkedin: string | null
           name: string
           niche_id: string | null
           normalized_name: string
           opportunity_id: string | null
           paid_media_signal: string | null
+          phone: string | null
           portfolio_match: Json | null
           product: string | null
           quality: Json | null
@@ -2288,14 +2290,19 @@ export type Database = {
           researched_at: string | null
           risk: string
           run_id: string
+          saved: boolean
+          saved_at: string | null
+          search_relevance: number | null
           sent_at: string | null
           socials: Json
           sources: Json
           status: string
           subject: string
+          ugc_opportunity: number | null
           ugc_signal: string | null
           updated_at: string
           website: string | null
+          whatsapp: string | null
           why_fit: string
           why_may_pay: string
           why_now: string
@@ -2305,6 +2312,7 @@ export type Database = {
           ai_subject?: string
           body?: string
           brand_id?: string | null
+          city?: string | null
           contact_email?: string | null
           contact_name?: string | null
           contact_role?: string | null
@@ -2315,18 +2323,22 @@ export type Database = {
           creative_opportunity?: string
           domain?: string | null
           email_confidence?: string | null
+          field_sources?: Json
           fit_band?: string | null
           fit_breakdown?: Json | null
           fit_score?: number | null
           gmail_message_id?: string | null
           gmail_thread_id?: string | null
           id?: string
+          instagram?: string | null
           language?: string
+          linkedin?: string | null
           name: string
           niche_id?: string | null
           normalized_name: string
           opportunity_id?: string | null
           paid_media_signal?: string | null
+          phone?: string | null
           portfolio_match?: Json | null
           product?: string | null
           quality?: Json | null
@@ -2336,14 +2348,19 @@ export type Database = {
           researched_at?: string | null
           risk?: string
           run_id: string
+          saved?: boolean
+          saved_at?: string | null
+          search_relevance?: number | null
           sent_at?: string | null
           socials?: Json
           sources?: Json
           status?: string
           subject?: string
+          ugc_opportunity?: number | null
           ugc_signal?: string | null
           updated_at?: string
           website?: string | null
+          whatsapp?: string | null
           why_fit?: string
           why_may_pay?: string
           why_now?: string
@@ -2353,6 +2370,7 @@ export type Database = {
           ai_subject?: string
           body?: string
           brand_id?: string | null
+          city?: string | null
           contact_email?: string | null
           contact_name?: string | null
           contact_role?: string | null
@@ -2363,18 +2381,22 @@ export type Database = {
           creative_opportunity?: string
           domain?: string | null
           email_confidence?: string | null
+          field_sources?: Json
           fit_band?: string | null
           fit_breakdown?: Json | null
           fit_score?: number | null
           gmail_message_id?: string | null
           gmail_thread_id?: string | null
           id?: string
+          instagram?: string | null
           language?: string
+          linkedin?: string | null
           name?: string
           niche_id?: string | null
           normalized_name?: string
           opportunity_id?: string | null
           paid_media_signal?: string | null
+          phone?: string | null
           portfolio_match?: Json | null
           product?: string | null
           quality?: Json | null
@@ -2384,14 +2406,19 @@ export type Database = {
           researched_at?: string | null
           risk?: string
           run_id?: string
+          saved?: boolean
+          saved_at?: string | null
+          search_relevance?: number | null
           sent_at?: string | null
           socials?: Json
           sources?: Json
           status?: string
           subject?: string
+          ugc_opportunity?: number | null
           ugc_signal?: string | null
           updated_at?: string
           website?: string | null
+          whatsapp?: string | null
           why_fit?: string
           why_may_pay?: string
           why_now?: string
@@ -2420,20 +2447,62 @@ export type Database = {
           },
         ]
       }
+      outreach_focus: {
+        Row: {
+          app_user_id: string
+          countries: Json
+          id: string
+          niches: Json
+          per_day: number
+          updated_at: string
+        }
+        Insert: {
+          app_user_id: string
+          countries?: Json
+          id?: string
+          niches?: Json
+          per_day?: number
+          updated_at?: string
+        }
+        Update: {
+          app_user_id?: string
+          countries?: Json
+          id?: string
+          niches?: Json
+          per_day?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_focus_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: true
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_run: {
         Row: {
           app_user_id: string
+          countries: Json
           discovered: number
           error: string | null
           finished_at: string | null
           id: string
           input_tokens: number
+          intent: Json
           kind: string
           output_tokens: number
           partial_failures: Json
+          raw_query: string | null
+          rejected_country: number
+          rejected_irrelevant: number
+          rejected_known: number
           researched: number
           run_date: string
           screened: number
+          search_terms: Json
           selected: number
           started_at: string
           status: string
@@ -2441,17 +2510,24 @@ export type Database = {
         }
         Insert: {
           app_user_id: string
+          countries?: Json
           discovered?: number
           error?: string | null
           finished_at?: string | null
           id?: string
           input_tokens?: number
+          intent?: Json
           kind?: string
           output_tokens?: number
           partial_failures?: Json
+          raw_query?: string | null
+          rejected_country?: number
+          rejected_irrelevant?: number
+          rejected_known?: number
           researched?: number
           run_date: string
           screened?: number
+          search_terms?: Json
           selected?: number
           started_at?: string
           status?: string
@@ -2459,17 +2535,24 @@ export type Database = {
         }
         Update: {
           app_user_id?: string
+          countries?: Json
           discovered?: number
           error?: string | null
           finished_at?: string | null
           id?: string
           input_tokens?: number
+          intent?: Json
           kind?: string
           output_tokens?: number
           partial_failures?: Json
+          raw_query?: string | null
+          rejected_country?: number
+          rejected_irrelevant?: number
+          rejected_known?: number
           researched?: number
           run_date?: string
           screened?: number
+          search_terms?: Json
           selected?: number
           started_at?: string
           status?: string
@@ -3347,6 +3430,210 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      zz_backup_outreach_candidate_20260901: {
+        Row: {
+          ai_body: string | null
+          ai_subject: string | null
+          body: string | null
+          brand_id: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_role: string | null
+          contact_source: string | null
+          content_ideas: Json | null
+          country: string | null
+          created_at: string | null
+          creative_opportunity: string | null
+          domain: string | null
+          email_confidence: string | null
+          fit_band: string | null
+          fit_breakdown: Json | null
+          fit_score: number | null
+          gmail_message_id: string | null
+          gmail_thread_id: string | null
+          id: string | null
+          language: string | null
+          name: string | null
+          niche_id: string | null
+          normalized_name: string | null
+          opportunity_id: string | null
+          paid_media_signal: string | null
+          portfolio_match: Json | null
+          product: string | null
+          quality: Json | null
+          rank: number | null
+          red_flags: Json | null
+          reject_reason: string | null
+          researched_at: string | null
+          risk: string | null
+          run_id: string | null
+          sent_at: string | null
+          socials: Json | null
+          sources: Json | null
+          status: string | null
+          subject: string | null
+          ugc_signal: string | null
+          updated_at: string | null
+          website: string | null
+          why_fit: string | null
+          why_may_pay: string | null
+          why_now: string | null
+        }
+        Insert: {
+          ai_body?: string | null
+          ai_subject?: string | null
+          body?: string | null
+          brand_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          contact_source?: string | null
+          content_ideas?: Json | null
+          country?: string | null
+          created_at?: string | null
+          creative_opportunity?: string | null
+          domain?: string | null
+          email_confidence?: string | null
+          fit_band?: string | null
+          fit_breakdown?: Json | null
+          fit_score?: number | null
+          gmail_message_id?: string | null
+          gmail_thread_id?: string | null
+          id?: string | null
+          language?: string | null
+          name?: string | null
+          niche_id?: string | null
+          normalized_name?: string | null
+          opportunity_id?: string | null
+          paid_media_signal?: string | null
+          portfolio_match?: Json | null
+          product?: string | null
+          quality?: Json | null
+          rank?: number | null
+          red_flags?: Json | null
+          reject_reason?: string | null
+          researched_at?: string | null
+          risk?: string | null
+          run_id?: string | null
+          sent_at?: string | null
+          socials?: Json | null
+          sources?: Json | null
+          status?: string | null
+          subject?: string | null
+          ugc_signal?: string | null
+          updated_at?: string | null
+          website?: string | null
+          why_fit?: string | null
+          why_may_pay?: string | null
+          why_now?: string | null
+        }
+        Update: {
+          ai_body?: string | null
+          ai_subject?: string | null
+          body?: string | null
+          brand_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          contact_source?: string | null
+          content_ideas?: Json | null
+          country?: string | null
+          created_at?: string | null
+          creative_opportunity?: string | null
+          domain?: string | null
+          email_confidence?: string | null
+          fit_band?: string | null
+          fit_breakdown?: Json | null
+          fit_score?: number | null
+          gmail_message_id?: string | null
+          gmail_thread_id?: string | null
+          id?: string | null
+          language?: string | null
+          name?: string | null
+          niche_id?: string | null
+          normalized_name?: string | null
+          opportunity_id?: string | null
+          paid_media_signal?: string | null
+          portfolio_match?: Json | null
+          product?: string | null
+          quality?: Json | null
+          rank?: number | null
+          red_flags?: Json | null
+          reject_reason?: string | null
+          researched_at?: string | null
+          risk?: string | null
+          run_id?: string | null
+          sent_at?: string | null
+          socials?: Json | null
+          sources?: Json | null
+          status?: string | null
+          subject?: string | null
+          ugc_signal?: string | null
+          updated_at?: string | null
+          website?: string | null
+          why_fit?: string | null
+          why_may_pay?: string | null
+          why_now?: string | null
+        }
+        Relationships: []
+      }
+      zz_backup_outreach_run_20260901: {
+        Row: {
+          app_user_id: string | null
+          discovered: number | null
+          error: string | null
+          finished_at: string | null
+          id: string | null
+          input_tokens: number | null
+          kind: string | null
+          output_tokens: number | null
+          partial_failures: Json | null
+          researched: number | null
+          run_date: string | null
+          screened: number | null
+          selected: number | null
+          started_at: string | null
+          status: string | null
+          strategy: Json | null
+        }
+        Insert: {
+          app_user_id?: string | null
+          discovered?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string | null
+          input_tokens?: number | null
+          kind?: string | null
+          output_tokens?: number | null
+          partial_failures?: Json | null
+          researched?: number | null
+          run_date?: string | null
+          screened?: number | null
+          selected?: number | null
+          started_at?: string | null
+          status?: string | null
+          strategy?: Json | null
+        }
+        Update: {
+          app_user_id?: string | null
+          discovered?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string | null
+          input_tokens?: number | null
+          kind?: string | null
+          output_tokens?: number | null
+          partial_failures?: Json | null
+          researched?: number | null
+          run_date?: string | null
+          screened?: number | null
+          selected?: number | null
+          started_at?: string | null
+          status?: string | null
+          strategy?: Json | null
+        }
+        Relationships: []
       }
     }
     Views: {
