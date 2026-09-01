@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  ACTION_CTA,
   planForOpportunity,
   priorityScore,
   staleActionIds,
@@ -296,4 +297,16 @@ test('as oportunidades com o mesmo texto escrevem-se de uma vez', () => {
 
 test('sem oportunidades não se escreve nada', () => {
   assert.deepEqual(nextActionGroups([]), []);
+});
+
+test('nenhum botão da fila está escrito noutra língua', () => {
+  // «Reparer ligação» esteve na fila dela durante semanas. Um erro de uma letra
+  // não parte nada e por isso ninguém o vê.
+  // «follow-up» fica: é termo corrente aqui e dá nome a uma tela inteira.
+  const estrangeiro = /\b(reparer|repair|send|reply|create|deliver|close|review|request)\b/i;
+  for (const [tipo, cta] of Object.entries(ACTION_CTA)) {
+    assert.doesNotMatch(cta, estrangeiro, `«${cta}» (${tipo}) não está em português`);
+    assert.doesNotMatch(cta, /_/, `«${cta}» parece um identificador`);
+    assert.ok(cta.length > 2, `«${cta}» é curto demais para se perceber`);
+  }
 });

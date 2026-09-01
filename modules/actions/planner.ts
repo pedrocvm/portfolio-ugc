@@ -41,7 +41,7 @@ export const ACTION_CTA: Record<ActionType, string> = {
   close: 'Fechar oportunidade',
   review: 'Rever',
   wait_expired: 'A espera terminou',
-  integration_fix: 'Reparer ligação',
+  integration_fix: 'Reparar ligação',
   chase_payment: 'Cobrar',
 };
 
