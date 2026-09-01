@@ -68,41 +68,55 @@ export function stem(word: string): string {
  *  e evitar que «hotéis» e «hotelaria» sejam tratados como coisas diferentes.
  *  Uma busca que não caia em nenhuma família funciona na mesma — usa as próprias
  *  palavras dela. */
-type Family = { id: string; terms: readonly string[]; expand: readonly string[] };
+type Family = {
+  id: string;
+  terms: readonly string[];
+  expand: readonly string[];
+  /** Famílias do mesmo mundo. Um wine hotel é hotelaria e é turismo; penalizar
+   *  por isso deitava fora precisamente os melhores resultados. */
+  related?: readonly string[];
+};
 
 const FAMILIES: readonly Family[] = [
   {
     id: 'hospitality',
+    related: ['travel', 'food'],
     terms: ['hotel', 'hotelaria', 'resort', 'pousada', 'hostel', 'alojamento', 'estadia', 'hospedagem'],
     expand: ['hotéis', 'hotéis boutique', 'hotelaria independente', 'resorts', 'alojamento local'],
   },
   {
     id: 'food',
+    related: ['hospitality', 'travel'],
     terms: ['restaurante', 'gastronomia', 'bistro', 'cafe', 'cafetaria', 'padaria', 'pizzaria', 'marisqueira', 'tasca'],
     expand: ['restaurantes', 'restauração', 'cafés e bistrôs'],
   },
   {
     id: 'fitness',
+    related: ['clinic'],
     terms: ['academia', 'ginasio', 'fitness', 'crossfit', 'pilates', 'yoga', 'treino'],
     expand: ['ginásios', 'estúdios de fitness', 'boxes de crossfit'],
   },
   {
     id: 'clinic',
+    related: ['fitness'],
     terms: ['clinica', 'dentaria', 'dentista', 'medico', 'estetica', 'fisioterapia', 'veterinaria'],
     expand: ['clínicas', 'consultórios'],
   },
   {
     id: 'furniture',
+    related: ['retail'],
     terms: ['mobiliario', 'movel', 'moveis', 'decoracao', 'interiores', 'iluminacao'],
     expand: ['mobiliário', 'marcas de decoração', 'design de interiores'],
   },
   {
     id: 'software',
+    related: ['hardware'],
     terms: ['saas', 'software', 'plataforma', 'app', 'aplicacao', 'aplicativo', 'startup', 'fintech', 'crm', 'erp'],
     expand: ['SaaS', 'aplicações', 'plataformas B2B'],
   },
   {
     id: 'hardware',
+    related: ['software'],
     terms: ['gadget', 'eletronica', 'dispositivo', 'robo', 'aspirador', 'domotica', 'wearable'],
     expand: ['gadgets', 'consumer tech', 'eletrónica de consumo'],
   },
@@ -113,11 +127,13 @@ const FAMILIES: readonly Family[] = [
   },
   {
     id: 'travel',
+    related: ['hospitality', 'food'],
     terms: ['viagem', 'viagens', 'turismo', 'travel', 'enoturismo'],
     expand: ['turismo', 'experiências de viagem'],
   },
   {
     id: 'retail',
+    related: ['furniture'],
     terms: ['loja', 'retalho', 'ecommerce', 'marketplace', 'vestuario', 'moda', 'joalharia'],
     expand: ['comércio', 'lojas online'],
   },
@@ -175,8 +191,15 @@ export function parseManualIntent(rawQuery: string, country: string): ManualInte
     expansions,
     requiredConcepts: required,
     optionalConcepts: secundaria ? secundaria.terms.map(stem) : [],
-    // Nunca se exclui uma família que a própria busca mencionou.
-    exclusions: FAMILIES.filter((f) => f !== principal && f !== secundaria)
+    // Nunca se exclui uma família que a busca mencionou, nem uma do mesmo
+    // mundo: «hotéis» tem de aceitar enoturismo e alojamento rural.
+    exclusions: FAMILIES.filter(
+      (f) =>
+        f !== principal &&
+        f !== secundaria &&
+        !principal?.related?.includes(f.id) &&
+        !secundaria?.related?.includes(f.id),
+    )
       .flatMap((f) => f.terms)
       .map(stem),
     country,

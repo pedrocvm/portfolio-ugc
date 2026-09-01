@@ -192,3 +192,50 @@ test('sem país conhecido não se rejeita: é falta de prova, não prova de falt
   assert.equal(sameCountry('', 'Portugal'), true);
   assert.equal(sameCountry('Portugal', ''), true);
 });
+
+/* ── A regressão, com o que apareceu mesmo no ecrã dela ──────────────────── */
+
+/** As marcas que uma busca por hotéis devolveu de facto, copiadas da tela.
+ *  Quatro eram hotelaria; as outras cinco não tinham nada que ali fazer. */
+const O_QUE_APARECEU = [
+  ['Caravel', 'App de finanças pessoais com foco em controlo manual rigoroso e privacidade absoluta.', false],
+  ['WonderMoney', 'Aplicação de finanças pessoais e gestão de património com Open Banking.', false],
+  ['Azulcer', 'Azulejos artesanais e revestimentos cerâmicos decorativos.', false],
+  ['Costa Nova', 'A marca foca-se em louça e cerâmica para mesa.', false],
+  ['FinHab', 'Aplicativo de construção de hábitos financeiros e orçamento.', false],
+  ['São Lourenço do Barrocal', 'Estadia em hotel de luxo e experiências farm-to-table.', true],
+  ['Torre de Palma Wine Hotel', 'Enoturismo, vinhos de produção própria e experiências de luxo no Alentejo.', true],
+  ['QR Casas de Campo', 'Alojamento em turismo rural e equestre, casas independentes.', true],
+  ['Herdade do Amarelo Natura & Spa', 'Alojamento turístico em espaço rural e spa.', true],
+] as const;
+
+test('a busca por hotéis que correu mal: só a hotelaria sobrevive', () => {
+  const i = intent('hotéis');
+  const passaram: string[] = [];
+  const sairam: string[] = [];
+
+  for (const [nome, desc] of O_QUE_APARECEU) {
+    (relevanceFor(cand(nome, desc), i).passes ? passaram : sairam).push(nome);
+  }
+
+  const deviamPassar = O_QUE_APARECEU.filter(([, , hotel]) => hotel).map(([n]) => n);
+  const deviamSair = O_QUE_APARECEU.filter(([, , hotel]) => !hotel).map(([n]) => n);
+
+  assert.deepEqual(passaram.sort(), [...deviamPassar].sort(), `entrou o que não devia: ${passaram.join(', ')}`);
+  assert.deepEqual(sairam.sort(), [...deviamSair].sort());
+});
+
+test('a quota não se enche com o que sobrou', () => {
+  // Havia nove resultados; quatro eram hotéis. O certo é mostrar quatro, e não
+  // completar dez com apps de finanças.
+  const i = intent('hotéis');
+  const ficam = O_QUE_APARECEU.filter(([n, d]) => relevanceFor(cand(n, d), i).passes);
+  assert.equal(ficam.length, 4);
+});
+
+test('a mesma lista pedida como outra coisa devolve outra coisa', () => {
+  const cerâmica = intent('marcas de louça e cerâmica');
+  const passaram = O_QUE_APARECEU.filter(([n, d]) => relevanceFor(cand(n, d), cerâmica).passes).map(([n]) => n);
+  assert.ok(passaram.includes('Costa Nova'), `a louça não entrou: ${passaram.join(', ')}`);
+  assert.ok(!passaram.includes('Torre de Palma Wine Hotel'), 'um hotel entrou numa busca por louça');
+});
