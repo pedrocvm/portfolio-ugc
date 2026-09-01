@@ -121,3 +121,25 @@ test('o que a pesquisa devolve é exatamente o que o motor pontua', async () => 
   const doMotor = Object.keys(FIT_WEIGHTS).sort();
   assert.deepEqual(doSchema, doMotor);
 });
+
+test('um nicho que ela pôs no foco é prioritário, mesmo não sendo tech', () => {
+  // Um hotel levava a nota de «Outro» e aparecia com «não pertence aos nichos
+  // prioritários» como risco — depois de ela ter posto hotéis de luxo no foco.
+  const sinais = { nicheId: 'other' } as never;
+  const fora = scoreBrandFit(sinais);
+  const dentro = scoreBrandFit(sinais, { inFocus: true, focusLabel: 'Hotéis de luxo' });
+
+  assert.ok(dentro.score > fora.score, 'estar no foco não mudou nada');
+  const linha = dentro.lines.find((l) => l.criterion === 'category')!;
+  assert.match(linha.note ?? '', /Hotéis de luxo: está no foco/);
+});
+
+test('o foco não traz de volta o que está fora da estratégia', () => {
+  // Skincare e haircare estão fora por decisão de produto, em código e não em
+  // prompt. Nenhuma configuração dela pode furar isso.
+  const skincare = { nicheId: 'beauty' } as never;
+  const normal = scoreBrandFit(skincare);
+  const forcado = scoreBrandFit(skincare, { inFocus: true, focusLabel: 'Skincare' });
+  assert.equal(forcado.score, normal.score, 'o foco furou uma exclusão de produto');
+  assert.match(forcado.lines.find((l) => l.criterion === 'category')!.note ?? '', /fora da estratégia/);
+});

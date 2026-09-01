@@ -106,7 +106,16 @@ export const BAND_ACTION: Record<FitBand, string> = {
 
 const clamp = (v: number) => Math.max(0, Math.min(5, v));
 
-export function scoreBrandFit(signals: FitSignals): FitResult {
+export function scoreBrandFit(
+  signals: FitSignals,
+  /** Se a marca cai num nicho que ela pôs no foco.
+   *
+   *  A categoria era pontuada só pela tabela tech-first, por isso um hotel
+   *  levava a nota de «Outro» mesmo depois de ela ter posto hotéis de luxo no
+   *  foco — e aparecia com «não pertence aos nichos prioritários» como risco.
+   *  Quem decide o que é prioritário é ela. */
+  opts: { inFocus?: boolean; focusLabel?: string } = {},
+): FitResult {
   const niche = nicheById(signals.nicheId);
   const excluded = isExcludedNiche(signals.nicheId);
 
@@ -120,10 +129,18 @@ export function scoreBrandFit(signals: FitSignals): FitResult {
     if (criterion === 'category') {
       // A categoria não se adivinha a partir de um sinal solto: vem da política
       // de nichos, que é o único sítio onde skincare/haircare valem zero.
-      raw = niche.fit;
-      note = excluded
-        ? `${niche.label}: fora da estratégia. Sem bónus de categoria.`
-        : `${niche.label} (${niche.tier}).`;
+      // A exclusão continua a ganhar a tudo: skincare e haircare estão fora por
+      // decisão de produto, e o foco não os pode trazer de volta.
+      if (excluded) {
+        raw = niche.fit;
+        note = `${niche.label}: fora da estratégia. Sem bónus de categoria.`;
+      } else if (opts.inFocus) {
+        raw = 5;
+        note = `${opts.focusLabel ?? niche.label}: está no foco dela.`;
+      } else {
+        raw = niche.fit;
+        note = `${niche.label} (${niche.tier}).`;
+      }
     }
 
     const assumed = raw === undefined || raw === null || Number.isNaN(raw);

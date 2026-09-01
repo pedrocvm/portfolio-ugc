@@ -48,7 +48,10 @@ export const tokens = (s: string) => strip(s).split(' ').filter((t) => t.length 
 /** Singular e plural da mesma palavra são a mesma coisa para uma busca. */
 export function stem(word: string): string {
   const w = strip(word);
-  if (w.length <= 4) return w;
+  // A guarda era pelo comprimento da palavra e cortava cedo demais: «apps»
+  // ficava «apps» e nunca batia com «app». Cada regra abaixo guarda-se a si
+  // própria — o que sobra tem de continuar a ser uma palavra.
+  if (w.length < 4) return w;
   if (w.endsWith('oes') || w.endsWith('aes')) return `${w.slice(0, -3)}ao`;
   // -al/-el/-ol/-ul fazem plural em -ais/-eis/-ois/-uis.
   for (const [plural, singular] of [['ais', 'al'], ['eis', 'el'], ['ois', 'ol'], ['uis', 'ul']]) {
@@ -58,7 +61,7 @@ export function stem(word: string): string {
   // O `-es` só é plural depois de r, s ou z: mar→mares, luz→luzes. Em
   // «restaurantes» o plural é só o `s`, e cortar `es` dava «restaurant».
   if (w.endsWith('es') && /[rsz]$/.test(w.slice(0, -2))) return w.slice(0, -2);
-  if (w.endsWith('s')) return w.slice(0, -1);
+  if (w.endsWith('s') && w.length > 3) return w.slice(0, -1);
   return w;
 }
 
@@ -87,7 +90,9 @@ const FAMILIES: readonly Family[] = [
   {
     id: 'food',
     related: ['hospitality', 'travel'],
-    terms: ['restaurante', 'gastronomia', 'bistro', 'cafe', 'cafetaria', 'padaria', 'pizzaria', 'marisqueira', 'tasca'],
+    terms: ['restaurante', 'gastronomia', 'gastronomico', 'bistro', 'cafe', 'cafetaria',
+      'padaria', 'pizzaria', 'marisqueira', 'tasca', 'cozinha', 'chef', 'dining',
+      'jantar', 'menu', 'culinaria'],
     expand: ['restaurantes', 'restauração', 'cafés e bistrôs'],
   },
   {
@@ -370,4 +375,29 @@ export function sameCountry(a: string, b: string): boolean {
     us: 'eua', usa: 'eua', 'united states': 'eua', fr: 'franca', france: 'franca',
   };
   return (alias[A] ?? A) === (alias[B] ?? B);
+}
+
+/* ── A marca cai num nicho que ela escolheu? ─────────────────────────────── */
+
+/** Se o que a marca faz corresponde a um dos nichos do foco.
+ *
+ *  O `niche_id` só conhece a lista de origem: um hotel sai sempre como «Outro»,
+ *  por muito que ela tenha posto hotéis de luxo no foco. Isto compara o texto da
+ *  marca com o que ela escreveu, pela mesma família e pelo mesmo radical que a
+ *  busca dirigida usa — não vale a pena ter duas noções de «isto é aquilo». */
+export function focusMatch(
+  text: string,
+  focusLabels: readonly string[],
+): { matches: boolean; label?: string } {
+  const stems = new Set(tokens(text).map(stem));
+  const familia = familyFor(text);
+
+  for (const label of focusLabels) {
+    if (tokens(label).map(stem).some((t) => stems.has(t))) return { matches: true, label };
+    const f = familyFor(label);
+    if (f && familia && (f.id === familia.id || f.related?.includes(familia.id))) {
+      return { matches: true, label };
+    }
+  }
+  return { matches: false };
 }

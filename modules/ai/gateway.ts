@@ -161,7 +161,7 @@ export async function runPrompt<TInput, TOutput>(
     try {
       call = await setup.provider.structured({
         model,
-        system: prompt.system,
+        system: await withFocus(prompt.system),
         user,
         schema: prompt.schema as z.ZodType<unknown>,
         jsonSchema: toJsonSchema(prompt.schema as z.ZodType<unknown>),
@@ -255,4 +255,26 @@ async function record(
     .maybeSingle();
 
   return data?.id ?? null;
+}
+
+/** Enche o buraco dos nichos prioritários com o foco que ela configurou.
+ *
+ *  A lista estava escrita no prompt. Depois de os nichos passarem a ser dela, o
+ *  prompt continuava a dizer que os prioritários eram SaaS e afins — e o modelo
+ *  obedecia, marcando um hotel como risco por não ser tech numa altura em que
+ *  hotéis já eram prioritários. Duas verdades sobre a mesma coisa, e a errada
+ *  era a que chegava ao modelo. */
+async function withFocus(system: string): Promise<string> {
+  if (!system.includes('{{NICHOS}}')) return system;
+  try {
+    const { readFocus } = await import('@/modules/outreach/focus-service');
+    const focus = await readFocus();
+    const lista = focus.niches
+      .map((n) => (n.note ? `${n.label} (${n.note})` : n.label))
+      .join('; ');
+    return system.replace('{{NICHOS}}', lista);
+  } catch {
+    // Sem foco legível, tira-se a linha em vez de deixar um buraco à vista.
+    return system.replace('{{NICHOS}}', 'os que ela configurou no CarolOS');
+  }
 }

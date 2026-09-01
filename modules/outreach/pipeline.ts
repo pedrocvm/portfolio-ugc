@@ -4,6 +4,7 @@ import { supabaseService } from '@/lib/supabase/service';
 import { scoreBrandFit, type FitSignals } from '@/modules/brands/fit';
 import { localDay } from '@/lib/time';
 import { dedupe, LIMITS, partitionDaily, scoreEmail, strategyFor, suppress, enoughToChooseFrom } from './domain';
+import { focusMatch } from './intent';
 import { discoverBrands, type Discovered } from './discovery';
 import { buildKnownSet, gmailHasHistory } from './suppression';
 import { styleProfileFresh } from './style';
@@ -150,7 +151,15 @@ export async function runDailyOutreach(
       failures.push(`Não consegui pesquisar a ${c.name}.`);
       continue;
     }
-    const fit = scoreBrandFit(r.research.fit_signals as FitSignals);
+    // Prioritário é o que ela escolheu, não o que estava na tabela.
+    const emFoco = focusMatch(
+      [c.name, r.research.category ?? '', r.research.product ?? '', c.description].join(' '),
+      focus.niches.map((n) => n.label),
+    );
+    const fit = scoreBrandFit(r.research.fit_signals as FitSignals, {
+      inFocus: emFoco.matches,
+      focusLabel: emFoco.label,
+    });
     if (fit.score >= LIMITS.minFitScore) qualified++;
     scored.push({ ...r, fit });
   }

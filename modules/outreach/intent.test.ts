@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   RELEVANCE_GATE,
   familyFor,
+  focusMatch,
   opportunityFor,
   parseManualIntent,
   relevanceFor,
@@ -238,4 +239,34 @@ test('a mesma lista pedida como outra coisa devolve outra coisa', () => {
   const passaram = O_QUE_APARECEU.filter(([n, d]) => relevanceFor(cand(n, d), cerâmica).passes).map(([n]) => n);
   assert.ok(passaram.includes('Costa Nova'), `a louça não entrou: ${passaram.join(', ')}`);
   assert.ok(!passaram.includes('Torre de Palma Wine Hotel'), 'um hotel entrou numa busca por louça');
+});
+
+/* ── O foco dela decide o que é prioritário ──────────────────────────────── */
+
+const FOCO = ['SaaS e software', 'Apps e produtos digitais', 'Hotéis de luxo', 'Restaurantes de luxo'];
+
+test('a marca que apareceu marcada como risco está, afinal, no foco dela', () => {
+  // «Pedras Salgadas Spa & Nature Park» veio com «Não pertence aos nichos
+  // prioritários» depois de ela ter posto hotéis de luxo no foco.
+  const m = focusMatch(
+    'Pedras Salgadas Spa & Nature Park — Eco Houses e Tree Houses, resort e alojamento em Portugal',
+    FOCO,
+  );
+  assert.equal(m.matches, true, 'um resort continua fora do foco de hotéis');
+  assert.equal(m.label, 'Hotéis de luxo');
+});
+
+test('o foco reconhece pela família, não só pela palavra exacta', () => {
+  assert.equal(focusMatch('Alojamento turístico em espaço rural', FOCO).matches, true);
+  assert.equal(focusMatch('Fine dining e cozinha de autor', FOCO).matches, true);
+  assert.equal(focusMatch('Plataforma de faturação para PMEs', FOCO).matches, true);
+});
+
+test('o que está fora do foco continua fora', () => {
+  assert.equal(focusMatch('Azulejos artesanais e revestimentos cerâmicos', FOCO).matches, false);
+  assert.equal(focusMatch('Coleira com GPS para cães', FOCO).matches, false);
+});
+
+test('sem foco nenhum, nada é prioritário por acidente', () => {
+  assert.equal(focusMatch('Hotel de luxo no Alentejo', []).matches, false);
 });
