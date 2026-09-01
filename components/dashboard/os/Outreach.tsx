@@ -3,13 +3,16 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import {
-  approveOutreach, discoverNow, draftOutreach, sendApprovedOutreach, sendOutreach, skipOutreach,
+  approveOutreach, draftOutreach, sendApprovedOutreach, sendOutreach, skipOutreach, startDiscovery,
   suppressBrand, updateOutreachDraft,
 } from '@/app/dashboard/outreach-actions';
 import Spinner from '@/components/dashboard/Spinner';
+import { watchDiscovery } from '@/components/dashboard/DiscoveryWatch';
+import { pushToast } from '@/components/dashboard/Toasts';
 import { formatDate } from '@/lib/time';
 import { CONF_LABEL, PAID_LABEL, UGC_LABEL } from '@/modules/outreach/history';
 import { LIMITS } from '@/modules/outreach/domain';
+import { nicheLabel } from '@/modules/brands/niches';
 
 /** A revisão diária.
  *
@@ -65,6 +68,9 @@ function Card({ c }: { c: Candidate }) {
             <span className="osTag" data-tone={c.fit_score >= LIMITS.minFitScore ? 'hot' : 'mute'}>
               encaixe {c.fit_score}
             </span>
+          ) : null}
+          {nicheLabel(c.niche_id) ? (
+            <span className="osTag" data-tone="mute">{nicheLabel(c.niche_id)}</span>
           ) : null}
           {c.paid_media_signal ? (
             <span className="osTag" data-tone={c.paid_media_signal === 'strong' ? 'ok' : 'mute'}>
@@ -303,9 +309,20 @@ export default function Outreach({
           data-primary=""
           type="button"
           disabled={pending}
-          onClick={() => run('now', () => discoverNow())}
+          onClick={() =>
+            // Não se espera pela corrida: são minutos. Arranca, avisa, e o
+            // resto da aplicação continua a responder.
+            run('now', async () => {
+              const r = await startDiscovery();
+              if (r.since) {
+                watchDiscovery(r.since);
+                pushToast('Procura começada. Aviso quando acabar — pode continuar a trabalhar.');
+              }
+              return r;
+            })
+          }
         >
-          {running === 'now' ? <Spinner label="A procurar" /> : null}
+          {running === 'now' ? <Spinner label="A começar" /> : null}
           Procurar marcas agora
         </button>
         {approved > 0 ? (
@@ -325,7 +342,16 @@ export default function Outreach({
         className="osSearch"
         onSubmit={(e) => {
           e.preventDefault();
-          if (ask.trim()) run('ask', () => discoverNow(ask.trim()));
+          if (!ask.trim()) return;
+          run('ask', async () => {
+            const r = await startDiscovery(ask.trim());
+            if (r.since) {
+              watchDiscovery(r.since);
+              pushToast(`A procurar «${ask.trim()}». Aviso quando acabar.`);
+              setAsk('');
+            }
+            return r;
+          });
         }}
       >
         <input

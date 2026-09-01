@@ -155,3 +155,19 @@ export function guessNiche(...texts: (string | null | undefined)[]): Niche | nul
   }
   return best?.niche ?? null;
 }
+
+/** O nicho como se diz, não como se guarda.
+ *
+ *  `home_tech` numa etiqueta é o sistema a falar consigo próprio. Um nicho que
+ *  não esteja na lista devolve null em vez de inventar: melhor uma etiqueta a
+ *  menos do que uma etiqueta errada. */
+export function nicheLabel(id: string | null | undefined): string | null {
+  if (!id) return null;
+  return NICHES.find((n) => n.id === id)?.label ?? null;
+}
+
+/** Uma etiqueta curta, para caber num cartão ao lado de outras. */
+export function nicheShort(id: string | null | undefined): string | null {
+  const full = nicheLabel(id);
+  return full ? (full.split(/\s+e\s+|,\s*/)[0] ?? full) : null;
+}

@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import { nicheShort } from '@/modules/brands/niches';
 import {
-  CONF_LABEL, PAID_LABEL, UGC_LABEL, countryLabel, dayLabel,
+  CONF_LABEL, PAID_LABEL, UGC_LABEL, countryLabel, dayLabel, dayTotals,
   groupByDay, statusLabel, summarize, summarySentence, type HistoryRow,
 } from '@/modules/outreach/history';
 
@@ -200,7 +201,7 @@ export default function OutreachHistory({
 }) {
   const summary = summarize(rows);
   const days = groupByDay(rows);
-  const runByDay = new Map(runs.map((r) => [r.run_date, r]));
+  const totals = dayTotals(runs);
 
   return (
     <>
@@ -263,7 +264,7 @@ export default function OutreachHistory({
       ) : null}
 
       {days.map(({ day, rows: doDia }, i) => {
-        const run = runByDay.get(day);
+        const t = totals.get(day);
         const enviadas = doDia.filter((c) => c.status === 'sent').length;
         return (
           // Os dias antigos ficam fechados: com um mês de corridas, a lista
@@ -275,9 +276,10 @@ export default function OutreachHistory({
                 {doDia.length} {doDia.length === 1 ? 'marca' : 'marcas'}
                 {enviadas ? `, ${enviadas} enviada${enviadas === 1 ? '' : 's'}` : ''}
               </span>
-              {run ? (
+              {t ? (
                 <span className="histDayRun">
-                  {run.discovered} encontradas · {run.researched} pesquisadas · {run.selected} escolhidas
+                  {t.runs > 1 ? `${t.runs} procuras · ` : ''}
+                  {t.discovered} encontradas · {t.researched} pesquisadas · {t.selected} escolhidas
                 </span>
               ) : null}
             </summary>
@@ -287,6 +289,9 @@ export default function OutreachHistory({
                 <summary>
                   <span className="histName">{c.name}</span>
                   {c.fit_score !== null ? <span className="histFit">{c.fit_score}</span> : null}
+                  {nicheShort(c.niche_id) ? (
+                    <span className="histNiche">{nicheShort(c.niche_id)}</span>
+                  ) : null}
                   <span className="histStatus" data-status={c.status}>
                     {statusLabel(c.status)}
                   </span>

@@ -5,6 +5,8 @@ import Assistant from '@/components/assistant/Assistant';
 import { AssistantProvider } from '@/components/assistant/AssistantProvider';
 import Command from '@/components/dashboard/Command';
 import Notifications from '@/components/dashboard/Notifications';
+import Toasts from '@/components/dashboard/Toasts';
+import DiscoveryWatch from '@/components/dashboard/DiscoveryWatch';
 import Logo from '@/components/dashboard/Logo';
 import Menu from '@/components/dashboard/Menu';
 import MobileNav from '@/components/dashboard/MobileNav';
@@ -63,6 +65,8 @@ export default async function AppLayout({
         />
           {/* Fixo no topo, em todos as telas. */}
           <Notifications items={alerts} />
+          <Toasts />
+          <DiscoveryWatch />
           <Command />
           {/* Só na área privada, e só com a bandeira aberta: o portfólio público
               não conhece a Carol AI. */}

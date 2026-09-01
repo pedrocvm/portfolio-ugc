@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Notification } from '@/modules/assistant/service';
 
 /** O que precisa dela, em qualquer tela.
@@ -12,7 +12,52 @@ import type { Notification } from '@/modules/assistant/service';
  *
  *  O que já passou do prazo vem primeiro, porque é trabalho concreto; os avisos
  *  do negócio vêm a seguir, porque são coisas a começar a doer. */
-export default function Notifications({ items }: { items: Notification[] }) {
+/** O que ela dispensou fica dispensado, no browser dela.
+ *
+ *  Um aviso que volta depois de ela o ter lido e resolvido treina-a a ignorar a
+ *  campainha inteira. Não vai para a base de dados de propósito: é uma
+ *  preferência de leitura, não um facto do negócio, e o facto continua na tela
+ *  a que o aviso aponta. */
+const KEY = 'carolos.notif.dismissed';
+let listeners: (() => void)[] = [];
+let cache: string[] | null = null;
+
+const read = (): string[] => {
+  if (cache) return cache;
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) ?? '[]');
+    cache = Array.isArray(raw) ? raw.filter((v) => typeof v === 'string') : [];
+  } catch {
+    cache = [];
+  }
+  return cache;
+};
+
+const EMPTY: string[] = [];
+const dismissedStore = {
+  subscribe(cb: () => void) {
+    listeners.push(cb);
+    return () => {
+      listeners = listeners.filter((l) => l !== cb);
+    };
+  },
+  get: read,
+  getServer: () => EMPTY,
+};
+
+function dismiss(id: string) {
+  cache = [...read().filter((v) => v !== id), id].slice(-200);
+  try {
+    localStorage.setItem(KEY, JSON.stringify(cache));
+  } catch {
+    /* sem armazenamento, some só nesta sessão */
+  }
+  for (const l of listeners) l();
+}
+
+export default function Notifications({ items: all }: { items: Notification[] }) {
+  const dismissed = useSyncExternalStore(dismissedStore.subscribe, dismissedStore.get, dismissedStore.getServer);
+  const items = all.filter((i) => !dismissed.includes(i.id));
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
 
@@ -72,23 +117,29 @@ export default function Notifications({ items }: { items: Notification[] }) {
             <p className="notifEmpty">Nada em atraso e nenhum aviso aberto. Está tudo em dia.</p>
           ) : (
             <ul>
-              {items.map((i) =>
-                i.href ? (
-                  <li key={i.id}>
+              {items.map((i) => (
+                <li key={i.id}>
+                  {i.href ? (
                     <Link href={i.href} data-sev={i.severity} onClick={() => setOpen(false)}>
                       <b>{i.title}</b>
                       <span>{i.detail}</span>
                     </Link>
-                  </li>
-                ) : (
-                  <li key={i.id}>
+                  ) : (
                     <div data-sev={i.severity}>
                       <b>{i.title}</b>
                       <span>{i.detail}</span>
                     </div>
-                  </li>
-                ),
-              )}
+                  )}
+                  <button
+                    className="notifX"
+                    type="button"
+                    onClick={() => dismiss(i.id)}
+                    aria-label={`Dispensar: ${i.title}`}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
             </ul>
           )}
         </div>

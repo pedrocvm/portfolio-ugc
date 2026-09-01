@@ -30,7 +30,14 @@ export type Strategy = {
   seed: string;
 };
 
-const COUNTRIES = ['Portugal', 'Espanha', 'Brasil', 'Reino Unido', 'Alemanha', 'internacional'];
+/** Só onde ela pode escrever na língua dela.
+ *
+ *  A lista tinha Espanha, Reino Unido e Alemanha, e foi de lá que vieram a
+ *  Felmo, a Dogo App e a Personio. Uma marca que só se aborda em inglês é uma
+ *  marca que ela não vai abordar: ocupa uma vaga do dia e desperdiça a pesquisa
+ *  que já foi paga. Marcas de fora entram por serem lusófonas, não por serem
+ *  boas. */
+const COUNTRIES = ['Portugal', 'Brasil', 'empresas lusófonas com atendimento em português'];
 
 /** Ângulos de procura. Rodam para não se encontrar sempre o mesmo tipo de
  *  empresa — «SaaS português» todos os dias devolve a mesma lista à terceira. */

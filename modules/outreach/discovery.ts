@@ -64,6 +64,9 @@ export async function discoverBrands(
   const ask = [
     `Nichos a procurar hoje: ${strategy.niches.join(', ')}.`,
     `Mercados: ${strategy.countries.join(', ')}.`,
+    // A Carol escreve em português. Uma marca que só se aborda em inglês ocupa
+    // uma vaga do dia e queima a pesquisa: é um requisito, não uma preferência.
+    'OBRIGATÓRIO: só marcas que se possam abordar em português — sediadas em Portugal ou no Brasil, ou com equipa de marketing lusófona. Se não tiveres a certeza de que falam português, não a proponhas.',
     `Ângulo: ${strategy.angle}.`,
     extra ? `Pedido específico: ${extra}` : '',
     'Procura na web e devolve as empresas que encontrares.',

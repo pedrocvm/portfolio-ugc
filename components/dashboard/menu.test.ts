@@ -76,3 +76,17 @@ test('o menu cabe: no máximo cinco grupos, nenhum com mais de seis entradas', (
     assert.ok(n <= 6, `o grupo «${name}» tem ${n} entradas`);
   }
 });
+
+/** Lido como texto pela mesma razão que o menu: importar a action puxa o
+ *  Supabase e o `next/cache` para dentro do runner. */
+test('a corrida a mostrar escolhe-se pelo instante, não pelo dia', () => {
+  // Várias corridas partilham a mesma `run_date` — o cron da manhã e cada
+  // «procurar agora». Ordenar por dia empata, o Postgres devolve uma qualquer, e
+  // a busca que ela acabou de fazer parece não ter aparecido.
+  const actions = readFileSync(path.join(ROOT, 'app/dashboard/outreach-actions.ts'), 'utf8');
+  const ordenacoes = [...actions.matchAll(/\.from\('outreach_run'\)[\s\S]{0,400}?\.order\('(\w+)'/g)];
+  assert.ok(ordenacoes.length >= 2, `só encontrei ${ordenacoes.length} leituras de outreach_run`);
+  for (const [, coluna] of ordenacoes) {
+    assert.equal(coluna, 'started_at', `ordenou outreach_run por «${coluna}»`);
+  }
+});

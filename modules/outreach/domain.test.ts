@@ -356,3 +356,16 @@ test('um dia inteiro de prospecção cabe no tempo que a rota dá', async () => 
     `${chamadas} chamadas a ${MIN_GAP_MS}ms dão ${segundos}s, e a rota morre aos 300s`,
   );
 });
+
+test('a procura só vai a sítios onde ela pode escrever em português', () => {
+  // Ela não domina inglês o suficiente para abordar marcas estrangeiras. Uma
+  // marca alemã ocupa uma vaga do dia e queima a pesquisa que já foi paga.
+  const proibidos = /\b(espanha|spain|reino unido|alemanha|germany|frança|itália|estados unidos|eua|usa)\b/i;
+  for (let d = 0; d < 40; d++) {
+    const dia = new Date(2026, 8, 1 + d);
+    for (const pais of strategyFor(dia, []).countries) {
+      assert.doesNotMatch(pais, proibidos, `dia ${d}: foi procurar a ${pais}`);
+      assert.match(pais, /portugal|brasil|portugu|lusófon/i, `${pais} não garante português`);
+    }
+  }
+});

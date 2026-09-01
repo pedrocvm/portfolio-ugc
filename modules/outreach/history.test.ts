@@ -8,6 +8,7 @@ import {
   type HistoryRow,
   dayLabel,
   countryLabel,
+  dayTotals,
 } from './history.ts';
 
 const row = (over: Partial<HistoryRow> = {}): HistoryRow => ({
@@ -141,4 +142,20 @@ test('um país que não conheço passa como veio, não desaparece', () => {
   assert.equal(countryLabel('Estónia'), 'Estónia');
   assert.equal(countryLabel(null), null);
   assert.equal(countryLabel('   '), null);
+});
+
+test('um dia com várias corridas soma-as, em vez de escolher uma', () => {
+  const t = dayTotals([
+    { run_date: '2026-08-31', discovered: 8, researched: 8, selected: 8, status: 'success' },
+    { run_date: '2026-08-31', discovered: 6, researched: 6, selected: 0, status: 'empty' },
+    { run_date: '2026-08-31', discovered: 0, researched: 0, selected: 0, status: 'error' },
+    { run_date: '2026-08-30', discovered: 5, researched: 4, selected: 2, status: 'success' },
+  ]).get('2026-08-31')!;
+  assert.equal(t.runs, 3);
+  assert.equal(t.discovered, 14);
+  assert.equal(t.selected, 8);
+});
+
+test('sem corridas nesse dia, não se inventa um total', () => {
+  assert.equal(dayTotals([]).get('2026-08-31'), undefined);
 });

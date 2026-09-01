@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth';
 import { supabaseServer } from '@/lib/supabase/server';
@@ -16,8 +17,11 @@ export async function todayOutreach() {
 
   const { data: run } = await db
     .from('outreach_run')
-    .select('id, run_date, status, strategy, discovered, screened, selected, partial_failures, finished_at')
-    .order('run_date', { ascending: false })
+    .select('id, run_date, status, strategy, discovered, screened, selected, partial_failures, finished_at, started_at')
+    // Por `run_date` não chega: várias corridas do mesmo dia empatam e o
+    // Postgres devolve uma qualquer — foi por isso que a busca parecia não
+    // aparecer na tela. O instante é único.
+    .order('started_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
@@ -147,6 +151,75 @@ export async function sendApprovedOutreach(): Promise<Result & { sent?: number; 
 }
 
 /** «Procurar marcas agora», e a busca dirigida. Mesmo pipeline, sem duplicar. */
+/** Começa a procura e devolve já.
+ *
+ *  Uma corrida faz até 52 chamadas ao modelo, espaçadas para não estourar a
+ *  cota: são três a quatro minutos. Esperar por ela dentro da ação prendia a
+ *  aplicação inteira — a Carol carregava em «procurar» e não conseguia sequer ir
+ *  ao Inbox. O trabalho segue depois da resposta, com `after`, e a tela pergunta
+ *  de vez em quando se já acabou. */
+export async function startDiscovery(ask?: string): Promise<Result & { since?: string }> {
+  await requireUser();
+  const db = await supabaseServer();
+
+  // Duas corridas ao mesmo tempo duplicavam marcas e cota. Uma de cada vez.
+  const { data: running } = await db
+    .from('outreach_run')
+    .select('id')
+    .eq('status', 'running')
+    .gt('started_at', new Date(Date.now() - 10 * 60_000).toISOString())
+    .limit(1)
+    .maybeSingle();
+  if (running) return { error: 'Já há uma procura a decorrer. Esta acaba primeiro.' };
+
+  const since = new Date().toISOString();
+  after(async () => {
+    const { runDailyOutreach } = await import('@/modules/outreach/pipeline');
+    await runDailyOutreach({ kind: ask ? 'targeted' : 'manual', ask });
+  });
+  return { ok: true, since };
+}
+
+/** Já acabou? A tela pergunta a cada poucos segundos enquanto espera. */
+export async function discoveryStatus(since: string): Promise<{
+  state: 'running' | 'done' | 'unknown';
+  message?: string;
+}> {
+  await requireUser();
+  const db = await supabaseServer();
+
+  const { data: run } = await db
+    .from('outreach_run')
+    .select('status, discovered, screened, researched, selected, partial_failures')
+    .gte('started_at', since)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Ainda não há linha: o `after` arranca depois da resposta chegar ao cliente.
+  if (!run) return { state: 'unknown' };
+  if (run.status === 'running') return { state: 'running' };
+
+  const { runMessage } = await import('@/modules/outreach/domain');
+  const below = await db
+    .from('outreach_candidate')
+    .select('id', { count: 'exact', head: true })
+    .gte('created_at', since)
+    .eq('status', 'researched');
+
+  const out = runMessage({
+    status: run.status as 'success' | 'partial' | 'empty' | 'error',
+    discovered: run.discovered,
+    screened: run.screened,
+    researched: run.researched,
+    selected: run.selected,
+    below: below.count ?? 0,
+    failures: (run.partial_failures as string[] | null) ?? [],
+    blocked: null,
+  });
+  return { state: 'done', message: out.message };
+}
+
 /** Uma busca que devolve «0» sem dizer porquê é inútil. Isto conta o funil:
  *  quantas apareceram, quantas sobreviveram à supressão, quantas foram
  *  pesquisadas, quantas ficaram. É onde ela vê que o problema é o filtro e não
@@ -191,8 +264,8 @@ export async function outreachHistory(status?: string) {
     q,
     db
       .from('outreach_run')
-      .select('id, run_date, kind, status, discovered, screened, researched, selected, partial_failures')
-      .order('run_date', { ascending: false })
+      .select('id, run_date, kind, status, discovered, screened, researched, selected, partial_failures, started_at')
+      .order('started_at', { ascending: false })
       .limit(30),
   ]);
 

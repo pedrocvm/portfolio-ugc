@@ -175,3 +175,35 @@ export function countryLabel(raw: string | null): string | null {
   const limpos = partes.map((p) => PAISES[p.trim().toLowerCase()] ?? p.trim());
   return [...new Set(limpos)].join(' · ');
 }
+
+/** O dia somado, não uma corrida qualquer dele.
+ *
+ *  Um dia pode ter várias corridas — o cron de manhã e cada vez que ela carrega
+ *  em «procurar agora». Mostrar uma delas dava um número que não explicava as
+ *  marcas na lista; mostrar a mais antiga, que era o que acontecia, dava um
+ *  número errado. */
+export type RunLike = {
+  run_date: string;
+  discovered: number;
+  researched: number;
+  selected: number;
+  status: string;
+};
+
+export function dayTotals(runs: readonly RunLike[]): Map<string, {
+  runs: number;
+  discovered: number;
+  researched: number;
+  selected: number;
+}> {
+  const out = new Map<string, { runs: number; discovered: number; researched: number; selected: number }>();
+  for (const r of runs) {
+    const t = out.get(r.run_date) ?? { runs: 0, discovered: 0, researched: 0, selected: 0 };
+    t.runs += 1;
+    t.discovered += r.discovered;
+    t.researched += r.researched;
+    t.selected += r.selected;
+    out.set(r.run_date, t);
+  }
+  return out;
+}
