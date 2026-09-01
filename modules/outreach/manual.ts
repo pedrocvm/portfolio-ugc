@@ -5,7 +5,9 @@ import { localDay } from '@/lib/time';
 import { discoverForIntent } from './discovery';
 import { dedupe, suppress } from './domain';
 import { buildKnownSet } from './suppression';
-import { parseManualIntent, relevanceFor, opportunityFor, type ManualIntent } from './intent';
+import {
+  parseManualIntent, relevanceFor, opportunityFor, sameCountry, type ManualIntent,
+} from './intent';
 import { researchCandidate } from './research';
 
 /** A busca que ela pediu.
@@ -204,20 +206,4 @@ export async function runManualSearch(
   }
 
   return finish(rows.length, failures.length ? 'partial' : 'success');
-}
-
-/** «Portugal» e «PT» são o mesmo sítio; «Portugal» e «Espanha» não são.
- *  Compara-se por prefixo normalizado para não falhar em «Brasil»/«Brazil». */
-export function sameCountry(a: string, b: string): boolean {
-  const n = (s: string) =>
-    s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-  const A = n(a);
-  const B = n(b);
-  if (!A || !B) return true;
-  const alias: Record<string, string> = {
-    pt: 'portugal', br: 'brasil', brazil: 'brasil', es: 'espanha', spain: 'espanha',
-    de: 'alemanha', germany: 'alemanha', uk: 'reino unido', gb: 'reino unido',
-    us: 'eua', usa: 'eua', 'united states': 'eua', fr: 'franca', france: 'franca',
-  };
-  return (alias[A] ?? A) === (alias[B] ?? B);
 }

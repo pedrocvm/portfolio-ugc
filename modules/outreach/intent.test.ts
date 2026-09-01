@@ -6,6 +6,7 @@ import {
   opportunityFor,
   parseManualIntent,
   relevanceFor,
+  sameCountry,
   stem,
 } from './intent.ts';
 
@@ -177,8 +178,7 @@ test('a família principal é a primeira nomeada, não a última', () => {
 
 /* ── País por prova, não por língua ──────────────────────────────────────── */
 
-test('«Portugal» e «PT» são o mesmo sítio; «Portugal» e «Espanha» não são', async () => {
-  const { sameCountry } = await import('./manual.ts');
+test('«Portugal» e «PT» são o mesmo sítio; «Portugal» e «Espanha» não são', () => {
   assert.equal(sameCountry('Portugal', 'PT'), true);
   assert.equal(sameCountry('Brasil', 'Brazil'), true);
   assert.equal(sameCountry('Espanha', 'Spain'), true);
@@ -189,8 +189,6 @@ test('«Portugal» e «PT» são o mesmo sítio; «Portugal» e «Espanha» não
 test('sem país conhecido não se rejeita: é falta de prova, não prova de falta', () => {
   // Rejeitar por não saber deitava fora candidatas boas cuja sede não estava
   // escrita em lado nenhum da página.
-  return import('./manual.ts').then(({ sameCountry }) => {
-    assert.equal(sameCountry('', 'Portugal'), true);
-    assert.equal(sameCountry('Portugal', ''), true);
-  });
+  assert.equal(sameCountry('', 'Portugal'), true);
+  assert.equal(sameCountry('Portugal', ''), true);
 });

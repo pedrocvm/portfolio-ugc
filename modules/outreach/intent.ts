@@ -332,3 +332,19 @@ export function opportunityFor(s: OpportunitySignals): Opportunity {
   const band = score >= 80 ? 'Excelente' : score >= 65 ? 'Bom' : score >= 45 ? 'Razoável' : 'Fraco';
   return { score, band, lines };
 }
+
+/** «Portugal» e «PT» são o mesmo sítio; «Portugal» e «Espanha» não são.
+ *  Compara-se por prefixo normalizado para não falhar em «Brasil»/«Brazil». */
+export function sameCountry(a: string, b: string): boolean {
+  const n = (s: string) =>
+    s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  const A = n(a);
+  const B = n(b);
+  if (!A || !B) return true;
+  const alias: Record<string, string> = {
+    pt: 'portugal', br: 'brasil', brazil: 'brasil', es: 'espanha', spain: 'espanha',
+    de: 'alemanha', germany: 'alemanha', uk: 'reino unido', gb: 'reino unido',
+    us: 'eua', usa: 'eua', 'united states': 'eua', fr: 'franca', france: 'franca',
+  };
+  return (alias[A] ?? A) === (alias[B] ?? B);
+}
