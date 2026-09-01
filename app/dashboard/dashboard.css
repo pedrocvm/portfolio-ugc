@@ -5606,3 +5606,51 @@ a.aiSource:hover {
 .dash .revClear {
   margin-top: 12px;
 }
+
+/* Uma procura a decorrer, visível de qualquer tela. Fica ao lado da campainha,
+   que é onde ela já olha para saber o que está a acontecer. */
+.dash .findingChip {
+  position: fixed;
+  /* Acompanha o sino em vez de adivinhar: ele usa clamp, e com um valor fixo os
+     dois encostavam-se em ecrãs largos. 42px é o sino, 10px é o respiro. */
+  top: calc(clamp(14px, 2vw, 22px) + 4px);
+  right: calc(clamp(16px, 2vw, 28px) + 52px);
+  z-index: var(--z-fab);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px;
+  border: 1px solid var(--areia2);
+  border-radius: 999px;
+  background: var(--papel);
+  font-size: 13px;
+  color: var(--tinta2);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 7%);
+}
+.dash .findingDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--realce);
+  animation: findingPulse 1.4s var(--quart) infinite;
+}
+@keyframes findingPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash .findingDot { animation: none; }
+}
+@media (max-width: 700px) {
+  /* Num ecrã estreito o texto não cabe ao lado da campainha; fica o ponto. */
+  .dash .findingChip {
+    right: calc(clamp(16px, 2vw, 28px) + 50px);
+    padding: 8px;
+    font-size: 0;
+    gap: 0;
+  }
+  .dash .findingDot {
+    width: 9px;
+    height: 9px;
+  }
+}

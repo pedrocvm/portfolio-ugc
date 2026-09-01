@@ -327,3 +327,35 @@ export function planForOpportunity(
 
   return out.sort((a, b) => b.priorityScore - a.priorityScore);
 }
+
+/* ── Replanear em lote ───────────────────────────────────────────────────── */
+
+/** Quais das ações abertas deixaram de se justificar.
+ *
+ *  As chaves são por oportunidade (`opp:<id>:…`), por isso juntá-las todas num
+ *  conjunto só é seguro: uma chave de uma oportunidade nunca colide com a de
+ *  outra, e assim cancela-se tudo numa consulta em vez de uma por oportunidade. */
+export function staleActionIds(
+  open: readonly { id: string; dedupe_key: string | null }[],
+  keep: ReadonlySet<string>,
+): string[] {
+  return open.filter((a) => a.dedupe_key && !keep.has(a.dedupe_key)).map((a) => a.id);
+}
+
+/** Agrupa as oportunidades que ficam com o mesmo texto de próxima ação.
+ *
+ *  O texto é materializado na oportunidade para o funil não ter de ler a fila
+ *  toda. Era um UPDATE por oportunidade — trinta viagens à base para escrever,
+ *  quase sempre, a mesma coisa: a maioria fica sem próxima ação nenhuma. */
+export function nextActionGroups(
+  rows: readonly { id: string; text: string; dueAt: string | null }[],
+): { text: string; dueAt: string | null; ids: string[] }[] {
+  const groups = new Map<string, { text: string; dueAt: string | null; ids: string[] }>();
+  for (const r of rows) {
+    const key = `${r.text} ${r.dueAt ?? ''}`;
+    const g = groups.get(key) ?? { text: r.text, dueAt: r.dueAt, ids: [] };
+    g.ids.push(r.id);
+    groups.set(key, g);
+  }
+  return [...groups.values()];
+}

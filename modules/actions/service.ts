@@ -4,7 +4,16 @@ import { asJson } from '@/lib/supabase/json';
 import { supabaseServer } from '@/lib/supabase/server';
 import { recordEvent, type Db } from '@/modules/activity/service';
 import { expiryStatus } from '@/modules/rights/engine';
-import { planForOpportunity, priorityScore, type ActionType, type OpportunitySnapshot, type PlannedAction, type Risk } from './planner';
+import {
+  planForOpportunity,
+  priorityScore,
+  staleActionIds,
+  nextActionGroups,
+  type ActionType,
+  type OpportunitySnapshot,
+  type PlannedAction,
+  type Risk,
+} from './planner';
 
 /** O planeador corre aqui e escreve em `action_item`. A tela Hoje só lê.
  *
@@ -105,42 +114,6 @@ export async function actionsForOpportunity(opportunityId: string): Promise<Acti
   return ((data ?? []) as unknown as RawAction[]).map(toAction);
 }
 
-async function upsertActions(db: Db, opportunityId: string, brandId: string, planned: PlannedAction[]) {
-  const keep = new Set(planned.map((p) => p.dedupeKey));
-
-  // Fecha o que deixou de se justificar. Cancelado, não apagado: o cartão
-  // existiu e a razão pela qual desapareceu importa.
-  const { data: open } = await db
-    .from('action_item')
-    .select('id, dedupe_key')
-    .eq('opportunity_id', opportunityId)
-    .eq('status', 'open');
-
-  const stale = (open ?? []).filter((a) => a.dedupe_key && !keep.has(a.dedupe_key)).map((a) => a.id);
-  if (stale.length) {
-    await db.from('action_item').update({ status: 'cancelled' }).in('id', stale);
-  }
-
-  if (!planned.length) return;
-
-  await db.from('action_item').upsert(
-    planned.map((p) => ({
-      opportunity_id: opportunityId,
-      brand_id: brandId,
-      type: p.type,
-      title: p.title,
-      reason: p.reason,
-      evidence: asJson(p.evidence),
-      risk: p.risk,
-      due_at: p.dueAt,
-      priority_score: p.priorityScore,
-      status: 'open' as const,
-      requires_approval: p.requiresApproval,
-      dedupe_key: p.dedupeKey,
-    })),
-    { onConflict: 'dedupe_key' },
-  );
-}
 
 /** Reúne o retrato de uma oportunidade a partir do estado já materializado.
  *  Uma consulta por oportunidade em vez de cinco: o Hoje carrega dezenas. */
@@ -248,24 +221,67 @@ export type PlanReport = { opportunities: number; actions: number };
  *  nocturno faz. */
 export async function replanActions(db: Db, opportunityIds?: string[]): Promise<PlanReport> {
   const snapshots = await snapshotOpportunities(db, opportunityIds);
-  let total = 0;
-  for (const snap of snapshots) {
-    const planned = planForOpportunity(snap);
-    await upsertActions(db, snap.id, snap.brandId, planned);
-    total += planned.length;
+  if (snapshots.length === 0) return { opportunities: 0, actions: 0 };
 
-    // O texto da próxima ação é materializado na oportunidade: é o que a
-    // listagem do funil mostra sem ir buscar a fila toda.
-    const top = planned[0];
-    await db
-      .from('opportunity')
-      .update({
-        next_action_text: top?.title ?? '',
-        next_action_due_at: top?.dueAt ?? null,
-      })
-      .eq('id', snap.id);
+  // Em lote, e não uma oportunidade de cada vez. Eram três a quatro idas à base
+  // por oportunidade, em série: com trinta oportunidades, cem viagens antes de a
+  // tela responder — que era o «recalcular fila» a bloquear tudo. São quatro.
+  const plans = snapshots.map((snap) => ({ snap, planned: planForOpportunity(snap) }));
+  const ids = snapshots.map((s) => s.id);
+  const keep = new Set(plans.flatMap((p) => p.planned.map((a) => a.dedupeKey)));
+
+  const { data: open } = await db
+    .from('action_item')
+    .select('id, dedupe_key')
+    .in('opportunity_id', ids)
+    .eq('status', 'open');
+
+  // Cancelado, não apagado: o cartão existiu e a razão de ter desaparecido importa.
+  const stale = staleActionIds(open ?? [], keep);
+  if (stale.length) {
+    await db.from('action_item').update({ status: 'cancelled' }).in('id', stale);
   }
-  return { opportunities: snapshots.length, actions: total };
+
+  const rows = plans.flatMap(({ snap, planned }) =>
+    planned.map((p) => ({
+      opportunity_id: snap.id,
+      brand_id: snap.brandId,
+      type: p.type,
+      title: p.title,
+      reason: p.reason,
+      evidence: asJson(p.evidence),
+      risk: p.risk,
+      due_at: p.dueAt,
+      priority_score: p.priorityScore,
+      status: 'open' as const,
+      requires_approval: p.requiresApproval,
+      dedupe_key: p.dedupeKey,
+    })),
+  );
+  if (rows.length) {
+    await db.from('action_item').upsert(rows, { onConflict: 'dedupe_key' });
+  }
+
+  // O texto da próxima ação é materializado na oportunidade: é o que a listagem
+  // do funil mostra sem ir buscar a fila toda. Quase todas ficam com o mesmo
+  // valor, por isso escrevem-se agrupadas.
+  const groups = nextActionGroups(
+    plans.map(({ snap, planned }) => ({
+      id: snap.id,
+      text: planned[0]?.title ?? '',
+      dueAt: planned[0]?.dueAt ?? null,
+    })),
+  );
+  await Promise.all(
+    groups.map((g) =>
+      db
+        .from('opportunity')
+        .update({ next_action_text: g.text, next_action_due_at: g.dueAt })
+        .in('id', g.ids),
+    ),
+  );
+
+  return { opportunities: snapshots.length, actions: rows.length };
 }
 
 /** Ações que não nascem de uma oportunidade: licenças a expirar, pagamentos

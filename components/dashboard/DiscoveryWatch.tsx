@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { discoveryStatus } from '@/app/dashboard/outreach-actions';
 import { pushToast } from './Toasts';
 
@@ -29,12 +29,16 @@ export function watchDiscovery(since: string) {
 
 export default function DiscoveryWatch() {
   const router = useRouter();
+  // Sem isto, uma procura de quatro minutos é indistinguível de nada a
+  // acontecer: ela carrega, a tela não muda, e carrega outra vez.
+  const [running, setRunning] = useState(false);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     let parado = false;
 
     const stop = () => {
+      setRunning(false);
       try {
         localStorage.removeItem(KEY);
       } catch {
@@ -50,7 +54,11 @@ export default function DiscoveryWatch() {
       } catch {
         return;
       }
-      if (!since) return;
+      if (!since) {
+        setRunning(false);
+        return;
+      }
+      setRunning(true);
 
       if (Date.now() - new Date(since).getTime() > GIVE_UP_MS) {
         stop();
@@ -74,6 +82,13 @@ export default function DiscoveryWatch() {
 
     const arranca = () => {
       clearTimeout(timer);
+      try {
+        // Aparecer só ao primeiro tick punha o indicador cinco segundos depois
+        // do clique, que é precisamente quando ela duvida se carregou.
+        if (localStorage.getItem(KEY)) setRunning(true);
+      } catch {
+        /* sem armazenamento, aparece ao primeiro tick */
+      }
       timer = setTimeout(tick, EVERY_MS);
     };
 
@@ -86,5 +101,11 @@ export default function DiscoveryWatch() {
     };
   }, [router]);
 
-  return null;
+  if (!running) return null;
+  return (
+    <div className="findingChip" role="status">
+      <span className="findingDot" aria-hidden="true" />
+      A procurar marcas
+    </div>
+  );
 }

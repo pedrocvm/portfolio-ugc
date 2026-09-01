@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { planForOpportunity, priorityScore, type OpportunitySnapshot } from './planner.ts';
+import {
+  planForOpportunity,
+  priorityScore,
+  staleActionIds,
+  nextActionGroups,
+  type OpportunitySnapshot,
+} from './planner.ts';
 
 const NOW = new Date('2026-09-01T12:00:00Z');
 const daysAgo = (n: number) => new Date(NOW.getTime() - n * 86400000).toISOString();
@@ -253,4 +259,41 @@ test('uma mensagem de hoje não diz «há 0 dias»', () => {
   const hoje = planForOpportunity(snap({ awaitingReplySince: daysAgo(0) }), NOW)[0];
   assert.match(hoje.reason, /Chegou hoje/);
   assert.doesNotMatch(hoje.reason, /0 dias/);
+});
+
+/* ── Replanear em lote ───────────────────────────────────────────────────── */
+
+test('só se cancela o que deixou de estar planeado', () => {
+  const stale = staleActionIds(
+    [
+      { id: 'a', dedupe_key: 'opp:1:respond' },
+      { id: 'b', dedupe_key: 'opp:1:follow_up' },
+      { id: 'c', dedupe_key: null },
+    ],
+    new Set(['opp:1:respond']),
+  );
+  assert.deepEqual(stale, ['b']);
+});
+
+test('uma ação sem chave nunca é cancelada por engano', () => {
+  // Sem chave não há como saber se ainda se justifica; cancelar às cegas
+  // apagava trabalho que ela já via na fila.
+  assert.deepEqual(staleActionIds([{ id: 'x', dedupe_key: null }], new Set()), []);
+});
+
+test('as oportunidades com o mesmo texto escrevem-se de uma vez', () => {
+  const groups = nextActionGroups([
+    { id: '1', text: '', dueAt: null },
+    { id: '2', text: '', dueAt: null },
+    { id: '3', text: 'Responder', dueAt: '2026-09-02' },
+    { id: '4', text: 'Responder', dueAt: '2026-09-03' },
+  ]);
+  assert.equal(groups.length, 3, 'a maioria fica sem próxima ação e devia agrupar-se');
+  assert.deepEqual(groups.find((g) => g.text === '')!.ids, ['1', '2']);
+  // Mesmo texto mas prazo diferente não é o mesmo estado.
+  assert.equal(groups.filter((g) => g.text === 'Responder').length, 2);
+});
+
+test('sem oportunidades não se escreve nada', () => {
+  assert.deepEqual(nextActionGroups([]), []);
 });
