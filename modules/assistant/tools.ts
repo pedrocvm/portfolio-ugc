@@ -21,9 +21,21 @@ export type ToolContext = {
 
 export type ToolResult = { data: unknown; sources: Source[] };
 
+/** O que uma ferramenta pode fazer ao mundo.
+ *
+ *  `read`   lê. Corre sempre, sem perguntar.
+ *  `write`  muda alguma coisa cá dentro, e desfaz-se. Corre quando ela pede.
+ *  `high`   sai para fora, mexe em dinheiro, ou não se desfaz.
+ *
+ *  As `high` não estão registadas e não podem correr por aqui. O modelo prepara
+ *  e mostra; quem envia é ela, num botão. É a regra 3 do CarolOS, e a forma de
+ *  a garantir é não existir caminho — não é lembrar-se de a verificar. */
+export type ToolRisk = 'read' | 'write' | 'high';
+
 export type Tool = {
   name: string;
   description: string;
+  risk: ToolRisk;
   input: z.ZodType;
   run: (args: never, ctx: ToolContext) => Promise<ToolResult>;
 };
@@ -45,8 +57,9 @@ function define<S extends z.ZodType>(
   description: string,
   input: S,
   run: (args: z.infer<S>, ctx: ToolContext) => Promise<ToolResult>,
+  risk: ToolRisk = 'read',
 ): Tool {
-  return { name, description, input, run: run as Tool['run'] };
+  return { name, description, risk, input, run: run as Tool['run'] };
 }
 
 /* ── Marcas e relação ────────────────────────────────────────────────────── */
@@ -562,6 +575,7 @@ const createMemoryCandidate = define(
     if (error) throw new Error(`create_memory_candidate: ${error.message}`);
     return { data: { id: data?.id, status: data?.status, needsConfirmetion: status === 'proposed' }, sources: [] };
   },
+  'write',
 );
 
 
@@ -624,6 +638,7 @@ const createFollowupDraft = define(
       sources: [{ id: followup_id, type: 'followup' as const, label: 'Follow-up', at: null, href: '/dashboard/followups' }],
     };
   },
+  'write',
 );
 
 const createNote = define(
@@ -648,6 +663,7 @@ const createNote = define(
     if (error) throw new Error(`create_note: ${error.message}`);
     return { data: { saved: true }, sources: [] };
   },
+  'write',
 );
 
 const snoozeFollowupTool = define(
@@ -664,6 +680,7 @@ const snoozeFollowupTool = define(
     if (error) throw new Error(`snooze_followup: ${error.message}`);
     return { data: { dueAt: due }, sources: [] };
   },
+  'write',
 );
 
 const getInsights = define(
@@ -761,6 +778,7 @@ const updateOutreachDraftTool = define(
     if (error) throw new Error(`update_outreach_draft: ${error.message}`);
     return { data: { saved: true, sent: false, note: 'Salvo. O envio continua a passar por ela.' }, sources: [] };
   },
+  'write',
 );
 
 const approveOutreachTool = define(
@@ -773,6 +791,7 @@ const approveOutreachTool = define(
     if (error) throw new Error(`approve_outreach: ${error.message}`);
     return { data: { approved: true, sent: false }, sources: [] };
   },
+  'write',
 );
 
 const prepareOutreachSend = define(
@@ -808,6 +827,170 @@ const prepareOutreachSend = define(
   },
 );
 
+/* ── Operar o CarolOS ────────────────────────────────────────────────────── */
+
+/** Daqui para baixo, a Carol AI deixa de ser só consultiva.
+ *
+ *  Tudo o que está aqui é reversível e fica cá dentro: começar uma busca,
+ *  mudar o foco, adiar um cartão, guardar uma captura. Nada disto sai para
+ *  fora nem fecha um negócio — essas continuam a ser dela, num botão. */
+
+const startProspecting = define(
+  'start_prospecting',
+  'Começa uma busca de marcas com um pedido concreto («hotéis de luxo no Porto»). A busca demora minutos e corre em segundo plano; responde logo. Não envia nada a ninguém.',
+  z.object({
+    query: z.string().min(2).describe('o que procurar, em linguagem normal'),
+    country: z.string().optional().describe('país; por omissão Portugal'),
+  }),
+  async ({ query, country }) => {
+    const { startManualSearch } = await import('@/app/dashboard/outreach-actions');
+    const r = await startManualSearch(query, country ?? 'Portugal');
+    return {
+      data: r.error
+        ? { started: false, reason: r.error }
+        : {
+            started: true,
+            query,
+            country: country ?? 'Portugal',
+            note: 'A busca está a correr. Os resultados aparecem na Prospecção, com o email já escrito para as que passarem o corte. Nada sai sem ela aprovar.',
+          },
+      sources: [],
+    };
+  },
+  'write',
+);
+
+const readProspectingFocus = define(
+  'get_prospecting_focus',
+  'Mostra a configuração da busca automática: que nichos procura, em que países, e quantas marcas por dia.',
+  z.object({}),
+  async () => {
+    const { getFocus } = await import('@/app/dashboard/outreach-actions');
+    const focus = await getFocus();
+    return { data: focus, sources: [] };
+  },
+);
+
+const setProspectingFocus = define(
+  'set_prospecting_focus',
+  'Muda a busca automática: nichos, países e quantas por dia. Substitui a configuração inteira, por isso lê primeiro com get_prospecting_focus e devolve a lista completa que deve ficar. Reversível.',
+  z.object({
+    niches: z
+      .array(z.object({ label: z.string(), notes: z.string().optional() }))
+      .optional()
+      .describe('os nichos a procurar, com o que olhar dentro de cada um'),
+    countries: z.array(z.string()).optional(),
+    perDay: z.number().int().min(1).max(50).optional(),
+  }),
+  async (input) => {
+    const { getFocus, saveFocus } = await import('@/app/dashboard/outreach-actions');
+    const { nicheIdFor } = await import('@/modules/outreach/focus');
+    const actual = await getFocus();
+
+    // O que ela já tinha marcado como favorito continua favorito: o modelo
+    // recebe rótulos e notas, não a preferência dela sobre a ordem.
+    const favoritos = new Set(actual.niches.filter((n) => n.favourite).map((n) => n.id));
+    const niches = input.niches
+      ? input.niches.map((n) => ({
+          id: nicheIdFor(n.label),
+          label: n.label,
+          favourite: favoritos.has(nicheIdFor(n.label)),
+          note: n.notes,
+        }))
+      : actual.niches;
+
+    const r = await saveFocus({
+      niches,
+      countries: input.countries ?? actual.countries,
+      perDay: input.perDay ?? actual.perDay,
+    });
+    return {
+      data: r.error
+        ? { saved: false, reason: r.error }
+        : {
+            saved: true,
+            focus: { niches, countries: input.countries ?? actual.countries, perDay: input.perDay ?? actual.perDay },
+            note: 'A próxima busca automática já usa isto.',
+          },
+      sources: [],
+    };
+  },
+  'write',
+);
+
+const resolveTodayAction = define(
+  'resolve_today_action',
+  'Fecha ou adia um cartão da fila do Hoje. «done» quando ela já tratou do assunto; «snooze» com dias para voltar mais tarde. Desfaz-se.',
+  z.object({
+    action_id: z.string().uuid(),
+    decision: z.enum(['done', 'snooze']),
+    days: z.number().int().min(1).max(60).optional().describe('só para snooze; por omissão 3'),
+  }),
+  async ({ action_id, decision, days }) => {
+    const { doneAction, snooze } = await import('@/app/dashboard/carolos-actions');
+    const r = decision === 'done' ? await doneAction(action_id) : await snooze(action_id, days ?? 3);
+    return {
+      data: r.error
+        ? { ok: false, reason: r.error }
+        : {
+            ok: true,
+            decision,
+            note:
+              decision === 'done'
+                ? 'Saiu da fila. Se o assunto voltar a mexer, o cartão volta.'
+                : `Volta daqui a ${days ?? 3} dias.`,
+          },
+      sources: [],
+    };
+  },
+  'write',
+);
+
+const captureSomething = define(
+  'capture_something',
+  'Guarda um link, uma conversa colada, um briefing ou uma nota para o CarolOS processar. O tipo é detectado sozinho.',
+  z.object({
+    content: z.string().min(2).describe('o texto ou o endereço'),
+    note: z.string().optional().describe('contexto que ela tenha dado'),
+  }),
+  async ({ content, note }) => {
+    const { detectKind } = await import('@/modules/capture/detect');
+    const { capture } = await import('@/app/dashboard/carolos-actions');
+    const palpite = detectKind(content);
+    const r = await capture(palpite.kind, content, note ?? '');
+    return {
+      data: r.error
+        ? { saved: false, reason: r.error }
+        : { saved: true, understoodAs: palpite.label, note: 'Guardado. Aparece na Captura quando estiver processado.' },
+      sources: [],
+    };
+  },
+  'write',
+);
+
+const findAnything = define(
+  'find_anything',
+  'Procura em tudo ao mesmo tempo: marcas, negócios, pessoas, documentos e conteúdo. Usa isto quando ela nomeia alguma coisa e não se sabe onde vive.',
+  z.object({ query: z.string().min(2) }),
+  async ({ query }) => {
+    const { searchEverything } = await import('@/app/dashboard/search-actions');
+    const hits = await searchEverything(query);
+    // As fontes são citadas com o tipo que a interface já sabe desenhar. Um
+    // tipo novo só para isto obrigava a mexer no desenho da citação para não
+    // ganhar nada: o que interessa é o link.
+    return {
+      data: { hits },
+      sources: hits.slice(0, 8).map((h) => ({
+        id: h.id,
+        type: h.group === 'Marcas' ? ('brand' as const) : ('document' as const),
+        label: h.label,
+        at: null,
+        href: h.href,
+      })),
+    };
+  },
+);
+
 export const TOOLS: Tool[] = [
   searchBrands, getBrand, getBrandActivity,
   searchOpportunities, getOpportunity,
@@ -820,6 +1003,8 @@ export const TOOLS: Tool[] = [
   createFollowupDraft, createNote, snoozeFollowupTool,
   getDailyOutreach, getOutreachCandidate, updateOutreachDraftTool,
   approveOutreachTool, prepareOutreachSend,
+  startProspecting, readProspectingFocus, setProspectingFocus,
+  resolveTodayAction, captureSomething, findAnything,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));

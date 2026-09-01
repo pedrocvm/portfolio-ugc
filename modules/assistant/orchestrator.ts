@@ -3,7 +3,7 @@ import 'server-only';
 import { z } from 'zod';
 import { aiSetup, type ToolCall, type ToolReply, type Turn as ProviderTurn } from '@/modules/ai/provider';
 import { supabaseServer } from '@/lib/supabase/server';
-import { classifyDomain, memoryCandidate, OFF_TOPIC_REPLY, shouldUseTools, windowTurns, type Gate, type Source } from './domain';
+import { classifyDomain, memoryCandidate, needsConfirmetion, OFF_TOPIC_REPLY, shouldUseTools, windowTurns, type Gate, type Source } from './domain';
 import { assistantConfig } from './config';
 import { CORE_PROMPT, PROMPT_VERSION, situationPrompt } from './prompt';
 import { byName, TOOLS, type ToolContext } from './tools';
@@ -47,6 +47,12 @@ const STATUS: Record<string, string> = {
   get_outreach_candidate: 'A ler a pesquisa da marca…',
   update_outreach_draft: 'A reescrever o email…',
   approve_outreach: 'A aprovar…',
+  start_prospecting: 'A começar a busca…',
+  get_prospecting_focus: 'A ver o que procura sozinho…',
+  set_prospecting_focus: 'A mudar o que procurar…',
+  resolve_today_action: 'A tratar da fila…',
+  capture_something: 'A guardar…',
+  find_anything: 'A procurar em tudo…',
   prepare_outreach_send: 'A verificar o envio…',
 };
 
@@ -211,6 +217,30 @@ export async function* runAssistant(input: {
 
         if (!tool) {
           replies.push({ id: call.id, name: call.name, output: 'Ferramenta desconhecida.', isError: true });
+          continue;
+        }
+
+        // Regra 3 do CarolOS, verificada no sítio onde as ferramentas correm e
+        // não só na lista onde são registadas. Nenhuma ferramenta de alto risco
+        // está registada — isto existe para o dia em que alguém registar uma
+        // sem reparar. O modelo recebe a recusa como resultado e explica-a; não
+        // ganha forma de contornar.
+        if (tool.risk === 'high' || needsConfirmetion(tool.name)) {
+          replies.push({
+            id: call.id,
+            name: call.name,
+            output: JSON.stringify({
+              refused: true,
+              reason:
+                'Esta ação sai para fora ou não se desfaz, por isso não corre por aqui. Prepara o que for preciso, mostra-lhe, e diz-lhe onde é o botão.',
+            }),
+          });
+          if (run) {
+            await db.from('assistant_tool_call').insert({
+              run_id: run.id, tool: call.name, arguments: {},
+              status: 'error', duration_ms: 0, error: 'recusada: acao de alto risco',
+            });
+          }
           continue;
         }
 
