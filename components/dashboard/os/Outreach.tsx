@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import {
-  approveOutreach, draftOutreach, sendApprovedOutreach, sendOutreach, skipOutreach, startDiscovery,
+  approveOutreach, discardMany, draftOutreach, sendApprovedOutreach, sendOutreach, skipOutreach,
+  startDiscovery,
   suppressBrand, updateOutreachDraft,
 } from '@/app/dashboard/outreach-actions';
 import Spinner from '@/components/dashboard/Spinner';
@@ -83,6 +84,24 @@ function Card({ c }: { c: Candidate }) {
         ) : null}
 
         <span className="revState">{pronta ? 'Ver e enviar' : semEmail ? 'Ver' : 'Ler'}</span>
+
+        {status !== 'sent' ? (
+          <button
+            className="revX"
+            type="button"
+            disabled={pending}
+            title="Descartar esta marca"
+            aria-label={`Descartar ${c.name}`}
+            onClick={(e) => {
+              // Dentro de um <summary>, um clique abre a linha. Este não.
+              e.preventDefault();
+              e.stopPropagation();
+              run('skip', () => skipOutreach(c.id), () => setGone(true));
+            }}
+          >
+            {running === 'skip' ? <Spinner label="A descartar" /> : '×'}
+          </button>
+        ) : null}
 
         {/* Dentro do summary: a barra serve para ler a linha fechada, e fora
             dele só aparecia depois de ela já ter aberto. */}
@@ -407,6 +426,23 @@ export default function Outreach({
                 <Card key={c.id} c={c} />
               ))}
             </div>
+            {section === 'below' && rows.length > 1 ? (
+              <button
+                className="osPageBtn revClear"
+                type="button"
+                disabled={pending}
+                onClick={() =>
+                  run(`clear-${section}`, async () => {
+                    const r = await discardMany(rows.map((c) => c.id));
+                    if (r.discarded) pushToast(`${r.discarded} marcas de lado.`);
+                    return r;
+                  })
+                }
+              >
+                {running === `clear-${section}` ? <Spinner label="A descartar" /> : null}
+                Descartar as {rows.length} abaixo do corte
+              </button>
+            ) : null}
           </section>
         ))
       )}

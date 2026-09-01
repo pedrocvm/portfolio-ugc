@@ -360,3 +360,28 @@ export async function draftOutreach(id: string): Promise<Result & { subject?: st
   revalidatePath('/dashboard/outreach');
   return { ok: true, subject: written.subject, body: written.body };
 }
+
+/** Descarta várias de uma vez.
+ *
+ *  As que ficam abaixo do corte são as que enchem a lista, e mandá-las embora
+ *  uma a uma é trabalho a sério quando são doze. Continuam a existir na base de
+ *  propósito: é isso que impede a descoberta de amanhã de as encontrar outra vez
+ *  e pagar a pesquisa de novo. Ficam no histórico, em «De lado». */
+export async function discardMany(ids: string[]): Promise<Result & { discarded?: number }> {
+  await requireUser();
+  const validos = ids.filter((id) => Uuid.safeParse(id).success);
+  if (validos.length === 0) return { error: 'Nada para descartar.' };
+
+  const db = await supabaseServer();
+  const { error, count } = await db
+    .from('outreach_candidate')
+    .update({ status: 'skipped' }, { count: 'exact' })
+    .in('id', validos)
+    // Uma que já saiu não se descarta: o email está enviado e o registo é o que
+    // prova isso.
+    .neq('status', 'sent');
+  if (error) return { error: 'Não consegui descartar.' };
+
+  revalidatePath('/dashboard/outreach');
+  return { ok: true, discarded: count ?? validos.length };
+}
