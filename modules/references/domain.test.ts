@@ -5,6 +5,7 @@ import {
   asDate,
   dedupeReferences,
   freshnessOf,
+  looksLikeVideoUrl,
   normalizeReferenceUrl,
   rankReferences,
   referenceIsUsable,
@@ -174,4 +175,62 @@ test('o ranking corta em três e deixa as inúteis de fora', () => {
     true,
   );
   assert.ok(top[0].score >= top[1].score && top[1].score >= top[2].score);
+});
+
+/** As duas únicas referências que a primeira corrida real salvou.
+ *
+ *  A pesquisa devolve fichas de citação em base64; o modelo, proibido de
+ *  inventar links, pegou numa e vestiu-a de YouTube. Abre em «Este vídeo não
+ *  está disponível», e as ideias saíam pobres porque não havia vídeo nenhum
+ *  por trás delas. */
+test('uma ficha de citação vestida de YouTube não é um endereço de vídeo', () => {
+  const falso =
+    'https://www.youtube.com/watch?v=AUZIYQHiWvUJcyIvSfz4MLx7V26ueqJObzTW8ndk_fjeHA54xk3-' +
+    'iGQT30ws3xCvdnXLisGZGXuDMZ6U9-6u_xXX20f-C5yHM-nNY5EbSbWb1rBsky6f6iYuHR1ZtBSDeS114A==';
+  assert.equal(looksLikeVideoUrl(falso), false);
+  assert.ok(
+    referenceProblems(ref({ sourceUrl: falso, platform: 'youtube' })).includes(
+      'o endereço não tem a forma de um vídeo daquela plataforma',
+    ),
+  );
+});
+
+test('os endereços verdadeiros de cada plataforma passam', () => {
+  for (const url of [
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    'https://youtu.be/dQw4w9WgXcQ',
+    'https://www.youtube.com/shorts/dQw4w9WgXcQ',
+    'https://www.instagram.com/reel/C8xTqPqI2xY/',
+    'https://www.instagram.com/p/C8xTqPqI2xY/',
+    'https://www.tiktok.com/@carol/video/7401234567890123456',
+    'https://www.facebook.com/ads/library/?id=1234567890',
+    // Um blog não é plataforma conhecida: passa, porque a referência pode
+    // estar lá e recusar tudo era apertar mais do que o problema.
+    'https://algumblog.pt/2026/melhores-reels',
+  ]) {
+    assert.equal(looksLikeVideoUrl(url), true, url);
+  }
+});
+
+test('um perfil não é um vídeo, e um id curto de YouTube também não', () => {
+  assert.equal(looksLikeVideoUrl('https://www.youtube.com/watch?v=abc'), false);
+  assert.equal(looksLikeVideoUrl('https://www.youtube.com/@algumcanal'), false);
+  assert.equal(looksLikeVideoUrl('https://www.instagram.com/carolxqueiroz'), false);
+});
+
+/** Ela publica Reels e TikToks. O YouTube estava a ganhar por ser a única
+ *  plataforma que a pesquisa consegue citar, não por ser melhor molde. */
+test('entre duas referências iguais, ganha a do formato que ela publica', () => {
+  const igual = { publishedAt: '2026-08-20', durationSeconds: 28 };
+  const reel = scoreReference(
+    ref({ ...igual, platform: 'instagram', sourceUrl: 'https://www.instagram.com/reel/C8xTqPqI2xY/' }),
+    link(),
+    NOW,
+  );
+  const tube = scoreReference(
+    ref({ ...igual, platform: 'youtube', sourceUrl: 'https://youtu.be/dQw4w9WgXcQ' }),
+    link(),
+    NOW,
+  );
+  assert.ok(reel.score > tube.score, `reel ${reel.score} vs youtube ${tube.score}`);
 });

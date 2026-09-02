@@ -810,7 +810,7 @@ export const findBrandReferences: Prompt<
   CreativeReferences
 > = {
   task: 'creative_references',
-  version: 'v1',
+  version: 'v2',
   tier: 'fast',
   schema: CreativeReferencesSchema,
   maxTokens: 4000,
@@ -830,6 +830,11 @@ conseguir gravá-la sozinha, em casa, com celular e tripé.
 REGRAS:
 - Só entra o que tem endereço. Se o texto não trouxer um URL, não inventes um:
   deixa a referência de fora.
+- O endereço tem de ter a forma de um vídeo daquela plataforma:
+  instagram.com/reel/CÓDIGO, tiktok.com/@perfil/video/NÚMERO,
+  youtube.com/shorts/ID_DE_11_CARACTERES. Uma ficha de citação ou uma cadeia
+  longa em base64 não é um endereço: não a vistas de link de vídeo.
+- A plataforma vai como está no endereço. Um Reel não se declara \`youtube\`.
 - Só entra o que tem análise: estrutura, gancho, estilo de edição, e porque
   funciona.
 - A adaptação nomeia o produto DESTA marca. «Fazer um vídeo parecido» não é uma

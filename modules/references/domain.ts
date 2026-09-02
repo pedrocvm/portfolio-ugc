@@ -102,6 +102,56 @@ export function asDate(raw: string | null | undefined): string | null {
  *  e igualmente inútil. */
 const FAKE_URL = /(\.\.\.|…|\bVIDEO_?ID\b|\bEXAMPLE\b|\bexemplo\b|\bxxx+\b|\{|\}|<|>)/i;
 
+/** A forma de um endereço de vídeo em cada plataforma.
+ *
+ *  O teste de reticências não chegou. A pesquisa devolve fichas de citação —
+ *  cadeias longas em base64 — e o modelo, proibido de inventar um link, pegou
+ *  numa dessas e vestiu-a de YouTube:
+ *  `youtube.com/watch?v=AUZIYQHiWvUJ…iGQT30ws3xCvdnXLisGZ==`. Tem esquema, tem
+ *  domínio, não tem reticências, e abre em «Este vídeo não está disponível».
+ *  Foram as duas únicas referências que a primeira corrida real salvou, e são
+ *  a razão de as ideias saírem pobres: não há vídeo nenhum por trás delas.
+ *
+ *  Um id do YouTube tem onze caracteres. Isto sabe-se sem ir à rede, e é o
+ *  que separa um endereço de uma alegação. */
+const VIDEO_SHAPE: { host: RegExp; path: RegExp }[] = [
+  { host: /(^|\.)youtube\.com$/i, path: /^\/(shorts|live|embed)\/[\w-]{11}$|^\/watch$/i },
+  { host: /(^|\.)youtu\.be$/i, path: /^\/[\w-]{11}$/ },
+  { host: /(^|\.)instagram\.com$/i, path: /^\/(reel|reels|p|tv)\/[\w-]+/i },
+  { host: /(^|\.)tiktok\.com$/i, path: /\/video\/\d+|^\/[\w.@-]+$/i },
+  { host: /(^|\.)facebook\.com$/i, path: /^\/ads\/library|^\/(reel|watch|videos)\b/i },
+];
+
+/** `youtube.com/watch` leva o id no `v`, que tem de ter onze caracteres. */
+const idDoWatch = (u: URL) => /^[\w-]{11}$/.test(u.searchParams.get('v') ?? '');
+
+/** `false` só quando o endereço é de uma plataforma conhecida e não tem a
+ *  forma de um vídeo dela. Um domínio que não conhecemos passa: a referência
+ *  pode estar num blog, e recusar tudo o que não é dos cinco sítios era
+ *  apertar mais do que o problema. */
+export function looksLikeVideoUrl(raw: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(raw.trim());
+  } catch {
+    return false;
+  }
+  const shape = VIDEO_SHAPE.find((s) => s.host.test(u.hostname));
+  if (!shape) return true;
+  if (!shape.path.test(u.pathname)) return false;
+  if (/youtube\.com$/i.test(u.hostname) && u.pathname === '/watch') return idDoWatch(u);
+  return true;
+}
+
+/** Onde ela publica. Um Reel e um TikTok são o molde do que ela grava; um
+ *  vídeo de dez minutos do YouTube ensina alguma coisa e não é o formato. */
+export const NATIVE_PLATFORMS: readonly ReferencePlatform[] = [
+  'instagram',
+  'tiktok',
+  'meta_ads',
+  'tiktok_creative_center',
+];
+
 /** O portão de qualidade.
  *
  *  Uma referência sem endereço não é uma referência: é uma alegação. Uma sem
@@ -113,6 +163,7 @@ export function referenceProblems(ref: Partial<Reference>): string[] {
 
   if (!/^https?:\/\/\S+\.\S+/.test(url)) out.push('sem endereço verificável');
   else if (FAKE_URL.test(url)) out.push('o endereço é um exemplo, não um vídeo');
+  else if (!looksLikeVideoUrl(url)) out.push('o endereço não tem a forma de um vídeo daquela plataforma');
   if ((ref.whyItWorks ?? '').trim().length < 20) out.push('sem explicação do que a faz funcionar');
   if ((ref.structure ?? '').trim().length < 10 && (ref.hook ?? '').trim().length < 10) {
     out.push('sem estrutura nem gancho — não há nada para adaptar');
@@ -206,6 +257,16 @@ export function scoreReference(
 
   if (ref.sourceConfidence === 'verified') score += 10;
   else if (ref.sourceConfidence === 'reported') score += 5;
+
+  // O formato conta. Ela publica Reels e TikToks; uma referência do YouTube
+  // ensina o mecanismo mas não é o molde, e estava a ganhar por ser a única
+  // plataforma que a pesquisa consegue citar.
+  if (NATIVE_PLATFORMS.includes(ref.platform)) {
+    score += 12;
+    lines.push(`É do formato que ela publica: ${PLATFORM_LABEL[ref.platform]}.`);
+  } else {
+    lines.push(`${PLATFORM_LABEL[ref.platform]}: serve o mecanismo, não o formato.`);
+  }
 
   return { score: Math.max(0, Math.min(100, score)), lines };
 }

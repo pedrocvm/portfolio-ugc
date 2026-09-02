@@ -147,12 +147,23 @@ export async function referencesForCandidate(input: {
       system:
         'Você procura vídeos curtos REAIS que sirvam de referência criativa para uma criadora de UGC brasileira. ' +
         RESEARCH_MARKET.instruction +
-        ' Interessam Reels do Instagram, vídeos do TikTok, YouTube Shorts, criativos da biblioteca ' +
-        'de anúncios da Meta e do TikTok Creative Center — todos de creators brasileiros. ' +
+        ' A Carol publica Reels e TikToks: por ordem, interessam Reels do Instagram, vídeos do ' +
+        'TikTok, criativos da biblioteca de anúncios da Meta e do TikTok Creative Center. ' +
+        'YouTube Shorts só se não houver nada nos outros — e nunca um vídeo longo do YouTube. ' +
+        'Todos de creators brasileiros. ' +
         'Para cada vídeo que encontrar, escreva: o endereço exato, quem publicou, a data se ' +
         'estiver visível, quanto dura, como começa (o gancho), a estrutura, o estilo de edição, e ' +
         'os números que estiverem à vista. ' +
-        'NUNCA invente um endereço. Se não tem o link, não escreva o vídeo.',
+        // A primeira corrida real salvou duas referências com endereços
+        // fabricados: fichas de citação da pesquisa vestidas de
+        // `youtube.com/watch?v=`. Abrem em «vídeo não disponível», e as ideias
+        // saíram pobres porque não havia vídeo nenhum por trás.
+        'O endereço tem de ser o que se escreve na barra do navegador e abrir naquele vídeo: ' +
+        'instagram.com/reel/CÓDIGO, tiktok.com/@perfil/video/NÚMERO, youtube.com/shorts/ID_DE_11. ' +
+        'Uma ficha de citação, um link de redirecionamento ou uma cadeia longa em base64 NÃO é ' +
+        'um endereço de vídeo: não a transforme num. ' +
+        'NUNCA invente um endereço. Se não tem o link, não escreva o vídeo — é melhor devolver ' +
+        'dois vídeos com link do que oito sem.',
       user: [
         `Marca: ${input.name}.`,
         input.product ? `Produto: ${input.product}.` : '',
