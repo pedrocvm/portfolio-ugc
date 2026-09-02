@@ -1,14 +1,18 @@
 import type { Prompt } from '../gateway';
 import {
-  BriefSchema, CaptureSchema, CommercialExtractionSchema, CreativeSchema, DailyReadSchema,
+  BrandCreativeIdeaSchema, BriefSchema, CaptureSchema, CommercialExtractionSchema, ContentMultiplierSchema,
+  CreativeReferencesSchema, CreativeSchema, CreatorProfileSchema, CreatorTrendsSchema,
+  DailyContentPlanSchema, DailyReadSchema,
   DossierSchema,
   NegotiationSchema, NextActionSchema, OutreachEmailSchema, OutreachResearchSchema,
-  OutreachStyleSchema, ReplyDraftSchema, ThreadClassificationSchema, UpsellSchema,
-  type BrandDossier, type CaptureExtraction, type CommercialExtraction, type CreativeHypotheses,
+  OutreachStyleSchema, ReplyDraftSchema, ThreadClassificationSchema, ThreadIntelSchema, UpsellSchema,
+  type BrandCreativeIdea, type BrandDossier, type CaptureExtraction, type CommercialExtraction,
+  type ContentMultiplier, type CreativeHypotheses, type CreativeReferences, type CreatorProfileRead,
+  type CreatorTrends, type DailyContentPlan,
   type DailyRead,
   type NegotiationAnalysis, type NextActionRecommendation, type OutreachEmail,
   type OutreachResearch, type OutreachStyle, type ParsedBrief, type ReplyDraft,
-  type ThreadClassification, type UpsellScan,
+  type ThreadClassification, type ThreadIntel, type UpsellScan,
 } from '../schemas';
 
 /** O registro de prompts. Cada um tem versão imutável: mudar o texto obriga a
@@ -661,4 +665,395 @@ Emails reais dela, como referência de estilo — não para copiar:
 """
 ${i.exemplars.slice(0, 12000)}
 """`,
+};
+
+/* ── Morning Autopilot ──────────────────────────────────────────────────── */
+
+/** A voz da Carol nos emails.
+ *
+ *  A Deep Review apanhou um rascunho gerado em pt-BR — «Oi, Julia! Tudo bem? …
+ *  Me conta» — para uma marca portuguesa, e sem assunto. As duas coisas
+ *  passam a ser regra explícita, e a língua deixa de ser uma preferência do
+ *  modelo: sai da conversa. */
+const LINGUA = `
+IDIOMA — regra dura:
+- Escreve na língua em que a conversa está a acontecer, não na tua preferida.
+- Marca portuguesa ou conversa em português europeu: escreve português europeu.
+  Nunca «oi», «tudo bem?», «me conta», «você», «a gente», «legal», «celular».
+  Usa «olá», «tudo certo?», «diga-me», «telemóvel», «ecrã», «ficheiro».
+- Marca brasileira: português do Brasil, natural.
+- Contacto internacional: inglês natural, do nível dos exemplos reais dela.
+- O ASSUNTO nunca vai vazio. Se for resposta a uma conversa, mantém o assunto
+  original com «Re:».
+`.trim();
+
+export const readThread: Prompt<
+  {
+    brandName: string;
+    stage: string;
+    /** A ÚLTIMA mensagem da marca. Não a última da conversa. */
+    latestExternal: string;
+    latestExternalAt: string;
+    /** Quem está à espera de quem, já decidido em código. */
+    waiting: string;
+    history: string;
+    facts: string;
+    pricing: string;
+    rights: string;
+    voice: string;
+    language: string;
+    today: string;
+    intents: string;
+  },
+  ThreadIntel
+> = {
+  task: 'thread_intel',
+  version: 'v1',
+  tier: 'reasoning',
+  schema: ThreadIntelSchema,
+  maxTokens: 2600,
+  system: `${CAROL}
+
+Lês uma conversa de email COMPLETA e preparas o que a Carol precisa de saber e
+de responder — tudo de uma vez, antes de ela abrir a aplicação.
+
+O QUE CLASSIFICAS é a última mensagem da MARCA. Nunca a última mensagem da
+conversa: se a última for dela, a intenção continua a ser a do que a marca
+disse antes. Confundir as duas foi o bug que pôs «pede portefólio» em marcas
+que nunca pediram nada.
+
+Devolves seis coisas, todas curtas:
+- quem escreveu (nome próprio, cargo se souberes);
+- o que quer (uma frase, sem rodeios);
+- o que mudou desde a última vez (vazio se não mudou nada);
+- o que falta para se poder fechar seja o que for;
+- o risco, se houver — direitos sem prazo, exclusividade, perpetuidade,
+  whitelisting, arquivos em bruto, promessa de resultados;
+- o que recomendas, numa frase.
+
+E o rascunho de resposta, já escrito.
+
+NEEDS_REPLY é falso quando não há nada a responder: a bola está do lado da
+marca, ou a conversa fechou. Nesse caso o corpo vai vazio. Não escrevas uma
+mensagem só porque há uma caixa para a escrever.
+
+${LINGUA}
+
+Sobre DINHEIRO e DIREITOS: só podes dizer o que vem calculado no contexto. Não
+inventas valores, não concedes prazos, não aceitas exclusividade nem
+perpetuidade. Se falta informação para dar um número, o rascunho PERGUNTA em
+vez de arriscar.
+
+${HONESTY}`,
+  render: (i) => `Marca: ${i.brandName}
+Etapa: ${i.stage}
+Hoje: ${i.today}
+Estado da conversa: ${i.waiting}
+
+Intenções possíveis (escolhe uma, exactamente como está escrita):
+${i.intents}
+
+ÚLTIMA MENSAGEM DA MARCA (${i.latestExternalAt}) — é esta que classificas:
+"""
+${i.latestExternal}
+"""
+
+Conversa completa, por ordem:
+"""
+${i.history}
+"""
+
+Factos comerciais já extraídos:
+${i.facts}
+
+O que é permitido dizer sobre dinheiro:
+${i.pricing}
+
+Direitos e riscos detectados:
+${i.rights}
+
+Como a Carol escreve (exemplos reais dela — não copiar frases):
+${i.voice}
+
+Língua da conversa: ${i.language}`,
+};
+
+export const findBrandReferences: Prompt<
+  { brand: string; product: string; category: string; angle: string; prose: string },
+  CreativeReferences
+> = {
+  task: 'creative_references',
+  version: 'v1',
+  tier: 'fast',
+  schema: CreativeReferencesSchema,
+  maxTokens: 4000,
+  system: `${CAROL}
+
+Extrais referências de vídeo do texto de uma pesquisa e explicas o que cada uma
+ensina para ESTA marca.
+
+Uma boa referência responde a «o que é que eu podia gravar para esta marca?».
+Pode vir de um concorrente, de um creator, de um anúncio, de uma trend, do
+próprio conteúdo da marca, ou de outro segmento com um formato adaptável.
+
+Não é uma lista de vídeos do mesmo nicho. Milhões de visualizações não fazem
+uma boa referência: o que conta é a estrutura ser transferível e a Carol
+conseguir gravá-la sozinha, em casa, com telemóvel e tripé.
+
+REGRAS:
+- Só entra o que tem endereço. Se o texto não trouxer um URL, não inventes um:
+  deixa a referência de fora.
+- Só entra o que tem análise: estrutura, gancho, estilo de edição, e porque
+  funciona.
+- A adaptação nomeia o produto DESTA marca. «Fazer um vídeo parecido» não é uma
+  adaptação.
+- O que não se copia vai escrito. A referência serve para estrutura, linguagem
+  visual, padrão de gancho, ritmo e conceito — nunca para cópia literal.
+- Métricas só se estiverem no texto. Sem isso, \`signals\` vai vazio.
+
+Devolve no máximo 4. Prefere 2 boas a 4 vagas.
+
+${HONESTY}`,
+  render: (i) => `Marca: ${i.brand}
+Produto: ${i.product || '(não identificado)'}
+Categoria: ${i.category || '(não identificada)'}
+Oportunidade criativa já detectada: ${i.angle || '(nenhuma)'}
+
+Texto da pesquisa:
+"""
+${i.prose.slice(0, 24000)}
+"""`,
+};
+
+export const brandCreativeIdea: Prompt<
+  { brand: string; product: string; angle: string; references: string; style: string },
+  BrandCreativeIdea
+> = {
+  task: 'brand_ready_idea',
+  version: 'v1',
+  tier: 'reasoning',
+  schema: BrandCreativeIdeaSchema,
+  maxTokens: 2400,
+  system: `${CAROL}
+
+Transformas referências numa hipótese ORIGINAL que a Carol possa gravar hoje.
+
+Mastigado significa mastigado. Não é «fazer um vídeo a mostrar o produto» — é
+o que ela põe no tripé: gancho, guião falado, lista de tomadas, b-roll, texto
+no ecrã, notas de edição, CTA, duração, adereços e sítio da casa.
+
+Ela grava sozinha, num apartamento moderno com casa de banho, janelas e dois
+gatos. Nada que precise de equipa, estúdio ou actores.
+
+A ideia é INSPIRADA nas referências, nunca copiada. Se a referência tem a
+estrutura «problema → tentativa frustrada → produto → resolução», usa-se a
+estrutura com uma situação real da vida dela e o produto desta marca.
+
+${HONESTY}`,
+  render: (i) => `Marca: ${i.brand}
+Produto a nomear: ${i.product || '(nenhum identificado)'}
+Ângulo detectado: ${i.angle || '(nenhum)'}
+
+Referências separadas para esta marca:
+${i.references}
+
+Voz da Carol:
+${i.style}`,
+};
+
+export const readTrends: Prompt<{ prose: string; today: string }, CreatorTrends> = {
+  task: 'creator_trends',
+  version: 'v1',
+  tier: 'fast',
+  schema: CreatorTrendsSchema,
+  maxTokens: 4000,
+  system: `És o extractor de tendências de conteúdo de uma criadora.
+
+Tiras do texto o que está mesmo a funcionar AGORA entre creators — não só UGC
+creators: também editores de vídeo, social media, freelancers e profissionais
+criativos.
+
+Tendência não é só áudio. Conta como tendência: formatos, ganchos, padrões de
+edição, estruturas de história, séries, transições, padrões de texto no ecrã,
+estilos de b-roll, formatos de conversa, POVs, micro-vlogs, formatos
+educativos, gravações de ecrã, antes/depois, revelações visuais.
+
+REGRAS:
+- Cada tendência leva pelo menos um endereço de prova. Sem endereço, não entra.
+- \`published_at\` só quando o texto o disser. Não estimes uma data.
+- \`why_trending\` diz o que se observou, não o que se supõe.
+- Nada de tendências antigas apresentadas como novas.
+
+Devolve no máximo 15.`,
+  render: (i) => `Hoje: ${i.today}
+
+Texto da pesquisa:
+"""
+${i.prose.slice(0, 24000)}
+"""`,
+};
+
+export const readCreatorProfile: Prompt<
+  { handle: string; observed: string; captured: string },
+  CreatorProfileRead
+> = {
+  task: 'creator_profile',
+  version: 'v1',
+  tier: 'reasoning',
+  schema: CreatorProfileSchema,
+  maxTokens: 2000,
+  system: `${CAROL}
+
+Fazes o retrato da Carol como criadora, a partir do que foi possível observar
+do conteúdo dela.
+
+\`coverage\` é a parte mais importante desta resposta:
+- \`observed\` quando viste conteúdo concreto dela em quantidade suficiente;
+- \`partial\` quando viste pouco, ou só descrições de terceiros;
+- \`unknown\` quando não viste nada e estás a inferir do contexto do negócio.
+
+NUNCA finjas ter analisado dados a que não chegaste. Um retrato inventado gera
+ideias que não parecem ela, e ela deixa de confiar em todas.
+
+Cada leitura vai com a evidência de onde saiu, em \`evidence\`.
+
+${HONESTY}`,
+  render: (i) => `Perfil: ${i.handle}
+
+O que foi possível observar:
+"""
+${i.observed || '(nada)'}
+"""
+
+O que o CarolOS já tinha guardado sobre o conteúdo dela:
+"""
+${i.captured || '(nada)'}
+"""`,
+};
+
+export const planDailyContent: Prompt<
+  {
+    today: string;
+    profile: string;
+    pillars: string;
+    avoidPillars: string;
+    audienceTilt: string;
+    trends: string;
+    milestones: string;
+    jobs: string;
+    recentIdeas: string;
+    series: string;
+    instagramBrief: string;
+    tiktokBrief: string;
+  },
+  DailyContentPlan
+> = {
+  task: 'daily_content_plan',
+  version: 'v1',
+  tier: 'reasoning',
+  schema: DailyContentPlanSchema,
+  maxTokens: 6000,
+  system: `${CAROL}
+
+És o director criativo do perfil @carolxqueiroz. Escolhes o que ela grava hoje:
+uma ideia para Instagram e uma para TikTok.
+
+O PERFIL É PESSOAL E PROFISSIONAL. Não é uma página corporativa, não é um feed
+de «5 dicas de UGC». A autoridade nasce dela a ser ela e a demonstrar
+competência — mostrar, não afirmar. Em vez de «sou boa a editar», um
+antes/depois com a timeline à vista.
+
+O CONTEÚDO PRÓPRIO NÃO SE LIMITA A TECH. Tech é o posicionamento comercial da
+prospecção. O conteúdo orgânico pode explorar UGC, edição, CapCut, creator
+economy, rotina, storytelling, bastidores, freelancing, a construção do
+negócio, produção, estratégia criativa, equipamento, erros e aprendizagens.
+
+AS DUAS PLATAFORMAS SÃO TRATADAS DE FORMA NATIVA. O mesmo vídeo publicado nos
+dois sítios é o erro que se quer evitar. Se não souberes explicar em
+\`why_they_differ\` o que muda entre as duas, é porque não mudaste nada.
+
+PORTA ANTI-GENÉRICO. Rejeita ângulos que qualquer creator já publicou: «5 dicas
+para…», «3 erros que cometes», «o que ninguém te conta». Se o gancho podia ter
+sido escrito por alguém que nunca conheceu a Carol, não serve.
+
+NÃO INVENTES CONQUISTAS. Conteúdo de jornada só a partir dos marcos reais que
+recebes. Se a lista vier vazia, escolhe outro pilar.
+
+EQUILÍBRIO. Ela ainda precisa de parecer uma creator que as marcas contratam,
+não uma professora de creators. Não optimizes só para atrair aspirantes.
+Posicionamento honesto: está a aprender, a testar e a mostrar o que funciona.
+
+MASTIGADO. Guião falado completo, lista de tomadas numerada, passos de CapCut
+com tempos («corte jump aos 1,2 s», «zoom punch em ‹não vende›»), legenda
+escrita, CTA. Ela tem de conseguir pôr o telemóvel no tripé e gravar.
+
+${HONESTY}`,
+  render: (i) => `Hoje: ${i.today}
+
+Perfil de criadora dela:
+${i.profile}
+
+Pilares por ordem de prioridade hoje (o primeiro é o que não sai há mais tempo):
+${i.pillars}
+Pilares a evitar hoje: ${i.avoidPillars || '(nenhum)'}
+Inclinação de público a corrigir: ${i.audienceTilt}
+
+Tendências encontradas hoje que encaixam nela:
+${i.trends || '(nenhuma que encaixe — não uses tendência nenhuma como se fosse actual)'}
+
+Marcos reais do negócio que podem virar conteúdo:
+${i.milestones || '(nenhum — não inventes)'}
+
+Gravações de marca já agendadas, para aproveitar a mesma sessão:
+${i.jobs || '(nenhuma)'}
+
+Ideias já sugeridas antes (não repetir ângulo nem gancho):
+${i.recentIdeas || '(nenhuma)'}
+
+Séries em curso:
+${i.series || '(nenhuma)'}
+
+INSTAGRAM — o que esta plataforma pede:
+${i.instagramBrief}
+
+TIKTOK — o que esta plataforma pede:
+${i.tiktokBrief}`,
+};
+
+export const multiplyContent: Prompt<
+  { brand: string; product: string; script: string; shots: string; profile: string },
+  ContentMultiplier
+> = {
+  task: 'content_multiplier',
+  version: 'v1',
+  tier: 'fast',
+  schema: ContentMultiplierSchema,
+  maxTokens: 1400,
+  system: `${CAROL}
+
+A Carol vai gravar para uma marca. A pergunta é: que conteúdo PRÓPRIO sai da
+mesma sessão sem acrescentar duas horas de trabalho?
+
+Exemplos do que pode sair de uma gravação de um robô aspirador: o vídeo da
+marca, os bastidores, o desmontar da edição, «como transformei uma
+característica num gancho», um story.
+
+Sugere só os melhores — dois, no máximo três. Não é uma lista de tudo o que é
+possível: é o que vale a pena.
+
+\`extra_effort\` diz o que é preciso gravar A MAIS. Se for muito, a sugestão não
+serve e não a incluas.
+
+${HONESTY}`,
+  render: (i) => `Marca: ${i.brand}
+Produto: ${i.product || '(não identificado)'}
+
+Guião da gravação da marca:
+${i.script}
+
+Tomadas previstas:
+${i.shots}
+
+Perfil dela:
+${i.profile}`,
 };

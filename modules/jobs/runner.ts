@@ -21,6 +21,8 @@ import { requestPendingMetrics } from '@/modules/cases/service';
 export const JOBS = [
   'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'plan', 'upsell',
   'insights', 'outreach',
+  // Morning Autopilot. A ordem aqui não é o horário — é `runAllJobs`, abaixo.
+  'triage', 'references', 'trends', 'milestones', 'content-plan', 'morning',
 ] as const;
 export type JobName = (typeof JOBS)[number];
 
@@ -39,8 +41,23 @@ export type JobResult = {
 export function processedCount(result: JobResult): number {
   const d = result.detail as Record<string, number | undefined>;
   return (
-    d.processed ?? d.created ?? d.actions ?? d.markedDue ?? d.expired ?? d.requested ?? 0
+    d.processed ?? d.created ?? d.actions ?? d.markedDue ?? d.expired ?? d.requested ??
+    d.references ?? d.saved ?? d.generated ?? d.decisions ?? d.derived ?? 0
   );
+}
+
+/** O que correu mal, tirado do detalhe do trabalho.
+ *
+ *  Um trabalho pode devolver `success` e ter falhado metade — a prospecção
+ *  encontra marcas e não consegue escrever três emails. Quem lê a manhã precisa
+ *  de saber isso, e o único sítio onde essa informação existe é aqui. */
+function failuresOf(result: JobResult): string[] {
+  const d = result.detail as Record<string, unknown>;
+  const list = Array.isArray(d.failures) ? d.failures : [];
+  const out = list.map(String).filter(Boolean);
+  if (typeof d.error === 'string' && d.error) out.unshift(d.error);
+  if (typeof d.blocked === 'string' && d.blocked) out.unshift(d.blocked);
+  return out;
 }
 
 /** `background_jobs` governa correr **sem ninguém abrir o painel** — é o que a
@@ -48,6 +65,33 @@ export function processedCount(result: JobResult): number {
  *  pedir. Antes disto, ela carregava em «Correr tudo» e sete dos oito trabalhos
  *  saltavam em silêncio. */
 export async function runJob(job: JobName, opts: { manual?: boolean } = {}): Promise<JobResult> {
+  const result = await execute(job, opts);
+  await record(job, result);
+  return result;
+}
+
+/** Uma linha por corrida, sempre — não só quando rebenta.
+ *
+ *  Antes só se gravava a excepção. Uma manhã em que a pesquisa de tendências
+ *  devolvia zero era indistinguível de uma manhã em que ela não tinha corrido,
+ *  e a consolidação não tinha como ser honesta sobre o que falhou. */
+async function record(job: JobName, result: JobResult): Promise<void> {
+  const falhas = failuresOf(result);
+  try {
+    await supabaseService().from('job_run').insert({
+      job_type: job,
+      status: result.status === 'skipped' ? 'skipped' : result.status,
+      finished_at: new Date().toISOString(),
+      items_processed: processedCount(result),
+      detail: asJson({ ...result.detail, failures: falhas }),
+      error_summary: falhas[0]?.slice(0, 500) ?? null,
+    });
+  } catch {
+    // Um registo que falha não pode derrubar o trabalho que correu bem.
+  }
+}
+
+async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobResult> {
   const flags = await getFlagsService();
 
   if (!opts.manual && !flags.background_jobs && job !== 'gmail-sync') {
@@ -118,16 +162,69 @@ export async function runJob(job: JobName, opts: { manual?: boolean } = {}): Pro
           detail: { ...r },
         };
       }
+
+      /* ── Morning Autopilot ────────────────────────────────────────────── */
+
+      case 'triage': {
+        const { triageThreads } = await import('@/modules/email/triage-service');
+        const r = await triageThreads(flags);
+        return { job, status: 'success', detail: { ...r } };
+      }
+
+      case 'references': {
+        const { runReferencePass } = await import('@/modules/references/service');
+        const r = await runReferencePass();
+        return { job, status: r.candidates === 0 ? 'skipped' : 'success', detail: { ...r } };
+      }
+
+      case 'trends': {
+        const { runTrendDiscovery } = await import('@/modules/trends/service');
+        const r = await runTrendDiscovery();
+        return { job, status: r.saved === 0 && r.failures.length ? 'error' : 'success', detail: { ...r } };
+      }
+
+      case 'milestones': {
+        const { refreshMilestones } = await import('@/modules/milestones/service');
+        const r = await refreshMilestones();
+        return { job, status: 'success', detail: { ...r } };
+      }
+
+      case 'content-plan': {
+        const { runDailyContentPlan } = await import('@/modules/creator/plan-service');
+        const r = await runDailyContentPlan();
+        return {
+          job,
+          status: r.failures.length && r.generated === 0 ? 'error' : 'success',
+          detail: { ...r },
+        };
+      }
+
+      case 'morning': {
+        // A consolidação corre por último e refaz o plano antes de ler: assim
+        // não depende de o `plan` de hora a hora ter calhado passar primeiro.
+        await wakeSnoozed(db);
+        await replanActions(db);
+        await replanGlobalActions(db);
+        const { consolidateMorning } = await import('@/modules/morning/service');
+        const brief = await consolidateMorning();
+        return {
+          job,
+          status: brief ? 'success' : 'error',
+          detail: brief
+            ? {
+                decisions: brief.decisionCount,
+                minutes: brief.estimatedMinutes,
+                briefStatus: brief.status,
+                failures: brief.gaps.map((g) => g.message),
+              }
+            : { error: 'Não consegui consolidar a manhã.' },
+        };
+      }
     }
   } catch (error) {
     const summary = error instanceof Error ? error.message : 'Falha desconhecida.';
-    await db.from('job_run').insert({
-      job_type: job,
-      status: 'error',
-      finished_at: new Date().toISOString(),
-      error_summary: summary.slice(0, 500),
-      detail: asJson({ durationMs: Date.now() - started }),
-    });
+    // A linha em `job_run` é escrita por `record`, à saída de `runJob`. Antes
+    // era escrita aqui também, e uma falha ficava contada duas vezes.
 
     // Uma integração partida não pode ficar invisível: vira ação prioritária.
     if (job === 'gmail-sync') {
@@ -152,16 +249,19 @@ export async function runJob(job: JobName, opts: { manual?: boolean } = {}): Pro
       );
     }
 
-    return { job, status: 'error', detail: { error: summary } };
+    return { job, status: 'error', detail: { error: summary, durationMs: Date.now() - started } };
   }
 }
 
 /** Corre a cadeia toda pela ordem certa: sincronizar, processar o que ficou,
  *  atualizar prazos, expirar licenças e replanear. Uma só entrada de cron. */
 export async function runAllJobs(opts: { manual?: boolean } = {}): Promise<JobResult[]> {
+  // A ordem é o grafo de dependências, não o alfabeto: a triagem precisa do
+  // Gmail sincronizado, as referências precisam das marcas escolhidas, e a
+  // consolidação precisa de tudo o resto.
   const order: JobName[] = [
-    'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'upsell', 'plan',
-    'insights', 'outreach',
+    'gmail-sync', 'process-pending', 'triage', 'followups', 'rights', 'metrics', 'upsell', 'plan',
+    'insights', 'outreach', 'references', 'trends', 'milestones', 'content-plan', 'morning',
   ];
   const results: JobResult[] = [];
   for (const job of order) results.push(await runJob(job, opts));

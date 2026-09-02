@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { JOB_PURPOSE, readSchedule } from './domain.ts';
@@ -11,10 +11,20 @@ import { JOB_PURPOSE, readSchedule } from './domain.ts';
 const ROOT = path.join(import.meta.dirname, '..', '..');
 
 function scheduledJobs(): string[] {
-  // A última migração a redefinir a função é a que vale.
+  // A última migração a redefinir a função é a que vale — e é preciso ir
+  // procurá-la. O nome do ficheiro estava escrito à mão aqui, e quando entrou
+  // uma migração de horário mais recente este teste continuou a guardar a
+  // antiga: passava a verde sobre um agendamento que já não existia.
   const dir = path.join(ROOT, 'supabase', 'migrations');
-  const files = readFileSync(path.join(dir, '20260831007_carolos_schedule_outreach.sql'), 'utf8');
-  return [...files.matchAll(/\['(carolos-[a-z-]+)'/g)].map((m) => m[1]);
+  const ultima = readdirSync(dir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
+    .reverse()
+    .find((f) => readFileSync(path.join(dir, f), 'utf8').includes('function public.carolos_apply_schedule'));
+
+  assert.ok(ultima, 'nenhuma migração define carolos_apply_schedule');
+  const sql = readFileSync(path.join(dir, ultima), 'utf8');
+  return [...sql.matchAll(/\['(carolos-[a-z-]+)'/g)].map((m) => m[1]);
 }
 
 test('todo o trabalho agendado tem nome e explicação', () => {

@@ -74,6 +74,30 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
     label: 'Reconciliar chamadas',
     why: 'De 5 em 5 minutos. Fecha os disparos cuja resposta se perdeu, para nenhum ficar em aberto.',
   },
+  'carolos-triage': {
+    label: 'Ler os emails da noite',
+    why: 'Uma vez por dia, logo a seguir à sincronização. Classifica cada conversa pela última mensagem da marca, resume o que ela quer e escreve a resposta — antes de alguém abrir a aplicação.',
+  },
+  'carolos-references': {
+    label: 'Separar referências criativas',
+    why: 'Uma vez por dia, depois da prospecção. Para cada marca escolhida procura dois ou três vídeos reais e transforma-os numa ideia gravável.',
+  },
+  'carolos-trends': {
+    label: 'Ver o que resulta agora',
+    why: 'Uma vez por dia. Procura formatos, ganchos e edições que estejam a subir agora, e calcula quais encaixam nela.',
+  },
+  'carolos-milestones': {
+    label: 'Marcos do negócio',
+    why: 'Uma vez por dia. Deriva os marcos reais — primeiro pagamento, primeiro cliente de fora — dos factos já gravados. Nunca inventa nenhum.',
+  },
+  'carolos-content': {
+    label: 'Escolher o conteúdo do dia',
+    why: 'Uma vez por dia, depois das tendências e dos marcos. Uma ideia para Instagram e outra para TikTok, mastigadas até à gravação.',
+  },
+  'carolos-morning': {
+    label: 'Preparar a manhã',
+    why: 'Uma vez por dia, no fim de tudo. Junta o que os outros produziram, ordena as decisões e escreve o que falhou.',
+  },
 };
 
 export const DISPATCH_TONE: Record<string, 'ok' | 'bad' | 'hot' | 'mute'> = {

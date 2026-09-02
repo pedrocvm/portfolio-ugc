@@ -354,3 +354,225 @@ export const OutreachEmailSchema = z.object({
   cta: z.string(),
 });
 export type OutreachEmail = z.infer<typeof OutreachEmailSchema>;
+
+/* ── Morning Autopilot ──────────────────────────────────────────────────── */
+
+/** A leitura de uma conversa, feita de madrugada.
+ *
+ *  Uma chamada em vez de duas. Antes, a Carol pedia «Analisar a negociação»
+ *  (30 s), lia, escolhia um objectivo num dropdown de cinco e pedia «Escrever
+ *  rascunho» (25 s). Os dois passos eram o mesmo raciocínio partido ao meio, e
+ *  o segundo saía muitas vezes a contradizer o primeiro. */
+export const ThreadIntelSchema = z.object({
+  /** A taxonomia vive em `modules/email/thread-state.ts`; aqui é texto porque
+   *  o modelo pode devolver um valor fora dela e quem valida é o serviço, que
+   *  cai em UNCERTAIN em vez de rebentar. */
+  intent: z.string(),
+  secondary_intents: z.array(z.string()),
+  /** Quem escreveu, em nome próprio. */
+  who_wrote: z.string(),
+  what_they_want: z.string(),
+  /** O que mudou desde a última vez. Vazio quando não mudou nada. */
+  what_changed: z.string(),
+  /** O que falta para se poder fechar seja o que for. */
+  what_is_missing: z.array(z.string()),
+  risk: z.string(),
+  risk_level: z.enum(['none', 'low', 'medium', 'high']),
+  /** Uma frase. «Agradecer e confirmar que avisa quando receber.» */
+  recommendation: z.string(),
+  /** Se não há nada a responder, isto é `false` e o rascunho fica vazio. */
+  needs_reply: z.boolean(),
+  reply_subject: z.string().nullable(),
+  reply_body: z.string(),
+  /** A língua em que a conversa acontece, não a do sistema. */
+  reply_language: z.enum(['pt-PT', 'pt-BR', 'en', 'es', 'other']),
+  avoided_commitments: z.array(z.string()),
+  confidence,
+});
+export type ThreadIntel = z.infer<typeof ThreadIntelSchema>;
+
+/** Referências criativas extraídas de uma pesquisa na web. */
+export const CreativeReferencesSchema = z.object({
+  references: z.array(
+    z.object({
+      source_url: z.string(),
+      platform: z.enum(['instagram', 'tiktok', 'youtube', 'meta_ads', 'tiktok_creative_center', 'web', 'other']),
+      title: z.string(),
+      creator_handle: z.string().nullable(),
+      brand_name: z.string().nullable(),
+      published_at: z.string().nullable(),
+      duration_seconds: z.number().nullable(),
+      format: z.string(),
+      hook: z.string(),
+      structure: z.string(),
+      editing_style: z.string(),
+      why_it_works: z.string(),
+      /** Indicadores só quando estão à vista. Um número que ninguém viu não entra. */
+      signals: z.array(z.string()),
+      source_confidence: z.enum(['verified', 'reported', 'unverified']),
+      /** Porque encaixa nesta marca em concreto. */
+      why_it_matches: z.string(),
+      /** O que a Carol adapta. Concreto, com o produto desta marca lá dentro. */
+      adaptation: z.string(),
+      /** O que não se copia. */
+      do_not_copy: z.string(),
+    }),
+  ),
+});
+export type CreativeReferences = z.infer<typeof CreativeReferencesSchema>;
+
+const ShotSchema = z.object({
+  shot: z.string(),
+  note: z.string().nullable(),
+  required: z.boolean(),
+});
+
+/** A ideia pronta a gravar para uma marca. Não é «fazer um vídeo a mostrar o
+ *  produto»: é o que se põe no tripé. */
+export const BrandCreativeIdeaSchema = z.object({
+  creative_angle: z.string(),
+  title: z.string(),
+  hook: z.string(),
+  script: z.string(),
+  shot_list: z.array(ShotSchema),
+  b_roll: z.array(z.string()),
+  on_screen_text: z.array(z.string()),
+  editing_notes: z.string(),
+  cta: z.string(),
+  duration_seconds: z.number().nullable(),
+  props: z.array(z.string()),
+  location: z.string(),
+  why_this_brand: z.string(),
+});
+export type BrandCreativeIdea = z.infer<typeof BrandCreativeIdeaSchema>;
+
+/** Tendências extraídas de uma pesquisa. */
+export const CreatorTrendsSchema = z.object({
+  trends: z.array(
+    z.object({
+      title: z.string(),
+      kind: z.enum(['format', 'hook', 'editing', 'structure', 'series', 'audio', 'text', 'transition', 'pov', 'other']),
+      platform: z.enum(['instagram', 'tiktok', 'youtube', 'capcut', 'multi', 'other']),
+      description: z.string(),
+      why_trending: z.string(),
+      published_at: z.string().nullable(),
+      evidence: z.array(z.object({ url: z.string(), note: z.string().nullable() })),
+    }),
+  ),
+});
+export type CreatorTrends = z.infer<typeof CreatorTrendsSchema>;
+
+/** O retrato da Carol como criadora.
+ *
+ *  `coverage` é a honestidade do retrato: se não se conseguiu ver o perfil
+ *  dela, isso diz-se em vez de se inventar um. */
+export const CreatorProfileSchema = z.object({
+  coverage: z.enum(['observed', 'partial', 'unknown']),
+  /** De onde saiu cada leitura. Sem isto o retrato é opinião. */
+  evidence: z.array(z.string()),
+  dimensions: z.object({
+    camera_presence: z.string(),
+    energy: z.string(),
+    tone: z.string(),
+    humor: z.string(),
+    visual_style: z.string(),
+    editing_complexity: z.number().min(0).max(1),
+    preferred_duration_seconds: z.number().nullable(),
+    talking_head_tolerance: z.number().min(0).max(1),
+    voiceover_usage: z.string(),
+    b_roll_usage: z.string(),
+    personal_exposure: z.string(),
+    educational_style: z.string(),
+    storytelling_style: z.string(),
+    caption_style: z.string(),
+  }),
+  topics: z.array(z.string()),
+  successful_formats: z.array(z.string()),
+  avoided_formats: z.array(z.string()),
+});
+export type CreatorProfileRead = z.infer<typeof CreatorProfileSchema>;
+
+/** Uma peça de conteúdo próprio, mastigada até à gravação. */
+export const ContentIdeaSchema = z.object({
+  platform: z.enum(['instagram', 'tiktok']),
+  pillar: z.string(),
+  objective: z.string(),
+  format: z.string(),
+  /** Porquê hoje. Facto, não entusiasmo. */
+  why_now: z.string(),
+  title: z.string(),
+  hook: z.string(),
+  alternative_hooks: z.array(z.string()),
+  script: z.string(),
+  shot_list: z.array(ShotSchema),
+  b_roll: z.array(z.string()),
+  camera_position: z.string(),
+  location: z.string(),
+  props: z.array(z.string()),
+  on_screen_text: z.array(z.string()),
+  editing: z.object({
+    /** Instruções reproduzíveis, com tempos. «Corte aos 1,2 s», não «cortar bem». */
+    capcut_steps: z.array(z.string()),
+    transitions: z.array(z.string()),
+    pacing: z.string(),
+    sound: z.string(),
+    complexity: z.enum(['simple', 'medium', 'heavy']),
+  }),
+  duration_seconds: z.number().nullable(),
+  caption: z.string(),
+  cta: z.string(),
+  cover: z.string(),
+  posting_notes: z.string(),
+  why_it_can_work: z.string(),
+  /** O que uma marca aprende sobre a competência dela ao ver isto. */
+  authority_signal: z.string(),
+  engagement_mechanism: z.string(),
+  /** «Se um marketing manager vir isto, aumenta ou diminui a vontade de a
+   *  contratar?» */
+  brand_audience_effect: z.enum(['up', 'neutral', 'down']),
+  /** Ajuda a construir audiência que um dia confiaria nela para aprender. */
+  mentorship_signal: z.boolean(),
+  quality: z.object({
+    originality: z.number().min(0).max(100),
+    specificity: z.number().min(0).max(100),
+    carol_fit: z.number().min(0).max(100),
+    authority: z.number().min(0).max(100),
+    engagement: z.number().min(0).max(100),
+    recordability: z.number().min(0).max(100),
+    platform_native: z.number().min(0).max(100),
+    freshness: z.number().min(0).max(100),
+  }),
+  /** Uma série só quando a ideia a justifica. Nunca por omissão. */
+  series: z
+    .object({ name: z.string(), premise: z.string(), structure: z.string(), next_topics: z.array(z.string()) })
+    .nullable(),
+});
+export type ContentIdea = z.infer<typeof ContentIdeaSchema>;
+
+/** O plano do dia: uma para o Instagram, uma para o TikTok, tratadas de forma
+ *  nativa. O schema junta-as para o modelo ver as duas de uma vez e não
+ *  escrever o mesmo vídeo duas vezes. */
+export const DailyContentPlanSchema = z.object({
+  instagram: ContentIdeaSchema,
+  tiktok: ContentIdeaSchema,
+  /** O que diferencia os dois tratamentos, dito pelo próprio modelo. Serve de
+   *  auto-verificação: se não consegue explicar, é porque são o mesmo vídeo. */
+  why_they_differ: z.string(),
+});
+export type DailyContentPlan = z.infer<typeof DailyContentPlanSchema>;
+
+/** Conteúdo próprio que sai da mesma gravação de uma marca, sem somar horas. */
+export const ContentMultiplierSchema = z.object({
+  suggestions: z.array(
+    z.object({
+      platform: z.enum(['instagram', 'tiktok']),
+      angle: z.string(),
+      hook: z.string(),
+      /** O que é preciso gravar A MAIS. Se for muito, a sugestão não vale. */
+      extra_effort: z.string(),
+      extra_minutes: z.number(),
+      pillar: z.string(),
+    }),
+  ),
+});
+export type ContentMultiplier = z.infer<typeof ContentMultiplierSchema>;
