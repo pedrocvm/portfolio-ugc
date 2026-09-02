@@ -3,7 +3,7 @@ import 'server-only';
 import { formatMoney, type Currency } from '@/lib/money';
 import { localDay } from '@/lib/time';
 import { asJson } from '@/lib/supabase/json';
-import { supabaseService } from '@/lib/supabase/service';
+import { hasServiceRole, supabaseService } from '@/lib/supabase/service';
 import { repliesWaiting } from '@/modules/email/triage-service';
 import { todayContent } from '@/modules/creator/plan-service';
 import {
@@ -45,6 +45,9 @@ export type MorningBrief = {
 };
 
 export async function consolidateMorning(opts: { now?: Date } = {}): Promise<MorningBrief | null> {
+  // Sem chave de service role não há manhã — e é melhor devolver nada do que
+  // rebentar a tela toda. É a mesma variável que já bloqueia o agendador.
+  if (!hasServiceRole()) return null;
   const db = supabaseService();
   const now = opts.now ?? new Date();
   const date = localDay(now);
@@ -100,6 +103,7 @@ export async function consolidateMorning(opts: { now?: Date } = {}): Promise<Mor
  *  Se a consolidação não correu — o cron está desligado, ou falhou — devolve
  *  `null` e o Hoje mostra a fila antiga. Não se inventa uma manhã. */
 export async function readMorningBrief(opts: { now?: Date } = {}): Promise<MorningBrief | null> {
+  if (!hasServiceRole()) return null;
   const db = supabaseService();
   const now = opts.now ?? new Date();
   const date = localDay(now);
@@ -129,6 +133,7 @@ export async function readMorningBrief(opts: { now?: Date } = {}): Promise<Morni
 }
 
 export async function markMorningOpened(now: Date = new Date()): Promise<void> {
+  if (!hasServiceRole()) return;
   const db = supabaseService();
   await db
     .from('morning_brief')
@@ -138,6 +143,7 @@ export async function markMorningOpened(now: Date = new Date()): Promise<void> {
 }
 
 export async function markMorningCompleted(now: Date = new Date()): Promise<void> {
+  if (!hasServiceRole()) return;
   const db = supabaseService();
   await db
     .from('morning_brief')

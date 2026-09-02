@@ -20,7 +20,9 @@ Na prática:
 - o follow-up é agendado a partir da regra e da promessa da marca, não da memória;
 - o preço sai de política versionada, e diz «por resolver» quando não sabe;
 - direitos de uso são uma licença separada da produção, com fim obrigatório;
-- nada sai para fora sem ela ler.
+- nada sai para fora sem ela ler;
+- o trabalho — ler os emails, escolher marcas, separar referências, escrever o
+  plano de conteúdo — acontece de madrugada, para ela chegar e só decidir.
 
 ## Desenvolvimento
 
@@ -87,6 +89,11 @@ app/
 modules/                    o domínio, um por área
   <área>/domain.ts          regras puras: sem Next, sem Supabase, sem SDK
   <área>/service.ts         acesso a dados; marcado `server-only`
+  morning/                  a manhã consolidada: a ordem do dia e a frase que a abre
+  email/thread-state.ts     de quem é a vez numa conversa, e o que se classifica
+  references/ trends/       referências criativas por marca; o que está a subir
+  creator/                  o conteúdo dela: pilares, repetição, plano do dia
+  milestones/               marcos reais, derivados de factos — nunca cadastrados
 
 lib/                        plataforma partilhada
   money.ts                  cêntimos inteiros, nunca vírgula flutuante
@@ -128,8 +135,9 @@ criado numa conta Google:
 2. **APIs & Services → Library** → activar **Gmail API**.
 3. **OAuth consent screen** → External → preencher; adicionar o e-mail da Carol
    em *Test users* enquanto a app estiver em modo de teste.
-4. Scopes: `gmail.readonly` e `gmail.compose`. **Não** adicionar `gmail.send` —
-   o sistema não envia nada sozinho, por desenho.
+4. Scopes: `gmail.readonly` e `gmail.compose`. **Não** adicionar `gmail.send`.
+   O `compose` já chega para enviar o que ela aprova; o `send` daria acesso a
+   mais do que isso, e não há trabalho de fundo que precise dele.
 5. **Credentials → Create OAuth client ID → Web application**.
    Authorized redirect URI:
    `https://<domínio>/api/integrations/google/oauth/callback`
@@ -151,8 +159,10 @@ abrir está em `/dashboard/settings`, e é esta:
 7. só no fim, e só depois de a Carol concordar com o que o sistema propunha:
    `auto_apply_low_risk` ligado e modo sombra desligado.
 
-`external_send` fica fechada. O limite da automação é escrever um rascunho na
-caixa dela.
+`external_send` fica fechada, e governa uma coisa diferente do que o nome
+sugere: envio **sem aprovação**. Enviar com o sim dela não é isso, e existe —
+na prospecção e na resposta a uma conversa. O que nenhum trabalho de fundo tem
+é acesso a esse caminho: sai quando ela carrega, nunca antes.
 
 As variáveis `CAROLOS_*_ENABLED` só conseguem **fechar** uma bandeira, nunca
 abri-la. É assim que um preview não fala com o Gmail de produção mesmo que a

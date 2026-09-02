@@ -7636,3 +7636,18 @@ a.aiSource:hover {
   line-height: 1.4;
   color: var(--tinta);
 }
+
+/* ── alvos de toque nos botões secundários ────────────────────────────────
+   `.osPageBtn` tem 38px de altura, que chega ao rato e não chega ao polegar.
+   Alguns sítios já o corrigiam um a um — o modo focus, a captura, a gaveta da
+   conversa — e a revisão da prospecção, que agora é uma decisão da manhã,
+   ficava de fora.
+
+   `hover: none` e não uma largura: o que decide é ser um dedo, não ser um
+   ecrã pequeno. É o mesmo critério que o `.revX` já usava. */
+@media (hover: none) {
+  .dash .osPageBtn,
+  .dash .modos button {
+    min-height: 44px;
+  }
+}
