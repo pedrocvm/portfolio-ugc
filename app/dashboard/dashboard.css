@@ -4871,6 +4871,21 @@ a.osRow:hover .osRowName {
     max-height: 92dvh;
     padding: 18px 16px 16px;
   }
+  /* A resposta é a acção mais importante da gaveta e a que se faz com o
+     polegar. «Deixar rascunho no Gmail» ficava a 40px — abaixo do mínimo, e
+     com um rótulo comprido de mais para se acertar à primeira. */
+  .mailActs .osPageBtn,
+  .mailActs .osGo,
+  .mailActs .chip {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mailActs .osGo,
+  .mailActs .osPageBtn {
+    flex: 1 1 calc(50% - 8px);
+  }
 }
 
 /* ── paginação da fila ─────────────────────────────────────────────────── */
