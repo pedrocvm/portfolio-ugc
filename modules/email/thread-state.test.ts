@@ -157,3 +157,63 @@ test('a frase de espera diz de quem é a vez, sem tratar por tu', () => {
     assert.equal(/\b(tens|queres|podes|teu|tua|você)\b/i.test(frase), false, frase);
   }
 });
+
+/** O caso da Cecotec, a 31 de agosto.
+ *
+ *  Contrato assinado a 21, produto expedido a 26, briefing aprovado a 28 — e a
+ *  31 um «😉». A conversa em que faltava gravar um vídeo aparecia como
+ *  «Responder à mensagem. Está à espera de resposta há 2 dias.» */
+test('uma reação de emoji não é a mensagem que diz o que a marca quer', () => {
+  const aprovacao = msg('brief', 'inbound', '2026-08-28T14:00:00Z', {
+    bodyText: 'Adoramos a ideia! Segue o teu código de rastreio.',
+  });
+  const resposta = msg('dela', 'outbound', '2026-08-28T16:37:00Z', {
+    bodyText: 'Obrigada! Vou incluir o close-up.',
+  });
+  const reacao = msg('emoji', 'inbound', '2026-08-31T08:20:00Z', {
+    bodyText:
+      '😉\r\n\r\nJulia Bachur Quintella reaccionó a través de Gmail\r\n' +
+      '<https://www.google.com/gmail/about/?utm_campaign=emojireactionemail#app>',
+  });
+
+  const state = readThreadState([aprovacao, resposta, reacao], NOW);
+
+  assert.equal(state.lastExternal?.id, 'brief', 'a intenção passou a sair do emoji');
+  assert.equal(state.last?.id, 'emoji', 'a data da última atividade é a da reação');
+  assert.equal(state.waitingOn, 'brand', 'um emoji devolveu a vez à Carol');
+  assert.equal(state.inboundCount, 1, 'a reação foi contada como mensagem da marca');
+});
+
+test('a reação é reconhecida nos três idiomas em que ela a recebe', () => {
+  for (const corpo of [
+    'Julia reaccionó a través de Gmail',
+    'Julia reagiu através do Gmail',
+    'Julia reacted with 😉 via Gmail',
+    '<https://www.google.com/gmail/about/?utm_campaign=emojireactionemail#app>',
+  ]) {
+    const state = readThreadState(
+      [
+        msg('dela', 'outbound', '2026-08-28T16:00:00Z', { bodyText: 'Obrigada!' }),
+        msg('r', 'inbound', '2026-08-31T08:00:00Z', { bodyText: corpo }),
+      ],
+      NOW,
+    );
+    assert.equal(state.lastExternal, null, `passou como mensagem: ${corpo}`);
+    assert.equal(state.waitingOn, 'brand', `devolveu a vez à Carol: ${corpo}`);
+  }
+});
+
+/** Uma mensagem a falar de uma reação não é uma reação. */
+test('uma mensagem que menciona o Gmail continua a ser uma mensagem', () => {
+  const state = readThreadState(
+    [
+      msg('dela', 'outbound', '2026-08-28T16:00:00Z'),
+      msg('m', 'inbound', '2026-08-31T08:00:00Z', {
+        bodyText: 'Mandei o contrato para o teu Gmail, confirma se chegou.',
+      }),
+    ],
+    NOW,
+  );
+  assert.equal(state.lastExternal?.id, 'm');
+  assert.equal(state.waitingOn, 'carol');
+});

@@ -51,19 +51,43 @@ const ms = (v: string) => {
   return Number.isNaN(t) ? 0 : t;
 };
 
+/** Uma reação de emoji do Gmail chega como email, e não é uma mensagem.
+ *
+ *  A Cecotec aprovou o briefing e mandou o código de rastreio a 28; a 31
+ *  reagiu com «😉» à resposta dela. Como a intenção sai da última mensagem
+ *  externa, passou a sair do emoji: a conversa em que faltava gravar um vídeo
+ *  virou «Responder à mensagem. Está à espera de resposta há 2 dias.»
+ *
+ *  O que a identifica é o link que o Gmail mete no corpo — igual em todos os
+ *  idiomas. As frases servem de rede, porque a conta dela recebe reações em
+ *  português, espanhol e inglês. */
+const REACTION_LINK = /emojireactionemail/i;
+// Sem `\b` depois do verbo: em «reaccionó» o acento não é caractere de
+// palavra, e a fronteira nunca fecha.
+const REACTION_PHRASE = /\b(reagiu|reacted|reaccion[oó])[^\n]{0,40}gmail/i;
+
+export function isEmojiReaction(m: Pick<ThreadMessage, 'bodyText'>): boolean {
+  const body = m.bodyText ?? '';
+  return REACTION_LINK.test(body) || REACTION_PHRASE.test(body);
+}
+
 /** As mensagens podem vir por qualquer ordem: ordena-se aqui, uma vez. */
 export function readThreadState(
   messages: readonly ThreadMessage[],
   now: Date = new Date(),
 ): ThreadState {
   const ordered = [...messages].sort((a, b) => ms(a.sentAt) - ms(b.sentAt));
+  // Uma reação conta como atividade — entra em `last`, que serve para datas —
+  // mas não diz nada sobre o que a marca quer, nem devolve a vez a ninguém.
+  const ditas = ordered.filter((m) => !isEmojiReaction(m));
 
-  const lastExternal = [...ordered].reverse().find((m) => m.direction === 'inbound') ?? null;
-  const lastCarol = [...ordered].reverse().find((m) => m.direction === 'outbound') ?? null;
+  const lastExternal = [...ditas].reverse().find((m) => m.direction === 'inbound') ?? null;
+  const lastCarol = [...ditas].reverse().find((m) => m.direction === 'outbound') ?? null;
   const last = ordered[ordered.length - 1] ?? null;
+  const ultimaDita = ditas[ditas.length - 1] ?? null;
 
-  const inboundCount = ordered.filter((m) => m.direction === 'inbound').length;
-  const outboundCount = ordered.length - inboundCount;
+  const inboundCount = ditas.filter((m) => m.direction === 'inbound').length;
+  const outboundCount = ditas.length - inboundCount;
 
   // A vez é de quem ainda não respondeu à última do outro. Sem mensagens
   // nenhumas ninguém espera por ninguém — e é isso que impede uma conversa
@@ -71,18 +95,18 @@ export function readThreadState(
   let waitingOn: WaitingOn = 'nobody';
   let waitingSince: string | null = null;
 
-  if (last) {
-    if (last.direction === 'inbound') {
+  if (ultimaDita) {
+    if (ultimaDita.direction === 'inbound') {
       waitingOn = 'carol';
-      waitingSince = last.sentAt;
+      waitingSince = ultimaDita.sentAt;
     } else if (lastExternal) {
       waitingOn = 'brand';
-      waitingSince = last.sentAt;
+      waitingSince = ultimaDita.sentAt;
     } else {
       // Ela abordou e a marca nunca respondeu. A bola é da marca na mesma, e a
       // contagem começa na abordagem: é isso que o follow-up mede.
       waitingOn = 'brand';
-      waitingSince = last.sentAt;
+      waitingSince = ultimaDita.sentAt;
     }
   }
 
