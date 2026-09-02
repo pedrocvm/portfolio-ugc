@@ -1,6 +1,6 @@
 import { requireUser } from '@/lib/auth';
 import { getFlags } from '@/modules/settings/service';
-import { getFocus, latestManualRun, todayOutreach } from '@/app/dashboard/outreach-actions';
+import { getFocus, latestManualRun, referencesForCandidates, todayOutreach } from '@/app/dashboard/outreach-actions';
 import Outreach, { type Candidate } from '@/components/dashboard/os/Outreach';
 import type { ManualRun } from '@/components/dashboard/os/ResultsBar';
 
@@ -17,9 +17,13 @@ export default async function OutreachPage() {
 
   // A busca dirigida mostra os seus próprios resultados; a automática mostra o
   // lote do dia. `latestManualRun` já devolve nulo quando a dirigida caducou.
+  const visiveis = (manual.run ? manual.candidates : candidates) ?? [];
+  const references = await referencesForCandidates(visiveis.map((c) => c.id));
+
   return (
     <Outreach
-      candidates={(manual.run ? manual.candidates : candidates) as unknown as Candidate[]}
+      candidates={visiveis as unknown as Candidate[]}
+      references={references}
       runDate={run?.run_date ?? null}
       enabled={flags.daily_outreach}
       focus={focus}

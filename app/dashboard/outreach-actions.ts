@@ -37,6 +37,79 @@ export async function todayOutreach() {
   return { run, candidates: candidates ?? [] };
 }
 
+export type BrandReferenceRow = {
+  candidateId: string;
+  id: string;
+  rank: number;
+  platform: string;
+  url: string;
+  title: string;
+  creatorHandle: string | null;
+  publishedAt: string | null;
+  freshness: string;
+  hook: string;
+  structure: string;
+  editingStyle: string;
+  whyItWorks: string;
+  fitReason: string;
+  adaptation: string;
+  doNotCopy: string;
+};
+
+/** As referências de várias candidatas numa consulta.
+ *
+ *  Uma por candidata dava dez idas à base para desenhar uma lista; e carregá-las
+ *  só quando o cartão abre obrigava a um estado de espera dentro do cartão,
+ *  que é exactamente a fricção que a revisão sequencial não tem. */
+export async function referencesForCandidates(ids: readonly string[]): Promise<BrandReferenceRow[]> {
+  if (ids.length === 0) return [];
+  const db = await supabaseServer();
+  const { data } = await db
+    .from('candidate_reference')
+    .select(
+      'outreach_candidate_id, rank, fit_reason, adaptation, do_not_copy, reference:creative_reference_id ( id, source_platform, source_url, title, creator_handle, published_at, freshness, hook, structure, editing_style, why_it_works )',
+    )
+    .in('outreach_candidate_id', ids as string[])
+    .order('rank', { ascending: true });
+
+  type Ref = {
+    id: string; source_platform: string; source_url: string; title: string;
+    creator_handle: string | null; published_at: string | null; freshness: string;
+    hook: string; structure: string; editing_style: string; why_it_works: string;
+  };
+  type Row = {
+    outreach_candidate_id: string; rank: number; fit_reason: string; adaptation: string;
+    do_not_copy: string; reference: Ref | Ref[] | null;
+  };
+
+  const one = (v: Ref | Ref[] | null): Ref | null => (Array.isArray(v) ? (v[0] ?? null) : v);
+
+  return ((data ?? []) as unknown as Row[]).flatMap((r) => {
+    const ref = one(r.reference);
+    if (!ref) return [];
+    return [
+      {
+        candidateId: r.outreach_candidate_id,
+        id: ref.id,
+        rank: r.rank,
+        platform: ref.source_platform,
+        url: ref.source_url,
+        title: ref.title,
+        creatorHandle: ref.creator_handle,
+        publishedAt: ref.published_at,
+        freshness: ref.freshness,
+        hook: ref.hook,
+        structure: ref.structure,
+        editingStyle: ref.editing_style,
+        whyItWorks: ref.why_it_works,
+        fitReason: r.fit_reason,
+        adaptation: r.adaptation,
+        doNotCopy: r.do_not_copy,
+      },
+    ];
+  });
+}
+
 export async function updateOutreachDraft(id: string, subject: string, body: string): Promise<Result> {
   await requireUser();
   if (!Uuid.safeParse(id).success) return { error: 'Candidata inválida.' };
@@ -453,6 +526,7 @@ export async function latestManualRun() {
 
   return { run, candidates: candidates ?? [] };
 }
+
 
 /** Guardar é o que faz um resultado de busca virar candidata a sério.
  *  Sem isto, uma busca exploratória sujava o CRM com tudo o que apareceu. */

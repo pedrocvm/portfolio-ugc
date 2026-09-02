@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
 import { label } from '@/lib/labels';
 import { CAPABILITY_LABEL, FUNNEL_LABEL, capabilityInventory, listContent, type FunnelRole } from '@/modules/content/service';
+import { contentBank, todayContent } from '@/modules/creator/plan-service';
+import { usableTrends } from '@/modules/trends/service';
+import ContentBank from '@/components/dashboard/os/ContentBank';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,9 +13,23 @@ export const dynamic = 'force-dynamic';
  *  Serve para responder a uma pergunta concreta: quando uma marca pede um
  *  exemplo, qual é a peça que responde à dúvida dela? E, do outro lado, que
  *  competência ainda falta demonstrar. */
-export default async function ContentPage() {
+export default async function ContentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ idea?: string }>;
+}) {
   await requireUser();
-  const [content, inventory] = await Promise.all([listContent(), capabilityInventory()]);
+  const { idea } = await searchParams;
+  const [content, inventory, hoje, banco, trends] = await Promise.all([
+    listContent(),
+    capabilityInventory(),
+    // O conteúdo dela e o conteúdo das marcas vivem na mesma tela de propósito:
+    // são o mesmo trabalho visto de dois lados, e um destino a mais é um
+    // destino que ela não visita.
+    todayContent().catch(() => []),
+    contentBank().catch(() => []),
+    usableTrends(8).catch(() => []),
+  ]);
 
   const byRole = (role: FunnelRole) => content.filter((c) => c.funnelRole === role);
 
@@ -20,9 +37,14 @@ export default async function ContentPage() {
     <>
       <div className="dashBar">
         <h1>Conteúdo</h1>
-        <span className="dashState">{content.length} peça(s)</span>
+        <span className="dashState">
+          {hoje.length ? `${hoje.length} para gravar hoje` : `${content.length} peças`}
+        </span>
       </div>
 
+      <ContentBank today={hoje} bank={banco} trends={trends} openId={idea} />
+
+      <h2 className="osDivider">Para as marcas</h2>
       <p className="osNote">
         Cada peça é uma hipótese com uma função no funil e uma competência demonstrada. É isto que
         permite escolher o exemplo certo em vez de mandar o portfólio inteiro.

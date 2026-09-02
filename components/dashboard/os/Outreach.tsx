@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react';
 import {
   approveOutreach, clearManualSearch, discardMany, draftOutreach, saveCandidates,
   sendApprovedOutreach, sendOutreach, skipOutreach, startDiscovery, startManualSearch,
-  suppressBrand, updateOutreachDraft,
+  suppressBrand, updateOutreachDraft, type BrandReferenceRow,
 } from '@/app/dashboard/outreach-actions';
 import Spinner from '@/components/dashboard/Spinner';
 import { watchDiscovery } from '@/components/dashboard/DiscoveryWatch';
@@ -18,6 +18,7 @@ import {
   LIMITS, SECTION_HINT, SECTION_TITLE, groupForReview, sectionFor,
 } from '@/modules/outreach/domain';
 import { nicheShort } from '@/modules/brands/niches';
+import { FRESHNESS_LABEL, type Freshness } from '@/modules/references/domain';
 import type { Focus } from '@/modules/outreach/focus';
 import CountryPicker from './CountryPicker';
 import FocusEditor from './FocusEditor';
@@ -48,7 +49,87 @@ export type Candidate = {
   saved: boolean;
   quality: { pass: boolean; score: number; failures: string[] } | null;
   status: string; sent_at: string | null;
+  /** O conceito que o CarolOS recomenda gravar para esta marca, tirado das
+   *  referências que separou de madrugada. */
+  creative_angle: string | null;
+  ready_idea: ReadyIdea | null;
+  references_state: string | null;
+  references_note: string | null;
 };
+
+export type ReadyIdea = {
+  creative_angle: string;
+  title: string;
+  hook: string;
+  script: string;
+  shot_list: { shot: string; note: string | null; required: boolean }[];
+  b_roll: string[];
+  on_screen_text: string[];
+  editing_notes: string;
+  cta: string;
+  duration_seconds: number | null;
+  props: string[];
+  location: string;
+  why_this_brand: string;
+};
+
+/** A ideia pronta a gravar, tirada das referências.
+ *
+ *  «Ideia: fazer um vídeo a mostrar o produto» não é trabalho preparado. Isto é
+ *  o que se põe no tripé — e por isso vem com tomadas numeradas, texto no ecrã
+ *  e notas de edição, não com uma frase. */
+function ReadyIdeaBlock({ idea }: { idea: ReadyIdea }) {
+  return (
+    <div className="refIdea">
+      <h4>{idea.title || 'Pronto a gravar'}</h4>
+      <p className="refHook">«{idea.hook}»</p>
+      {idea.script ? <p className="refScript">{idea.script}</p> : null}
+      {idea.shot_list.length ? (
+        <ol className="refShots">
+          {idea.shot_list.map((s, i) => (
+            <li key={i}>
+              {s.shot}
+              {s.note ? <span> — {s.note}</span> : null}
+              {s.required === false ? <span className="refOpt"> (opcional)</span> : null}
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      <dl className="refPlan">
+        {idea.on_screen_text.length ? (
+          <>
+            <dt>Texto no ecrã</dt>
+            <dd>{idea.on_screen_text.join(' · ')}</dd>
+          </>
+        ) : null}
+        {idea.editing_notes ? (
+          <>
+            <dt>Edição</dt>
+            <dd>{idea.editing_notes}</dd>
+          </>
+        ) : null}
+        {idea.props.length ? (
+          <>
+            <dt>Adereços</dt>
+            <dd>{idea.props.join(', ')}</dd>
+          </>
+        ) : null}
+        {idea.location ? (
+          <>
+            <dt>Onde</dt>
+            <dd>{idea.location}</dd>
+          </>
+        ) : null}
+        {idea.cta ? (
+          <>
+            <dt>Remate</dt>
+            <dd>{idea.cta}</dd>
+          </>
+        ) : null}
+      </dl>
+    </div>
+  );
+}
 
 /** O que o número quer dizer. Numa busca dirigida a pergunta é «corresponde ao
  *  que pedi?»; na automática é «encaixa no que faço?». São perguntas
@@ -62,7 +143,7 @@ function scoreFor(c: Candidate): { n: number | null; label: string } {
   return { n, label: `${manual ? 'Potencial' : 'Encaixe'} · ${banda}` };
 }
 
-function Card({ c }: { c: Candidate }) {
+function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
   const [pending, start] = useTransition();
   const [running, setRunning] = useState('');
   const [gone, setGone] = useState(false);
@@ -187,6 +268,41 @@ function Card({ c }: { c: Candidate }) {
         </p>
       ) : null}
       {msg ? <p className="osWarn">{msg}</p> : null}
+
+      {/* As referências servem por dentro: nunca vão no cold email — mandar
+          links de concorrentes a uma marca é uma forma rápida de não ter
+          resposta. O que vai para o email é uma ideia melhor por causa delas. */}
+      {refs.length ? (
+        <details className="outDetail outRefs">
+          <summary>
+            {refs.length === 1 ? '1 referência separada' : `${refs.length} referências separadas`}
+            {c.creative_angle ? ' · 1 conceito recomendado' : ''}
+          </summary>
+          <div>
+            {c.creative_angle ? <p className="refAngle">{c.creative_angle}</p> : null}
+            <ol className="refList">
+              {refs.map((r) => (
+                <li key={r.id}>
+                  <a href={r.url} target="_blank" rel="noreferrer noopener">
+                    {r.title || r.url}
+                  </a>
+                  <span className="refMeta">
+                    {r.platform}
+                    {r.creatorHandle ? ` · ${r.creatorHandle}` : ''}
+                    {r.freshness && r.freshness !== 'unknown' ? ` · ${FRESHNESS_LABEL[r.freshness as Freshness] ?? r.freshness}` : ''}
+                  </span>
+                  {r.whyItWorks ? <p><b>Porque funciona:</b> {r.whyItWorks}</p> : null}
+                  {r.adaptation ? <p><b>Adaptar assim:</b> {r.adaptation}</p> : null}
+                  {r.doNotCopy ? <p className="refNo"><b>Não copiar:</b> {r.doNotCopy}</p> : null}
+                </li>
+              ))}
+            </ol>
+            {c.ready_idea ? <ReadyIdeaBlock idea={c.ready_idea} /> : null}
+          </div>
+        </details>
+      ) : c.references_state === 'empty' || c.references_state === 'failed' ? (
+        <p className="osRowSub">{c.references_note || 'Não encontrei referências utilizáveis para esta marca.'}</p>
+      ) : null}
 
       <details className="outDetail">
         <summary>Porquê esta marca</summary>
@@ -342,13 +458,20 @@ export default function Outreach({
   enabled,
   focus,
   manualRun,
+  references = [],
 }: {
   candidates: Candidate[];
   runDate: string | null;
   enabled: boolean;
   focus: Focus;
   manualRun: ManualRun | null;
+  references?: BrandReferenceRow[];
 }) {
+  const refsPorMarca = new Map<string, BrandReferenceRow[]>();
+  for (const r of references) {
+    refsPorMarca.set(r.candidateId, [...(refsPorMarca.get(r.candidateId) ?? []), r]);
+  }
+
   const [pending, start] = useTransition();
   const [running, setRunning] = useState('');
   const [msg, setMsg] = useState('');
@@ -550,7 +673,7 @@ export default function Outreach({
             </header>
             <div className="revList">
               {rows.map((c) => (
-                <Card key={c.id} c={c} />
+                <Card key={c.id} c={c} refs={refsPorMarca.get(c.id) ?? []} />
               ))}
             </div>
             {section === 'below' && rows.length > 1 ? (

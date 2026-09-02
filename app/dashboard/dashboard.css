@@ -7290,3 +7290,303 @@ a.aiSource:hover {
 .dash .osRest .osSection h2 {
   display: none;
 }
+
+/* ── referências criativas por marca ───────────────────────────────────────
+   Servem por dentro: nunca vão no email. O que vai para o email é uma ideia
+   melhor por causa delas — e é essa ideia que fecha este bloco. */
+
+.dash .outRefs > summary {
+  color: var(--umbra);
+}
+.dash .refAngle {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--tinta);
+}
+.dash .refList {
+  margin: 0;
+  padding-left: 18px;
+}
+.dash .refList > li {
+  margin-bottom: 14px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.dash .refList a {
+  font-weight: 500;
+  color: var(--tinta);
+  overflow-wrap: anywhere;
+}
+.dash .refMeta {
+  display: block;
+  margin: 1px 0 5px;
+  font-size: 13px;
+  color: var(--tinta3);
+}
+.dash .refList p {
+  margin: 0 0 4px;
+  color: var(--tinta2);
+}
+.dash .refNo {
+  color: var(--alerta);
+}
+
+/* Mastigado significa mastigado: tomadas numeradas, texto no ecrã, edição. */
+.dash .refIdea {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--areia);
+}
+.dash .refIdea h4 {
+  margin: 0 0 6px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 16px;
+  color: var(--tinta);
+}
+.dash .refHook {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--tinta);
+}
+.dash .refScript {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--tinta2);
+  white-space: pre-wrap;
+}
+.dash .refShots {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+.dash .refShots > li {
+  padding: 2px 0;
+}
+.dash .refOpt {
+  color: var(--pedra);
+}
+.dash .refPlan {
+  display: grid;
+  grid-template-columns: minmax(80px, auto) 1fr;
+  gap: 3px 12px;
+  margin: 0;
+  font-size: 14px;
+}
+.dash .refPlan dt {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  padding-top: 2px;
+}
+.dash .refPlan dd {
+  margin: 0;
+  color: var(--tinta2);
+  line-height: 1.5;
+}
+@media (max-width: 559px) {
+  .dash .refPlan {
+    grid-template-columns: 1fr;
+    gap: 0 0;
+  }
+  .dash .refPlan dd {
+    margin-bottom: 8px;
+  }
+}
+
+/* ── o banco de conteúdo dela ──────────────────────────────────────────────
+   Não é um destino obrigatório: a operação diária chega ao Hoje. Isto é onde
+   se vê o plano inteiro, e onde ficam as ideias guardadas para uma tarde com
+   tempo. */
+
+.dash .osDivider {
+  margin: 40px 0 6px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  font-size: 22px;
+}
+
+.dash .cbList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dash .cbIdea {
+  border: 1px solid var(--rule);
+  background: var(--papel);
+}
+.dash .cbIdea[data-status='discarded'],
+.dash .cbIdea[data-status='archived'] {
+  opacity: 0.62;
+}
+.dash .cbIdea > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  min-height: 52px;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.dash .cbIdea > summary::-webkit-details-marker {
+  display: none;
+}
+.dash .cbIdea > summary:hover {
+  background: var(--areia);
+}
+.dash .cbPlat {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  flex-basis: 82px;
+}
+.dash .cbTitle {
+  flex: 1 1 240px;
+  font-weight: 500;
+  color: var(--tinta);
+}
+.dash .cbTime {
+  font-size: 13px;
+  color: var(--tinta3);
+}
+
+.dash .cbBody {
+  padding: 0 16px 16px;
+}
+.dash .cbHook {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.4;
+  color: var(--tinta);
+}
+.dash .cbWhy,
+.dash .cbMeta {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--tinta3);
+}
+.dash .cbVerdict {
+  margin: 0 0 12px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 15px;
+  color: var(--umbra);
+}
+.dash .cbBlock {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+.dash .cbBlock h4 {
+  margin: 0 0 6px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.dash .cbScript,
+.dash .cbCaption {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--tinta);
+  white-space: pre-wrap;
+}
+.dash .cbShots,
+.dash .cbSteps {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--tinta2);
+}
+.dash .cbShots > li,
+.dash .cbSteps > li {
+  padding: 2px 0;
+}
+.dash .cbOpt {
+  color: var(--pedra);
+}
+.dash .cbPlan {
+  display: grid;
+  grid-template-columns: minmax(100px, auto) 1fr;
+  gap: 3px 14px;
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+.dash .cbPlan dt {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  padding-top: 2px;
+}
+.dash .cbPlan dd {
+  margin: 0;
+  color: var(--tinta2);
+  line-height: 1.5;
+}
+.dash .cbRefs {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+.dash .cbRefs a {
+  color: var(--tinta);
+  overflow-wrap: anywhere;
+}
+.dash .cbSub {
+  margin: 6px 0 0;
+}
+.dash .cbSub > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--tinta3);
+  cursor: pointer;
+}
+.dash .cbSub ul {
+  margin: 0 0 0 18px;
+  padding: 0;
+  font-size: 15px;
+  color: var(--tinta2);
+}
+
+@media (max-width: 559px) {
+  .dash .cbPlan {
+    grid-template-columns: 1fr;
+  }
+  .dash .cbPlan dd {
+    margin-bottom: 8px;
+  }
+  .dash .cbIdea > summary {
+    padding: 12px;
+  }
+  .dash .cbBody {
+    padding: 0 12px 14px;
+  }
+}

@@ -991,6 +991,323 @@ const findAnything = define(
   },
 );
 
+
+/* ── Morning Autopilot ───────────────────────────────────────────────────── */
+
+const getMorningBrief = define(
+  'get_morning_brief',
+  'A manhã já preparada: quantas decisões precisam dela, por que ordem, quanto tempo custam, o que o CarolOS fez sozinho e o que não conseguiu fazer. Usa isto para «organiza a minha manhã» e «o que preciso de fazer hoje».',
+  z.object({}),
+  async () => {
+    const { readMorningBrief } = await import('@/modules/morning/service');
+    const brief = await readMorningBrief();
+    if (!brief) {
+      return {
+        data: {
+          ready: false,
+          note: 'A manhã de hoje ainda não foi consolidada. Isso acontece quando o trabalho das 07:10 não correu — não quer dizer que não haja nada a fazer.',
+        },
+        sources: [],
+      };
+    }
+    return {
+      data: {
+        ready: true,
+        status: brief.status,
+        headline: brief.headline,
+        estimatedMinutes: brief.estimatedMinutes,
+        decisions: brief.decisions.map((d) => ({
+          id: d.id,
+          kind: d.kind,
+          subject: d.subject,
+          headline: d.headline,
+          because: d.because,
+          covers: d.covers,
+          href: d.href,
+        })),
+        // O que ele fez, e o que não conseguiu. As duas coisas, sempre.
+        prepared: brief.preparedLines,
+        gaps: brief.gaps.map((g) => g.message),
+      },
+      sources: [{ id: brief.date, type: 'followup' as const, label: 'A manhã de hoje', at: null, href: '/dashboard' }],
+    };
+  },
+);
+
+const getEmailTriage = define(
+  'get_email_triage',
+  'As conversas já triadas: quem escreveu, o que quer, o que falta, o risco, a recomendação e o rascunho de resposta. `waiting_on` diz de quem é a vez — nunca assumas pela última mensagem.',
+  z.object({
+    waiting_on: z.enum(['carol', 'brand', 'nobody']).optional(),
+    limit: z.number().optional(),
+  }),
+  async ({ waiting_on, limit }) => {
+    const db = await supabaseServer();
+    let q = db
+      .from('thread_intel')
+      .select('id, thread_id, brand_id, intent, waiting_on, waiting_since, who_wrote, what_they_want, what_is_missing, risk, risk_level, recommendation, draft_state, draft_subject, draft_body, prepared_at, brand:brand_id ( name )')
+      .order('waiting_since', { ascending: true })
+      .limit(cap(limit, 20));
+    if (waiting_on) q = q.eq('waiting_on', waiting_on);
+
+    const { data } = await q;
+    const rows = data ?? [];
+    return {
+      data: rows.map((r) => {
+        const brand = r.brand as { name: string } | { name: string }[] | null;
+        return {
+          threadId: r.thread_id,
+          brand: (Array.isArray(brand) ? brand[0]?.name : brand?.name) ?? null,
+          intent: r.intent,
+          waitingOn: r.waiting_on,
+          whoWrote: r.who_wrote,
+          whatTheyWant: r.what_they_want,
+          whatIsMissing: r.what_is_missing,
+          risk: r.risk,
+          riskLevel: r.risk_level,
+          recommendation: r.recommendation,
+          draftState: r.draft_state,
+          draftSubject: r.draft_subject,
+          draftBody: r.draft_body,
+          preparedAt: r.prepared_at,
+        };
+      }),
+      sources: rows.map((r) => ({
+        id: r.thread_id, type: 'email' as const,
+        label: r.who_wrote || 'Conversa', at: r.prepared_at, href: '/dashboard/inbox',
+      })),
+    };
+  },
+);
+
+const prepareReply = define(
+  'prepare_reply',
+  'Prepara (ou refaz) a leitura e o rascunho de resposta de uma conversa. Normalmente já está feito de madrugada; usa isto quando ela pedir para reescrever ou quando a preparação falhou.',
+  z.object({ thread_id: z.string().uuid() }),
+  async ({ thread_id }) => {
+    const { triageThread } = await import('@/modules/email/triage-service');
+    const { getFlags } = await import('@/modules/settings/service');
+    const outcome = await triageThread(thread_id, await getFlags(), { force: true });
+    const { intelForThread } = await import('@/modules/email/triage-service');
+    const intel = await intelForThread(thread_id);
+    return {
+      data: {
+        status: outcome.status,
+        detail: outcome.detail,
+        // Nunca envia. Prepara e mostra; quem envia é ela, num botão.
+        note: 'O rascunho fica preparado. O envio continua a exigir o sim dela.',
+        draft: intel ? { subject: intel.draftSubject, body: intel.draftBody, state: intel.draftState } : null,
+      },
+      sources: [{ id: thread_id, type: 'email' as const, label: 'Conversa', at: null, href: '/dashboard/inbox' }],
+    };
+  },
+  'write',
+);
+
+const getDailyContentPlan = define(
+  'get_daily_content_plan',
+  'O que ela tem para gravar hoje: uma ideia para Instagram e uma para TikTok, com gancho, guião, tomadas, edição e tempos. Usa isto para «o que gravo hoje?».',
+  z.object({}),
+  async () => {
+    const { todayContent } = await import('@/modules/creator/plan-service');
+    const ideas = await todayContent();
+    return {
+      data: ideas.length
+        ? ideas.map((i) => ({
+            id: i.id,
+            platform: i.platform,
+            pillar: i.pillarLabel,
+            title: i.title,
+            hook: i.hook,
+            whyNow: i.whyNow,
+            recordMinutes: i.recordMinutes,
+            editMinutes: i.editMinutes,
+            verdict: i.verdict,
+            shots: i.shotList.length,
+          }))
+        : { note: 'Ainda não há plano para hoje. O trabalho corre às 07:00.' },
+      sources: ideas.map((i) => ({
+        id: i.id, type: 'portfolio' as const, label: i.title || i.hook, at: i.planDate,
+        href: `/dashboard/content?idea=${i.id}`,
+      })),
+    };
+  },
+);
+
+const getContentIdea = define(
+  'get_content_idea',
+  'Uma ideia de conteúdo por inteiro: guião, tomadas, b-roll, texto no ecrã, passos de CapCut, legenda e remate.',
+  z.object({ idea_id: z.string().uuid() }),
+  async ({ idea_id }) => {
+    const { contentIdea } = await import('@/modules/creator/plan-service');
+    const idea = await contentIdea(idea_id);
+    if (!idea) return { data: { found: false }, sources: [] };
+    return {
+      data: { found: true, ...idea },
+      sources: [{
+        id: idea.id, type: 'portfolio' as const, label: idea.title || idea.hook, at: idea.planDate,
+        href: `/dashboard/content?idea=${idea.id}`,
+      }],
+    };
+  },
+);
+
+const regenerateContentIdea = define(
+  'regenerate_content_idea',
+  'Escreve outra ideia no lugar de uma. A direcção é uma de quatro: easier (mais fácil de gravar), personal (mais pessoal), educational (mais educativa), edited (mais trabalhada na edição). Usa isto para «quero outra», «quero algo mais fácil».',
+  z.object({
+    idea_id: z.string().uuid(),
+    direction: z.enum(['easier', 'personal', 'educational', 'edited']).optional(),
+  }),
+  async ({ idea_id, direction }) => {
+    const { replaceIdea } = await import('@/modules/creator/replace-service');
+    const r = await replaceIdea(idea_id, direction);
+    if (!r.ok) return { data: { replaced: false, reason: r.error }, sources: [] };
+    const { contentIdea } = await import('@/modules/creator/plan-service');
+    const idea = await contentIdea(r.id);
+    return {
+      data: { replaced: true, idea },
+      sources: idea
+        ? [{ id: idea.id, type: 'portfolio' as const, label: idea.title || idea.hook, at: idea.planDate, href: `/dashboard/content?idea=${idea.id}` }]
+        : [],
+    };
+  },
+  'write',
+);
+
+const saveContentIdea = define(
+  'save_content_idea',
+  'Muda o estado de uma ideia: saved (guardar para depois), recorded (já gravou), published (já publicou), discarded (não é para ela).',
+  z.object({
+    idea_id: z.string().uuid(),
+    status: z.enum(['ready', 'saved', 'recorded', 'published', 'discarded']),
+  }),
+  async ({ idea_id, status }) => {
+    const { setIdeaStatus } = await import('@/modules/creator/plan-service');
+    await setIdeaStatus(idea_id, status);
+    return { data: { ok: true, status }, sources: [] };
+  },
+  'write',
+);
+
+const getBrandReferences = define(
+  'get_brand_references',
+  'As referências criativas separadas para uma marca da prospecção, com link, o que as faz funcionar, como adaptar e o que não copiar.',
+  z.object({ candidate_id: z.string().uuid() }),
+  async ({ candidate_id }) => {
+    const { referencesForCandidates } = await import('@/app/dashboard/outreach-actions');
+    const refs = await referencesForCandidates([candidate_id]);
+    return {
+      data: refs.length ? refs : { note: 'Esta marca ainda não tem referências separadas.' },
+      sources: refs.map((r) => ({
+        id: r.id, type: 'knowledge' as const, label: r.title || r.url, at: r.publishedAt, href: r.url,
+      })),
+    };
+  },
+);
+
+const searchCreativeReferences = define(
+  'search_creative_references',
+  'Procura nas referências já guardadas por plataforma, marca ou palavra. Não vai à web: para procurar uma referência nova para uma marca, usa adapt_reference_to_brand.',
+  z.object({ query: z.string().optional(), platform: z.string().optional(), limit: z.number().optional() }),
+  async ({ query, platform, limit }) => {
+    const db = await supabaseServer();
+    let q = db
+      .from('creative_reference')
+      .select('id, source_platform, source_url, title, creator_handle, brand_name, published_at, freshness, hook, structure, editing_style, why_it_works')
+      .order('captured_at', { ascending: false })
+      .limit(cap(limit, 20));
+    if (platform) q = q.eq('source_platform', platform);
+    if (query) q = q.or(`title.ilike.%${query}%,hook.ilike.%${query}%,brand_name.ilike.%${query}%`);
+
+    const { data } = await q;
+    const rows = data ?? [];
+    return {
+      data: rows,
+      sources: rows.map((r) => ({
+        id: r.id, type: 'knowledge' as const, label: r.title || r.source_url, at: r.published_at, href: r.source_url,
+      })),
+    };
+  },
+);
+
+const adaptReferenceToBrand = define(
+  'adapt_reference_to_brand',
+  'Procura referências novas para uma marca candidata e transforma-as numa ideia gravável. Demora: é uma pesquisa na web mais duas chamadas.',
+  z.object({ candidate_id: z.string().uuid() }),
+  async ({ candidate_id }) => {
+    const db = await supabaseServer();
+    const { data: c } = await db
+      .from('outreach_candidate')
+      .select('id, name, product, niche_id, creative_opportunity, why_fit')
+      .eq('id', candidate_id)
+      .maybeSingle();
+    if (!c) return { data: { found: false }, sources: [] };
+
+    const { referencesForCandidate } = await import('@/modules/references/service');
+    const r = await referencesForCandidate({
+      candidateId: c.id,
+      name: c.name,
+      product: c.product ?? '',
+      category: c.niche_id ?? '',
+      angle: c.creative_opportunity || c.why_fit || '',
+    });
+    return {
+      data: r.error ? { ok: false, reason: r.error } : { ok: true, references: r.saved, readyIdea: r.idea },
+      sources: [{ id: c.id, type: 'brand' as const, label: c.name, at: null, href: '/dashboard/outreach' }],
+    };
+  },
+  'write',
+);
+
+const getCreatorTrends = define(
+  'get_creator_trends',
+  'As tendências encontradas hoje que encaixam nela, com prova clicável e a razão do encaixe. As que não encaixam ficam de fora — mas foram vistas.',
+  z.object({ limit: z.number().optional() }),
+  async ({ limit }) => {
+    const { usableTrends } = await import('@/modules/trends/service');
+    const rows = await usableTrends(cap(limit, 12));
+    return {
+      data: rows.length ? rows : { note: 'Não há tendências actuais que encaixem nela. Isso é uma resposta, não uma falha.' },
+      sources: rows.map((t) => ({
+        id: t.id, type: 'knowledge' as const, label: t.title, at: t.detectedAt,
+        href: t.evidence[0]?.url ?? t.sourceUrl ?? '/dashboard/content',
+      })),
+    };
+  },
+);
+
+const getCreatorProfile = define(
+  'get_creator_profile',
+  'O retrato da Carol como criadora: como se filma, que duração prefere, que formatos evita. `coverage` diz quanto disto foi mesmo observado — com «unknown», não afirmes que uma coisa é o estilo dela.',
+  z.object({}),
+  async () => {
+    const { readProfile } = await import('@/modules/creator/profile-service');
+    const p = await readProfile();
+    return {
+      data: p ?? { coverage: 'unknown', note: 'Ainda não há retrato observado dela.' },
+      sources: [],
+    };
+  },
+);
+
+const getBusinessMilestones = define(
+  'get_business_milestones',
+  'Os marcos reais da carreira dela, derivados de factos gravados — nunca inventados. Serve para conteúdo de jornada.',
+  z.object({ only_unused: z.boolean().optional(), limit: z.number().optional() }),
+  async ({ only_unused, limit }) => {
+    const { allMilestones, contentWorthyMilestones } = await import('@/modules/milestones/service');
+    const rows = only_unused ? await contentWorthyMilestones(cap(limit, 10)) : await allMilestones(cap(limit, 30));
+    return {
+      data: rows.length ? rows : { note: 'Ainda não há marcos derivados. Sem factos gravados, não se inventa nenhum.' },
+      sources: rows.filter((m) => m.brandId).map((m) => ({
+        id: m.brandId as string, type: 'brand' as const, label: m.brandName ?? 'Marca',
+        at: m.occurredAt, href: `/dashboard/brands/${m.brandId}`,
+      })),
+    };
+  },
+);
+
 export const TOOLS: Tool[] = [
   searchBrands, getBrand, getBrandActivity,
   searchOpportunities, getOpportunity,
@@ -1005,6 +1322,10 @@ export const TOOLS: Tool[] = [
   approveOutreachTool, prepareOutreachSend,
   startProspecting, readProspectingFocus, setProspectingFocus,
   resolveTodayAction, captureSomething, findAnything,
+  getMorningBrief, getEmailTriage, prepareReply,
+  getDailyContentPlan, getContentIdea, regenerateContentIdea, saveContentIdea,
+  getBrandReferences, searchCreativeReferences, adaptReferenceToBrand,
+  getCreatorTrends, getCreatorProfile, getBusinessMilestones,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));

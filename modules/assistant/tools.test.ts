@@ -65,7 +65,13 @@ test('nenhuma ferramenta de alto risco está registada', () => {
 /** Não existe `gmail.send` em lado nenhum, e o assistente não pode ser a
  *  primeira excepção. */
 test('nenhuma ferramenta envia seja o que for', () => {
-  const suspeitas = [/\bsendCandidate\b/, /\bsendApprovedOutreach\b/, /\bsendOutreach\b/, /messages\/send/];
+  // `sendReply` e `sendPreparedReply` são o caminho novo do envio de dentro do
+  // CarolOS. Continuam a exigir um clique dela, e por isso nenhuma ferramenta
+  // do assistente lhes pode chegar — nem por importação directa.
+  const suspeitas = [
+    /\bsendCandidate\b/, /\bsendApprovedOutreach\b/, /\bsendOutreach\b/, /messages\/send/,
+    /\bsendReply\b/, /\bsendPreparedReply\b/, /email\/send-service/,
+  ];
   for (const re of suspeitas) {
     assert.doesNotMatch(TOOLS, re, `as ferramentas alcançam ${re}`);
   }
@@ -76,6 +82,57 @@ test('preparar um envio diz, no que devolve, que não enviou', () => {
   assert.ok(i > 0, 'a ferramenta de preparar envio desapareceu');
   const corpo = TOOLS.slice(i, TOOLS.indexOf('\n);', i));
   assert.match(corpo, /Nada foi enviado/);
+});
+
+/** A camada da manhã tem de estar ao alcance do assistente: é o que separa
+ *  «podes ir a Conteúdo» de «trocado, está aqui». */
+test('a Carol AI alcança a manhã, o conteúdo e as referências', () => {
+  const lista = registadas();
+  const todas = ferramentas();
+  for (const nome of [
+    'get_morning_brief',
+    'get_email_triage',
+    'prepare_reply',
+    'get_daily_content_plan',
+    'get_content_idea',
+    'regenerate_content_idea',
+    'save_content_idea',
+    'get_brand_references',
+    'search_creative_references',
+    'adapt_reference_to_brand',
+    'get_creator_trends',
+    'get_creator_profile',
+    'get_business_milestones',
+  ]) {
+    const f = todas.find((x) => x.nome === nome);
+    assert.ok(f, `«${nome}» não existe`);
+    assert.notEqual(f.risco, 'high', `«${nome}» está classificada como alto risco`);
+  }
+  assert.match(lista, /getMorningBrief/);
+  assert.match(lista, /getDailyContentPlan/);
+  assert.match(lista, /regenerateContentIdea/);
+});
+
+/** Trocar uma ideia, refazer um rascunho e procurar referências mudam o
+ *  estado. Marcá-las como leitura deixava o modelo dispará-las em qualquer
+ *  resposta — e uma delas gasta uma pesquisa na web por chamada. */
+test('preparar, trocar e procurar contam como escrita', () => {
+  const todas = ferramentas();
+  for (const nome of ['prepare_reply', 'regenerate_content_idea', 'save_content_idea', 'adapt_reference_to_brand']) {
+    assert.equal(todas.find((f) => f.nome === nome)?.risco, 'write', `«${nome}» não está como escrita`);
+  }
+  for (const nome of ['get_morning_brief', 'get_email_triage', 'get_creator_trends', 'get_creator_profile']) {
+    assert.equal(todas.find((f) => f.nome === nome)?.risco, 'read', `«${nome}» não devia escrever`);
+  }
+});
+
+/** Preparar não é enviar, e o que a ferramenta devolve tem de o dizer — senão
+ *  o modelo relata «respondi à Cecotec» quando só escreveu um rascunho. */
+test('preparar uma resposta diz, no que devolve, que não enviou', () => {
+  const i = TOOLS.indexOf("'prepare_reply'");
+  assert.ok(i > 0, 'a ferramenta de preparar resposta desapareceu');
+  const corpo = TOOLS.slice(i, TOOLS.indexOf('\n);', i));
+  assert.match(corpo, /exigir o sim dela/);
 });
 
 /** O gate tem de estar no sítio onde as ferramentas correm — não só na lista
