@@ -6,6 +6,8 @@ import {
   REJECTION_REASONS,
   PILLAR_SPEC,
   catalogProblems,
+  ptPtProblems,
+  describeStrategy,
   describeRejections,
   energyBudget,
   energyOf,
@@ -27,6 +29,7 @@ import {
   shouldGenerate,
   similarity,
 } from './domain';
+import { EXEMPLAR_SCRIPTS, SEED_IDEAS } from './audit-seed';
 
 const NOW = new Date('2026-09-02T00:00:00Z');
 
@@ -240,7 +243,7 @@ test('«a Carol é substituível?» é o teste que reprova mais', () => {
 
   // A mesma técnica, com a vida dela lá dentro.
   const dela = replaceability({
-    hook: 'Passei dez anos a anotar pedido e nunca reparei na luz da sala',
+    hook: 'Passei dez anos anotando pedido e nunca reparei na luz da sala',
     script: 'No restaurante dos meus pais a luz era amarela. Fui entender isso a gravar em casa.',
   });
   assert.equal(dela.replaceable, false);
@@ -306,9 +309,9 @@ test('o portão único corre os quatro filtros de uma vez', () => {
   // Uma ideia da auditoria passa inteira.
   assert.deepEqual(
     ideaProblems({
-      hook: 'Meio peperoni, meio frango, sem cebola só no frango. Isto, num papel, era o meu terror.',
+      hook: 'Meio pepperoni, meio frango, sem cebola só no frango. Isso, num papel, era o meu terror.',
       script:
-        'Passei anos a anotar isto sem errar. O meu namorado passou meses a ensinar um WhatsApp a fazer o mesmo. ' +
+        'Passei anos anotando isso sem errar. Meu namorado passou meses ensinando um WhatsApp a fazer o mesmo. ' +
         'Fui testar sem facilitar e pedi o que ele tinha deixado de fora. No fim apareceu o total certo.',
       format: 'talking head',
     }),
@@ -467,4 +470,69 @@ test('todo o motivo que ela pode tocar muda alguma coisa no que se pede', () => 
     const texto = describeRejections([{ hook: 'seja o que for', reason: motivo }]);
     assert.match(texto, /→ .{20,}/, motivo);
   }
+});
+
+/* ── Português do Brasil ──────────────────────────────────────────────────── */
+
+test('a frase real que saiu do gerador é travada', () => {
+  // Saiu assim, numa corrida de produção: «A primeira vez que me pediram a
+  // ementa em inglês no Porto… Passei anos a viver em já vai, a correr entre
+  // mesas». O prompt pedia português do Brasil; os exemplares de voz estavam
+  // em português europeu, e o modelo imitou o que leu.
+  const problemas = ptPtProblems({
+    hook: 'A primeira vez que me pediram a ementa em inglês no Porto, eu congelei.',
+    script:
+      'Passei anos a viver em «já vai», a correr entre mesas. O silêncio do apartamento em Braga ainda me assusta.',
+  });
+  assert.ok(problemas.some((p) => p.includes('«ementa»')), problemas.join(' | '));
+  assert.ok(problemas.some((p) => p.includes('gerúndio')), problemas.join(' | '));
+});
+
+test('o portão do plano recusa a mesma frase, não só o detector', () => {
+  // O detector isolado não serve de nada se ninguém o chamar. Isto verifica a
+  // ligação: uma ideia com «ementa» não passa `ideaProblems`.
+  const problemas = ideaProblems({
+    hook: 'A primeira vez que me pediram a ementa em inglês, eu congelei.',
+    script: 'Eu não sabia dizer bacalhau em inglês sem soar a gozo, e foi o dia em que percebi o problema.',
+  });
+  assert.ok(problemas.some((p) => p.includes('«ementa»')), problemas.join(' | '));
+});
+
+test('português do Brasil legítimo não é travado', () => {
+  // Um portão que apanha frases certas é desligado na primeira semana.
+  assert.deepEqual(
+    ptPtProblems({
+      hook: 'A marca pediu sorriso no segundo 1. Eu entrei emburrada.',
+      script:
+        'Voltei a correr depois de dois anos parada. Comecei a gravar no celular, na tela do notebook, com o arquivo aberto do lado. Passei anos anotando pedido sem errar o sabor.',
+    }),
+    [],
+  );
+});
+
+test('cada família é nomeada com a palavra que a denuncia', () => {
+  assert.match(ptPtProblems({ hook: 'o ecrã do telemóvel' })[0], /«ecrã»/);
+  assert.match(ptPtProblems({ hook: 'a nossa selecção actual' }).join(' '), /«selecção»|«actual»/);
+  assert.match(ptPtProblems({ script: 'precisamos de si, tens de ver isto' }).join(' '), /«de si»|«tens»/);
+});
+
+test('o texto no tela também conta: é o que a marca lê primeiro', () => {
+  const problemas = ptPtProblems({ hook: 'tudo certo', onScreenText: ['GUARDA NO TELEMÓVEL'] });
+  assert.ok(problemas.some((p) => p.includes('«TELEMÓVEL»') || p.includes('«telemóvel»')), problemas.join(' | '));
+});
+
+test('a matéria-prima que o modelo imita está em português do Brasil', () => {
+  // O teste que trava a causa raiz. Os exemplares são «como ela soa quando
+  // está certa» e vão inteiros para o prompt: se um deles estiver em português
+  // europeu, o gerador copia-o antes de obedecer à instrução.
+  for (const e of EXEMPLAR_SCRIPTS) {
+    assert.deepEqual(ptPtProblems({ script: e.text }), [], `${e.id}: ${e.text.slice(0, 60)}`);
+  }
+  for (const s of SEED_IDEAS) {
+    assert.deepEqual(ptPtProblems({ hook: s.hook, title: s.title }), [], s.title);
+  }
+});
+
+test('a estratégia que descreve os pilares também', () => {
+  assert.deepEqual(ptPtProblems({ script: describeStrategy() }), []);
 });

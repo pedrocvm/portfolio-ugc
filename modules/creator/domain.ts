@@ -578,6 +578,7 @@ export function ideaProblems(idea: {
     ...genericProblems(idea),
     ...guruProblems(idea),
     ...catalogProblems(idea),
+    ...ptPtProblems(idea),
     ...(replaceability({
       hook: idea.hook,
       script: idea.script ?? '',
@@ -649,4 +650,72 @@ export function describeRejections(
       return `- ${quantas} por «${REJECTION_REASONS[motivo]}»: ${exemplos}\n  → ${REJECTION_FIX[motivo]}.`;
     })
     .join('\n');
+}
+
+/* ── Português do Brasil ──────────────────────────────────────────────────── */
+
+/** O que denuncia português europeu num texto que ela vai publicar.
+ *
+ *  Isto existe em código e não no prompt por uma razão que já custou uma
+ *  corrida: o plano saiu com «a primeira vez que me pediram a ementa em inglês
+ *  no Porto» e «dez anos a viver em já vai». O prompt pedia português do
+ *  Brasil e ao mesmo tempo entregava exemplares de voz escritos em português
+ *  europeu. Pedir não é garantir — e um modelo imita o que lê antes de obedecer
+ *  ao que lhe dizem.
+ *
+ *  Três famílias, todas inequívocas. Nenhuma delas tem leitura possível em
+ *  português do Brasil, e é por isso que podem ser um veto e não um desconto:
+ *
+ *    léxico      ementa, ecrã, telemóvel, casa de banho, rapariga
+ *    perífrase   «estar/andar/passar … a» mais infinitivo
+ *    grafia      o c mudo — acção, objectivo, contacto, óptimo
+ *
+ *  Fica de fora, de propósito, tudo o que também é português do Brasil:
+ *  «começar a correr» é correto dos dois lados, e «comboio» pode ser um
+ *  comboio de camiões. Um portão que apanha frases legítimas seria desligado
+ *  na primeira semana. */
+const PT_PT_LEXICO =
+  /(^|[^\p{L}])(ementas?|ecrãs?|telemóve(l|is)|ficheiros?|casas? de banho|raparigas?|miúd(o|a|os|as)|autocarro|comboios?|portefólios?|equipa|connosco|percebes|apelido|morada|pequeno-almoço|talho|sandes|chávenas?|frigorífico|autoclismo|estore|betão|relvado|passadeira|telemóvel)($|[^\p{L}])/iu;
+
+/** «Estar a fazer», não «estar fazendo». O gerúndio é a marca mais visível, e
+ *  a lista de verbos de apoio é fechada de propósito: com um verbo qualquer,
+ *  «voltei a correr» — que é português do Brasil — caía no portão. */
+const PT_PT_PERIFRASE =
+  /(^|[^\p{L}])(est(á|ás|ou|amos|ão|ava|avam|eve|iveram)|and(a|am|ava|ei|o)|continu(a|am|ava|ei|o)|fic(a|am|ava|o)|pass(ei|ou|aram|ava)\s+\w+|permanec(e|em))\s+a\s+[a-zà-ú]{2,}(ar|er|ir)($|[^\p{L}])/iu;
+
+const PT_PT_GRAFIA =
+  /(^|[^\p{L}])(ac(ç|c)ão|ac(ç|c)ões|direc(ç|c)ão|selec(ç|c)ão|colec(ç|c)ão|reac(ç|c)ão|objectivos?|actual(mente)?|contact(o|os|ar)|regist(o|os)|fact(o|os)|óptim(o|a|os|as)|direct(o|a|os|as)|exact(o|a|amente)|correct(o|a|amente)|baptiz\w*|adopt\w*)($|[^\p{L}])/iu;
+
+/** «De si» e o tratamento por tu. A Carol fala por «você» ou sem sujeito. */
+const PT_PT_TRATAMENTO = /(^|[^\p{L}])(de si|tens|queres|podes|deves|vais|contigo|teu|tua)($|[^\p{L}])/iu;
+
+/** Um por família: dizer «tem cinco lusitanismos» não ajuda ninguém a
+ *  reescrever. Dizer qual é a palavra, ajuda. */
+export function ptPtProblems(idea: {
+  hook?: string;
+  script?: string;
+  title?: string;
+  caption?: string;
+  onScreenText?: readonly string[];
+}): string[] {
+  const texto = [idea.hook, idea.script, idea.title, idea.caption, ...(idea.onScreenText ?? [])]
+    .filter(Boolean)
+    .join(' \n ');
+
+  const out: string[] = [];
+  const achar = (re: RegExp) => texto.match(re)?.[2]?.trim();
+
+  const lex = achar(PT_PT_LEXICO);
+  if (lex) out.push(`«${lex}» é português europeu — ela é brasileira e o público dela também`);
+
+  const per = texto.match(PT_PT_PERIFRASE)?.[0]?.trim();
+  if (per) out.push(`«${per}» está em português europeu: no Brasil é o gerúndio`);
+
+  const gra = achar(PT_PT_GRAFIA);
+  if (gra) out.push(`«${gra}» tem a grafia de Portugal`);
+
+  const tra = achar(PT_PT_TRATAMENTO);
+  if (tra) out.push(`«${tra}» trata por tu ou por si — ela não fala assim`);
+
+  return out;
 }

@@ -93,10 +93,10 @@ export const PILLAR_SPEC: Record<Pillar, PillarSpec> = {
   CASA_A_DOIS: {
     label: 'Casa a dois',
     weight: 0.2,
-    what: 'A casa a ficar casa, rituais, móveis, a vida no norte de Portugal com o namorado.',
+    what: 'A casa virando casa, rituais, móveis, a vida no norte de Portugal com o namorado.',
     objective: 'Aspiração próxima, não catálogo.',
-    audience: 'Casais a montar casa.',
-    format: 'Vlog curto COM VOZ. Montagem muda é o formato a matar.',
+    audience: 'Casais montando casa.',
+    format: 'Vlog curto COM VOZ. Montagem muda é o formato que mata.',
     commercial: 'Decoração, aroma, imobiliário.',
   },
   CORPO: {
@@ -220,8 +220,8 @@ export const SERIES_CANDIDATES: readonly SeriesCandidate[] = [
     pillar: 'A_SALA',
   },
   {
-    name: 'A casa a ficar casa',
-    premise: 'Cada divisão a nascer, com voz — não catálogo.',
+    name: 'A casa virando casa',
+    premise: 'Cada cômodo nascendo, com voz — não catálogo.',
     mechanism: 'o que faltava → o que mudou → porque importa',
     pillar: 'CASA_A_DOIS',
   },
