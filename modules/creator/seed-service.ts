@@ -101,15 +101,43 @@ async function seedKnowledgeSource(): Promise<boolean> {
 async function seedIdeas(appUserId: string): Promise<number> {
   const db = supabaseService();
 
-  const { count } = await db
+  // A idempotência não pode ser só a contagem.
+  //
+  // Era: «se já há trinta, não faças nada». Uma correção ao texto de uma
+  // semente ficava só no código, e a base continuava a servir ao planeador a
+  // versão velha — foi assim que «Passei anos a anotar isto» sobreviveu à
+  // reescrita e voltou a sair num plano. A âncora passa a ser a impressão
+  // digital: o que está na base e já não está no código é substituído.
+  //
+  // Uma semente que ela já promoveu a ideia não se toca: mudou de estado, é
+  // uma decisão dela e deixou de ser matéria-prima.
+  const impressao = (s: (typeof SEED_IDEAS)[number]) =>
+    ideaFingerprint({ platform: 'seed', pillar: s.pillar, hook: s.hook, title: s.title });
+
+  const esperadas = new Set(SEED_IDEAS.map(impressao));
+
+  const { data: existentes } = await db
     .from('creator_content_idea')
-    .select('id', { count: 'exact', head: true })
+    .select('id, fingerprint, status')
     .eq('provenance', AUDIT_PROVENANCE);
 
-  if ((count ?? 0) >= SEED_IDEAS.length) return 0;
+  const naBase = new Set((existentes ?? []).map((r) => r.fingerprint));
+  const velhas = (existentes ?? []).filter(
+    (r) => r.status === 'seed' && !esperadas.has(r.fingerprint),
+  );
+
+  if (velhas.length) {
+    await db
+      .from('creator_content_idea')
+      .delete()
+      .in('id', velhas.map((r) => r.id));
+  }
+
+  const emFalta = SEED_IDEAS.filter((s) => !naBase.has(impressao(s)));
+  if (emFalta.length === 0) return 0;
 
   const hoje = new Date().toISOString().slice(0, 10);
-  const rows = SEED_IDEAS.map((s) => ({
+  const rows = emFalta.map((s) => ({
     app_user_id: appUserId,
     plan_date: hoje,
     // As sementes não têm plataforma decidida: quem decide isso é o plano do
@@ -124,12 +152,7 @@ async function seedIdeas(appUserId: string): Promise<number> {
     source_reason: 'Ideia da auditoria do Instagram. Ainda não é um plano — é matéria-prima.',
     provenance: AUDIT_PROVENANCE,
     strategy_version: STRATEGY_VERSION,
-    fingerprint: ideaFingerprint({
-      platform: 'seed',
-      pillar: s.pillar,
-      hook: s.hook,
-      title: s.title,
-    }),
+    fingerprint: impressao(s),
     generated_at: new Date().toISOString(),
   }));
 
