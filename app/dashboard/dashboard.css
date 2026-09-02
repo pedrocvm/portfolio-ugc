@@ -2696,6 +2696,126 @@
   margin-top: 24px;
 }
 
+/* ── o que foi capturado, por confirmar ────────────────────────────── */
+
+.capCard {
+  padding: 22px 24px 20px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  animation: rise var(--t-slow) var(--exp) both;
+}
+.capCard h3 {
+  font-size: 26px;
+}
+.capWhat {
+  margin: 8px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--tinta2);
+}
+/* A resposta a «isto é para mim?». É a linha com mais peso do cartão a seguir
+   ao nome, porque é a única que a ajuda a decidir. */
+.capFit {
+  margin: 14px 0 0;
+  padding-left: 13px;
+  border-left: 2px solid var(--pedra);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--tinta);
+}
+.capCard[data-fit='match'] .capFit {
+  border-left-color: var(--jade);
+}
+.capCard[data-fit='excluded'] .capFit {
+  border-left-color: var(--alerta);
+  color: var(--tinta2);
+}
+/* O que se sabe, em pares. Substitui a lista do que falta. */
+.capKnown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 26px;
+  margin: 16px 0 0;
+}
+.capKnown > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.capKnown dt {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.capKnown dd {
+  margin: 0;
+  font-size: 15px;
+  color: var(--tinta);
+  overflow-wrap: anywhere;
+}
+.capNext {
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--tinta3);
+}
+.capActs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+.capActs .osGo,
+.capActs .osPageBtn {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+}
+.capActs .focusSkip {
+  margin-left: auto;
+}
+/* Só quando ela carrega em «corrigir», ou quando falta mesmo o nome. Dois
+   campos abertos por omissão fazem a tela parecer um formulário por preencher. */
+.capFix {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  animation: rise var(--t-fast) var(--ease) both;
+}
+@media (min-width: 620px) {
+  .capFix {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+/* Empilhados no telemóvel. Lado a lado, o segundo botão caía debaixo dos dois
+   botões flutuantes do canto — e um botão que se vê pela metade é um botão que
+   ela não sabe que existe. */
+@media (max-width: 619px) {
+  .capActs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .capActs .osGo,
+  .capActs .osPageBtn {
+    justify-content: center;
+  }
+  .capActs .focusSkip {
+    margin-left: 0;
+    min-height: 44px;
+  }
+}
+
 /* ── movimento ─────────────────────────────────────────────────────── */
 /* Curvas exponenciais, sem ressalto: entra depressa e assenta devagar. O
    movimento é delicado de propósito — o que tem de se notar é a precisão,

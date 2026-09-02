@@ -100,6 +100,21 @@ test('a interface não trata por tu', () => {
  *  uma variável. O que se verifica é a forma — quem desenha uma etapa tem de
  *  ter ido buscar a tabela de nomes. Um ficheiro que mostra `.stage` sem
  *  importar `STAGE_LABEL` está a mostrar o id. */
+/** O cartão da captura listava sete nomes de campo do schema — em inglês, com
+ *  underscores — a dizer o que o extractor não tinha conseguido. Nomes de
+ *  campo não são texto de tela em circunstância nenhuma, e `unknowns` é a
+ *  lista deles. */
+test('nenhuma tela desenha a lista de campos em falta', () => {
+  const achados: string[] = [];
+  for (const f of TODOS) {
+    const src = semComentarios(readFileSync(path.join(ROOT, f), 'utf8'));
+    for (const m of src.matchAll(/\{[^{}]*\.unknowns[^{}]*\}/g)) {
+      achados.push(`${f} «${m[0].replace(/\s+/g, ' ').trim().slice(0, 60)}»`);
+    }
+  }
+  assert.deepEqual(achados, [], `campos do schema na tela: ${achados.join(', ')}`);
+});
+
 test('nenhuma etapa é desenhada em bruto', () => {
   // Só o que é mesmo texto de tela: `{x.stage}` a seguir a um `>`, que em JSX
   // bem indentado cai na linha seguinte — por isso a procura é no ficheiro

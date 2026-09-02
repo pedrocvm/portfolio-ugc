@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { capture, confirmCapture, dropCapture, uploadScreenshot } from '@/app/dashboard/carolos-actions';
 import { prospectableNiches } from '@/modules/brands/niches';
-import { label } from '@/lib/labels';
+import { readCapture } from '@/modules/capture/read';
 import type { CaptureDraft } from '@/modules/capture/service';
 
 /** Captura rápida.
@@ -23,7 +23,13 @@ const KINDS = [
   { id: 'text', label: 'Outro' },
 ] as const;
 
-export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
+export default function Capture({
+  drafts,
+  focusLabels,
+}: {
+  drafts: CaptureDraft[];
+  focusLabels: string[];
+}) {
   const [pending, start] = useTransition();
   const [kind, setKind] = useState<string>('url');
   const [raw, setRaw] = useState('');
@@ -132,10 +138,12 @@ export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
         <section className="osSection">
           <h2>Por confirmar</h2>
           <p className="osNote">
-            Nada vira marca sem tu dizeres que sim. Um link colado por engano não pode encher o CRM.
+            Nada vira marca sem o seu sim. Um link colado por engano não pode encher o CRM.
           </p>
           <div className="osQueue">
-            {drafts.map((d) => <Draft key={d.id} draft={d} />)}
+            {drafts.map((d) => (
+              <Draft key={d.id} draft={d} focusLabels={focusLabels} />
+            ))}
           </div>
         </section>
       ) : null}
@@ -143,63 +151,72 @@ export default function Capture({ drafts }: { drafts: CaptureDraft[] }) {
   );
 }
 
-function Draft({ draft }: { draft: CaptureDraft }) {
+function Draft({ draft, focusLabels }: { draft: CaptureDraft; focusLabels: string[] }) {
   const [pending, start] = useTransition();
   const [gone, setGone] = useState(false);
   const [name, setName] = useState(draft.extracted?.brand_name ?? '');
   const [niche, setNiche] = useState(draft.extracted?.niche_id ?? '');
   const [error, setError] = useState('');
+  const [detalhe, setDetalhe] = useState(false);
   const router = useRouter();
 
   if (gone) return null;
   const e = draft.extracted;
 
+  const leitura = readCapture(
+    {
+      brandName: e?.brand_name ?? null,
+      website: e?.website ?? null,
+      instagramHandle: e?.instagram_handle ?? null,
+      contactEmail: e?.contact_email ?? null,
+      contactName: e?.contact_name ?? null,
+      productName: e?.product_name ?? null,
+      nicheId: e?.niche_id ?? null,
+      summary: e?.summary ?? '',
+      asks: e?.asks ?? [],
+    },
+    focusLabels,
+  );
+
+  // Ela escreveu um nome que o extractor não tinha: o bloqueio deixa de existir.
+  const bloqueios = name.trim() ? [] : leitura.blocking;
+
   return (
-    <article className="osCard">
-      <div className="osCardMain">
-        <div className="osCardTop">
-          <span className="osBrand">{label('captureKind', draft.kind)}</span>
-          {typeof draft.confidence === 'number' ? (
-            <span className="osTag" data-tone="mute">confiança {Math.round(draft.confidence * 100)}%</span>
-          ) : null}
-        </div>
+    <article className="capCard" data-fit={leitura.fit.verdict}>
+      <h3>{name.trim() || leitura.title}</h3>
+      {leitura.what ? <p className="capWhat">{leitura.what}</p> : null}
 
-        <h3>{e?.brand_name ?? 'Marca por identificar'}</h3>
-        {e?.summary ? <p className="osWhy">{e.summary}</p> : null}
+      {/* A resposta à pergunta que ela tem quando cola um link. */}
+      <p className="capFit">{leitura.fit.line}</p>
 
-        <div className="osMeta">
-          {e?.website ? <span>site <b>{e.website}</b></span> : null}
-          {e?.instagram_handle ? <span>ig <b>@{e.instagram_handle}</b></span> : null}
-          {e?.contact_email ? <span>email <b>{e.contact_email}</b></span> : null}
-          {e?.product_name ? <span>produto <b>{e.product_name}</b></span> : null}
-        </div>
+      {leitura.known.length ? (
+        <dl className="capKnown">
+          {leitura.known.map((k) => (
+            <div key={k.label}>
+              <dt>{k.label}</dt>
+              <dd>{k.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
 
-        {e?.unknowns?.length ? (
-          <p className="osRowSub">Não consegui apurar: {e.unknowns.join(', ')}.</p>
-        ) : null}
+      <p className="capNext">{leitura.next}</p>
 
-        <div className="osInline" style={{ marginTop: 12 }}>
-          <label className="osField">
-            <span>Nome da marca</span>
-            <input type="text" value={name} onChange={(ev) => setName(ev.target.value)} />
-          </label>
-          <label className="osField">
-            <span>Categoria</span>
-            <select value={niche} onChange={(ev) => setNiche(ev.target.value)}>
-              <option value="">Por definir</option>
-              {prospectableNiches().map((n) => (
-                <option key={n.id} value={n.id}>{n.label}</option>
-              ))}
-            </select>
-          </label>
-        </div>
+      {bloqueios.map((b) => (
+        <p className="osWarn" data-tone="info" key={b}>
+          {b}
+        </p>
+      ))}
 
-        {error ? <p className="osWarn" role="alert">{error}</p> : null}
-      </div>
+      {error ? (
+        <p className="osWarn" role="alert">
+          {error}
+        </p>
+      ) : null}
 
-      <div className="osCardActs">
+      <div className="capActs">
         <button
-          className="btn"
+          className="osGo"
           type="button"
           disabled={pending || !name.trim()}
           onClick={() =>
@@ -212,17 +229,55 @@ function Draft({ draft }: { draft: CaptureDraft }) {
             })
           }
         >
-          Criar
+          Criar a marca
         </button>
+
+        {/* O nome e a categoria deixaram de estar sempre à vista. Estavam
+            preenchidos e certos na maior parte das vezes, e dois campos abertos
+            fazem uma tela parecer um formulário por preencher. */}
+        <button className="osPageBtn" type="button" onClick={() => setDetalhe((v) => !v)}>
+          {detalhe ? 'Fechar' : 'Corrigir'}
+        </button>
+
         <button
-          className="chip"
+          className="focusSkip"
           type="button"
           disabled={pending}
-          onClick={() => start(async () => { await dropCapture(draft.id); setGone(true); })}
+          onClick={() =>
+            start(async () => {
+              await dropCapture(draft.id);
+              setGone(true);
+            })
+          }
         >
           Deitar fora
         </button>
       </div>
+
+      {detalhe || bloqueios.length ? (
+        <div className="capFix">
+          <label className="osField">
+            <span>Nome da marca</span>
+            <input
+              type="text"
+              value={name}
+              autoFocus={bloqueios.length > 0}
+              onChange={(ev) => setName(ev.target.value)}
+            />
+          </label>
+          <label className="osField">
+            <span>Categoria</span>
+            <select value={niche} onChange={(ev) => setNiche(ev.target.value)}>
+              <option value="">Por definir</option>
+              {prospectableNiches().map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
     </article>
   );
 }
