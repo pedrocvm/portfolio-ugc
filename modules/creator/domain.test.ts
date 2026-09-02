@@ -7,6 +7,7 @@ import {
   PILLAR_SPEC,
   catalogProblems,
   ptPtProblems,
+  SUGGESTED_STATUSES,
   describeStrategy,
   describeRejections,
   energyBudget,
@@ -535,4 +536,26 @@ test('a matéria-prima que o modelo imita está em português do Brasil', () => 
 
 test('a estratégia que descreve os pilares também', () => {
   assert.deepEqual(ptPtProblems({ script: describeStrategy() }), []);
+});
+
+test('uma semente não conta como ideia já sugerida', () => {
+  // O encurralamento, escrito: numa corrida real saíram quatro ideias e as
+  // quatro caíram com «o gancho é quase o mesmo de uma anterior». As trinta
+  // sementes da auditoria estavam a contar como sugestões anteriores — e o
+  // prompt manda desenvolvê-las. O portão rejeitava o que ele próprio pedia.
+  assert.equal(
+    (SUGGESTED_STATUSES as readonly string[]).includes('seed'),
+    false,
+    'uma semente voltou a contar como sugestão: o gerador fica sem saída',
+  );
+
+  const semente = { fingerprint: 'x', hook: 'Passei anos anotando isso sem errar.' };
+  assert.equal(
+    isRepeat(
+      { platform: 'instagram', pillar: 'TESTEI', hook: 'Passei anos anotando isso sem errar, e testei.', title: '' },
+      [semente],
+    ).repeat,
+    true,
+    'se a semente entrasse na lista, o portão travava a ideia que ela devia gerar',
+  );
 });

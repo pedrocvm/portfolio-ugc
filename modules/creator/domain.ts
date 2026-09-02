@@ -719,3 +719,24 @@ export function ptPtProblems(idea: {
 
   return out;
 }
+
+/** O que conta como «isto já lhe foi sugerido».
+ *
+ *  Uma semente não conta, e é a distinção inteira. As trinta sementes da
+ *  auditoria vivem na mesma tabela com `status = 'seed'`, e o prompt manda
+ *  desenvolvê-las — «se uma servir, desenvolve-a até ao guião». Enquanto
+ *  contaram como sugestões anteriores, o portão de repetição rejeitava
+ *  exatamente aquilo que o prompt tinha pedido: numa corrida real saíram
+ *  quatro ideias e as quatro caíram com «o gancho é quase o mesmo de uma
+ *  anterior», e o dia ficou sem plano nenhum.
+ *
+ *  A carga do dia já sabia disto — as sementes não contam para a fila. Faltava
+ *  no outro sítio, que é o clássico de uma regra escrita duas vezes. */
+export const SUGGESTED_STATUSES = [
+  'ready',
+  'saved',
+  'recorded',
+  'published',
+  'archived',
+  'discarded',
+] as const;

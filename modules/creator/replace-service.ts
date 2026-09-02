@@ -21,6 +21,7 @@ import {
   pillarPriority,
   qualityVerdict,
   describeRejections,
+  SUGGESTED_STATUSES,
   type Pillar,
   type Platform,
   type RejectionReason,
@@ -224,6 +225,7 @@ async function previousIdeas() {
   const { data } = await db
     .from('creator_content_idea')
     .select('fingerprint, hook, pillar, platform, generated_at')
+    .in('status', SUGGESTED_STATUSES)
     .order('generated_at', { ascending: false })
     .limit(30);
 

@@ -33,6 +33,7 @@ import {
   recentlyUsedPillars,
   seriesIsViable,
   shouldGenerate,
+  SUGGESTED_STATUSES,
   type Pillar,
   type RejectionReason,
   type Platform,
@@ -460,6 +461,7 @@ async function recentIdeas(limit: number): Promise<RecentIdea[]> {
   const { data } = await db
     .from('creator_content_idea')
     .select('fingerprint, hook, pillar, platform, generated_at')
+    .in('status', SUGGESTED_STATUSES)
     .order('generated_at', { ascending: false })
     .limit(limit);
 
