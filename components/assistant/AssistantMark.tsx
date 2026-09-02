@@ -68,7 +68,7 @@ export default function AssistantMark({ state }: { state: 'idle' | 'busy' }) {
 
   useEffect(() => {
     const busy = state === 'busy';
-    // A pensar, a caneta anda: o traço roda e o brilho respira depressa.
+    // Pensando, a caneta anda: o traço roda e o brilho respira depressa.
     if (busy) {
       spin.current?.play();
       pulse.current?.pause();

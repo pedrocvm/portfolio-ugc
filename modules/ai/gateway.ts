@@ -6,7 +6,7 @@ import { hashContent } from '@/lib/crypto';
 import { asJson } from '@/lib/supabase/json';
 import { supabaseService } from '@/lib/supabase/service';
 
-/** O único sítio da aplicação que fala com um modelo.
+/** O único lugar da aplicação que fala com um modelo.
  *
  *  Existe para que nenhum módulo comercial importe um SDK, para que toda a
  *  saída passe por um schema antes de tocar no domínio, e para que cada
@@ -178,7 +178,7 @@ export async function runPrompt<TInput, TOutput>(
   } catch (error) {
     const code = error instanceof AiUnavailableError ? error.code : 'provider_error';
     const message = error instanceof Error ? error.message : 'Falha desconhecida no fornecedor.';
-    // A frase é para quem lê a tela; o registo leva também o erro do fornecedor,
+    // A frase é para quem lê a tela; o registro leva também o erro do fornecedor,
     // que a tradução tinha apagado. Sete pesquisas falharam com «A IA falhou e
     // não disse porquê» gravado sete vezes, e a causa — um campo de schema que o
     // Gemini não conhece — só apareceu ao reproduzir a chamada à mão.

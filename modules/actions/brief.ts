@@ -4,7 +4,7 @@
  *  fala com ela, não sobre ela: a segunda pessoa cai, e o que sobra é a frase
  *  a dizer o que há, sem sujeito nenhum.
  *
- *  A Carol não precisa de quatro caixas com números soltos: precisa de saber
+ *  A Carol não precisa de quatro caixas com números soltos: precisa saber
  *  se hoje tem trabalho, quanto, e por onde começar. Isto é determinístico e
  *  puro de propósito — a leitura do dia não pode depender de haver modelo
  *  configurado, nem de a chamada correr a tempo. A IA escreve por cima, não

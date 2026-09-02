@@ -10,7 +10,7 @@ import { z } from 'zod';
  *
  *  Antes isto era uma lista do que remover, e cada palavra nova que o Zod
  *  emitisse partia tudo com um 400 — foi `propertyNames`, de um `z.record`, que
- *  matou as sete pesquisas de uma corrida. Guardar o que é conhecido erra para
+ *  matou as sete pesquisas de uma corrida. Salvar o que é conhecido erra para
  *  o lado seguro: um campo a menos degrada o schema, um campo a mais rejeita-o. */
 const GEMINI_SCHEMA_KEYS = new Set([
   'type', 'format', 'title', 'description', 'nullable', 'enum', 'items',

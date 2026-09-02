@@ -78,7 +78,7 @@ test('caso 1 · comportamental: sem originalidade a média não salva a ideia', 
 
 /* ── 2. Marco pessoal: só a partir de um evento real ─────────────────────── */
 
-test('caso 2 · comportamental: sem facto gravado não nasce marco nenhum', () => {
+test('caso 2 · comportamental: sem fato gravado não nasce marco nenhum', () => {
   assert.deepEqual(deriveMilestones({ payments: [], events: [], homeCountry: 'PT' }), []);
 });
 
@@ -119,10 +119,10 @@ test('caso 3 · estrutural: o prompt diz o que cada plataforma pede, e exige a d
   assert.match(p, /Reel republicado no\s+TikTok/);
 });
 
-/* ── 4. Tendência antiga não é recomendada como actual ───────────────────── */
+/* ── 4. Tendência antiga não é recomendada como atual ───────────────────── */
 
 const tendencia = (over: Record<string, unknown> = {}) => ({
-  title: 'Breakdown de edição em ecrã dividido',
+  title: 'Breakdown de edição em tela dividido',
   kind: 'editing' as const,
   platform: 'tiktok' as const,
   description: 'O criador mostra a timeline do CapCut ao lado do vídeo final.',
@@ -184,7 +184,7 @@ test('caso 7 · estrutural: os dois prompts criativos proíbem a cópia literal'
 
 /* ── 8. A última mensagem é dela, mas existe resposta da marca ───────────── */
 
-test('caso 8 · comportamental: a classificação usa o estado externo correcto', () => {
+test('caso 8 · comportamental: a classificação usa o estado externo correto', () => {
   const state = readThreadState(
     [
       {
@@ -193,7 +193,7 @@ test('caso 8 · comportamental: a classificação usa o estado externo correcto'
       },
       {
         id: '2', direction: 'outbound', sentAt: '2026-08-26T10:00:00Z',
-        bodyText: 'Claro! Envio já o meu portefólio com exemplos de trabalhos.',
+        bodyText: 'Claro! Envio já o meu portfólio com exemplos de trabalhos.',
       },
     ],
     NOW,
@@ -261,7 +261,7 @@ test('os prompts do autopilot têm versão e não carregam preço', () => {
 });
 
 /* ── A auditoria do Instagram (02/09/2026) ────────────────────────────────
-   Sete verificações novas. As três primeiras são as correcções que a auditoria
+   Sete verificações novas. As três primeiras são as correções que a auditoria
    forçou; as outras são regras que ela acrescentou. */
 
 test('auditoria · os pilares são os cinco reais, não os genéricos', () => {

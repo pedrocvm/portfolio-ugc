@@ -82,9 +82,9 @@ export default function Library({
       <div className="dashBar">
         <h1>Biblioteca</h1>
         <span className="dashState">
-          {pending || busy ? <Spinner label="A carregar" /> : null}
+          {pending || busy ? <Spinner label="Carregando" /> : null}
           {pending || busy
-            ? (note ?? 'A processar')
+            ? (note ?? 'Processando')
             : `${shown.length} ${KIND_LABEL[kind].toLowerCase()}s`}
         </span>
       </div>
@@ -119,7 +119,7 @@ export default function Library({
             onChange={(e) => setTitle(e.target.value)}
           />
           <label className="btn tiny">
-            {busy ? <Spinner label="A carregar" /> : null}
+            {busy ? <Spinner label="Carregando" /> : null}
             {busy ? note : 'Carregar arquivo'}
             <input
               type="file"

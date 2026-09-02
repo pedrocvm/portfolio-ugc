@@ -2,7 +2,7 @@
  *
  *  Separada do serviço porque a tela de Definições corre no browser e precisa
  *  destas etiquetas. Se viessem do serviço, importá-las arrastava o cliente de
- *  service role para o pacote do cliente — que é exactamente o que o
+ *  service role para o pacote do cliente — que é exatamente o que o
  *  `server-only` no serviço está lá para impedir. */
 
 export type ScheduleRow = {
@@ -80,7 +80,7 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
   },
   'carolos-references': {
     label: 'Separar referências criativas',
-    why: 'Uma vez por dia, depois da prospecção. Para cada marca escolhida procura dois ou três vídeos reais e transforma-os numa ideia gravável.',
+    why: 'Uma vez por dia, depois da prospeção. Para cada marca escolhida procura dois ou três vídeos reais e transforma-os numa ideia gravável.',
   },
   'carolos-trends': {
     label: 'Ver o que resulta agora',
@@ -88,7 +88,7 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
   },
   'carolos-milestones': {
     label: 'Marcos do negócio',
-    why: 'Uma vez por dia. Deriva os marcos reais — primeiro pagamento, primeiro cliente de fora — dos factos já gravados. Nunca inventa nenhum.',
+    why: 'Uma vez por dia. Deriva os marcos reais — primeiro pagamento, primeiro cliente de fora — dos fatos já gravados. Nunca inventa nenhum.',
   },
   'carolos-content': {
     label: 'Escolher o conteúdo do dia',

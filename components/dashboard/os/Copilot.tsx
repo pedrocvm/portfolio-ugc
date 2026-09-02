@@ -10,7 +10,7 @@ import { label } from '@/lib/labels';
 /** Copiloto comercial. Recomendação primeiro, texto depois — e nunca envio.
  *
  *  O botão que existe é «criar rascunho no Gmail»: a mensagem fica escrita na
- *  caixa dela, e enviar continua a ser um clique dela. Não há aqui nenhum
+ *  caixa dela, e enviar continua sendo um clique dela. Não há aqui nenhum
  *  caminho que ponha uma decisão comercial na rua sozinha. */
 
 const RECOMMENDATION_LABEL: Record<string, string> = {

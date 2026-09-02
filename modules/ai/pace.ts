@@ -1,12 +1,12 @@
 /** Não gastar a cota grátis, e não desistir por causa dela.
  *
- *  Uma corrida de prospecção faz até 36 chamadas: a descoberta, mais uma
+ *  Uma corrida de prospeção faz até 36 chamadas: a descoberta, mais uma
  *  pesquisa por marca, mais um email por finalista. O plano grátis do Gemini
  *  conta pedidos por minuto, e 36 seguidas não cabem lá. Antes disto, a
  *  chamada 16 levava 429 e a corrida inteira morria — depois de já ter gasto as
  *  quinze anteriores.
  *
- *  Duas coisas, no mesmo sítio por onde já passam todas as chamadas: espaçar,
+ *  Duas coisas, no mesmo lugar por onde já passam todas as chamadas: espaçar,
  *  para não bater no limite; e repetir quando se bate, porque um limite por
  *  minuto passa sozinho. */
 import { failureKind, quotaWindow, retryAfterMs } from './failure';

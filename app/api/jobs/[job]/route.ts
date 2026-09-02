@@ -35,8 +35,8 @@ function authorizedByCron(request: NextRequest): boolean {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** O id do disparo viaja no corpo do POST que o pg_net faz. Confirmar por id
- *  exacto é melhor do que a reconciliação adivinhar por proximidade de horas —
- *  e é o que permite guardar quantas coisas o trabalho tocou. */
+ *  exato é melhor do que a reconciliação adivinhar por proximidade de horas —
+ *  e é o que permite salvar quantas coisas o trabalho tocou. */
 async function dispatchIdFrom(request: NextRequest): Promise<string | null> {
   if (request.method !== 'POST') return null;
   const body = (await request.json().catch(() => null)) as { dispatch_id?: unknown } | null;

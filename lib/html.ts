@@ -6,7 +6,7 @@
  *  uma descodificação, e era por isso que a Inbox mostrava
  *  «I&#39;m sharing my portfolio» e endereços dentro de «&lt;…&gt;».
  *
- *  O `&amp;` é o último de propósito. A descodificar primeiro, «&amp;lt;»
+ *  O `&amp;` é o último de propósito. Descodificando primeiro, «&amp;lt;»
  *  virava «&lt;» e à passagem seguinte virava «<» — texto que o remetente
  *  escreveu à mão a transformar-se em marcação. */
 export const decodeEntities = (text: string) =>

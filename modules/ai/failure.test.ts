@@ -106,7 +106,7 @@ test('saldo esgotado não é cota: uma passa por esperar, a outra não', () => {
   assert.doesNotMatch(frase, /[{}"[\]]|https?:/);
 });
 
-test('a causa crua fica no cause: a tradução é para a tela, não para o registo', async () => {
+test('a causa crua fica no cause: a tradução é para a tela, não para o registro', async () => {
   const cru = new Error('{"error":{"code":400,"message":"Unknown name \\"propertyNames\\""}}');
   const p = humanizeErrors({
     async structured() {
@@ -115,12 +115,12 @@ test('a causa crua fica no cause: a tradução é para a tela, não para o regis
   });
   await assert.rejects(p.structured(), (e: Error) => {
     assert.doesNotMatch(e.message, /propertyNames/, 'a tela recebeu o erro do fornecedor');
-    assert.match((e.cause as Error).message, /propertyNames/, 'o registo perdeu a única pista que havia');
+    assert.match((e.cause as Error).message, /propertyNames/, 'o registro perdeu a única pista que havia');
     return true;
   });
 });
 
-/** O erro que apareceu na tela do Carol AI, colado do registo. */
+/** O erro que apareceu na tela do Carol AI, colado do registro. */
 test('«This operation was aborted» é o nosso cronómetro, e diz-se assim', () => {
   const abortado = new Error('This operation was aborted');
   assert.equal(failureKind(abortado), 'timeout');
@@ -128,7 +128,7 @@ test('«This operation was aborted» é o nosso cronómetro, e diz-se assim', ()
   const frase = aiFailure(abortado);
   assert.match(frase, /demorou|esperar/i);
   // «A IA falhou e não disse porquê» era o que ela via, e não é verdade: o
-  // sistema sabia exactamente o que tinha acontecido.
+  // sistema sabia exatamente o que tinha acontecido.
   assert.doesNotMatch(frase, /não disse porquê/);
   assert.doesNotMatch(frase, /[{}"]|abort/i);
 });

@@ -1,9 +1,9 @@
-/** Tendências: o que está a subir, e se isso interessa à Carol.
+/** Tendências: o que está subindo, e se isso interessa à Carol.
  *
  *  Duas perguntas diferentes, e confundi-las é o erro clássico. «Está a
- *  funcionar» é um facto sobre o mundo; «vale a pena para ela» é um juízo
+ *  funcionar» é um fato sobre o mundo; «vale a pena para ela» é um juízo
  *  sobre o perfil dela. Um vídeo com dez milhões de visualizações de alguém a
- *  saltar de um penhasco está a funcionar e não interessa nada.
+ *  saltar de um penhasco está funcionando e não interessa nada.
  *
  *  Uma tendência de há três meses também não é uma tendência: é história. Por
  *  isso a frescura entra no veredicto, e não só na etiqueta.
@@ -17,8 +17,8 @@ export { FRESHNESS_LABEL, type Freshness } from '@/modules/references/domain';
 /** Uma tendência envelhece muito mais depressa do que uma referência.
  *
  *  Uma referência é uma estrutura — problema, tentativa, produto, resolução —
- *  e essa continua a funcionar daqui a um ano. Uma tendência é um momento: aos
- *  três meses já não está a subir, está a descer, e recomendá-la como actual
+ *  e essa continua funcionando daqui a um ano. Uma tendência é um momento: aos
+ *  três meses já não está subindo, está descendo, e recomendá-la como atual
  *  é a forma mais rápida de a Carol publicar tarde. Daí duas escalas. */
 export function trendFreshness(publishedAt: string | null | undefined, now: Date = new Date()): Freshness {
   if (!publishedAt) return 'unknown';
@@ -54,7 +54,7 @@ export const TREND_KIND_LABEL: Record<TrendKind, string> = {
   structure: 'estrutura',
   series: 'série',
   audio: 'som',
-  text: 'texto no ecrã',
+  text: 'texto no tela',
   transition: 'transição',
   pov: 'ponto de vista',
   other: 'outro',
@@ -116,7 +116,7 @@ export function trendProblems(t: Partial<Trend>): string[] {
   if (!(t.title ?? '').trim()) out.push('sem nome');
   const links = (t.evidence ?? []).filter((e) => /^https?:\/\/\S+\.\S+/.test(e.url ?? ''));
   if (links.length === 0) out.push('sem prova clicável');
-  if ((t.whyTrending ?? '').trim().length < 15) out.push('sem explicação de porque está a subir');
+  if ((t.whyTrending ?? '').trim().length < 15) out.push('sem explicação de porque está subindo');
   return out;
 }
 
@@ -155,7 +155,7 @@ export function trendFit(input: FitInput): FitResult {
   const byFreshness: Record<Freshness, number> = { fresh: 25, recent: 12, aging: -10, stale: -35, unknown: 0 };
   score += byFreshness[fresh];
   if (fresh === 'stale') reasons.push('já passou o momento');
-  else if (fresh === 'fresh') reasons.push('está a acontecer agora');
+  else if (fresh === 'fresh') reasons.push('está acontecendo agora');
 
   const haystack = `${input.trend.title} ${input.trend.description} ${input.trend.whyTrending}`.toLowerCase();
 
@@ -193,7 +193,7 @@ export function trendFit(input: FitInput): FitResult {
   }
 
   // O que a marca vê. Uma tendência que só serve para entreter não constrói
-  // autoridade, e a autoridade é o objectivo declarado do perfil.
+  // autoridade, e a autoridade é o objetivo declarado do perfil.
   if (/(estrat[ée]gia|hook|gancho|edi[çc][ãa]o|performance|an[úu]ncio|brief|storytelling|creative)/.test(haystack)) {
     score += 12;
     reasons.push('dá para mostrar competência, não só entretenimento');

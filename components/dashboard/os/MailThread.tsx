@@ -21,7 +21,7 @@ import { formatDate } from '@/lib/time';
  *  para quando for preciso confirmar.
  *
  *  A leitura vem da base — o corpo das mensagens é salvo na ingestão — por
- *  isso abre depressa e continua a funcionar com o Gmail em baixo. A resposta é
+ *  isso abre depressa e continua funcionando com o Gmail em baixo. A resposta é
  *  que precisa do Gmail, e sai como rascunho: escrever e enviar são duas
  *  decisões, e a segunda é dela. */
 
@@ -103,7 +103,7 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
   }
 
   /** Enviar daqui. Sai para fora, por isso pede um segundo sim — e é o único
-   *  sítio desta gaveta que o pede. */
+   *  lugar desta gaveta que o pede. */
   async function send() {
     setSending(true);
     setDone('');
@@ -241,7 +241,7 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
                   </article>
                 ))}
                 {thread.messages.length === 0 ? (
-                  <p className="osRowSub">Esta conversa não tem mensagens guardadas.</p>
+                  <p className="osRowSub">Esta conversa não tem mensagens salvas.</p>
                 ) : null}
               </details>
             </div>
@@ -271,7 +271,7 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
                 {confirmar ? (
                   <>
                     <button className="osGo" type="button" onClick={send} disabled={sending}>
-                      {sending ? <Spinner label="A enviar" /> : null}
+                      {sending ? <Spinner label="Enviando" /> : null}
                       Sim, enviar
                     </button>
                     <button
@@ -299,7 +299,7 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
                       onClick={draft}
                       disabled={!thread.replyTo || sending || reply.trim().length < 2}
                     >
-                      {sending ? <Spinner label="A preparar" /> : null}
+                      {sending ? <Spinner label="Preparando" /> : null}
                       Deixar rascunho no Gmail
                     </button>
                   </>

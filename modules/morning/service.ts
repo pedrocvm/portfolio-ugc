@@ -24,7 +24,7 @@ export * from './domain';
  *
  *  Não é mais um trabalho: é o que junta o que os outros produziram e decide o
  *  que chega à Carol. Sem isto havia quinze crons a produzir quinze
- *  experiências desligadas, que é exactamente o que o Hoje já era.
+ *  experiências desligadas, que é exatamente o que o Hoje já era.
  *
  *  Corre por último, e é honesta: o que não correu fica escrito em `gaps` e
  *  aparece na tela. Fingir que a manhã correu bem quando a pesquisa de marcas
@@ -264,7 +264,7 @@ async function moneyDecisions(now: Date): Promise<Decision[]> {
   return out;
 }
 
-/** Nível 3: prospecção. Um cartão para o lote todo — seis emails prontos não
+/** Nível 3: prospeção. Um cartão para o lote todo — seis emails prontos não
  *  são seis decisões, são uma revisão. */
 async function outreachDecision(): Promise<Decision[]> {
   const db = supabaseService();
@@ -287,7 +287,7 @@ async function outreachDecision(): Promise<Decision[]> {
       id: 'outreach:batch',
       kind: 'outreach_batch',
       subject: 'Marcas novas',
-      headline: n === 1 ? 'Tenho um email de prospecção pronto.' : `Tenho ${n} emails de prospecção prontos.`,
+      headline: n === 1 ? 'Tenho um email de prospeção pronto.' : `Tenho ${n} emails de prospeção prontos.`,
       because:
         (comReferencias ?? 0) > 0
           ? `${comReferencias} destas marcas já têm referências e um conceito separado.`

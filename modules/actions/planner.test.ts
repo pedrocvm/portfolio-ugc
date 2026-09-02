@@ -45,7 +45,7 @@ test('um pedido de preço vira a ação de enviar valor, não uma resposta gené
   );
   assert.equal(action.type, 'send_rate');
   // A razão nomeia o pedido em português corrente: um id de máquina no meio de
-  // uma frase é o sistema a falar consigo próprio à frente de quem o usa.
+  // uma frase é o sistema a falar com você próprio à frente de quem o usa.
   assert.match(action.reason, /A marca pediu o seu valor, e ainda não teve resposta\./);
   assert.doesNotMatch(action.reason, /rate_request/);
 });
@@ -307,6 +307,6 @@ test('nenhum botão da fila está escrito noutra língua', () => {
   for (const [tipo, cta] of Object.entries(ACTION_CTA)) {
     assert.doesNotMatch(cta, estrangeiro, `«${cta}» (${tipo}) não está em português`);
     assert.doesNotMatch(cta, /_/, `«${cta}» parece um identificador`);
-    assert.ok(cta.length > 2, `«${cta}» é curto demais para se perceber`);
+    assert.ok(cta.length > 2, `«${cta}» é curto demais para se entender`);
   }
 });

@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Sem sessão.' }, { status: 401 });
 
-  // Qual caixa. A consulta é filtrada pelo utilizador da sessão, por isso um id
+  // Qual caixa. A consulta é filtrada pelo usuário da sessão, por isso um id
   // de outra pessoa não encontra linha nenhuma em vez de desligar a errada.
   const body = await request.json().catch(() => ({}));
   const connectionId = typeof body?.connectionId === 'string' ? body.connectionId : '';

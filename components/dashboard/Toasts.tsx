@@ -5,7 +5,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 /** Avisos que aparecem e saem sozinhos.
  *
  *  A procura demora minutos e agora corre em segundo plano. Sem isto, ela
- *  carrega em «procurar», vai fazer outra coisa, e nunca fica a saber que
+ *  carrega em «procurar», vai fazer outra coisa, e nunca fica sabendo que
  *  acabou.
  *
  *  A loja vive no módulo, não num contexto: qualquer componente cliente chama

@@ -42,7 +42,7 @@ export default function Capture({
     start(async () => {
       setError('');
 
-      // O print sobe primeiro, para o bucket privado; a captura guarda só o
+      // O print sobe primeiro, para o bucket privado; a captura salva só o
       // caminho. O arquivo nunca passa por uma tabela.
       let storagePath: string | null = null;
       if (file) {

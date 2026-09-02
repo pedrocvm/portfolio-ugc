@@ -13,11 +13,11 @@ import {
 const NOW = new Date('2026-09-02T00:00:00Z');
 
 const trend = (over: Partial<Trend> = {}): Trend => ({
-  title: 'Breakdown de edição em ecrã dividido',
+  title: 'Breakdown de edição em tela dividido',
   kind: 'editing',
   platform: 'tiktok',
   description: 'O criador mostra a timeline do CapCut ao lado do vídeo final.',
-  whyTrending: 'Está a aparecer em vários perfis de edição desde meados de Agosto, com muitos comentários a pedir tutorial.',
+  whyTrending: 'Está aparecendo em vários perfis de edição desde meados de Agosto, com muitos comentários a pedir tutorial.',
   evidence: [{ url: 'https://www.tiktok.com/@editor/video/999', note: 'exemplo com 400k' }],
   publishedAt: '2026-08-26',
   detectedAt: '2026-09-02T06:35:00Z',
@@ -32,8 +32,8 @@ const perfil = {
 };
 
 test('a mesma tendência escrita de duas maneiras tem a mesma impressão digital', () => {
-  const a = trendFingerprint({ title: 'Breakdown de edição em ecrã dividido', kind: 'editing', platform: 'tiktok' });
-  const b = trendFingerprint({ title: 'Ecrã dividido: breakdown da edição', kind: 'editing', platform: 'tiktok' });
+  const a = trendFingerprint({ title: 'Breakdown de edição em tela dividido', kind: 'editing', platform: 'tiktok' });
+  const b = trendFingerprint({ title: 'tela dividido: breakdown da edição', kind: 'editing', platform: 'tiktok' });
   assert.equal(a, b);
 });
 
@@ -46,7 +46,7 @@ test('tendências diferentes não colidem', () => {
 test('a deduplicação apanha a mesma tendência repetida', () => {
   const lista = dedupeTrends([
     trend(),
-    trend({ title: 'Ecrã dividido com breakdown da edição' }),
+    trend({ title: 'tela dividido com breakdown da edição' }),
     trend({ title: 'Micro-vlog de manhã', kind: 'format' }),
   ]);
   assert.equal(lista.length, 2);
@@ -60,7 +60,7 @@ test('uma tendência sem prova clicável não entra', () => {
 
 /* ── Os casos que o briefing nomeia ───────────────────────────────────────── */
 
-test('uma tendência de há meses não é recomendada como actual', () => {
+test('uma tendência de há meses não é recomendada como atual', () => {
   const velha = trendFit({ trend: trend({ publishedAt: '2026-01-10' }), ...perfil, now: NOW });
   assert.equal(velha.freshness, 'stale');
   assert.equal(velha.verdict, 'skip');
@@ -98,7 +98,7 @@ test('um formato que ela evita cai', () => {
   assert.ok(evitado.reason.includes('evita'));
 });
 
-test('sem perfil observado o encaixe é conservador, não optimista', () => {
+test('sem perfil observado o encaixe é conservador, não otimista', () => {
   const semPerfil = trendFit({
     trend: trend({ description: 'Talking head longo a falar para a câmara sobre o mês.' }),
     topics: [],
@@ -118,7 +118,7 @@ test('sem perfil observado o encaixe é conservador, não optimista', () => {
 test('a análise profunda só recebe o que sobrevive à triagem barata', () => {
   const candidatas = [
     trend(),
-    trend({ title: 'Ecrã dividido: breakdown da edição' }),
+    trend({ title: 'tela dividido: breakdown da edição' }),
     trend({ title: 'Coisa de 2024', publishedAt: '2024-05-01' }),
     trend({ title: 'Micro-vlog matinal', kind: 'format' }),
   ];

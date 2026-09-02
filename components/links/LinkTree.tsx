@@ -38,7 +38,7 @@ export default function LinkTree({ c, hero, contact, whatsapp }: Props) {
   const bolha = useRef<HTMLSpanElement>(null);
   const contado = useRef(false);
 
-  /* a visita conta-se uma vez por carregamento. o guarda existe porque em
+  /* a visita conta-se uma vez por carregamento. o salva existe porque em
      desenvolvimento o React monta duas vezes de propósito */
   useEffect(() => {
     if (contado.current) return;
@@ -108,7 +108,7 @@ export default function LinkTree({ c, hero, contact, whatsapp }: Props) {
         window.addEventListener('pointermove', seguir, { passive: true });
 
         /* cada botão inclina-se para o lado onde o dedo está. o toque não
-           inclina nada: no telemóvel o cartão só afunda ao ser premido */
+           inclina nada: no celular o cartão só afunda ao ser premido */
         const cartoes = Array.from(el.querySelectorAll<HTMLElement>('.lkItem'));
         const soltar: (() => void)[] = [];
         for (const cartao of cartoes) {

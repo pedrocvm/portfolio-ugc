@@ -31,11 +31,11 @@ const prompts: [string, z.ZodType<unknown>][] = Object.entries(
   registry as Record<string, { schema?: unknown }>,
 ).flatMap(([nome, p]) => (p?.schema ? [[nome, p.schema as z.ZodType<unknown>]] : []));
 
-test('há prompts no registo para verificar', () => {
+test('há prompts no registro para verificar', () => {
   assert.ok(prompts.length >= 10, `só encontrei ${prompts.length}`);
 });
 
-test('nenhum schema do registo leva uma palavra que o Gemini rejeite', () => {
+test('nenhum schema do registro leva uma palavra que o Gemini rejeite', () => {
   for (const [nome, schema] of prompts) {
     const traduzido = geminiSchemaFor(schema);
     const sobras = estranhas(traduzido);
@@ -44,7 +44,7 @@ test('nenhum schema do registo leva uma palavra que o Gemini rejeite', () => {
 });
 
 test('um nome de campo igual a uma palavra de schema sobrevive', () => {
-  // `properties` guarda nomes escolhidos por nós; filtrá-los pela mesma lista
+  // `properties` salva nomes escolhidos por nós; filtrá-los pela mesma lista
   // apagava silenciosamente um campo chamado `title` ou `pattern`.
   const schema = z.object({ title: z.string(), pattern: z.string(), enum: z.string() });
   const out = geminiSchemaFor(schema) as { properties: Record<string, unknown> };

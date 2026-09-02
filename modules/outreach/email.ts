@@ -7,7 +7,7 @@ import { fetchOutreachHistory, type StyleProfile } from './style';
 
 /** Escrever a abordagem.
  *
- *  A voz vem de dois sítios: o perfil medido e emails reais parecidos. Os
+ *  A voz vem de dois sites: o perfil medido e emails reais parecidos. Os
  *  exemplos servem para saber como ela escreve — não para reciclar frases. */
 
 export type Written = {

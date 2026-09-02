@@ -8,7 +8,7 @@ import type { Notification } from '@/modules/assistant/service';
  *
  *  O Hoje é a casa da fila, mas ela passa o dia dentro de uma marca ou de um
  *  documento — e o que está atrasado não deixa de estar atrasado por ela ter
- *  mudado de página. Isto fica fixo no topo e não muda de sítio.
+ *  mudado de página. Isto fica fixo no topo e não muda de lugar.
  *
  *  O que já passou do prazo vem primeiro, porque é trabalho concreto; os avisos
  *  do negócio vêm a seguir, porque são coisas a começar a doer. */
@@ -16,7 +16,7 @@ import type { Notification } from '@/modules/assistant/service';
  *
  *  Um aviso que volta depois de ela o ter lido e resolvido treina-a a ignorar a
  *  campainha inteira. Não vai para a base de dados de propósito: é uma
- *  preferência de leitura, não um facto do negócio, e o facto continua na tela
+ *  preferência de leitura, não um fato do negócio, e o fato continua na tela
  *  a que o aviso aponta. */
 const KEY = 'carolos.notif.dismissed';
 let listeners: (() => void)[] = [];
@@ -88,8 +88,8 @@ export default function Notifications({ items: all }: { items: Notification[] })
         aria-expanded={open}
         aria-label={
           items.length === 0
-            ? 'Nada precisa de si'
-            : `${items.length} ${items.length === 1 ? 'coisa precisa' : 'coisas precisam'} de si`
+            ? 'Nada precisa de você'
+            : `${items.length} ${items.length === 1 ? 'coisa precisa' : 'coisas precisam'} de você`
         }
         onClick={() => setOpen((v) => !v)}
       >
@@ -105,9 +105,9 @@ export default function Notifications({ items: all }: { items: Notification[] })
       </button>
 
       {open ? (
-        <div className="notifBox" role="dialog" aria-label="O que precisa de si">
+        <div className="notifBox" role="dialog" aria-label="O que precisa de você">
           <header>
-            <b>Precisa de si</b>
+            <b>precisa de você</b>
             <Link href="/dashboard" onClick={() => setOpen(false)}>
               Ver o dia
             </Link>

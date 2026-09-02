@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
   }
 
   const file = form.get('file');
-  if (!(file instanceof File)) return NextResponse.json({ error: 'Falta o ficheiro.' }, { status: 400 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'Ficheiro acima de 10 MB.' }, { status: 413 });
+  if (!(file instanceof File)) return NextResponse.json({ error: 'Falta o arquivo.' }, { status: 400 });
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'arquivo acima de 10 MB.' }, { status: 413 });
 
   const mode = form.get('mode') === 'knowledge' ? 'knowledge' : 'chat';
   const stored = await storeAttachment({ threadId, file, mode });

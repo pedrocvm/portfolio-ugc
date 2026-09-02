@@ -4,7 +4,7 @@
  *  «Não consegui apurar: instagram_handle, contact_name, contact_email,
  *  contact_role, product_name, product_price_cents, country_code.» Sete
  *  palavras em inglês com underscores, uma percentagem de confiança, e uma
- *  etiqueta a dizer LINK — três coisas que são o sistema a falar de si próprio,
+ *  etiqueta a dizer LINK — três coisas que são o sistema a falar de você próprio,
  *  e zero coisas sobre se aquela marca lhe serve para alguma coisa.
  *
  *  A pergunta que ela tem quando cola um link é sempre a mesma: **isto é para
@@ -42,7 +42,7 @@ export type CaptureRead = {
   /** O que o sistema tem, já legível. */
   known: { label: string; value: string }[];
   /** O que vai acontecer a seguir se ela criar. Substitui a lista de ausências:
-   *  ela não precisa de saber que campos ficaram vazios, precisa de saber que
+   *  ela não precisa saber que campos ficaram vazios, precisa saber que
    *  alguém trata deles. */
   next: string;
   /** O que só ela pode responder, em português. Vazio quase sempre. */
@@ -77,7 +77,7 @@ export function readFit(f: CaptureFacts, focusLabels: readonly string[]): Fit {
   if (isExcludedNiche(f.nicheId)) {
     return {
       verdict: 'excluded',
-      line: `${nicheById(f.nicheId).label} está fora da sua estratégia. Pode criar na mesma, mas não vai aparecer em prospecção.`,
+      line: `${nicheById(f.nicheId).label} está fora da sua estratégia. Pode criar na mesma, mas não vai aparecer em prospeção.`,
     };
   }
 
@@ -124,7 +124,7 @@ function readKnown(f: CaptureFacts): { label: string; value: string }[] {
   if (site) out.push({ label: 'site', value: site });
   if (f.instagramHandle) out.push({ label: 'instagram', value: `@${f.instagramHandle.replace(/^@/, '')}` });
   if (f.contactName || f.contactEmail) {
-    out.push({ label: 'contacto', value: f.contactName ?? f.contactEmail! });
+    out.push({ label: 'contato', value: f.contactName ?? f.contactEmail! });
   }
   if (f.productName) out.push({ label: 'produto', value: f.productName });
   return out;
@@ -134,18 +134,18 @@ function readKnown(f: CaptureFacts): { label: string; value: string }[] {
  *
  *  Escrito ao contrário da lista de ausências: em vez de sete campos vazios,
  *  uma frase sobre quem trata deles. Só promete o que existe mesmo — a pesquisa
- *  da marca corre ao criar, e o email só se escreve na prospecção. */
+ *  da marca corre ao criar, e o email só se escreve na prospeção. */
 function readNext(f: CaptureFacts, fit: Fit): string {
   if (f.asks.length) {
     return 'Já há um pedido nesta conversa, por isso ao criar isto entra também como oportunidade e aparece no Hoje.';
   }
   if (fit.verdict === 'excluded') {
-    return 'Fica guardada como registo. Não entra em prospecção nem em sugestões.';
+    return 'Fica salva como registro. Não entra em prospeção nem em sugestões.';
   }
   const temContacto = Boolean(f.contactEmail || f.contactName);
   return temContacto
-    ? 'Ao criar, fica com o contacto já ligado e eu procuro o resto.'
-    : 'Ao criar, vou procurar quem contactar e o que fazem — não precisa de preencher nada.';
+    ? 'Ao criar, fica com o contato já ligado e eu procuro o resto.'
+    : 'Ao criar, vou procurar quem contatar e o que fazem — não precisa preencher nada.';
 }
 
 /** O que nem o sistema nem a pesquisa conseguem resolver.
@@ -155,7 +155,7 @@ function readNext(f: CaptureFacts, fit: Fit): string {
 function readBlocking(f: CaptureFacts): string[] {
   const out: string[] = [];
   if (!f.brandName && !f.website && !f.instagramHandle) {
-    out.push('Não consegui perceber de que marca se trata. Escreva o nome e eu procuro o resto.');
+    out.push('Não consegui entender de que marca se trata. Escreva o nome e eu procuro o resto.');
   }
   return out;
 }

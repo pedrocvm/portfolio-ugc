@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { changeStage, openCollaboration, wait } from '@/app/dashboard/carolos-actions';
 import { STAGES, STAGE_LABEL, type Stage } from '@/modules/opportunities/domain';
 
-/** Mudar etapa à mão continua a existir — é o fallback, não o caminho normal.
+/** Mudar etapa à mão continua existindo — é o fallback, não o caminho normal.
  *  Fechar e perder pedem motivo: sem ele, daqui a três meses ninguém sabe
  *  porque é que a oportunidade morreu. */
 export default function StageControl({
@@ -60,7 +60,7 @@ export default function StageControl({
             })
           }
         >
-          Guardar etapa
+          salvar etapa
         </button>
       </div>
 

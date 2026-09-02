@@ -8,7 +8,7 @@ export * from './domain';
 
 /** Os marcos derivam-se; não se cadastram.
  *
- *  Um ecrã onde a Carol registasse «primeiro cliente internacional» era mais um
+ *  Um tela onde a Carol registasse «primeiro cliente internacional» era mais um
  *  formulário para ela manter — e o CarolOS existe para não ter formulários que
  *  dependem da memória dela. Estes saem dos pagamentos e dos eventos que já
  *  estão gravados, e é por isso que nenhum é uma invenção. */

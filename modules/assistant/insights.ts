@@ -42,7 +42,7 @@ export type InsightInput = {
 const days = (from: string | Date, to: Date) =>
   Math.floor((to.getTime() - new Date(from).getTime()) / 86400000);
 
-/** Uma janela, não um dia exacto: se o trabalho de fundo falhar uma passagem,
+/** Uma janela, não um dia exato: se o trabalho de fundo falhar uma passagem,
  *  o aviso não desaparece para sempre. */
 const STALE_DAYS = 7;
 const UPSELL_DAYS = 7;
@@ -68,7 +68,7 @@ export function buildInsights(input: InsightInput): Insight[] {
       severity: idle >= 21 ? 'urgent' : 'warn',
       title: `${o.brandName} está parada há ${idle} dias`,
       // `o.stage` é o identificador da base. «Estava em replied» é o sistema a
-      // falar consigo próprio à frente de quem o usa.
+      // falar com você próprio à frente de quem o usa.
       detail: `Estava em ${(STAGE_LABEL[o.stage as Stage] ?? o.stage).toLowerCase()}. Quanto mais tempo passa, mais caro é reabrir a conversa.`,
       href: `/dashboard/opportunities/${o.id}`,
       brandId: o.brandId,
@@ -91,7 +91,7 @@ export function buildInsights(input: InsightInput): Insight[] {
       kind: 'rights_expiring',
       severity: left <= 7 ? 'urgent' : 'warn',
       title: `A licença da ${r.brandName} acaba em ${left} ${left === 1 ? 'dia' : 'dias'}`,
-      detail: 'Renovar antes de expirar é mais barato do que voltar a negociar do zero.',
+      detail: 'Renovar antes de expirar é mais barato do que negociar de novo do zero.',
       href: r.opportunityId ? `/dashboard/opportunities/${r.opportunityId}` : '/dashboard/revenue',
       brandId: null,
       opportunityId: r.opportunityId,

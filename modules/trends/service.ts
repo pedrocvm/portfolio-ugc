@@ -209,7 +209,7 @@ export type TrendRow = {
   detectedAt: string;
 };
 
-/** As que interessam a ela. As `skip` ficam guardadas — é assim que se sabe
+/** As que interessam a ela. As `skip` ficam salvas — é assim que se sabe
  *  que a pesquisa correu e devolveu coisas que não serviam. */
 export async function usableTrends(limit = 6): Promise<TrendRow[]> {
   const db = supabaseService();

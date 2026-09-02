@@ -19,7 +19,7 @@ import { refreshGate } from '@/modules/production/service';
  *  ter lembrança de os assinalar. */
 const CRITICAL: { key: keyof ParsedBrief; label: string; question: string }[] = [
   { key: 'objective', label: 'Objetivo da campanha', question: 'Qual é o objetivo desta campanha?' },
-  { key: 'product', label: 'Produto ou SKU', question: 'Qual é exactamente o produto a mostrar?' },
+  { key: 'product', label: 'Produto ou SKU', question: 'Qual é exatamente o produto a mostrar?' },
   { key: 'channels', label: 'Canais', question: 'Em que canais vai correr o conteúdo?' },
   { key: 'usage_period', label: 'Período de uso', question: 'Durante quanto tempo vão usar o vídeo?' },
   { key: 'deadline', label: 'Prazo', question: 'Para quando precisam da entrega?' },

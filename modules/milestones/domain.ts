@@ -2,7 +2,7 @@
  *
  *  «Consegui o meu primeiro cliente internacional» é o melhor conteúdo que a
  *  Carol pode publicar — e é a mentira mais fácil de contar por acidente. Este
- *  módulo existe para que um marco só nasça de um facto que já está gravado:
+ *  módulo existe para que um marco só nasça de um fato que já está gravado:
  *  um pagamento, uma aprovação, uma licença, uma marca de outro país.
  *
  *  Nada aqui inventa. Se não há evento, não há marco, e o plano de conteúdo do
@@ -25,7 +25,7 @@ export const MILESTONE_KINDS = [
 
 export type MilestoneKind = (typeof MILESTONE_KINDS)[number];
 
-/** A frase que a Carol lê. Facto, não celebração inventada. */
+/** A frase que a Carol lê. fato, não celebração inventada. */
 export const MILESTONE_LABEL: Record<MilestoneKind, string> = {
   first_positive_reply: 'A primeira resposta positiva de uma marca',
   first_product_received: 'O primeiro produto recebido',
@@ -54,7 +54,7 @@ export type Milestone = {
 
 export type MilestoneInput = {
   /** Pagamentos em dinheiro, já recebidos. Permuta não conta: produto não é
-   *  receita, e a regra 5 do CarolOS existe exactamente para isto. */
+   *  receita, e a regra 5 do CarolOS existe exatamente para isto. */
   payments: readonly {
     id: string;
     brandId: string | null;

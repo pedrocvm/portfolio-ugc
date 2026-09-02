@@ -33,7 +33,7 @@ test('haircare cai no mesmo nicho excluído que skincare', () => {
   assert.equal(guessNiche('sérum facial anti-idade')?.id, 'beauty');
 });
 
-test('skincare e haircare nunca aparecem na lista de prospecção', () => {
+test('skincare e haircare nunca aparecem na lista de prospeção', () => {
   assert.equal(prospectableNiches().some((n) => n.id === 'beauty'), false);
   for (const n of prospectableNiches()) assert.notEqual(n.tier, 'EXCLUDED');
 });

@@ -33,7 +33,7 @@ export async function searchEverything(query: string): Promise<Hit[]> {
   const db = await supabaseServer();
   const like = `%${q}%`;
 
-  const [marcas, contactos, oportunidades, documentos, conteudo] = await Promise.all([
+  const [marcas, contatos, oportunidades, documentos, conteudo] = await Promise.all([
     db.from('brand').select('id, name, category_primary').ilike('name', like).limit(POR_TIPO),
     db.from('contact').select('id, name, email, brand_id, brand:brand_id ( name )')
       .or(`name.ilike.${like},email.ilike.${like}`).limit(POR_TIPO),
@@ -61,12 +61,12 @@ export async function searchEverything(query: string): Promise<Hit[]> {
       group: 'Negócios',
       href: `/dashboard/opportunities/${o.id}`,
     })),
-    ...((contactos.data ?? []) as unknown as
+    ...((contatos.data ?? []) as unknown as
       { id: string; name: string; email: string | null; brand_id: string | null; brand: { name: string } | null }[]).map(
       (c) => ({
         id: `contact-${c.id}`,
-        label: c.name || c.email || 'contacto',
-        detail: nome(c) || c.email || 'contacto',
+        label: c.name || c.email || 'contato',
+        detail: nome(c) || c.email || 'contato',
         group: 'Pessoas',
         href: c.brand_id ? `/dashboard/brands/${c.brand_id}` : '/dashboard/clients',
       }),

@@ -104,8 +104,8 @@ export default function PreviewFrame({
         </div>
         {dirty ? (
           <p className="pvNote">
-            Estás a ver as alterações que ainda não guardaste. O site só muda
-            depois de Guardar e Publicar.
+            Estás vendo as alterações que ainda não guardaste. O site só muda
+            depois de salvar e Publicar.
           </p>
         ) : null}
         <div className="pvFrame" style={{ maxWidth: size.width }}>

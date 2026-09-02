@@ -179,7 +179,7 @@ test('a família principal é a primeira nomeada, não a última', () => {
 
 /* ── País por prova, não por língua ──────────────────────────────────────── */
 
-test('«Portugal» e «PT» são o mesmo sítio; «Portugal» e «Espanha» não são', () => {
+test('«Portugal» e «PT» são o mesmo lugar; «Portugal» e «Espanha» não são', () => {
   assert.equal(sameCountry('Portugal', 'PT'), true);
   assert.equal(sameCountry('Brasil', 'Brazil'), true);
   assert.equal(sameCountry('Espanha', 'Spain'), true);
@@ -194,9 +194,9 @@ test('sem país conhecido não se rejeita: é falta de prova, não prova de falt
   assert.equal(sameCountry('Portugal', ''), true);
 });
 
-/* ── A regressão, com o que apareceu mesmo no ecrã dela ──────────────────── */
+/* ── A regressão, com o que apareceu mesmo no tela dela ──────────────────── */
 
-/** As marcas que uma busca por hotéis devolveu de facto, copiadas da tela.
+/** As marcas que uma busca por hotéis devolveu de fato, copiadas da tela.
  *  Quatro eram hotelaria; as outras cinco não tinham nada que ali fazer. */
 const O_QUE_APARECEU = [
   ['Caravel', 'App de finanças pessoais com foco em controlo manual rigoroso e privacidade absoluta.', false],
@@ -256,7 +256,7 @@ test('a marca que apareceu marcada como risco está, afinal, no foco dela', () =
   assert.equal(m.label, 'Hotéis de luxo');
 });
 
-test('o foco reconhece pela família, não só pela palavra exacta', () => {
+test('o foco reconhece pela família, não só pela palavra exata', () => {
   assert.equal(focusMatch('Alojamento turístico em espaço rural', FOCO).matches, true);
   assert.equal(focusMatch('Fine dining e cozinha de autor', FOCO).matches, true);
   assert.equal(focusMatch('Plataforma de faturação para PMEs', FOCO).matches, true);

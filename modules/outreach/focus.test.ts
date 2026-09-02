@@ -4,7 +4,7 @@ import {
   DEFAULT_FOCUS, MAX_NICHES, nicheIdFor, nichesForDay, normalizeFocus,
 } from './focus.ts';
 
-test('sem foco guardado, usa-se o tech-first e não o vazio', () => {
+test('sem foco salvo, usa-se o tech-first e não o vazio', () => {
   // Uma lista de nichos vazia fazia a busca procurar tudo, que é procurar nada.
   const f = normalizeFocus(null);
   assert.deepEqual(f, DEFAULT_FOCUS);
@@ -77,7 +77,7 @@ test('um nicho pode dizer o que procurar lá dentro', () => {
   assert.match(f.niches[0].note!, /troca de estadia/);
 });
 
-test('uma nota vazia não fica a ocupar espaço', () => {
+test('uma nota vazia não fica ocupando espaço', () => {
   const f = normalizeFocus({ niches: [{ id: '', label: 'Hotéis', favourite: false, note: '   ' }] });
   assert.equal(f.niches[0].note, undefined);
 });
@@ -90,7 +90,7 @@ test('a nota tem tecto: um ensaio dilui o pedido', () => {
 });
 
 test('a nota do nicho chega à estratégia da corrida, não fica na tela', () => {
-  // Guardar a nota e não a usar era o pior dos casos: parece configurável e
+  // Salvar a nota e não a usar era o pior dos casos: parece configurável e
   // não muda nada no que aparece.
   const focus = normalizeFocus({
     niches: [

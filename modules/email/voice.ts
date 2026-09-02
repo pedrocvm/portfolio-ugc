@@ -4,32 +4,26 @@
  *  próprio: uma decide a língua da conversa a partir da conversa, e a outra
  *  nomeia o que ela corrigiu num rascunho.
  *
- *  A segunda é a memória de voz. Antes, cada correcção que a Carol fazia era
- *  deitada fora — e o rascunho seguinte voltava a sair em português do Brasil.
- *  Aprende ESTILO. Nunca política comercial: um modelo que aprende a baixar o
- *  preço porque ela o baixou uma vez é um modelo a decidir dinheiro. */
+ *  A segunda é a memória de voz. Antes, cada correção que a Carol fazia era
+ *  jogada fora — e o rascunho seguinte voltava a sair errado. Aprende ESTILO.
+ *  Nunca política comercial: um modelo que aprende a baixar o preço porque ela
+ *  o baixou uma vez é um modelo decidindo dinheiro. */
 
-/** A língua da conversa sai da conversa, não da preferência do modelo.
+/** Português ou inglês. Nunca português europeu.
  *
- *  Um domínio `.pt`, ou português europeu no texto, manda escrever em pt-PT.
- *  Foi assim que um rascunho para a Cecotec saiu com «Oi, Julia! Tudo bem?». */
+ *  A regra do projeto é PT-BR em qualquer caso — inclusive numa conversa com
+ *  uma marca portuguesa, que é a maioria delas. A escolha aqui é só entre
+ *  escrever na língua dela ou em inglês; a variante já está decidida. */
 export function languageOfThread(input: {
   participants: readonly string[];
   externalText: string;
   carolText: string;
-}): 'pt-PT' | 'pt-BR' | 'en' | 'other' {
-  const dominios = input.participants.map((p) => p.split('@')[1] ?? '').join(' ').toLowerCase();
+}): 'pt-BR' | 'en' | 'other' {
   const texto = `${input.externalText} ${input.carolText}`.toLowerCase();
-
-  const marcasPT = /(telem[óo]vel|ecr[ãa]|fich(eiro|eiros)|equipa|s[íi]tio|pretende|contact[oa]|estamos a |gostar[íi]amos de |obrigad[oa] pela)/;
-  const marcasBR = /(celular|tela|arquivo|time de|site de|voc[êe]s?|a gente|legal|valeu|abra[çc]o)/;
   const marcasEN = /\b(hi|hello|thanks|regards|we would|could you|looking forward)\b/;
 
-  if (/\.pt\b/.test(dominios) || marcasPT.test(texto)) return 'pt-PT';
-  if (/\.br\b/.test(dominios) || marcasBR.test(texto)) return 'pt-BR';
   if (marcasEN.test(texto) && !/[ãõçáéí]/.test(texto)) return 'en';
-  // Sem sinal, o padrão dela: as marcas com que fala são portuguesas.
-  return 'pt-PT';
+  return 'pt-BR';
 }
 
 /** O que mudou entre o que se escreveu e o que ela enviou, dito em padrões.
@@ -38,20 +32,22 @@ export function languageOfThread(input: {
  *  caro e vago. Isto nomeia o que se repete, que é o que serve para corrigir. */
 export function observeEdit(ai: string, final: string): string[] {
   const notas: string[] = [];
-  const brasileirismos: [RegExp, string][] = [
-    [/\boi\b/i, '«oi» → «olá»'],
-    [/tudo bem\?/i, '«tudo bem?» → «tudo certo?»'],
-    [/\bme conta\b/i, '«me conta» → «diga-me» ou «conte-me»'],
-    // Sem `\b`: em JavaScript a fronteira de palavra só conhece [A-Za-z0-9_],
-    // por isso o «ê» já é fora da palavra e `\bvocê\b` nunca casa. O mesmo
-    // erro estava no teste de voz da interface e passava por não achar nada.
-    [/(^|[^\p{L}])voc[êe]($|[^\p{L}])/iu, '«você» → tratamento por «si» ou sem sujeito'],
-    [/\ba gente\b/i, '«a gente» → «nós»'],
-    [/\bcelular\b/i, '«celular» → «telemóvel»'],
-    [/\btela\b/i, '«tela» → «ecrã»'],
-    [/\barquivo\b/i, '«arquivo» → «ficheiro»'],
+  // Sem `\b` à volta de palavra acentuada: em JavaScript a fronteira de palavra
+  // só conhece [A-Za-z0-9_], por isso «ã» já conta como fora da palavra e
+  // `\becrã\b` nunca casa. O mesmo erro passou despercebido no teste de voz da
+  // interface, que passava por não achar nada.
+  const lusitanismos: [RegExp, string][] = [
+    [/(^|[^\p{L}])telem[óo]ve(l|is)($|[^\p{L}])/iu, '«telemóvel» → «celular»'],
+    [/(^|[^\p{L}])ecrãs?($|[^\p{L}])/iu, '«ecrã» → «tela»'],
+    [/(^|[^\p{L}])ficheiros?($|[^\p{L}])/iu, '«ficheiro» → «arquivo»'],
+    [/(^|[^\p{L}])portef[óo]lio($|[^\p{L}])/iu, '«portefólio» → «portfólio»'],
+    [/\bequipa\b/i, '«equipa» → «equipe»'],
+    [/\bde si\b/i, '«de si» → «de você»'],
+    [/\bcontact(o|ar)\b/i, '«contacto» → «contato»'],
+    [/\bestá a [a-zà-ú]+[aei]r\b/i, '«está a fazer» → «está fazendo»'],
+    [/\bdiga-me\b/i, '«diga-me» → «me diga»'],
   ];
-  for (const [re, nota] of brasileirismos) {
+  for (const [re, nota] of lusitanismos) {
     if (re.test(ai) && !re.test(final)) notas.push(`tira ${nota}`);
   }
 

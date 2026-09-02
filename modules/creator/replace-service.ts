@@ -29,7 +29,7 @@ import { describeProfile, profileFresh } from './profile-service';
 /** «Quero outra ideia.»
  *
  *  Não é regenerar às cegas — isso devolvia a mesma coisa com outras palavras.
- *  Recebe uma direcção de um toque e escreve outra na mesma plataforma, sabendo
+ *  Recebe uma direção de um toque e escreve outra na mesma plataforma, sabendo
  *  o que já foi sugerido para não repetir.
  *
  *  A ideia velha é descartada com o motivo. Fica no banco: se ela mudar de
@@ -199,7 +199,7 @@ export async function replaceIdea(ideaId: string, nudge?: Nudge): Promise<Replac
     .select('id')
     .maybeSingle();
 
-  if (error || !created) return { ok: false, error: 'Não consegui guardar a alternativa.' };
+  if (error || !created) return { ok: false, error: 'Não consegui salvar a alternativa.' };
 
   await db
     .from('creator_content_idea')
@@ -228,5 +228,5 @@ async function previousIdeas() {
 
 function describeBrief(platform: Platform): string {
   const b = PLATFORM_BRIEF[platform];
-  return `Objectivo: ${b.objective}\nTratamento: ${b.treatment}\nA evitar: ${b.avoid}`;
+  return `objetivo: ${b.objective}\nTratamento: ${b.treatment}\nA evitar: ${b.avoid}`;
 }

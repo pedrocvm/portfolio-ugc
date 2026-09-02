@@ -10,8 +10,8 @@ export type Researched = { candidate: Discovered; research: OutreachResearch };
 /** Vai ao site e ao Instagram buscar o que só lá está.
  *
  *  Isto corria sem web nenhuma: o modelo respondia de memória, e como o prompt
- *  — bem — proíbe inventar contactos, o contacto vinha sempre a null. O
- *  WhatsApp e o @ da marca estão na página de contactos e na bio; sem lá ir, não
+ *  — bem — proíbe inventar contatos, o contato vinha sempre a null. O
+ *  WhatsApp e o @ da marca estão na página de contatos e na bio; sem lá ir, não
  *  há como os saber.
  *
  *  Devolve prosa. A estrutura vem na volta seguinte, porque pedir pesquisa e
@@ -36,10 +36,10 @@ async function gatherFacts(candidate: Discovered): Promise<string> {
       system:
         'Pesquisas uma marca para uma criadora de conteúdo a avaliar se vale a pena abordá-la. ' +
         'Procura: o produto principal, se investem em anúncios, se já trabalham com creators, ' +
-        'e sobretudo COMO SE FALA COM ELES — página de contactos do site, link de WhatsApp ' +
+        'e sobretudo COMO SE FALA COM ELES — página de contatos do site, link de WhatsApp ' +
         '(wa.me), Instagram da marca, email de marketing ou parcerias. ' +
         'Escreve o que encontraste em texto corrido, dizendo em que página viste cada coisa. ' +
-        'Não inventes contactos: se não encontraste, diz que não encontraste.',
+        'Não inventes contatos: se não encontraste, diz que não encontraste.',
       user: alvo,
       maxTokens: 3000,
     });

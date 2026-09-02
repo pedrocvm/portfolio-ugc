@@ -19,7 +19,7 @@ import type { ActionRow } from '@/modules/actions/service';
  *  para fora, e nada aqui sai.
  *
  *  Onde há trabalho a sério a fazer, o botão principal abre a tela dessa
- *  oportunidade. O sítio guarda-se: voltar continua de onde parou. */
+ *  oportunidade. O lugar salva-se: voltar continua de onde parou. */
 
 const RETOMA = 'carolos.focus.at';
 
@@ -35,7 +35,7 @@ export default function Focus({ actions }: { actions: ActionRow[] }) {
   const caixa = useRef<HTMLDivElement>(null);
 
   const restantes = actions.filter((a) => !feitos.includes(a.id));
-  const actual = restantes[Math.min(at, Math.max(0, restantes.length - 1))];
+  const atual = restantes[Math.min(at, Math.max(0, restantes.length - 1))];
   const acabou = restantes.length === 0;
 
   // Onde ela ia. Sobrevive a fechar o browser a meio; não sobrevive ao dia
@@ -52,8 +52,8 @@ export default function Focus({ actions }: { actions: ActionRow[] }) {
   const abrir = useCallback(() => {
     let inicio = 0;
     try {
-      const guardado = Number(sessionStorage.getItem(RETOMA));
-      if (Number.isInteger(guardado) && guardado > 0 && guardado < actions.length) inicio = guardado;
+      const salvo = Number(sessionStorage.getItem(RETOMA));
+      if (Number.isInteger(salvo) && salvo > 0 && salvo < actions.length) inicio = salvo;
     } catch {
       /* sem sessionStorage, começa no princípio */
     }
@@ -85,8 +85,8 @@ export default function Focus({ actions }: { actions: ActionRow[] }) {
     fn: () => Promise<{ error?: string }>,
   ) =>
     start(async () => {
-      if (!actual) return;
-      const alvo = actual.id;
+      if (!atual) return;
+      const alvo = atual.id;
       setRunning(id);
       const r = await fn();
       setRunning('');
@@ -141,16 +141,16 @@ export default function Focus({ actions }: { actions: ActionRow[] }) {
             {acabou ? (
               <div className="focusDone">
                 <h2>Está tudo.</h2>
-                <p>Não há mais nada que precise de si agora.</p>
+                <p>Não há mais nada que precise de você agora.</p>
                 <button className="osStart" type="button" onClick={close}>
                   Fechar
                 </button>
               </div>
-            ) : actual ? (
-              <div className="focusOne" key={actual.id}>
-                <span className="osBrand">{actual.brandName}</span>
-                <h2>{actual.title}</h2>
-                <p className="focusWhy">{actual.reason}</p>
+            ) : atual ? (
+              <div className="focusOne" key={atual.id}>
+                <span className="osBrand">{atual.brandName}</span>
+                <h2>{atual.title}</h2>
+                <p className="focusWhy">{atual.reason}</p>
 
                 {erro ? (
                   <p className="osWarn" role="alert">
@@ -162,14 +162,14 @@ export default function Focus({ actions }: { actions: ActionRow[] }) {
                   <Link
                     className="osGo"
                     href={
-                      actual.opportunityId
-                        ? `/dashboard/opportunities/${actual.opportunityId}`
-                        : actual.brandId
-                          ? `/dashboard/brands/${actual.brandId}`
+                      atual.opportunityId
+                        ? `/dashboard/opportunities/${atual.opportunityId}`
+                        : atual.brandId
+                          ? `/dashboard/brands/${atual.brandId}`
                           : '/dashboard/settings'
                     }
                   >
-                    {actual.cta}
+                    {atual.cta}
                   </Link>
 
                   <button
@@ -177,12 +177,12 @@ export default function Focus({ actions }: { actions: ActionRow[] }) {
                     type="button"
                     disabled={pending}
                     onClick={() =>
-                      resolver('done', `«${actual.title}» dado como feito.`, () =>
-                        doneAction(actual.id),
+                      resolver('done', `«${atual.title}» dado como feito.`, () =>
+                        doneAction(atual.id),
                       )
                     }
                   >
-                    {running === 'done' ? <Spinner label="A marcar" /> : null}
+                    {running === 'done' ? <Spinner label="Marcando" /> : null}
                     Já está
                   </button>
 
@@ -191,12 +191,12 @@ export default function Focus({ actions }: { actions: ActionRow[] }) {
                     type="button"
                     disabled={pending}
                     onClick={() =>
-                      resolver('snooze', `«${actual.title}» volta daqui a 3 dias.`, () =>
-                        snooze(actual.id, 3),
+                      resolver('snooze', `«${atual.title}» volta daqui a 3 dias.`, () =>
+                        snooze(atual.id, 3),
                       )
                     }
                   >
-                    {running === 'snooze' ? <Spinner label="A adiar" /> : null}
+                    {running === 'snooze' ? <Spinner label="Adiando" /> : null}
                     Depois
                   </button>
 
@@ -205,8 +205,8 @@ export default function Focus({ actions }: { actions: ActionRow[] }) {
                     type="button"
                     disabled={pending}
                     onClick={() =>
-                      resolver('dismiss', `«${actual.title}» saiu da fila.`, () =>
-                        dismiss(actual.id),
+                      resolver('dismiss', `«${atual.title}» saiu da fila.`, () =>
+                        dismiss(atual.id),
                       )
                     }
                   >

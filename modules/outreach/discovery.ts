@@ -10,7 +10,7 @@ import type { ManualIntent } from './intent';
 /** Encontrar candidatas.
  *
  *  A pesquisa é do lado do fornecedor: o modelo procura na web e devolve nomes
- *  com o sítio onde os viu. Não há scraping em massa nem infra de cold email —
+ *  com o lugar onde os viu. Não há scraping em massa nem infra de cold email —
  *  isto procura umas dezenas de empresas por dia, uma vez por dia. */
 
 const Found = z.object({
@@ -102,7 +102,7 @@ export async function discoverForIntent(
     'mesmo que seja tecnologia, mesmo que pareça encaixar no trabalho dela.',
     'Antes preencher menos do que preencher com outra coisa.',
     '',
-    `A empresa tem de estar sediada em ${intent.country}, com prova (morada, domínio, registo).`,
+    `A empresa tem de estar sediada em ${intent.country}, com prova (endereço, domínio, registro).`,
     'Um site traduzido para português não faz de uma empresa portuguesa.',
   ]
     .filter((l) => l !== undefined)
@@ -155,7 +155,7 @@ export async function discoverBrands(
     `Mercados: ${strategy.countries.join(', ')}.`,
     // A Carol escreve em português. Uma marca que só se aborda em inglês ocupa
     // uma vaga do dia e queima a pesquisa: é um requisito, não uma preferência.
-    'OBRIGATÓRIO: só marcas que se possam abordar em português — sediadas em Portugal ou no Brasil, ou com equipa de marketing lusófona. Se não tiveres a certeza de que falam português, não a proponhas.',
+    'OBRIGATÓRIO: só marcas que se possam abordar em português — sediadas em Portugal ou no Brasil, ou com equipe de marketing lusófona. Se não tiveres a certeza de que falam português, não a proponhas.',
     `Ângulo: ${strategy.angle}.`,
     extra ? `Pedido específico: ${extra}` : '',
     'Procura na web e devolve as empresas que encontrares.',

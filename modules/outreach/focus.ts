@@ -3,7 +3,7 @@
  *  Os nichos estavam no código e os países numa lista fixa. Mudar o que o
  *  CarolOS procura de manhã era um commit — o que quer dizer que, na prática,
  *  não mudava. Isto é a parte pura: o que é um foco válido e o que acontece
- *  quando não há nenhum guardado. */
+ *  quando não há nenhum salvo. */
 
 import { NICHES } from '@/modules/brands/niches';
 
@@ -27,7 +27,7 @@ export type Focus = {
   perDay: number;
 };
 
-/** O tech-first continua a ser o ponto de partida — mas agora é um ponto de
+/** O tech-first continua sendo o ponto de partida — mas agora é um ponto de
  *  partida, e não uma lei. Skincare e haircare continuam fora, por decisão de
  *  produto e não por acidente de lista. */
 export const DEFAULT_FOCUS: Focus = {

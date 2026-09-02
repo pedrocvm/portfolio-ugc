@@ -15,12 +15,12 @@ import RecordingMode from './RecordingMode';
  *  ideias que ela guardou para uma tarde com tempo.
  *
  *  «Mastigado significa mastigado»: cada plano traz gancho, guião falado,
- *  tomadas numeradas, texto no ecrã e os passos de CapCut com tempos. Se ela
+ *  tomadas numeradas, texto no tela e os passos de CapCut com tempos. Se ela
  *  precisar de pensar em alguma coisa antes de gravar, o plano falhou. */
 
 const STATUS_LABEL: Record<string, string> = {
   ready: 'pronta para gravar',
-  saved: 'guardada',
+  saved: 'salva',
   recorded: 'gravada',
   published: 'publicada',
   archived: 'arquivada',
@@ -45,7 +45,7 @@ export default function ContentBank({
   trends: TrendRow[];
   openId?: string;
 }) {
-  const guardadas = bank.filter((i) => i.status === 'saved');
+  const salvas = bank.filter((i) => i.status === 'saved');
   const feitas = bank.filter((i) => i.status === 'recorded' || i.status === 'published');
   const arquivo = bank.filter((i) => i.status === 'archived' || i.status === 'discarded');
 
@@ -74,13 +74,13 @@ export default function ContentBank({
         </section>
       )}
 
-      {guardadas.length ? (
+      {salvas.length ? (
         <section className="osSection">
           <h2>
-            Guardadas <span className="osCount">{guardadas.length}</span>
+            salvas <span className="osCount">{salvas.length}</span>
           </h2>
           <div className="cbList">
-            {guardadas.map((i) => (
+            {salvas.map((i) => (
               <Idea key={i.id} idea={i} trends={trends} open={openId === i.id} />
             ))}
           </div>
@@ -134,7 +134,7 @@ function Idea({
 
   const decidir = (novo: string, frase: string) =>
     start(async () => {
-      const r = await decideOnIdea(idea.id, novo).catch(() => ({ error: 'Não consegui guardar agora.' }));
+      const r = await decideOnIdea(idea.id, novo).catch(() => ({ error: 'Não consegui salvar agora.' }));
       if (r.error) {
         setErro(r.error);
         return;
@@ -230,7 +230,7 @@ function Idea({
               ) : null}
               {idea.onScreenText.length ? (
                 <>
-                  <dt>Texto no ecrã</dt>
+                  <dt>Texto no tela</dt>
                   <dd>{idea.onScreenText.join(' · ')}</dd>
                 </>
               ) : null}
@@ -319,7 +319,7 @@ function Idea({
         ) : null}
 
         {/* Cada tendência usada é clicável. Sem prova, não se afirma que uma
-            coisa está a funcionar. */}
+            coisa está funcionando. */}
         {usadas.length ? (
           <div className="cbBlock">
             <h4>De onde veio</h4>
@@ -372,9 +372,9 @@ function Idea({
               className="osPageBtn"
               type="button"
               disabled={pending}
-              onClick={() => decidir('saved', 'Guardada para depois.')}
+              onClick={() => decidir('saved', 'Salva para depois.')}
             >
-              Guardar para depois
+              salvar para depois
             </button>
           ) : null}
 

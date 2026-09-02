@@ -50,7 +50,7 @@ test('ações de ler não pedem confirmação; enviar pede', () => {
   assert.equal(needsConfirmetion('set_pricing_policy'), true);
 });
 
-test('a janela guarda tudo e envia o fim', () => {
+test('a janela salva tudo e envia o fim', () => {
   const turns = Array.from({ length: 20 }, (_, i) => ({
     role: (i % 2 ? 'assistant' : 'user') as 'user' | 'assistant',
     content: `m${i}`,

@@ -63,7 +63,7 @@ export default function Settings({
 
   const run = (id: string, work: () => Promise<void>) => {
     // Fora da transição, de propósito. Uma transição existe para adiar o novo
-    // estado e manter o antigo visível — que é exactamente o contrário de
+    // estado e manter o antigo visível — que é exatamente o contrário de
     // mostrar que se carregou no botão. O spinner tem de ser urgente.
     setRunning(id);
     start(async () => {
@@ -150,7 +150,7 @@ export default function Settings({
                       })
                     }
                   >
-                    {running === `disc:${m.id}` ? <Spinner label="A desligar" /> : null}
+                    {running === `disc:${m.id}` ? <Spinner label="Desligando" /> : null}
                     Desligar
                   </button>
                 ) : null}
@@ -192,7 +192,7 @@ export default function Settings({
               disabled={pending}
               onClick={() => flip(key)}
             >
-              {running === `flag:${key}` ? <Spinner label="A guardar" /> : null}
+              {running === `flag:${key}` ? <Spinner label="Salvando" /> : null}
               {local[key] ? 'ligado' : 'desligado'}
             </button>
           </div>

@@ -6,7 +6,7 @@
  *  que uma «UGC creator» costuma ser, e o que se viu contradiz o que estava
  *  construído aqui.
  *
- *  Duas correcções que este ficheiro existe para gravar:
+ *  Duas correções que este arquivo existe para gravar:
  *
  *  1. **Os pilares anteriores estavam errados.** Eram os de um creator
  *     genérico — autoridade em UGC, estratégia criativa, ensinar creators. A
@@ -22,7 +22,7 @@
  *  Regra que governa tudo o que vem daqui: **autoridade sim, professora não.**
  *  Mostrar competência, nunca afirmá-la.
  *
- *  Puro, e versionado de propósito: uma ideia guardada tem de continuar a saber
+ *  Puro, e versionado de propósito: uma ideia salva tem de continuar a saber
  *  que estratégia a produziu. */
 
 export const STRATEGY_VERSION = 'CAROL_CONTENT_STRATEGY_V1';
@@ -33,7 +33,7 @@ export const STRATEGY_SOURCE = {
   observedAt: '2026-09-02',
   /** Alta para identidade e conteúdo observado; nula para métricas. A auditoria
    *  diz explicitamente que o Instagram bloqueou o feed autenticado e que views
-   *  e retenção **não foram verificadas**. Nada aqui pode virar facto numérico. */
+   *  e retenção **não foram verificadas**. Nada aqui pode virar fato numérico. */
   authority: 'high for creator identity and observed content, none for metrics',
 } as const;
 
@@ -55,7 +55,7 @@ export const PILLAR_LABEL: Record<Pillar, string> = {
   A_SALA: 'A sala',
   TESTEI: 'Testei de verdade',
   CASA_A_DOIS: 'Casa a dois',
-  CORPO: 'Corpo no sítio',
+  CORPO: 'Corpo no lugar',
   LARGUEI_O_TURNO: 'Larguei o turno',
 };
 
@@ -87,7 +87,7 @@ export const PILLAR_SPEC: Record<Pillar, PillarSpec> = {
     what: 'Um produto ou serviço posto à prova com ceticismo real, como cliente chata.',
     objective: 'O motor de UGC orgânico. Demonstra o ofício sem parecer um anúncio.',
     audience: 'Consumidoras e marcas ao mesmo tempo.',
-    format: 'Storytime com prova no plano: ecrã, produto na mão, antes/depois.',
+    format: 'Storytime com prova no plano: tela, produto na mão, antes/depois.',
     commercial: 'Tudo o que ela já grava.',
   },
   CASA_A_DOIS: {
@@ -100,9 +100,9 @@ export const PILLAR_SPEC: Record<Pillar, PillarSpec> = {
     commercial: 'Decoração, aroma, imobiliário.',
   },
   CORPO: {
-    label: 'Corpo no sítio',
+    label: 'Corpo no lugar',
     weight: 0.15,
-    what: 'Pele com rosácea, cabelo estragado, treino de quem está a começar. Problemas reais, não rotina de beleza.',
+    what: 'Pele com rosácea, cabelo estragado, treino de quem está começando. Problemas reais, não rotina de beleza.',
     objective: 'Identificação física imediata.',
     audience: 'Mulheres 20-32.',
     format: 'Antes/depois, 20-30s, com a metáfora dela.',
@@ -133,7 +133,7 @@ export const AUDIENCE_SPEC: Record<Audience, { label: string; priority: number; 
   brand_buyer: {
     label: 'Quem compra UGC',
     priority: 2,
-    note: 'Não precisa de seguir. Precisa de, ao visitar, perceber presença, narrativa e bom senso comercial. Compra o ficheiro, não o follow — e o sítio para isso é o site.',
+    note: 'Não precisa de seguir. Precisa de, ao visitar, entender presença, narrativa e bom senso comercial. Compra o arquivo, não o follow — e o lugar para isso é o site.',
   },
   creator: {
     label: 'Creators a começar',
@@ -163,7 +163,7 @@ export const CONTENT_DNA: readonly string[] = [
   'Nunca mandar a audiência embora no CTA. O follow fica nela.',
 ];
 
-export const POSITIONING = 'A rapariga da sala que agora grava. Lifestyle com ofício.';
+export const POSITIONING = 'A menina da sala que agora grava. Lifestyle com ofício.';
 
 /** A frase que a auditoria diz que devia orientar tudo. */
 export const NORTH_STAR = 'Se eu não serviria isto a uma mesa, não ponho no Reels.';
@@ -172,7 +172,7 @@ export const NORTH_STAR = 'Se eu não serviria isto a uma mesa, não ponho no Re
 
 export const ANTI_PATTERNS: readonly string[] = [
   'Criativo de cliente que não é episódio da vida dela — listar features, montagem muda de casa.',
-  'Inglês de stock no ecrã: Home, Rituals, Welcome To My, sem ironia.',
+  'Inglês de stock no tela: Home, Rituals, Welcome To My, sem ironia.',
   'Conteúdo para creators: dicas de UGC, ferramentas, «como consegui X».',
   'Anúncios de 60 segundos com lapela à vista.',
   'Montagem muda como formato por omissão.',
@@ -183,7 +183,7 @@ export const ANTI_PATTERNS: readonly string[] = [
 export const PREFERRED_FORMATS: readonly string[] = [
   'talking head com história',
   'storytelling com prova',
-  'reacção e ceticismo',
+  'reação e ceticismo',
   'antes/depois',
   'voice-over pessoal por cima de imagem',
   'mini-vlog falado com uma tese',
@@ -279,7 +279,7 @@ export const RESEARCH_TERRITORIES: readonly string[] = [
  *  Brasileiras. A Carol é brasileira, escreve e fala em português do Brasil, e
  *  uma referência de um creator europeu ensina um ritmo e um humor que não são
  *  os dela — copiar o mecanismo de outra cultura é como o conteúdo sai
- *  correcto e soa a tradução.
+ *  correto e soa a tradução.
  *
  *  Isto vai literalmente para dentro das buscas: sem o dizer, o motor devolve
  *  o que há mais na web, que é conteúdo em inglês. */
@@ -310,12 +310,12 @@ export const HYPOTHESES: readonly Hypothesis[] = [
   { id: 'H3', claim: 'CTA para o próprio perfil vale mais do que CTA para o namorado.', test: 'republicar a tese do Cenlo sem mencionar o outro perfil.', metric: 'seguidores ganhos', status: 'untested' },
   { id: 'H4', claim: 'Pele real alcança mais não-seguidores do que casa bonita.', test: '3 peças de rosácea.', metric: 'alcance de contas não seguidoras', status: 'untested' },
   { id: 'H5', claim: 'Mini-vlog com tese termina mais do que mini-vlog estético.', test: '3 vlogs de 20-30s com uma frase no segundo 1.', metric: 'conclusão contra abandono', status: 'untested' },
-  { id: 'H6', claim: 'Inglês no ecrã piora a identificação em Portugal.', test: 'o mesmo ritual de casa, um em inglês e outro falado em português.', metric: 'comentários escritos contra emoji', status: 'untested' },
+  { id: 'H6', claim: 'Inglês no tela piora a identificação em Portugal.', test: 'o mesmo ritual de casa, um em inglês e outro falado em português.', metric: 'comentários escritos contra emoji', status: 'untested' },
 ];
 
 /* ── Como se mede o sucesso ───────────────────────────────────────────────── */
 
-/** Não é views. Cada objectivo tem o seu sinal, e confundi-los é como um perfil
+/** Não é views. Cada objetivo tem o seu sinal, e confundi-los é como um perfil
  *  optimiza para a métrica errada durante meses. */
 export const SUCCESS_SIGNALS: Record<string, { label: string; signals: readonly string[] }> = {
   authority: { label: 'Autoridade', signals: ['saves', 'profileVisits', 'inboundLeads'] },
@@ -324,7 +324,7 @@ export const SUCCESS_SIGNALS: Record<string, { label: string; signals: readonly 
   business: { label: 'Negócio', signals: ['inboundLeads', 'profileVisits'] },
 };
 
-/* ── A estratégia inteira, para guardar e para ler ────────────────────────── */
+/* ── A estratégia inteira, para salvar e para ler ────────────────────────── */
 
 export type CreatorContentStrategy = {
   version: string;
@@ -371,7 +371,7 @@ export function describeStrategy(): string {
     'PILARES, com o peso alvo:',
     ...PILLARS.map((p) => {
       const s = PILLAR_SPEC[p];
-      return `- ${p} · ${s.label} (${Math.round(s.weight * 100)}%): ${s.what}\n  Objectivo: ${s.objective}\n  Formato: ${s.format}`;
+      return `- ${p} · ${s.label} (${Math.round(s.weight * 100)}%): ${s.what}\n  objetivo: ${s.objective}\n  Formato: ${s.format}`;
     }),
     '',
     'AUDIÊNCIA, por prioridade:',

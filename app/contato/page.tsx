@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: nome,
       description: meta.ogDescription,
-      locale: 'pt_PT',
+      locale: 'pt_BR',
       type: 'profile',
       images: [meta.ogImage],
     },

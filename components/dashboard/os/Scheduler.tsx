@@ -12,7 +12,7 @@ import {
 /** O agendador.
  *
  *  Vive no Supabase e não na Vercel: o plano Hobby só permite um cron por dia,
- *  e o Gmail precisa de ser visto de quinze em quinze minutos. Aqui só se liga,
+ *  e o Gmail precisa ser visto de quinze em quinze minutos. Aqui só se liga,
  *  se desliga e se vê se está rodando. */
 
 export default function Scheduler({ state }: { state: SchedulerState }) {
@@ -43,7 +43,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
         <h2>Agendador</h2>
         <p className="osWarn" data-tone="info">
           {state.unavailableReason ??
-            'Não consigo falar com o agendador. Verifique as migrações e a chave de service role.'}
+            'Não com você falar com o agendador. Verifique as migrações e a chave de service role.'}
         </p>
       </section>
     );
@@ -56,7 +56,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
       <h2>Agendador</h2>
       <p className="osNote">
         Os trabalhos correm no Supabase, não na Vercel — o plano Hobby só deixa um cron por dia, e o
-        Gmail precisa de ser visto muito mais vezes do que isso. Nada aqui depende de abrir a
+        Gmail precisa ser visto muito mais vezes do que isso. Nada aqui depende de abrir a
         aplicação.
       </p>
       {state.configured ? (
@@ -111,8 +111,8 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
             })
           }
         >
-          {running === 'apply' ? <Spinner label="A aplicar o horário" /> : null}
-          {/* «Voltar a aplicar o horário» não diz o que faz nem quando serve.
+          {running === 'apply' ? <Spinner label="Aplicando o horário" /> : null}
+          {/* «aplicar de novo o horário» não diz o que faz nem quando serve.
               O que o botão faz é pôr no relógio a lista de trabalhos que esta
               versão do CarolOS tem — e isso só interessa depois de haver
               trabalhos novos. */}
@@ -133,7 +133,7 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
               })
             }
           >
-            {running === 'stop' ? <Spinner label="A parar" /> : null}
+            {running === 'stop' ? <Spinner label="Parando" /> : null}
             Parar tudo
           </button>
         ) : null}

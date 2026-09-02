@@ -216,7 +216,7 @@ async function attachIdentities(db: Db, brandId: string, claims: readonly Identi
   );
 }
 
-/** Recalcula e guarda o fit. O score derivado é uma fotografia: a fonte de
+/** Recalcula e salva o fit. O score derivado é uma fotografia: a fonte de
  *  verdade é a política mais os sinais, e ambos ficam no breakdown para a
  *  interface poder explicar cada ponto. */
 export async function scoreAndSaveFit(

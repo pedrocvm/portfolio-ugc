@@ -58,7 +58,7 @@ test('com todas esgotadas, ainda se tenta a que descansa há mais tempo', async 
   assert.equal(tries, 1, 'com todas de castigo, devia tentar uma e não todas');
 });
 
-test('avisa quando muda de chave, para o registo dizer qual está a servir', async () => {
+test('avisa quando muda de chave, para o registro dizer qual está servindo', async () => {
   const trocas: string[] = [];
   const p = withFallback(
     [

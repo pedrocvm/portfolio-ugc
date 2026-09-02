@@ -304,7 +304,7 @@ test('as que não chegam ao corte não se perdem: ficam à parte, para ela ver',
   assert.equal(below.length, 2, 'uma pesquisa já paga foi deitada fora');
 });
 
-test('o corte continua a decidir quem leva email escrito', () => {
+test('o corte continua decidindo quem leva email escrito', () => {
   const { ready } = partitionDaily([cand({ fitScore: LIMITS.minFitScore - 1 })]);
   assert.deepEqual(ready, [], 'baixar a régua não era o pedido');
 });
@@ -345,11 +345,11 @@ test('sem nenhuma abaixo do corte, não se promete o que não há', () => {
   assert.doesNotMatch(message, /abaixo do corte/);
 });
 
-test('um dia inteiro de prospecção cabe no tempo que a rota dá', async () => {
+test('um dia inteiro de prospeção cabe no tempo que a rota dá', async () => {
   // A rota dos jobs é morta aos 300s. As chamadas ao modelo são espaçadas para
   // não estourar o limite por minuto do plano grátis, e esse espaçamento é o que
   // manda no relógio: subir o alvo do dia sem contar isto faz a corrida ser
-  // morta a meio, todos os dias, sem ninguém perceber porquê.
+  // morta a meio, todos os dias, sem ninguém entender porquê.
   const { MIN_GAP_MS, PAID_GAP_MS } = await import('@/modules/ai/pace.ts');
   const ROTA_MS = 300_000;
 
@@ -365,7 +365,7 @@ test('um dia inteiro de prospecção cabe no tempo que a rota dá', async () => 
   );
 });
 
-test('a procura só vai a sítios onde ela pode escrever em português', () => {
+test('a procura só vai a sites onde ela pode escrever em português', () => {
   // Ela não domina inglês o suficiente para abordar marcas estrangeiras. Uma
   // marca alemã ocupa uma vaga do dia e queima a pesquisa que já foi paga.
   const proibidos = /\b(espanha|spain|reino unido|alemanha|germany|frança|itália|estados unidos|eua|usa)\b/i;
@@ -378,29 +378,29 @@ test('a procura só vai a sítios onde ela pode escrever em português', () => {
   }
 });
 
-test('cada estado cai numa secção, e nenhuma marca se perde', () => {
+test('cada estado cai numa seção, e nenhuma marca se perde', () => {
   const estados = ['discovered', 'screened', 'researched', 'ready', 'needs_review',
     'approved', 'edited', 'sent', 'failed'];
   const groups = groupForReview(estados.map((status, i) => ({ status, id: String(i) })));
   assert.equal(groups.reduce((t, g) => t + g.rows.length, 0), estados.length);
 });
 
-test('o trabalho vem antes do registo', () => {
+test('o trabalho vem antes do registro', () => {
   const groups = groupForReview([{ status: 'sent' }, { status: 'ready' }, { status: 'needs_review' }]);
   assert.deepEqual(groups.map((g) => g.section), ['ready', 'review', 'sent']);
 });
 
-test('sem marcas numa secção, a secção não aparece vazia', () => {
+test('sem marcas numa seção, a seção não aparece vazia', () => {
   const groups = groupForReview([{ status: 'ready' }]);
   assert.equal(groups.length, 1);
 });
 
-test('uma marca sem email fica na secção que explica porquê', () => {
+test('uma marca sem email fica na seção que explica porquê', () => {
   assert.equal(sectionFor('researched'), 'below');
   assert.match(SECTION_HINT.below, /sem email escrito/);
 });
 
-test('nenhum título ou dica de secção é um estado cru', () => {
+test('nenhum título ou dica de seção é um estado cru', () => {
   for (const s of SECTION_ORDER) {
     assert.doesNotMatch(SECTION_TITLE[s], /_|needs|ready|sent/, SECTION_TITLE[s]);
     assert.ok(SECTION_HINT[s].endsWith('.'), `«${SECTION_HINT[s]}» não é uma frase`);

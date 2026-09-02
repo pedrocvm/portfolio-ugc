@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { isCurrent, sectionFor } from './nav';
 
-/** A barra da secção. Só existe quando há para onde ir dentro dela.
+/** A barra da seção. Só existe quando há para onde ir dentro dela.
  *
  *  É aqui que vivem as sub-áreas que saíram do carril. As de operação ficam à
  *  vista; as que são base de conhecimento — marcas, clientes, documentos —

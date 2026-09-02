@@ -1,6 +1,6 @@
 /** Saúde das integrações, sem tocar na base de dados.
  *
- *  Só os campos que podem ser mostrados: o que guarda tokens fica no service. */
+ *  Só os campos que podem ser mostrados: o que salva tokens fica no service. */
 export type IntegrationHealth = {
   /** Identifica a caixa nas ações da UI. Vazio no resumo agregado. */
   id: string;

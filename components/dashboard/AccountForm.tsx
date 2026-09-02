@@ -54,7 +54,7 @@ export default function AccountForm() {
       {state.error ? <p className="loginErr">{state.error}</p> : null}
       {state.ok ? <p className="okMsg">Palavra-passe alterada.</p> : null}
       <button className="btn solid" type="submit" disabled={pending}>
-        {pending ? 'A verificar…' : 'Mudar palavra-passe'}
+        {pending ? 'Verificando…' : 'Mudar palavra-passe'}
       </button>
     </form>
   );

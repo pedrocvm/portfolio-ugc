@@ -12,8 +12,8 @@ const ROOT = path.join(import.meta.dirname, '..', '..');
 
 function scheduledJobs(): string[] {
   // A última migração a redefinir a função é a que vale — e é preciso ir
-  // procurá-la. O nome do ficheiro estava escrito à mão aqui, e quando entrou
-  // uma migração de horário mais recente este teste continuou a guardar a
+  // procurá-la. O nome do arquivo estava escrito à mão aqui, e quando entrou
+  // uma migração de horário mais recente este teste continuou a salvar a
   // antiga: passava a verde sobre um agendamento que já não existia.
   const dir = path.join(ROOT, 'supabase', 'migrations');
   const ultima = readdirSync(dir)

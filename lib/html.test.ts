@@ -18,7 +18,7 @@ test('as entidades comuns viram texto', () => {
 /** A ordem importa. Com o «&amp;» primeiro, «&amp;lt;» descodificava para
  *  «&lt;» e a substituição seguinte transformava-o em «<» — texto que o
  *  remetente escreveu à mão a virar marcação. */
-test('um «&amp;lt;» escrito à mão continua a ler-se «&lt;»', () => {
+test('um «&amp;lt;» escrito à mão continua lendo-se «&lt;»', () => {
   assert.equal(decodeEntities('escreve &amp;lt; assim'), 'escreve &lt; assim');
 });
 
@@ -27,7 +27,7 @@ test('entidades numéricas também', () => {
   assert.equal(decodeEntities('&#8364;250'), '€250');
 });
 
-test('texto sem entidades nenhumas fica exactamente igual', () => {
+test('texto sem entidades nenhumas fica exatamente igual', () => {
   const limpo = 'Olá Carolina, queríamos falar sobre uma campanha — 3 vídeos.';
   assert.equal(decodeEntities(limpo), limpo);
 });

@@ -186,7 +186,7 @@ const ASK_TO_ACTION: Record<string, { type: ActionType; title: string }> = {
  *
  *  As etiquetas do inbox são frases verbais («Pede preço») e ficam bem numa
  *  lista, mas «a marca pediu pede preço» não é português. E um `rate_request`
- *  no meio de uma frase é o sistema a falar consigo próprio à frente de quem
+ *  no meio de uma frase é o sistema a falar com você próprio à frente de quem
  *  o usa. */
 const ASK_NOUN: Record<string, string> = {
   portfolio_request: 'o portfólio',
@@ -238,7 +238,7 @@ export function planForOpportunity(
       type,
       title: primary?.title ?? 'Responder à mensagem',
       // Sem data ISO no meio de uma frase. «2026-08-31» é o sistema a falar
-      // consigo próprio; ela quer saber há quanto tempo é que a pessoa espera.
+      // com você próprio; ela quer saber há quanto tempo é que a pessoa espera.
       reason: asks.length
         ? `A marca pediu ${askNames(asks)}, e ainda não teve resposta.`
         : waitingDays <= 0

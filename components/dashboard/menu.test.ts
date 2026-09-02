@@ -9,12 +9,12 @@ import { SECTIONS, UTILITY, ALL_DESTINATIONS, sectionFor, isCurrent } from './na
  *  de fora dela passa a existir só para quem souber o URL de cor.
  *
  *  O `nav.ts` importa-se à vontade — é uma tabela, não um componente. O que se
- *  continua a ler como texto são os ficheiros que puxavam o React e o
+ *  continua lendo como texto são os arquivos que puxavam o React e o
  *  `next/navigation` para dentro do runner. */
 
 const ROOT = path.join(import.meta.dirname, '..', '..');
 
-/** Nem tudo precisa de entrada na barra: uma sub-vista pertence ao ecrã que a
+/** Nem tudo precisa de entrada na barra: uma sub-vista pertence ao tela que a
  *  abre. O que não pode existir é uma tela sem porta nenhuma — por isso vale
  *  também um link a partir de outra tela. */
 function linkedFromScreens(): string[] {
@@ -33,7 +33,7 @@ function linkedFromScreens(): string[] {
   return found;
 }
 
-/** Endereços antigos que só redirecionam para o sítio novo. Não levam a lado
+/** Endereços antigos que só redirecionam para o lugar novo. Não levam a lado
  *  nenhum próprio, por isso não pertencem a barra nenhuma — mas também não são
  *  telas órfãs. */
 const REDIRECTS = new Set(['/dashboard/library', '/dashboard/links']);
@@ -61,12 +61,12 @@ test('nenhum destino aparece duas vezes', () => {
 });
 
 /** O ponto de toda a reorganização. Se isto crescer, cresceu por descuido. */
-test('o primeiro nível cabe de um olhar: cinco secções e duas utilidades', () => {
-  assert.equal(SECTIONS.length, 5, `${SECTIONS.length} secções no carril`);
+test('o primeiro nível cabe de um olhar: cinco seções e duas utilidades', () => {
+  assert.equal(SECTIONS.length, 5, `${SECTIONS.length} seções no carril`);
   assert.equal(UTILITY.length, 2, `${UTILITY.length} utilidades`);
 });
 
-test('cada secção leva a uma sub-área sua, não a um índice à parte', () => {
+test('cada seção leva a uma sub-área sua, não a um índice à parte', () => {
   for (const s of SECTIONS) {
     if (!s.items.length) continue;
     assert.ok(
@@ -76,15 +76,15 @@ test('cada secção leva a uma sub-área sua, não a um índice à parte', () =>
   }
 });
 
-test('o Hoje não abre barra de secção nenhuma', () => {
+test('o Hoje não abre barra de seção nenhuma', () => {
   assert.equal(sectionFor('/dashboard')?.id, 'today');
   assert.equal(SECTIONS.find((s) => s.id === 'today')?.items.length, 0);
 });
 
-/** `sectionFor` devolve a primeira secção que casa. Isso só está certo
- *  enquanto nenhuma secção for prefixo de outra — a partir daí a ordem da
+/** `sectionFor` devolve a primeira seção que casa. Isso só está certo
+ *  enquanto nenhuma seção for prefixo de outra — a partir daí a ordem da
  *  tabela decidia em silêncio qual das duas ganhava. */
-test('nenhuma secção é prefixo de outra', () => {
+test('nenhuma seção é prefixo de outra', () => {
   for (const a of SECTIONS) {
     for (const b of SECTIONS) {
       if (a.id === b.id || a.href === '/dashboard') continue;
@@ -99,20 +99,20 @@ test('nenhuma secção é prefixo de outra', () => {
   }
 });
 
-test('cada sub-área pertence à secção que a lista', () => {
+test('cada sub-área pertence à seção que a lista', () => {
   assert.equal(sectionFor('/dashboard/site/links')?.id, 'site');
   assert.equal(sectionFor('/dashboard/outreach/history')?.id, 'prospecting');
   assert.equal(sectionFor('/dashboard/inbox')?.id, 'work');
   assert.equal(sectionFor('/dashboard/revenue')?.id, 'money');
 });
 
-test('uma tela de detalhe mantém acesa a secção a que pertence', () => {
+test('uma tela de detalhe mantém acesa a seção a que pertence', () => {
   assert.equal(sectionFor('/dashboard/opportunities/abc-123')?.id, 'work');
   assert.equal(sectionFor('/dashboard/brands/abc-123')?.id, 'work');
   assert.equal(sectionFor('/dashboard/production/abc-123')?.id, 'work');
 });
 
-test('uma rota fora das secções não acende nenhuma', () => {
+test('uma rota fora das seções não acende nenhuma', () => {
   assert.equal(sectionFor('/dashboard/settings'), null);
   assert.equal(sectionFor('/dashboard/capture'), null);
 });
@@ -152,7 +152,7 @@ test('a animação de saída repõe-se, e não se reagenda a cada render', () =>
   assert.match(hook, /useRef\(onDone\)/, 'sem ref, o efeito volta a depender de uma função instável');
 });
 
-/** O ficheiro tinha trinta e seis durações escolhidas uma a uma. O teste não
+/** O arquivo tinha trinta e seis durações escolhidas uma a uma. O teste não
  *  julga o gosto: só impede que uma transição volte a nascer com um número
  *  solto ao lado das que passaram a token. */
 test('nenhuma transição do painel traz duração à mão', () => {

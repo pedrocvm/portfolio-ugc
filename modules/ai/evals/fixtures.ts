@@ -139,7 +139,7 @@ Meta. Enviamos o produto esta semana e o briefing amanhã.`,
   {
     id: 'rejection_not_now',
     note: '«Agora não» é nurture, não perda.',
-    message: `Olá Carol, obrigada pelo contato. Neste momento não estamos a fazer
+    message: `Olá Carol, obrigada pelo contato. Neste momento não estamos fazendo
 parcerias, mas voltamos a falar quando abrirmos o próximo ciclo de campanhas.`,
     expect: {
       replyTypes: ['rejection', 'future_followup'],

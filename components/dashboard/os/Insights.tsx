@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 /** Os avisos proativos no Hoje.
  *
- *  Não são notificações: não piscam, não interrompem, e cada um leva ao sítio
+ *  Não são notificações: não piscam, não interrompem, e cada um leva ao lugar
  *  onde se resolve.
  *
  *  Passaram para debaixo da fila. Estavam entre o resumo e as decisões, e com

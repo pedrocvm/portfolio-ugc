@@ -7,11 +7,11 @@
  *
  *  O problema é o outro lado: metade da tela traduzia e a outra metade não, e
  *  chegava a acontecer na mesma linha — «Pede preço» ao lado de «negotiation».
- *  Isto existe para haver um sítio só, e para o próximo enum não voltar a
+ *  Isto existe para haver um lugar só, e para o próximo enum não voltar a
  *  aparecer cru por esquecimento.
  *
  *  Os domínios que já têm vocabulário próprio (etapas, estados de produção,
- *  papéis no funil, situações de follow-up) continuam a mandar no seu; aqui
+ *  papéis no funil, situações de follow-up) continuam mandando no seu; aqui
  *  ficam os que não tinham casa. */
 
 const DICTIONARIES: Record<string, Record<string, string>> = {

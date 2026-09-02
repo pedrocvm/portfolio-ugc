@@ -13,7 +13,7 @@ import { setIn } from './paths';
 
 type State = { tone: 'idle' | 'dirty' | 'ok' | 'bad'; text: string };
 
-const CLEAN: State = { tone: 'idle', text: 'Sem alterações por guardar' };
+const CLEAN: State = { tone: 'idle', text: 'Sem alterações por salvar' };
 
 export default function Editor({ initial }: { initial: Content }) {
   const [content, setContent] = useState(initial);
@@ -81,7 +81,7 @@ export default function Editor({ initial }: { initial: Content }) {
   }, []);
 
   /* a barra pode passar a duas linhas conforme a largura: as âncoras das
-     secções têm de parar debaixo dela, não atrás */
+     seções têm de parar debaixo dela, não atrás */
   useEffect(() => {
     const el = sticky.current;
     if (!el) return;
@@ -108,11 +108,11 @@ export default function Editor({ initial }: { initial: Content }) {
     tocadas.current.add(path.split('.')[0]);
     setContent((c) => setIn(c, path, value));
     setDirty(true);
-    setState({ tone: 'dirty', text: 'Alterações por guardar' });
+    setState({ tone: 'dirty', text: 'Alterações por salvar' });
   }
 
   function save() {
-    /* só as secções mexidas seguem: o que esta janela não tocou fica como
+    /* só as seções mexidas seguem: o que esta janela não tocou fica como
        está na base, mesmo que aqui esteja desatualizado */
     const patch = Object.fromEntries(
       [...tocadas.current].map((k) => [k, (content as Record<string, unknown>)[k]]),
@@ -122,7 +122,7 @@ export default function Editor({ initial }: { initial: Content }) {
       if (r.error) return setState({ tone: 'bad', text: r.error });
       tocadas.current.clear();
       setDirty(false);
-      setState({ tone: 'ok', text: 'Guardado. Ainda não está no site.' });
+      setState({ tone: 'ok', text: 'Salvo. Ainda não está no site.' });
       /* sem router.refresh aqui: o rascunho já está no cliente, e esperar pela
          página inteira deixava o estado preso em "a processar" */
     });
@@ -159,8 +159,8 @@ export default function Editor({ initial }: { initial: Content }) {
       <div className="dashBar">
         <h1>Conteúdo do site</h1>
         <span className="dashState" data-tone={pending ? undefined : state.tone}>
-          {pending ? <Spinner label="A guardar" /> : null}
-          {pending ? 'A processar' : state.text}
+          {pending ? <Spinner label="Salvando" /> : null}
+          {pending ? 'Processando' : state.text}
         </span>
         <button
           type="button"
@@ -176,14 +176,14 @@ export default function Editor({ initial }: { initial: Content }) {
           onClick={save}
           disabled={pending || !dirty}
         >
-          Guardar
+          salvar
         </button>
         <button
           type="button"
           className="btn solid"
           onClick={publish}
           disabled={pending || dirty}
-          title={dirty ? 'Guarda as alterações antes de publicar.' : undefined}
+          title={dirty ? 'Salva as alterações antes de publicar.' : undefined}
         >
           Publicar
         </button>
@@ -239,7 +239,7 @@ export default function Editor({ initial }: { initial: Content }) {
             </section>
           ))}
         </div>
-        <nav className="secIndex" aria-label="Secções">
+        <nav className="secIndex" aria-label="Seções">
           {SECTIONS.map((s) => (
             <a
               key={s.id}

@@ -53,7 +53,7 @@ export default function Production({ rows }: { rows: CollaborationRow[] }) {
       ) : null}
 
       <section className="osSection">
-        <h2>A andar</h2>
+        <h2>Andando</h2>
         {ready.length ? (
           <div className="osRows">
             {ready.map((c) => (

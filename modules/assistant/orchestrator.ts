@@ -13,7 +13,7 @@ import { summariseThread } from './summary';
 
 /** O laço: mensagem → porta de domínio → contexto → modelo → ferramentas →
  *  resposta. Escrito à mão de propósito. Um framework de agentes esconderia
- *  exactamente as três coisas que aqui interessam: quantas rondas correram, que
+ *  exatamente as três coisas que aqui interessam: quantas rondas correram, que
  *  ferramentas foram chamadas, e quanto custou. */
 
 export type StreamEvent =
@@ -25,35 +25,35 @@ export type StreamEvent =
   | { type: 'error'; message: string };
 
 const STATUS: Record<string, string> = {
-  search_brands: 'A procurar marcas…',
+  search_brands: 'Procurando marcas…',
   get_brand: 'A ler o dossier da marca…',
   get_brand_activity: 'A ver o histórico…',
   search_opportunities: 'A ver as oportunidades…',
   get_opportunity: 'A ler a oportunidade…',
   get_today_actions: 'A ver a fila de hoje…',
   get_followups: 'A ver os follow-ups…',
-  search_emails: 'A procurar nos emails…',
+  search_emails: 'Procurando nos emails…',
   get_email_thread: 'A ler a conversa…',
-  calculate_price: 'A calcular o preço…',
+  calculate_price: 'Calculando o preço…',
   get_pricing_policy: 'A ler a política de preço…',
-  get_revenue_summary: 'A somar a receita…',
+  get_revenue_summary: 'Somando a receita…',
   search_portfolio: 'A ver o portfólio…',
-  search_documents: 'A procurar documentos…',
-  get_rights: 'A verificar direitos…',
-  search_business_memory: 'A lembrar-me…',
-  search_knowledge: 'A consultar as fontes…',
-  create_memory_candidate: 'A salvar…',
+  search_documents: 'Procurando documentos…',
+  get_rights: 'Verificando direitos…',
+  search_business_memory: 'Lembrando-me…',
+  search_knowledge: 'Consultando as fontes…',
+  create_memory_candidate: 'Salvando…',
   get_daily_outreach_batch: 'A ver as marcas de hoje…',
   get_outreach_candidate: 'A ler a pesquisa da marca…',
   update_outreach_draft: 'A reescrever o email…',
-  approve_outreach: 'A aprovar…',
-  start_prospecting: 'A começar a busca…',
+  approve_outreach: 'Aprovando…',
+  start_prospecting: 'Começando a busca…',
   get_prospecting_focus: 'A ver o que procura sozinho…',
-  set_prospecting_focus: 'A mudar o que procurar…',
-  resolve_today_action: 'A tratar da fila…',
-  capture_something: 'A guardar…',
-  find_anything: 'A procurar em tudo…',
-  prepare_outreach_send: 'A verificar o envio…',
+  set_prospecting_focus: 'Mudando o que procurar…',
+  resolve_today_action: 'Tratando da fila…',
+  capture_something: 'Salvando…',
+  find_anything: 'Procurando em tudo…',
+  prepare_outreach_send: 'Verificando o envio…',
 };
 
 const toolSpecs = () =>
@@ -211,7 +211,7 @@ export async function* runAssistant(input: {
       const replies: ToolReply[] = [];
 
       for (const call of calls) {
-        yield { type: 'status', label: STATUS[call.name] ?? 'A consultar…' };
+        yield { type: 'status', label: STATUS[call.name] ?? 'Consultando…' };
         const t0 = Date.now();
         const tool = byName.get(call.name);
 
@@ -220,7 +220,7 @@ export async function* runAssistant(input: {
           continue;
         }
 
-        // Regra 3 do CarolOS, verificada no sítio onde as ferramentas correm e
+        // Regra 3 do CarolOS, verificada no lugar onde as ferramentas correm e
         // não só na lista onde são registadas. Nenhuma ferramenta de alto risco
         // está registada — isto existe para o dia em que alguém registar uma
         // sem reparar. O modelo recebe a recusa como resultado e explica-a; não

@@ -7,15 +7,15 @@ import type { Shot } from '@/modules/content/domain';
 /** Modo de gravação.
  *
  *  A shot list é uma lista numerada, e uma lista numerada lê-se sentada. A
- *  gravar é outra coisa: o telemóvel está na mão ou no tripé, ela está a
+ *  gravar é outra coisa: o celular está na mão ou no tripé, ela está a
  *  segurar o produto, e o que precisa de ver é a tomada seguinte — não as sete.
  *
  *  Uma de cada vez, com o número grande e nada à volta. Marcar avança sozinho.
  *  As opcionais ficam para o fim, atrás de uma frase que dá licença para não as
  *  fazer: uma lista que obriga a tudo é uma lista que se abandona a meio.
  *
- *  O sítio onde ela ia sobrevive a fechar a aplicação. Filmar é levantar,
- *  mudar de sítio, voltar — e recomeçar do princípio ao voltar seria motivo
+ *  O lugar onde ela ia sobrevive a fechar a aplicação. Filmar é levantar,
+ *  mudar de lugar, voltar — e recomeçar do princípio ao voltar seria motivo
  *  para nunca mais abrir isto. */
 
 const chave = (id: string) => `carolos.rec.${id}`;
@@ -46,12 +46,12 @@ export default function RecordingMode({
   const opcionais = ordenadas.filter((i) => shots[i].required === false);
 
   const porGravar = ordenadas.filter((i) => !feitas.includes(i));
-  const actual = porGravar[0];
+  const atual = porGravar[0];
   const faltamObrigatorias = obrigatorias.filter((i) => !feitas.includes(i)).length;
-  const acabou = actual === undefined;
+  const acabou = atual === undefined;
   const soFaltamExtras = !acabou && faltamObrigatorias === 0;
 
-  const guardar = useCallback(
+  const salvar = useCallback(
     (lista: number[]) => {
       setFeitas(lista);
       try {
@@ -64,19 +64,19 @@ export default function RecordingMode({
   );
 
   const abrir = () => {
-    let guardado: number[] = [];
+    let salvo: number[] = [];
     try {
       const cru = localStorage.getItem(chave(contentId));
       const lido: unknown = cru ? JSON.parse(cru) : [];
-      if (Array.isArray(lido)) guardado = lido.filter((n): n is number => Number.isInteger(n));
+      if (Array.isArray(lido)) salvo = lido.filter((n): n is number => Number.isInteger(n));
     } catch {
       /* começa do princípio */
     }
-    setFeitas(guardado);
+    setFeitas(salvo);
     setOpen(true);
   };
 
-  const recomecar = () => guardar([]);
+  const recomecar = () => salvar([]);
 
   useEffect(() => {
     if (!open) return;
@@ -106,7 +106,7 @@ export default function RecordingMode({
             className="recBox"
             role="dialog"
             aria-modal="true"
-            aria-label={`A gravar ${title}`}
+            aria-label={`Gravando ${title}`}
             tabIndex={-1}
             ref={caixa}
           >
@@ -135,7 +135,7 @@ export default function RecordingMode({
                 </div>
               </div>
             ) : (
-              <div className="recOne" key={actual}>
+              <div className="recOne" key={atual}>
                 <span className="recCount">
                   {feitas.length + 1}/{shots.length}
                 </span>
@@ -149,14 +149,14 @@ export default function RecordingMode({
                   </p>
                 ) : null}
 
-                <h2>{shots[actual].shot}</h2>
-                {shots[actual].note ? <p className="recNote">{shots[actual].note}</p> : null}
+                <h2>{shots[atual].shot}</h2>
+                {shots[atual].note ? <p className="recNote">{shots[atual].note}</p> : null}
 
                 <div className="recActs">
                   <button
                     className="recGot"
                     type="button"
-                    onClick={() => guardar([...feitas, actual])}
+                    onClick={() => salvar([...feitas, atual])}
                   >
                     Gravei
                   </button>
@@ -164,7 +164,7 @@ export default function RecordingMode({
                     <button
                       className="focusSkip"
                       type="button"
-                      onClick={() => guardar(feitas.slice(0, -1))}
+                      onClick={() => salvar(feitas.slice(0, -1))}
                     >
                       Voltar atrás
                     </button>

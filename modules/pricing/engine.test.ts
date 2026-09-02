@@ -96,7 +96,7 @@ test('perpetuidade nunca tem preço: fica por resolver e é decisão humana', ()
 test('whitelisting e exclusividade entram como decisão humana', () => {
   const q = calculateQuote(FILLED, { videos: 1, whitelisting: true, exclusivity: true }, 'test');
   assert.equal(q.humanOnly.length, 2);
-  // Com regra configurada os valores existem, mas continuam a exigir pessoa.
+  // Com regra configurada os valores existem, mas continuam exigindo pessoa.
   assert.equal(q.recommendedCents, 13000 + 6500 + 9100);
 });
 

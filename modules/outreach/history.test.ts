@@ -42,7 +42,7 @@ test('sem histórico, não se inventa um resumo', () => {
 
 test('a média de encaixe ignora quem nunca chegou a ser pesquisada', () => {
   // Uma marca morta na triagem não tem nota. Contá-la como zero fazia a
-  // prospecção parecer má por uma razão que não é de qualidade.
+  // prospeção parecer má por uma razão que não é de qualidade.
   const s = summarize([row({ fit_score: 80 }), row({ fit_score: 90 }), row({ fit_score: null })]);
   assert.equal(s.avgFit, 85);
 });
@@ -186,7 +186,7 @@ test('o canal nunca cai da linha, mesmo com sinais a mais', () => {
     paid_media_signal: 'none', ugc_signal: 'product_only',
     red_flags: ['uma', 'duas'], contact_email: null, whatsapp: null,
   });
-  assert.ok(t.some((x) => /contacto|WhatsApp|Email|Instagram/i.test(x)), `sem canal: ${t.join(' · ')}`);
+  assert.ok(t.some((x) => /contato|WhatsApp|Email|Instagram/i.test(x)), `sem canal: ${t.join(' · ')}`);
 });
 
 test('o canal mostrado é o melhor que existir', () => {
@@ -194,7 +194,7 @@ test('o canal mostrado é o melhor que existir', () => {
   assert.equal(signalsFor(sig())[0].text, 'Email verificado');
   assert.equal(signalsFor(sig({ email_confidence: 'low' }))[0].text, 'Email por confirmar');
   assert.equal(signalsFor(sig({ contact_email: null, instagram: '@x' }))[0].text, 'Só por Instagram');
-  assert.equal(signalsFor(sig({ contact_email: null }))[0].text, 'Sem contacto direto');
+  assert.equal(signalsFor(sig({ contact_email: null }))[0].text, 'Sem contato direto');
 });
 
 test('a linha não leva mais de três sinais', () => {
@@ -214,7 +214,7 @@ test('uma bandeira comprida corta-se sem ficar a meio de uma palavra', () => {
   assert.ok(flag!.length <= 36, `«${flag}» ficou comprida`);
 });
 
-test('o sítio lê-se como se diz', () => {
+test('o lugar lê-se como se diz', () => {
   assert.equal(placeLabel({ city: 'Porto', country: 'Portugal' }), 'Porto, Portugal');
   assert.equal(placeLabel({ city: null, country: 'Germany' }), 'Alemanha');
   assert.equal(placeLabel({ city: 'Braga', country: null }), 'Braga');

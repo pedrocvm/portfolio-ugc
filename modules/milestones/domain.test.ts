@@ -7,7 +7,7 @@ const NOW = new Date('2026-09-02T00:00:00Z');
 
 const base: MilestoneInput = { payments: [], events: [], homeCountry: 'PT' };
 
-test('sem factos não nascem marcos', () => {
+test('sem fatos não nascem marcos', () => {
   assert.deepEqual(deriveMilestones(base), []);
 });
 

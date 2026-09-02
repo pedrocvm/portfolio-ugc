@@ -15,8 +15,8 @@ import Replan from './Replan';
  *  Três estados, e a diferença entre eles é a única coisa que esta tela tem de
  *  ensinar:
  *
- *    precisa de si       — pede uma decisão
- *    o CarolOS trata     — está a acontecer, não pede nada
+ *    precisa de você       — pede uma decisão
+ *    o CarolOS trata     — está acontecendo, não pede nada
  *    fechado hoje        — já não existe, mas conta
  *
  *  Antes era tudo a mesma lista. Uma fila de dez em que seis não eram para ela
@@ -60,13 +60,13 @@ export default function Today({ data, read }: { data: TodayData; read?: React.Re
           em Definições, onde se vai de propósito. */}
       {partida ? (
         <p className="osWarn" role="alert">
-          Perdi o acesso ao Gmail, por isso as conversas novas não estão a entrar.{' '}
-          <Link href="/dashboard/settings">Voltar a ligar</Link>.
+          Perdi o acesso ao Gmail, por isso as conversas novas não estão entrando.{' '}
+          <Link href="/dashboard/settings">ligar de novo</Link>.
         </p>
       ) : null}
 
       {/* A manhã preparada substitui o resumo genérico. Sem ela — cron
-          desligado, ou consolidação falhada — o Hoje continua a funcionar como
+          desligado, ou consolidação falhada — o Hoje continua funcionando como
           antes, que é o que impede um trabalho em baixo de apagar a tela. */}
       {data.morning ? (
         <Morning brief={data.morning} />
@@ -105,7 +105,7 @@ export default function Today({ data, read }: { data: TodayData; read?: React.Re
 
       {background.length ? (
         <section className="osSection osBg">
-          <h2>O CarolOS está a tratar de</h2>
+          <h2>O CarolOS está tratando de</h2>
           <ul className="osBgList">
             {background.map((b, i) => (
               <li key={`${b.kind}-${i}`}>{b.label}</li>
@@ -133,7 +133,7 @@ export default function Today({ data, read }: { data: TodayData; read?: React.Re
       {/* Manutenção, e por isso no fim e em voz baixa. O cron pode não estar
           ligado, e nesse caso isto é a única forma de a fila ficar certa.
           O modo sombra saiu daqui: é uma definição permanente, não uma coisa
-          que aconteça hoje, e estava a interromper todos os dias para dizer o
+          que aconteça hoje, e estava interrompendo todos os dias para dizer o
           mesmo. Vive em Definições, onde se vai de propósito. */}
       <div className="osMaint">
         <Replan />

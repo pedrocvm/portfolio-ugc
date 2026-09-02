@@ -88,7 +88,7 @@ export function useBoardDrag(
         try {
           el.setPointerCapture(pointerId);
         } catch {
-          /* o ponteiro pode já ter saído; arrastar continua a funcionar */
+          /* o ponteiro pode já ter saído; arrastar continua funcionando */
         }
         setHeld({
           id,

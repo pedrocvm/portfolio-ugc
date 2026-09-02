@@ -3,29 +3,20 @@ import test from 'node:test';
 
 import { languageOfThread, observeEdit } from './voice';
 
-test('um domínio .pt manda escrever português europeu', () => {
+test('uma marca portuguesa continua a receber português do Brasil', () => {
+  // A regra do projeto não abre exceção por domínio. Um `.pt` responde-se em
+  // pt-BR na mesma — o que muda com a marca é o tom, nunca a variante.
   assert.equal(
     languageOfThread({
       participants: ['julia@cecotec.pt', 'carolxqueiroz@gmail.com'],
-      externalText: 'Hello, we would like to work with you.',
-      carolText: '',
-    }),
-    'pt-PT',
-  );
-});
-
-test('português europeu no texto chega, mesmo sem domínio', () => {
-  assert.equal(
-    languageOfThread({
-      participants: ['marketing@marca.com'],
       externalText: 'Olá! Gostaríamos de saber se tem disponibilidade. A nossa equipa acompanha o seu sítio.',
       carolText: '',
     }),
-    'pt-PT',
+    'pt-BR',
   );
 });
 
-test('português do Brasil é reconhecido como outra variante', () => {
+test('português é português, venha de onde vier', () => {
   assert.equal(
     languageOfThread({
       participants: ['contato@marca.com.br'],
@@ -47,31 +38,34 @@ test('inglês sem acentos é inglês', () => {
   );
 });
 
-test('sem sinal nenhum, o padrão dela é português europeu', () => {
-  // As marcas com que fala são portuguesas. Cair em pt-BR por omissão foi o que
-  // pôs «Oi, Julia! Tudo bem?» num email para a Cecotec.
+test('sem sinal nenhum, o padrão é a língua dela', () => {
   assert.equal(
     languageOfThread({ participants: ['x@y.com'], externalText: 'ok', carolText: '' }),
-    'pt-PT',
+    'pt-BR',
   );
 });
 
 /* ── Memória de voz ───────────────────────────────────────────────────────── */
 
-test('as correcções de português do Brasil viram padrão', () => {
+test('as correções de português europeu viram padrão', () => {
   const notas = observeEdit(
-    'Oi, Julia! Tudo bem? Me conta quais são os próximos passos. Você pode ver no seu celular.',
-    'Olá, Julia. Diga-me quais são os próximos passos. Pode ver no telemóvel.',
+    'Olá, Julia. Diga-me se quer ver o portefólio no telemóvel ou prefere o ficheiro por email.',
+    'Olá, Julia. Me diga se prefere ver o portfólio no celular ou receber o arquivo por email.',
   );
-  assert.ok(notas.some((n) => n.includes('«oi»')));
-  assert.ok(notas.some((n) => n.includes('tudo bem?')));
-  assert.ok(notas.some((n) => n.includes('me conta')));
-  assert.ok(notas.some((n) => n.includes('você')));
-  assert.ok(notas.some((n) => n.includes('celular')));
+  assert.ok(notas.some((n) => n.includes('«telemóvel»')));
+  assert.ok(notas.some((n) => n.includes('«ficheiro»')));
+  assert.ok(notas.some((n) => n.includes('«portefólio»')));
+  assert.ok(notas.some((n) => n.includes('«diga-me»')));
 });
 
-test('uma correcção que não aconteceu não vira padrão', () => {
-  const notas = observeEdit('Olá, Julia. Diga-me como quer avançar.', 'Olá, Julia. Diga-me como prefere avançar.');
+test('o gerúndio também é uma correção que se aprende', () => {
+  const notas = observeEdit('O produto está a caminho e a equipa está a preparar o briefing.', 'O produto está a caminho e a equipe está preparando o briefing.');
+  assert.ok(notas.some((n) => n.includes('«equipa»')));
+  assert.ok(notas.some((n) => n.includes('está fazendo')));
+});
+
+test('uma correção que não aconteceu não vira padrão', () => {
+  const notas = observeEdit('Olá, Julia. Me diga como quer avançar.', 'Olá, Julia. Me diga como prefere avançar.');
   assert.deepEqual(
     notas.filter((n) => n.includes('tira «')),
     [],
@@ -81,13 +75,13 @@ test('uma correcção que não aconteceu não vira padrão', () => {
 test('encurtar e alongar são padrões diferentes', () => {
   const curta = observeEdit(
     'Uma frase muito comprida com muitas palavras que ela cortou quase toda porque não gosta de mensagens longas nem de rodeios nenhuns.',
-    'Obrigada, fico à espera.',
+    'Obrigada, fico no aguardo.',
   );
   assert.ok(curta.some((n) => n.includes('encurta')));
 
   const longa = observeEdit(
     'Obrigada.',
-    'Obrigada pela confirmação. Aviso assim que o produto chegar e digo já a data prevista de gravação para poderem contar com ela.',
+    'Obrigada pela confirmação. Aviso assim que o produto chegar e já digo a data prevista de gravação para poderem contar com ela.',
   );
   assert.ok(longa.some((n) => n.includes('alonga')));
 });

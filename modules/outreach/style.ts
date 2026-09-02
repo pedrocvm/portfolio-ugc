@@ -9,7 +9,7 @@ import { supabaseService } from '@/lib/supabase/service';
  *  e nomear os padrões; o que é contável, conta-se em código.
  *
  *  Privacidade: procura-se primeiro e só se trazem as mensagens que parecem
- *  prospecção. A caixa dela não vai inteira para lado nenhum. */
+ *  prospeção. A caixa dela não vai inteira para lado nenhum. */
 
 export type StyleProfile = {
   language: 'pt' | 'en';
@@ -38,7 +38,7 @@ export type StyleProfile = {
   } | null;
 };
 
-/** As buscas que encontram prospecção e deixam de fora o resto da caixa. */
+/** As buscas que encontram prospeção e deixam de fora o resto da caixa. */
 const OUTREACH_QUERIES = [
   'in:sent (ugc OR "creator" OR "conteúdo" OR "content creation")',
   'in:sent (parceria OR colaboração OR collaboration OR partnership)',
@@ -78,7 +78,7 @@ const lastLines = (body: string) =>
 
 export type SentMail = { subject: string; body: string; to: string; sentAt: string };
 
-/** Traz da caixa dela só o que parece prospecção. */
+/** Traz da caixa dela só o que parece prospeção. */
 export async function fetchOutreachHistory(limit = 40): Promise<{ mails: SentMail[]; checked: boolean }> {
   try {
     const { accessTokenFor } = await import('@/modules/integrations/gmail/oauth');
@@ -124,7 +124,7 @@ export function measure(mails: readonly SentMail[]): StyleProfile['measured'] {
   };
 }
 
-/** Constrói e guarda o perfil. Sem Gmail não se inventa um: devolve null e
+/** Constrói e salva o perfil. Sem Gmail não se inventa um: devolve null e
  *  quem escreve o email fica sabendo que não tem voz de referência. */
 export async function buildStyleProfile(language: 'pt' | 'en' = 'pt'): Promise<StyleProfile | null> {
   const { mails, checked } = await fetchOutreachHistory();

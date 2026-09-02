@@ -9,7 +9,7 @@ import type { Known } from './domain';
  *
  *  Três fontes, porque o CRM só sabe o que nasceu dentro dele. A Carol trabalha
  *  há mais tempo do que o CarolOS existe, e abordar outra vez uma marca com quem
- *  já falou é a forma mais rápida de parecer que não sabe o que anda a fazer. */
+ *  já falou é a forma mais rápida de parecer que não sabe o que anda fazendo. */
 
 export type KnownSet = Known & {
   /** Se o Gmail não respondeu, não se pode afirmar que uma marca é nova. */
@@ -83,7 +83,7 @@ export async function buildKnownSet(): Promise<KnownSet> {
 
 /** Pergunta direta ao Gmail, para uma marca concreta.
  *
- *  A ingestão só guarda o que já sincronizou. Isto vai à caixa perguntar se
+ *  A ingestão só salva o que já sincronizou. Isto vai à caixa perguntar se
  *  existe qualquer mensagem — enviada ou recebida — com aquele domínio, que é
  *  a única forma de apanhar uma conversa anterior ao CarolOS. */
 export async function gmailHasHistory(

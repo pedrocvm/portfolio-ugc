@@ -28,7 +28,7 @@ import {
  *
  *  A Deep Review contou nove passos entre «a marca respondeu» e «a Carol
  *  enviou»: abrir, descobrir que não dá para ler, navegar, rolar até ao
- *  copiloto, esperar 30 s, escolher um objectivo num dropdown, esperar mais
+ *  copiloto, esperar 30 s, escolher um objetivo num dropdown, esperar mais
  *  25 s, corrigir o português, e sair da aplicação. Sete desses nove passos
  *  existiam porque o trabalho começava quando ela clicava.
  *
@@ -104,7 +104,7 @@ type VoiceExamples = { text: string; language: string };
 
 /** Como ela escreve, a partir do que ela escreveu mesmo.
  *
- *  Duas fontes: as mensagens que já saíram, e as correcções que ela fez a
+ *  Duas fontes: as mensagens que já saíram, e as correções que ela fez a
  *  rascunhos anteriores. A segunda é a que resolve o português do Brasil sem
  *  ninguém configurar nada. */
 async function voiceExamples(): Promise<VoiceExamples> {
@@ -134,7 +134,7 @@ async function voiceExamples(): Promise<VoiceExamples> {
     .map((e) => {
       const notas = (e.observations as string[] | null) ?? [];
       return notas.length
-        ? `Correcção dela: ${notas.join('; ')}`
+        ? `Correção dela: ${notas.join('; ')}`
         : `Escreveu-se «${e.ai_text.slice(0, 160)}»; ela mudou para «${e.final_text.slice(0, 160)}».`;
     });
 
@@ -145,7 +145,7 @@ async function voiceExamples(): Promise<VoiceExamples> {
     ]
       .filter(Boolean)
       .join('\n\n'),
-    language: 'pt-PT',
+    language: 'pt-BR',
   };
 }
 
@@ -325,7 +325,7 @@ export async function triageThread(
       rights: risks.length
         ? risks.map((r) => `- [${r.severity}] ${r.message}${r.question ? ` Perguntar: ${r.question}` : ''}`).join('\n')
         : 'Sem riscos de direitos detectados.',
-      voice: voice.text || '(sem exemplos guardados)',
+      voice: voice.text || '(sem exemplos salvos)',
       language: idioma,
       today: new Date().toISOString().slice(0, 10),
       intents: THREAD_INTENTS.join(', '),
@@ -584,7 +584,7 @@ export async function rememberEdit(input: {
   const db = supabaseService();
   await db.from('voice_memory').insert({
     kind: 'reply',
-    language: 'pt-PT',
+    language: 'pt-BR',
     ai_text: input.aiText.slice(0, 8000),
     final_text: input.finalText.slice(0, 8000),
     brand_id: input.brandId,

@@ -158,7 +158,7 @@ export type HypothesisResult =
   | { ok: true; created: number }
   | { ok: false; code: string; message: string };
 
-/** Gera hipóteses e guarda-as. Compara com o portfólio para não propor a
+/** Gera hipóteses e salva-as. Compara com o portfólio para não propor a
  *  quinta versão do mesmo formato — repertório novo é o que faz a peça
  *  seguinte valer mais do que a anterior. */
 export async function generateHypotheses(input: {

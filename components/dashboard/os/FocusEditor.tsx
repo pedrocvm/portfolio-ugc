@@ -175,13 +175,13 @@ export default function FocusEditor({ initial }: { initial: Focus }) {
           onClick={() =>
             start(async () => {
               const r = await saveFocus({ niches, countries, perDay });
-              pushToast(r.error ?? 'Foco guardado. É o que o CarolOS procura amanhã.', r.error ? 'warn' : 'ok');
+              pushToast(r.error ?? 'Foco salvo. É o que o CarolOS procura amanhã.', r.error ? 'warn' : 'ok');
               if (!r.error) setSujo(false);
             })
           }
         >
-          {pending ? <Spinner label="A guardar" /> : null}
-          {sujo ? 'Guardar foco' : 'Foco guardado'}
+          {pending ? <Spinner label="Salvando" /> : null}
+          {sujo ? 'Salvar foco' : 'Foco salvo'}
         </button>
       </div>
     </div>

@@ -16,7 +16,7 @@ export default async function LoginPage() {
     <div className="login">
       <div className="loginBox">
         <h1>Entrar</h1>
-        <p className="sub">O site continua a mostrar o que já está publicado.</p>
+        <p className="sub">O site continua mostrando o que já está publicado.</p>
         <LoginForm />
         <Link className="loginBack" href="/">
           ← Voltar ao site

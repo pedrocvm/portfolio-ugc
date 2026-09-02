@@ -45,7 +45,7 @@ const ICON = {
 
 /* No celular só cabem quatro mais o «Mais». São as quatro que ela usa em
    movimento: decidir o dia, ver o trabalho, ver quem apareceu, e perguntar.
-   A captura saiu daqui porque passou a ser global — cola-se de qualquer sítio. */
+   A captura saiu daqui porque passou a ser global — cola-se de qualquer lugar. */
 const TABS = ['today', 'work', 'prospecting'] as const;
 
 function Glyph({ name }: { name: keyof typeof ICON }) {
@@ -151,7 +151,7 @@ export default function MobileNav({
               </div>
             ))}
 
-            {/* As sub-áreas da secção onde ela está, para não ter de voltar ao
+            {/* As sub-áreas da seção onde ela está, para não ter de voltar ao
                 topo só para mudar de vista. */}
             {here && here.items.length ? (
               <div className="moreGroup">

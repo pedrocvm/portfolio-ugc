@@ -31,7 +31,7 @@ export const FLAG_LABEL: Record<FlagKey, string> = {
   auto_apply_low_risk: 'Aplicar mudanças de baixo risco',
   background_jobs: 'Trabalhos em segundo plano',
   assistant_enabled: 'Carol AI',
-  daily_outreach: 'Prospecção diária',
+  daily_outreach: 'Prospeção diária',
   shadow_mode: 'Modo sombra',
 };
 

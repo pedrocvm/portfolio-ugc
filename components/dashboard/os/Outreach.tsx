@@ -76,7 +76,7 @@ export type ReadyIdea = {
 /** A ideia pronta a gravar, tirada das referências.
  *
  *  «Ideia: fazer um vídeo a mostrar o produto» não é trabalho preparado. Isto é
- *  o que se põe no tripé — e por isso vem com tomadas numeradas, texto no ecrã
+ *  o que se põe no tripé — e por isso vem com tomadas numeradas, texto no tela
  *  e notas de edição, não com uma frase. */
 function ReadyIdeaBlock({ idea }: { idea: ReadyIdea }) {
   return (
@@ -98,7 +98,7 @@ function ReadyIdeaBlock({ idea }: { idea: ReadyIdea }) {
       <dl className="refPlan">
         {idea.on_screen_text.length ? (
           <>
-            <dt>Texto no ecrã</dt>
+            <dt>Texto no tela</dt>
             <dd>{idea.on_screen_text.join(' · ')}</dd>
           </>
         ) : null}
@@ -152,7 +152,7 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
   const [body, setBody] = useState(c.body);
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState(c.status);
-  // Abaixo do corte de encaixe: pesquisada, guardada, sem email escrito. O
+  // Abaixo do corte de encaixe: pesquisada, salva, sem email escrito. O
   // email custa uma chamada ao modelo e só se escreve se ela quiser esta marca.
   const semEmail = !subject && !body;
 
@@ -217,7 +217,7 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
               run('skip', () => skipOutreach(c.id), () => setGone(true));
             }}
           >
-            {running === 'skip' ? <Spinner label="A descartar" /> : '×'}
+            {running === 'skip' ? <Spinner label="Descartando" /> : '×'}
           </button>
         ) : null}
 
@@ -387,7 +387,7 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
                 })
               }
             >
-              {running === 'send' ? <Spinner label="A enviar" /> : null}
+              {running === 'send' ? <Spinner label="Enviando" /> : null}
               Sim, enviar
             </button>
             <button className="osPageBtn" type="button" onClick={() => setConfirming(false)}>
@@ -411,8 +411,8 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
                 disabled={pending}
                 onClick={() => run('save', () => updateOutreachDraft(c.id, subject, body), () => setStatus('edited'))}
               >
-                {running === 'save' ? <Spinner label="A guardar" /> : null}
-                Guardar
+                {running === 'save' ? <Spinner label="Salvando" /> : null}
+                Salvar
               </button>
             ) : (
               <button
@@ -421,7 +421,7 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
                 disabled={pending || status === 'approved'}
                 onClick={() => run('ok', () => approveOutreach(c.id), () => setStatus('approved'))}
               >
-                {running === 'ok' ? <Spinner label="A aprovar" /> : null}
+                {running === 'ok' ? <Spinner label="Aprovando" /> : null}
                 {status === 'approved' ? 'Aprovado' : 'Aprovar'}
               </button>
             )}
@@ -433,7 +433,7 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
                 <button type="button" disabled={pending} onClick={() => run('skip', () => skipOutreach(c.id), () => setGone(true))}>
                   Saltar
                 </button>
-                <span className="osMoreLabel">Voltar a mostrar</span>
+                <span className="osMoreLabel">mostrar de novo</span>
                 {[30, 60, 90].map((d) => (
                   <button key={d} type="button" disabled={pending} onClick={() => run(`s${d}`, () => suppressBrand(c.id, d as 30), () => setGone(true))}>
                     daqui a {d} dias
@@ -478,7 +478,7 @@ export default function Outreach({
   const [ask, setAsk] = useState(manualRun?.raw_query ?? '');
   const [pais, setPais] = useState(manualRun?.countries?.[0] ?? 'Portugal');
   // Um modo de cada vez, e não dois conjuntos de controlos na mesma tela: a
-  // busca dirigida obedece ao que ela escreve, a automática ao foco guardado.
+  // busca dirigida obedece ao que ela escreve, a automática ao foco salvo.
   const [modo, setModo] = useState<'manual' | 'auto'>('manual');
 
   const approved = candidates.filter((c) => c.status === 'approved').length;
@@ -498,7 +498,7 @@ export default function Outreach({
   return (
     <>
       <div className="dashBar">
-        <h1>Prospecção</h1>
+        <h1>Prospeção</h1>
         {runDate ? <span className="dashState">lote de {formatDate(runDate)}</span> : null}
         <Link className="osMore" href="/dashboard/outreach/history">
           Histórico
@@ -530,7 +530,7 @@ export default function Outreach({
 
       {modo === 'auto' && !enabled ? (
         <p className="osWarn" data-tone="info">
-          A prospecção diária está desligada. Ligue em Definições para o CarolOS procurar marcas
+          A prospeção diária está desligada. Ligue em Definições para o CarolOS procurar marcas
           novas todas as manhãs — nunca envia nada sozinho.
         </p>
       ) : null}
@@ -546,7 +546,7 @@ export default function Outreach({
               disabled={pending}
               onClick={() =>
                 // Não se espera pela corrida: são minutos. Arranca, avisa, e o
-                // resto da aplicação continua a responder.
+                // resto da aplicação continua respondendo.
                 run('now', async () => {
                   const r = await startDiscovery();
                   if (r.since) {
@@ -557,7 +557,7 @@ export default function Outreach({
                 })
               }
             >
-              {running === 'now' ? <Spinner label="A começar" /> : null}
+              {running === 'now' ? <Spinner label="Começando" /> : null}
               Procurar agora com este foco
             </button>
             {approved > 0 ? (
@@ -567,7 +567,7 @@ export default function Outreach({
                 disabled={pending}
                 onClick={() => run('bulk', () => sendApprovedOutreach())}
               >
-                {running === 'bulk' ? <Spinner label="A enviar" /> : null}
+                {running === 'bulk' ? <Spinner label="Enviando" /> : null}
                 Enviar os {approved} aprovados
               </button>
             ) : null}
@@ -586,7 +586,7 @@ export default function Outreach({
                 const r = await startManualSearch(ask.trim(), pais);
                 if (r.since) {
                   watchDiscovery(r.since);
-                  pushToast(`A procurar «${ask.trim()}» em ${pais}. Aviso quando acabar.`);
+                  pushToast(`Procurando «${ask.trim()}» em ${pais}. Aviso quando acabar.`);
                 }
                 return r;
               });
@@ -604,7 +604,7 @@ export default function Outreach({
               />
               <CountryPicker value={pais} onChange={setPais} disabled={pending} />
               <button className="osGo" type="submit" disabled={pending || !ask.trim()}>
-                {running === 'ask' ? <Spinner label="A procurar" /> : null}
+                {running === 'ask' ? <Spinner label="Procurando" /> : null}
                 Procurar
               </button>
             </div>
@@ -622,7 +622,7 @@ export default function Outreach({
               onSaveAll={() =>
                 run('saveall', async () => {
                   const r = await saveCandidates(candidates.map((c) => c.id));
-                  if (r.saved) pushToast(`${r.saved} guardadas no histórico.`);
+                  if (r.saved) pushToast(`${r.saved} salvas no histórico.`);
                   return r;
                 })
               }
@@ -689,7 +689,7 @@ export default function Outreach({
                   })
                 }
               >
-                {running === `clear-${section}` ? <Spinner label="A descartar" /> : null}
+                {running === `clear-${section}` ? <Spinner label="Descartando" /> : null}
                 Descartar as {rows.length} abaixo do corte
               </button>
             ) : null}

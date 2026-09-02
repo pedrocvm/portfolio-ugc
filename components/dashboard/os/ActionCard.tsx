@@ -46,7 +46,7 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
 
   /** Nenhuma destas três pergunta antes: são todas reversíveis, e nenhuma sai
    *  cá para fora. O cartão sai da tela e fica um «desfazer» num aviso, que é
-   *  menos fricção do que uma janela por cartão e protege o mesmo. */
+   *  menos frição do que uma janela por cartão e protege o mesmo. */
   const run = (id: string, etiqueta: string, fn: () => Promise<{ error?: string }>) =>
     start(async () => {
       setRunning(id);
@@ -92,7 +92,7 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
       <p className="osWhy">{action.reason}</p>
 
       {/* «Precisa da sua aprovação» saiu: estava em todos os cartões de uma
-          secção chamada «Precisa de si». Um rótulo que nunca varia não
+          seção chamada «precisa de você». Um rótulo que nunca varia não
           distingue nada — só ocupa a linha por onde os olhos passam a caminho
           do botão. */}
       {action.stage ? (
@@ -120,7 +120,7 @@ export default function ActionCard({ action, index }: { action: ActionRow; index
           disabled={pending}
           onClick={() => run('done', `«${action.title}» dado como feito.`, () => doneAction(action.id))}
         >
-          {running === 'done' ? <Spinner label="A marcar" /> : null}
+          {running === 'done' ? <Spinner label="Marcando" /> : null}
           Já está
         </button>
 

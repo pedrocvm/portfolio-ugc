@@ -6,7 +6,7 @@ import { AssistantProvider } from '@/components/assistant/AssistantProvider';
 import Harness from './Harness';
 import '@/app/dashboard/dashboard.css';
 
-// Lê o ambiente a cada pedido: pré-renderizada, a guarda ficava decidida no build.
+// Lê o ambiente a cada pedido: pré-renderizada, a salva ficava decidida no build.
 export const dynamic = 'force-dynamic';
 
 /** Bancada de desenvolvimento. Não existe em produção.

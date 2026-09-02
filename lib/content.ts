@@ -1,4 +1,4 @@
-/** Modelo de conteúdo do site. O layout das secções é fixo: a área privada só
+/** Modelo de conteúdo do site. O layout das seções é fixo: a área privada só
  *  altera os valores deste objeto, nunca a estrutura. */
 
 export type Video = { src: string; srcSm: string };
@@ -114,7 +114,7 @@ export type Content = {
   };
 };
 
-/** Os âncoras das secções são estrutura, não conteúdo: ficam fora do modelo. */
+/** Os âncoras das seções são estrutura, não conteúdo: ficam fora do modelo. */
 export const NAV_HREFS = [
   '#meet',
   '#fotos',
@@ -330,7 +330,7 @@ export const DEFAULT_CONTENT: Content = {
       },
       {
         q: 'Quanto tempo demora?',
-        a: 'Até 7 dias úteis depois que o produto chega. Se o seu prazo for mais apertado, me fala no primeiro contato que eu digo se consigo.',
+        a: 'Até 7 dias úteis depois que o produto chega. Se o seu prazo for mais apertado, me fala no primeiro contato que eu digo se com você.',
       },
       {
         q: 'Quantas revisões estão incluídas?',

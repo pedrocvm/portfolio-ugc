@@ -51,7 +51,7 @@ export async function listPolicies() {
   return data ?? [];
 }
 
-/** Guarda regras novas numa versão nova. Editar uma política ativa por cima
+/** salva regras novas numa versão nova. Editar uma política ativa por cima
  *  tornava impossível dizer que regras produziram um orçamento antigo. */
 export async function savePolicyDraft(
   version: string,
@@ -132,7 +132,7 @@ export async function previewQuote(scope: unknown): Promise<QuoteResult> {
   return calculateQuote(policy.rules, scope, policy.version);
 }
 
-/** Cria um orçamento a partir do cálculo. Guarda a fotografia completa —
+/** Cria um orçamento a partir do cálculo. salva a fotografia completa —
  *  política, escopo, linhas, direitos — para o poder reconstruir depois de a
  *  política mudar. */
 export async function createQuote(input: {

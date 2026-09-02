@@ -72,9 +72,9 @@ function ReviewThread({ thread, onOpen }: { thread: ThreadRow; onOpen: (id: stri
       <div className="osCardMain">
         <div className="osCardTop">
           <span className="osBrand">{thread.participants[0] ?? thread.provider}</span>
-          {/* A percentagem de confiança é o modelo a falar de si próprio. O
-              que ela precisa de saber é que a decisão é dela, e isso já está
-              dito no título da secção. */}
+          {/* A percentagem de confiança é o modelo a falar de você próprio. O
+              que ela precisa saber é que a decisão é dela, e isso já está
+              dito no título da seção. */}
         </div>
         <h3>{thread.subject}</h3>
         <p className="osWhy">{thread.snippet.slice(0, 240) || 'Sem pré-visualização.'}</p>

@@ -8,7 +8,7 @@ import { getFlags } from '@/modules/settings/service';
 /** As escritas da manhã.
  *
  *  Uma regra atravessa todas: o que sai para fora exige um clique dela, e o que
- *  não sai não pergunta nada. Guardar uma ideia para depois é reversível e
+ *  não sai não pergunta nada. Salvar uma ideia para depois é reversível e
  *  faz-se em silêncio; enviar um email é irreversível e passa por confirmação
  *  na interface antes de chegar aqui. */
 
@@ -45,7 +45,7 @@ export async function sendPreparedReply(input: {
   return { ok: true };
 }
 
-/** Guarda o rascunho na caixa dela em vez de o enviar. Continua a existir para
+/** salva o rascunho na caixa dela em vez de o enviar. Continua existindo para
  *  quando ela quiser rever no Gmail antes de mandar. */
 export async function draftPreparedReply(input: {
   threadId: string;
@@ -95,7 +95,7 @@ export async function decideOnIdea(ideaId: string, status: string): Promise<Resu
 
 /** «Quero outra ideia.»
  *
- *  Não regenera às cegas: recebe uma direcção de um toque — mais fácil, mais
+ *  Não regenera às cegas: recebe uma direção de um toque — mais fácil, mais
  *  pessoal, mais educativa, mais editada — e a ideia velha fica descartada com
  *  o motivo, para não voltar. */
 const NUDGES = ['easier', 'personal', 'educational', 'edited'] as const;

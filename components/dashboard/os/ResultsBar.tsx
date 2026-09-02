@@ -6,7 +6,7 @@ import Spinner from '@/components/dashboard/Spinner';
  *
  *  Uma lista de seis resultados sem explicação parece uma busca fraca. Com o
  *  que foi descartado à vista, lê-se como uma busca exigente — e ela consegue
- *  perceber se o problema foi o termo, o país, ou não haver mesmo nada. */
+ *  entender se o problema foi o termo, o país, ou não haver mesmo nada. */
 
 export type ManualRun = {
   id: string;
@@ -50,8 +50,8 @@ export default function ResultsBar({
 
         <div className="resActs">
           <button type="button" className="osPageBtn" disabled={pending || count === 0} onClick={onSaveAll}>
-            {pending ? <Spinner label="A guardar" /> : null}
-            Guardar todas
+            {pending ? <Spinner label="Salvando" /> : null}
+            Salvar todas
           </button>
           <button type="button" className="osPageBtn" disabled={pending} onClick={onClear}>
             Limpar busca

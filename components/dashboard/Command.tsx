@@ -12,7 +12,7 @@ type Item = { id: string; label: string; group: string; run: () => void };
 const semAcento = (v: string) =>
   v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-/** Ir a qualquer sítio, e encontrar qualquer coisa. Abre com Ctrl+K ou ⌘K.
+/** Ir a qualquer lugar, e encontrar qualquer coisa. Abre com Ctrl+K ou ⌘K.
  *
  *  Saltava só entre áreas do menu. Agora procura também marcas, negócios,
  *  pessoas, documentos e conteúdo — que é o que torna possível terem saído do
@@ -25,7 +25,7 @@ export default function Command() {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [at, setAt] = useState(0);
-  // O resultado guarda o termo que o produziu. Sem isso era preciso um segundo
+  // O resultado salva o termo que o produziu. Sem isso era preciso um segundo
   // estado «a procurar» reposto dentro do efeito — e escrever estado no corpo
   // de um efeito é o que faz um render puxar outro.
   const [achado, setAchado] = useState<{ termo: string; hits: Hit[] }>({ termo: '', hits: [] });
@@ -162,7 +162,7 @@ export default function Command() {
         />
         {lista.length === 0 ? (
           <p className="cmdVazio">
-            {procurando ? 'A procurar…' : 'Nada com esse nome.'}
+            {procurando ? 'Procurando…' : 'Nada com esse nome.'}
           </p>
         ) : (
           <ul className="cmdList">

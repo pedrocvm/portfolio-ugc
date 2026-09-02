@@ -17,7 +17,7 @@ const slug = (name: string) =>
 
 /** ponytail: o teto de 50 MB é o do plano gratuito do Supabase, igual para
  *  todos os buckets. Se o projeto passar a Pro, sobe aqui e nas definições de
- *  Storage. Sem esta guarda o pedido só volta com 413 e uma frase em inglês. */
+ *  Storage. Sem esta salva o pedido só volta com 413 e uma frase em inglês. */
 const MAX_UPLOAD = 50 * 1024 * 1024;
 /** O que ela pode escolher: acima disto o browser engasga-se a descodificar. */
 const MAX_PICK = 100 * 1024 * 1024;
@@ -39,7 +39,7 @@ export function useUpload() {
     }
     setBusy(true);
     setError(null);
-    setNote('A carregar');
+    setNote('Carregando');
 
     let file = input;
     if (input.type.startsWith('video/') && input.size > COMPRESS_OVER) {
@@ -47,7 +47,7 @@ export function useUpload() {
       file = await compressVideo(input, (r) =>
         setNote(`A comprimir ${Math.round(r * 100)}%`),
       );
-      setNote('A carregar');
+      setNote('Carregando');
     }
 
     if (file.size > MAX_UPLOAD) {

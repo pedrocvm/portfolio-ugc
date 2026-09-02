@@ -627,7 +627,7 @@ const getInstagramContext = define(
 
 const createFollowupDraft = define(
   'create_followup_draft',
-  'Escreve o texto de um follow-up já agendado. Guarda como rascunho — não envia nada.',
+  'Escreve o texto de um follow-up já agendado. Salva como rascunho — não envia nada.',
   z.object({ followup_id: z.string().uuid(), text: z.string().min(10).max(4000) }),
   async ({ followup_id, text }) => {
     const db = await supabaseServer();
@@ -706,11 +706,11 @@ const getInsights = define(
 );
 
 
-/* ── Prospecção diária ───────────────────────────────────────────────────── */
+/* ── Prospeção diária ───────────────────────────────────────────────────── */
 
 const getDailyOutreach = define(
   'get_daily_outreach_batch',
-  'As marcas que a prospecção encontrou hoje, com encaixe, porquê, contato e o email preparado.',
+  'As marcas que a prospeção encontrou hoje, com encaixe, porquê, contato e o email preparado.',
   z.object({ niche: z.string().optional(), limit: z.number().optional() }),
   async ({ niche, limit }) => {
     const db = await supabaseServer();
@@ -720,7 +720,7 @@ const getDailyOutreach = define(
       .order('run_date', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!run) return { data: { found: false, note: 'Ainda não correu nenhuma prospecção.' }, sources: [] };
+    if (!run) return { data: { found: false, note: 'Ainda não correu nenhuma prospeção.' }, sources: [] };
 
     let q = db
       .from('outreach_candidate')
@@ -759,7 +759,7 @@ const getOutreachCandidate = define(
 
 const updateOutreachDraftTool = define(
   'update_outreach_draft',
-  'Reescreve o assunto ou o corpo de uma abordagem. Guarda; não envia.',
+  'Reescreve o assunto ou o corpo de uma abordagem. Salva; não envia.',
   z.object({
     candidate_id: z.string().uuid(),
     subject: z.string().min(3).max(200).optional(),
@@ -776,7 +776,7 @@ const updateOutreachDraftTool = define(
       })
       .eq('id', candidate_id);
     if (error) throw new Error(`update_outreach_draft: ${error.message}`);
-    return { data: { saved: true, sent: false, note: 'Salvo. O envio continua a passar por ela.' }, sources: [] };
+    return { data: { saved: true, sent: false, note: 'Salvo. O envio continua passando por ela.' }, sources: [] };
   },
   'write',
 );
@@ -796,7 +796,7 @@ const approveOutreachTool = define(
 
 const prepareOutreachSend = define(
   'prepare_outreach_send',
-  'Verifica se uma abordagem está pronta a sair e devolve exactamente o que sairia. NÃO envia — o envio é sempre uma ação da Carol na interface.',
+  'Verifica se uma abordagem está pronta a sair e devolve exatamente o que sairia. NÃO envia — o envio é sempre uma ação da Carol na interface.',
   z.object({ candidate_id: z.string().uuid() }),
   async ({ candidate_id }) => {
     const db = await supabaseServer();
@@ -820,7 +820,7 @@ const prepareOutreachSend = define(
         subject: data.subject,
         body: data.body,
         emailConfidence: data.email_confidence,
-        note: 'Nada foi enviado. Para enviar, ela clica em Enviar na tela de Prospecção.',
+        note: 'Nada foi enviado. Para enviar, ela clica em Enviar na tela de Prospeção.',
       },
       sources: [],
     };
@@ -832,8 +832,8 @@ const prepareOutreachSend = define(
 /** Daqui para baixo, a Carol AI deixa de ser só consultiva.
  *
  *  Tudo o que está aqui é reversível e fica cá dentro: começar uma busca,
- *  mudar o foco, adiar um cartão, guardar uma captura. Nada disto sai para
- *  fora nem fecha um negócio — essas continuam a ser dela, num botão. */
+ *  mudar o foco, adiar um cartão, salvar uma captura. Nada disto sai para
+ *  fora nem fecha um negócio — essas continuam sendo dela, num botão. */
 
 const startProspecting = define(
   'start_prospecting',
@@ -852,7 +852,7 @@ const startProspecting = define(
             started: true,
             query,
             country: country ?? 'Portugal',
-            note: 'A busca está a correr. Os resultados aparecem na Prospecção, com o email já escrito para as que passarem o corte. Nada sai sem ela aprovar.',
+            note: 'A busca está correndo. Os resultados aparecem na Prospeção, com o email já escrito para as que passarem o corte. Nada sai sem ela aprovar.',
           },
       sources: [],
     };
@@ -885,11 +885,11 @@ const setProspectingFocus = define(
   async (input) => {
     const { getFocus, saveFocus } = await import('@/app/dashboard/outreach-actions');
     const { nicheIdFor } = await import('@/modules/outreach/focus');
-    const actual = await getFocus();
+    const atual = await getFocus();
 
     // O que ela já tinha marcado como favorito continua favorito: o modelo
     // recebe rótulos e notas, não a preferência dela sobre a ordem.
-    const favoritos = new Set(actual.niches.filter((n) => n.favourite).map((n) => n.id));
+    const favoritos = new Set(atual.niches.filter((n) => n.favourite).map((n) => n.id));
     const niches = input.niches
       ? input.niches.map((n) => ({
           id: nicheIdFor(n.label),
@@ -897,19 +897,19 @@ const setProspectingFocus = define(
           favourite: favoritos.has(nicheIdFor(n.label)),
           note: n.notes,
         }))
-      : actual.niches;
+      : atual.niches;
 
     const r = await saveFocus({
       niches,
-      countries: input.countries ?? actual.countries,
-      perDay: input.perDay ?? actual.perDay,
+      countries: input.countries ?? atual.countries,
+      perDay: input.perDay ?? atual.perDay,
     });
     return {
       data: r.error
         ? { saved: false, reason: r.error }
         : {
             saved: true,
-            focus: { niches, countries: input.countries ?? actual.countries, perDay: input.perDay ?? actual.perDay },
+            focus: { niches, countries: input.countries ?? atual.countries, perDay: input.perDay ?? atual.perDay },
             note: 'A próxima busca automática já usa isto.',
           },
       sources: [],
@@ -948,7 +948,7 @@ const resolveTodayAction = define(
 
 const captureSomething = define(
   'capture_something',
-  'Guarda um link, uma conversa colada, um briefing ou uma nota para o CarolOS processar. O tipo é detectado sozinho.',
+  'Salva um link, uma conversa colada, um briefing ou uma nota para o CarolOS processar. O tipo é detectado sozinho.',
   z.object({
     content: z.string().min(2).describe('o texto ou o endereço'),
     note: z.string().optional().describe('contexto que ela tenha dado'),
@@ -961,7 +961,7 @@ const captureSomething = define(
     return {
       data: r.error
         ? { saved: false, reason: r.error }
-        : { saved: true, understoodAs: palpite.label, note: 'Guardado. Aparece na Captura quando estiver processado.' },
+        : { saved: true, understoodAs: palpite.label, note: 'Salvo. Aparece na Captura quando estiver processado.' },
       sources: [],
     };
   },
@@ -1095,7 +1095,7 @@ const prepareReply = define(
         status: outcome.status,
         detail: outcome.detail,
         // Nunca envia. Prepara e mostra; quem envia é ela, num botão.
-        note: 'O rascunho fica preparado. O envio continua a exigir o sim dela.',
+        note: 'O rascunho fica preparado. O envio continua exigindo o sim dela.',
         draft: intel ? { subject: intel.draftSubject, body: intel.draftBody, state: intel.draftState } : null,
       },
       sources: [{ id: thread_id, type: 'email' as const, label: 'Conversa', at: null, href: '/dashboard/inbox' }],
@@ -1136,7 +1136,7 @@ const getDailyContentPlan = define(
 
 const getContentIdea = define(
   'get_content_idea',
-  'Uma ideia de conteúdo por inteiro: guião, tomadas, b-roll, texto no ecrã, passos de CapCut, legenda e remate.',
+  'Uma ideia de conteúdo por inteiro: guião, tomadas, b-roll, texto no tela, passos de CapCut, legenda e remate.',
   z.object({ idea_id: z.string().uuid() }),
   async ({ idea_id }) => {
     const { contentIdea } = await import('@/modules/creator/plan-service');
@@ -1154,7 +1154,7 @@ const getContentIdea = define(
 
 const regenerateContentIdea = define(
   'regenerate_content_idea',
-  'Escreve outra ideia no lugar de uma. A direcção é uma de quatro: easier (mais fácil de gravar), personal (mais pessoal), educational (mais educativa), edited (mais trabalhada na edição). Usa isto para «quero outra», «quero algo mais fácil».',
+  'Escreve outra ideia no lugar de uma. A direção é uma de quatro: easier (mais fácil de gravar), personal (mais pessoal), educational (mais educativa), edited (mais trabalhada na edição). Usa isto para «quero outra», «quero algo mais fácil».',
   z.object({
     idea_id: z.string().uuid(),
     direction: z.enum(['easier', 'personal', 'educational', 'edited']).optional(),
@@ -1177,7 +1177,7 @@ const regenerateContentIdea = define(
 
 const saveContentIdea = define(
   'save_content_idea',
-  'Muda o estado de uma ideia: saved (guardar para depois), recorded (já gravou), published (já publicou), discarded (não é para ela).',
+  'Muda o estado de uma ideia: saved (salvar para depois), recorded (já gravou), published (já publicou), discarded (não é para ela).',
   z.object({
     idea_id: z.string().uuid(),
     status: z.enum(['ready', 'saved', 'recorded', 'published', 'discarded']),
@@ -1192,7 +1192,7 @@ const saveContentIdea = define(
 
 const getBrandReferences = define(
   'get_brand_references',
-  'As referências criativas separadas para uma marca da prospecção, com link, o que as faz funcionar, como adaptar e o que não copiar.',
+  'As referências criativas separadas para uma marca da prospeção, com link, o que as faz funcionar, como adaptar e o que não copiar.',
   z.object({ candidate_id: z.string().uuid() }),
   async ({ candidate_id }) => {
     const { referencesForCandidates } = await import('@/app/dashboard/outreach-actions');
@@ -1208,7 +1208,7 @@ const getBrandReferences = define(
 
 const searchCreativeReferences = define(
   'search_creative_references',
-  'Procura nas referências já guardadas por plataforma, marca ou palavra. Não vai à web: para procurar uma referência nova para uma marca, usa adapt_reference_to_brand.',
+  'Procura nas referências já salvas por plataforma, marca ou palavra. Não vai à web: para procurar uma referência nova para uma marca, usa adapt_reference_to_brand.',
   z.object({ query: z.string().optional(), platform: z.string().optional(), limit: z.number().optional() }),
   async ({ query, platform, limit }) => {
     const db = await supabaseServer();
@@ -1268,7 +1268,7 @@ const getCreatorTrends = define(
     const { usableTrends } = await import('@/modules/trends/service');
     const rows = await usableTrends(cap(limit, 12));
     return {
-      data: rows.length ? rows : { note: 'Não há tendências actuais que encaixem nela. Isso é uma resposta, não uma falha.' },
+      data: rows.length ? rows : { note: 'Não há tendências atuais que encaixem nela. Isso é uma resposta, não uma falha.' },
       sources: rows.map((t) => ({
         id: t.id, type: 'knowledge' as const, label: t.title, at: t.detectedAt,
         href: t.evidence[0]?.url ?? t.sourceUrl ?? '/dashboard/content',
@@ -1293,13 +1293,13 @@ const getCreatorProfile = define(
 
 const getBusinessMilestones = define(
   'get_business_milestones',
-  'Os marcos reais da carreira dela, derivados de factos gravados — nunca inventados. Serve para conteúdo de jornada.',
+  'Os marcos reais da carreira dela, derivados de fatos gravados — nunca inventados. Serve para conteúdo de jornada.',
   z.object({ only_unused: z.boolean().optional(), limit: z.number().optional() }),
   async ({ only_unused, limit }) => {
     const { allMilestones, contentWorthyMilestones } = await import('@/modules/milestones/service');
     const rows = only_unused ? await contentWorthyMilestones(cap(limit, 10)) : await allMilestones(cap(limit, 30));
     return {
-      data: rows.length ? rows : { note: 'Ainda não há marcos derivados. Sem factos gravados, não se inventa nenhum.' },
+      data: rows.length ? rows : { note: 'Ainda não há marcos derivados. Sem fatos gravados, não se inventa nenhum.' },
       sources: rows.filter((m) => m.brandId).map((m) => ({
         id: m.brandId as string, type: 'brand' as const, label: m.brandName ?? 'Marca',
         at: m.occurredAt, href: `/dashboard/brands/${m.brandId}`,

@@ -363,7 +363,7 @@ export default function Assistant({ configured }: { configured: boolean }) {
                       <span className="aiCaret" aria-label="a escrever" />
                     ) : (
                       <>
-                        <Spinner label="A pensar" />A pensar…
+                        <Spinner label="Pensando" />Pensando…
                       </>
                     )}
                   </p>

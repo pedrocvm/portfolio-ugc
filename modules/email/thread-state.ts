@@ -1,7 +1,7 @@
 /** Quem está à espera de quem.
  *
  *  O bug conceptual que este módulo existe para matar: classificar a intenção
- *  de uma conversa olhando para a última mensagem guardada. Quando a última é
+ *  de uma conversa olhando para a última mensagem salva. Quando a última é
  *  dela, essa leitura diz que a Carol «pediu portfólio» — e a etiqueta
  *  PEDE PORTFÓLIO aparece em três marcas que nunca pediram nada.
  *
@@ -96,7 +96,7 @@ export function readThreadState(
 
 /* ── Taxonomia de intenção ────────────────────────────────────────────────── */
 
-/** O que a MARCA está a fazer nesta conversa.
+/** O que a MARCA está fazendo nesta conversa.
  *
  *  A lista é longa porque a diferença entre `BARTER_OFFER` e `PAID_COLLAB`
  *  muda a resposta inteira, e porque `INFLUENCER_REQUEST` — que a Carol recusa
@@ -142,9 +142,9 @@ export const isThreadIntent = (v: string): v is ThreadIntent =>
 /** O que ela lê. Nunca a constante em maiúsculas. */
 export const INTENT_LABEL: Record<ThreadIntent, string> = {
   NEW_INTEREST: 'interesse novo',
-  PORTFOLIO_REQUEST: 'pediu portefólio',
+  PORTFOLIO_REQUEST: 'pediu portfólio',
   RATE_REQUEST: 'pediu preço',
-  SCOPE_REQUEST: 'quer perceber o âmbito',
+  SCOPE_REQUEST: 'quer entender o âmbito',
   PAID_COLLAB: 'proposta paga',
   BARTER_OFFER: 'proposta de permuta',
   HYBRID_OFFER: 'permuta com dinheiro',
@@ -154,7 +154,7 @@ export const INTENT_LABEL: Record<ThreadIntent, string> = {
   USAGE_RIGHTS: 'quer direitos de uso',
   WHITELISTING: 'quer whitelisting',
   EXCLUSIVITY: 'quer exclusividade',
-  RAW_FOOTAGE: 'quer os ficheiros em bruto',
+  RAW_FOOTAGE: 'quer os arquivos em bruto',
   CALL_REQUEST: 'quer uma chamada',
   BRIEF_RECEIVED: 'mandou o briefing',
   PRODUCT_SHIPPED: 'produto a caminho',
@@ -169,7 +169,7 @@ export const INTENT_LABEL: Record<ThreadIntent, string> = {
   REFERRAL: 'indicou outra pessoa',
   GENERAL_REPLY: 'respondeu',
   NON_COMMERCIAL: 'não é comercial',
-  UNCERTAIN: 'por perceber',
+  UNCERTAIN: 'por entender',
 };
 
 /** Intenções que a Carol tem de ver hoje, mesmo que o prazo diga o contrário.
@@ -197,7 +197,7 @@ export const CLOSED_INTENTS: ReadonlySet<ThreadIntent> = new Set<ThreadIntent>([
 /** Palpite determinístico, para quando não há modelo.
  *
  *  Não substitui a classificação: é o chão. Sem chave de IA a Inbox continua a
- *  dizer alguma coisa verdadeira em vez de dizer «por perceber» a tudo — e o
+ *  dizer alguma coisa verdadeira em vez de dizer «por entender» a tudo — e o
  *  que ela diz sai de palavras que estão mesmo lá, não de adivinhação.
  *
  *  Só olha para a última mensagem EXTERNA. É o ponto todo deste módulo. */
@@ -214,7 +214,7 @@ export function guessIntent(state: ThreadState): { intent: ThreadIntent; confide
     ['PAYMENT', /\b(pagamento|pagar|transfer[iê]ncia|iban|payment|paid|remessa)/],
     ['WHITELISTING', /\b(whitelist|whitelisting|spark ?ads|c[óo]digo de autoriza)/],
     ['EXCLUSIVITY', /\b(exclusivid|exclusive|exclusivity|n[ãa]o poder[áa] trabalhar com)/],
-    ['RAW_FOOTAGE', /\b(raw|ficheiros em bruto|arquivos brutos|footage|material em bruto)/],
+    ['RAW_FOOTAGE', /\b(raw|arquivos em bruto|arquivos brutos|footage|material em bruto)/],
     ['USAGE_RIGHTS', /\b(direitos de uso|usage rights|an[úu]ncios pagos|paid ads|impulsionar|boost)/],
     ['REVISION', /\b(altera[çc]|revis[ãa]o|revision|ajuste|mudar o v[íi]deo|refazer)/],
     ['APPROVED', /\b(aprovad|approved|est[áa] [óo]tim|adorámos|adoramos|pode publicar)/],
@@ -225,7 +225,7 @@ export function guessIntent(state: ThreadState): { intent: ThreadIntent; confide
     // uma oferta, e era assim que uma proposta paga aparecia como pedido de
     // tabela. Fica o que só aparece quando alguém pergunta.
     ['RATE_REQUEST', /\b(tabela de pre[çc]|or[çc]amento|quanto (cobra|custa)|rate card|pricing|valores para)/],
-    ['PORTFOLIO_REQUEST', /\b(portef[óo]lio|portfolio|exemplos de trabalhos|media ?kit)/],
+    ['PORTFOLIO_REQUEST', /\b(portef[óo]lio|portf[óo]lio|portfolio|exemplos de trabalhos|media ?kit)/],
     ['CALL_REQUEST', /\b(call|reuni[ãa]o|videochamada|meet|agendar uma conversa)/],
     ['AFFILIATE_ONLY', /\b(afilia|comiss[ãa]o por venda|affiliate|c[óo]digo de desconto[^.]*comiss)/],
     ['BARTER_OFFER', /\b(permuta|em troca do produto|oferecemos o produto|barter|sem cach[êe])/],

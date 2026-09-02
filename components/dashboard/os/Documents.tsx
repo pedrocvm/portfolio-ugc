@@ -113,7 +113,7 @@ export default function Documents({
             Documentos desta marca sem oportunidade ({candidates.length})
           </summary>
           <p className="osRowSub" style={{ marginTop: 8 }}>
-            A importação só ligou os que batiam exactamente pelo nome. Estes precisam de uma
+            A importação só ligou os que batiam exatamente pelo nome. Estes precisam de uma
             confirmação — ligar o documento errado é pior do que não ligar nenhum.
           </p>
           <div className="osRows">

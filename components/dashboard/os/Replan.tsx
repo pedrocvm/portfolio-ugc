@@ -9,7 +9,7 @@ export default function Replan() {
   const [pending, start] = useTransition();
   return (
     <button className="chip" type="button" disabled={pending} onClick={() => start(() => replan().then(() => undefined))}>
-      {pending ? 'A recalcular…' : 'Recalcular fila'}
+      {pending ? 'Recalculando…' : 'Recalcular fila'}
     </button>
   );
 }

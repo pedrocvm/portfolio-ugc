@@ -38,7 +38,7 @@ test('um email colado é uma conversa', () => {
     'Para: carol@exemplo.pt',
     'Assunto: Colaboração',
     '',
-    'Olá Carolina, gostávamos de falar consigo.',
+    'Olá Carolina, gostávamos de falar com você.',
   ].join('\n');
   const g = detectKind(email);
   assert.equal(g.kind, 'conversation');
@@ -76,7 +76,7 @@ test('acentos não mudam o palpite', () => {
   assert.equal(detectKind(semAcentos).kind, 'brief');
 });
 
-test('um ficheiro de imagem é sempre um print, seja qual for o texto', () => {
+test('um arquivo de imagem é sempre um print, seja qual for o texto', () => {
   const g = detectKind('https://instagram.com/marca', 'conversa.png');
   assert.equal(g.kind, 'screenshot');
   assert.ok(g.sure);

@@ -1,7 +1,7 @@
-/** O histórico de prospecção, resumido.
+/** O histórico de prospeção, resumido.
  *
- *  Duas perguntas: quem é que já vimos — para não voltar a pesquisar a mesma
- *  marca — e a prospecção está a prestar. A segunda não se responde com um
+ *  Duas perguntas: quem é que já vimos — para não pesquisar de novo a mesma
+ *  marca — e a prospeção está prestando. A segunda não se responde com um
  *  total: responde-se com quantas passaram o corte de qualidade e em que é que
  *  as outras falharam. */
 
@@ -117,7 +117,7 @@ export function groupByDay<T extends { created_at: string }>(rows: T[]): { day: 
 
 /** Uma frase sobre o lote, para quem não quer ler a tabela. */
 export function summarySentence(s: Summary): string {
-  if (s.total === 0) return 'Ainda não há prospecções no histórico.';
+  if (s.total === 0) return 'Ainda não há prospeções no histórico.';
 
   const marcas = `${s.total} ${s.total === 1 ? 'marca' : 'marcas'}`;
   const partes: string[] = [];
@@ -154,7 +154,7 @@ export function dayLabel(day: string, now = new Date()): string {
 
 /** O modelo devolve o país como lhe apetece: «Germany», «Alemanha»,
  *  «Alemanha / Brasil». Três grafias da mesma coisa numa lista fazem-na parecer
- *  desarrumada e escondem que são o mesmo sítio. */
+ *  desarrumada e escondem que são o mesmo lugar. */
 const PAISES: Record<string, string> = {
   germany: 'Alemanha', deutschland: 'Alemanha', de: 'Alemanha',
   brazil: 'Brasil', br: 'Brasil',
@@ -213,7 +213,7 @@ export function dayTotals(runs: readonly RunLike[]): Map<string, {
 /** O que a linha diz sobre uma marca.
  *
  *  Isto mostrava «2 bandeiras», que obriga a perguntar o que é uma bandeira.
- *  Um indicador que precisa de ser explicado não é um indicador — é um enigma
+ *  Um indicador que precisa ser explicado não é um indicador — é um enigma
  *  com número. Cada sinal aqui é uma frase curta que se entende à primeira, e
  *  o que não couber vive na análise. */
 export type Signal = { text: string; tone: 'good' | 'watch' | 'plain' };
@@ -249,7 +249,7 @@ export function channelSignal(c: SignalInput): Signal {
   if (c.contact_email && !emailFraco) return { text: 'Email verificado', tone: 'good' };
   if (c.contact_email) return { text: 'Email por confirmar', tone: 'watch' };
   if (instagram) return { text: 'Só por Instagram', tone: 'plain' };
-  return { text: 'Sem contacto direto', tone: 'watch' };
+  return { text: 'Sem contato direto', tone: 'watch' };
 }
 
 /** Dois ou três sinais na linha; o resto fica na análise.

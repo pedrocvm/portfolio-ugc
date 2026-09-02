@@ -60,7 +60,7 @@ export type BrandReferenceRow = {
  *
  *  Uma por candidata dava dez idas à base para desenhar uma lista; e carregá-las
  *  só quando o cartão abre obrigava a um estado de espera dentro do cartão,
- *  que é exactamente a fricção que a revisão sequencial não tem. */
+ *  que é exatamente a frição que a revisão sequencial não tem. */
 export async function referencesForCandidates(ids: readonly string[]): Promise<BrandReferenceRow[]> {
   if (ids.length === 0) return [];
   const db = await supabaseServer();
@@ -122,7 +122,7 @@ export async function updateOutreachDraft(id: string, subject: string, body: str
     .from('outreach_candidate')
     .update({ subject: subject.trim(), body: body.trim(), status: 'edited' })
     .eq('id', id);
-  if (error) return { error: 'Não consegui guardar.' };
+  if (error) return { error: 'Não consegui salvar.' };
   revalidatePath('/dashboard/outreach');
   return { ok: true };
 }
@@ -143,7 +143,7 @@ const REASONS = [
 ] as const;
 
 /** Saltar é para hoje; rejeitar é para sempre. São decisões diferentes e
- *  salvam-se em sítios diferentes. */
+ *  salvam-se em sites diferentes. */
 export async function skipOutreach(id: string, reason?: string): Promise<Result> {
   await requireUser();
   if (!Uuid.safeParse(id).success) return { error: 'Candidata inválida.' };
@@ -185,7 +185,7 @@ export async function suppressBrand(
     },
     { onConflict: 'app_user_id,normalized_name' },
   );
-  if (error) return { error: 'Não consegui guardar a decisão.' };
+  if (error) return { error: 'Não consegui salvar a decisão.' };
 
   await db.from('outreach_candidate').update({ status: 'rejected', reject_reason: reason ?? null }).eq('id', id);
   revalidatePath('/dashboard/outreach');
@@ -312,7 +312,7 @@ export async function rebuildStyleProfile(): Promise<Result & { samples?: number
   await requireUser();
   const { buildStyleProfile } = await import('@/modules/outreach/style');
   const profile = await buildStyleProfile('pt');
-  if (!profile) return { error: 'Não encontrei emails de prospecção suficientes no Gmail.' };
+  if (!profile) return { error: 'Não encontrei emails de prospeção suficientes no Gmail.' };
   return { ok: true, samples: profile.sampleCount };
 }
 
@@ -320,7 +320,7 @@ export async function rebuildStyleProfile(): Promise<Result & { samples?: number
  *
  *  Lê tudo — incluindo as recusadas e as postas de lado, que a revisão diária
  *  esconde. É esse o ponto: o que ficou de fora é metade do que diz se a
- *  prospecção está a acertar. */
+ *  prospeção está acertando. */
 export async function outreachHistory(status?: string) {
   await requireUser();
   const db = await supabaseServer();
@@ -428,7 +428,7 @@ export async function draftOutreach(id: string): Promise<Result & { subject?: st
       status: quality.pass ? 'ready' : 'needs_review',
     })
     .eq('id', id);
-  if (error) return { error: 'Escrevi o email mas não o consegui guardar.' };
+  if (error) return { error: 'Escrevi o email mas não o consegui salvar.' };
 
   revalidatePath('/dashboard/outreach');
   return { ok: true, subject: written.subject, body: written.body };
@@ -437,7 +437,7 @@ export async function draftOutreach(id: string): Promise<Result & { subject?: st
 /** Descarta várias de uma vez.
  *
  *  As que ficam abaixo do corte são as que enchem a lista, e mandá-las embora
- *  uma a uma é trabalho a sério quando são doze. Continuam a existir na base de
+ *  uma a uma é trabalho a sério quando são doze. Continuam existindo na base de
  *  propósito: é isso que impede a descoberta de amanhã de as encontrar outra vez
  *  e pagar a pesquisa de novo. Ficam no histórico, em «De lado». */
 export async function discardMany(ids: string[]): Promise<Result & { discarded?: number }> {
@@ -450,7 +450,7 @@ export async function discardMany(ids: string[]): Promise<Result & { discarded?:
     .from('outreach_candidate')
     .update({ status: 'skipped' }, { count: 'exact' })
     .in('id', validos)
-    // Uma que já saiu não se descarta: o email está enviado e o registo é o que
+    // Uma que já saiu não se descarta: o email está enviado e o registro é o que
     // prova isso.
     .neq('status', 'sent');
   if (error) return { error: 'Não consegui descartar.' };
@@ -459,7 +459,7 @@ export async function discardMany(ids: string[]): Promise<Result & { discarded?:
   return { ok: true, discarded: count ?? validos.length };
 }
 
-/* ── Prospecção v2 ───────────────────────────────────────────────────────── */
+/* ── Prospeção v2 ───────────────────────────────────────────────────────── */
 
 /** Começa uma busca dirigida. Devolve já; o trabalho segue depois da resposta. */
 export async function startManualSearch(
@@ -488,8 +488,8 @@ export async function startManualSearch(
   return { ok: true, since };
 }
 
-/** Quanto tempo uma busca dirigida continua a ser «a busca de agora». Passado
- *  isto, o ecrã volta ao lote automático do dia. */
+/** Quanto tempo uma busca dirigida continua sendo «a busca de agora». Passado
+ *  isto, o tela volta ao lote automático do dia. */
 const MANUAL_FRESH_MS = 6 * 3600_000;
 
 /** Os resultados da última busca dirigida, com o que foi pedido e o que foi
@@ -528,25 +528,25 @@ export async function latestManualRun() {
 }
 
 
-/** Guardar é o que faz um resultado de busca virar candidata a sério.
+/** Salvar é o que faz um resultado de busca virar candidata a sério.
  *  Sem isto, uma busca exploratória sujava o CRM com tudo o que apareceu. */
 export async function saveCandidates(ids: string[]): Promise<Result & { saved?: number }> {
   await requireUser();
   const validos = ids.filter((id) => Uuid.safeParse(id).success);
-  if (validos.length === 0) return { error: 'Nada para guardar.' };
+  if (validos.length === 0) return { error: 'Nada para salvar.' };
 
   const db = await supabaseServer();
   const { error, count } = await db
     .from('outreach_candidate')
     .update({ saved: true, saved_at: new Date().toISOString() }, { count: 'exact' })
     .in('id', validos);
-  if (error) return { error: 'Não consegui guardar.' };
+  if (error) return { error: 'Não consegui salvar.' };
 
   revalidatePath('/dashboard/outreach');
   return { ok: true, saved: count ?? validos.length };
 }
 
-/** Limpa os resultados desta busca do ecrã — não o histórico.
+/** Limpa os resultados desta busca do tela — não o histórico.
  *  O que ela guardou fica; o resto era exploração e não tem de ficar. */
 export async function clearManualSearch(): Promise<Result & { cleared?: number }> {
   await requireUser();
@@ -590,6 +590,6 @@ export async function saveFocus(input: {
     revalidatePath('/dashboard/outreach');
     return { ok: true };
   } catch {
-    return { error: 'Não consegui guardar o foco.' };
+    return { error: 'Não consegui salvar o foco.' };
   }
 }

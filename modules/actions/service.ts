@@ -94,15 +94,15 @@ export async function todayQueue(limit = 40): Promise<ActionRow[]> {
   return ((data ?? []) as unknown as RawAction[]).map(toAction);
 }
 
-/** O que o CarolOS está a tratar sozinho, e o que ela já fechou hoje.
+/** O que o CarolOS está tratando sozinho, e o que ela já fechou hoje.
  *
  *  Cinco leituras pequenas em paralelo, todas com contagem ou limite. Nenhuma
- *  delas pede uma decisão: é de propósito, e é o que separa esta secção da
+ *  delas pede uma decisão: é de propósito, e é o que separa esta seção da
  *  fila. Follow-ups vencidos e pagamentos em atraso ficam de fora — esses já
  *  entraram na fila pelo planeador, e apareceriam duas vezes.
  *
  *  Correr isto nunca deve poder partir o Hoje: se uma das leituras falhar, a
- *  secção fica mais curta e a fila continua de pé. */
+ *  seção fica mais curta e a fila continua de pé. */
 export async function dayBoard(): Promise<{ background: BackgroundItem[]; doneToday: number }> {
   const db = await supabaseServer();
   const now = new Date();

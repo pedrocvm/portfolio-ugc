@@ -45,7 +45,7 @@ export * from './domain';
  *  Uma ideia para Instagram e uma para TikTok, tratadas de forma nativa. Não é
  *  o mesmo vídeo duas vezes: `platformTreatmentsDiffer` verifica-o depois de o
  *  modelo responder, e uma ideia que não passa é rejeitada com o motivo em vez
- *  de ser guardada na mesma.
+ *  de ser salva na mesma.
  *
  *  Duas travagens antes de gerar seja o que for: se já há muitas ideias por
  *  gravar, refresca-se em vez de somar; e se o retrato dela não foi observado,
@@ -69,7 +69,7 @@ export async function runDailyContentPlan(
   const failures: string[] = [];
 
   const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
-  if (!me) return { generated: 0, rejected: 0, archived: 0, reasons: [], failures: ['Sem utilizador.'] };
+  if (!me) return { generated: 0, rejected: 0, archived: 0, reasons: [], failures: ['Sem usuário.'] };
 
   // ── Idempotência pelo dia ───────────────────────────────────────────────
   const { data: hoje } = await db
@@ -128,7 +128,7 @@ export async function runDailyContentPlan(
   );
 
   if (trends.length === 0) {
-    reasons.push('Nenhuma tendência actual encaixava nela hoje, por isso o plano não usa nenhuma.');
+    reasons.push('Nenhuma tendência atual encaixava nela hoje, por isso o plano não usa nenhuma.');
   }
 
   const run = await runPrompt(
@@ -189,7 +189,7 @@ export async function runDailyContentPlan(
   let rejected = 0;
   const porGravar = new Set<Platform>(['instagram', 'tiktok']);
 
-  const guardar = async (idea: ContentIdea) => {
+  const salvar = async (idea: ContentIdea) => {
     const saved = await saveIdea({
       idea,
       appUserId: me.id,
@@ -210,7 +210,7 @@ export async function runDailyContentPlan(
     return saved;
   };
 
-  for (const idea of [plano.instagram, plano.tiktok]) await guardar(idea);
+  for (const idea of [plano.instagram, plano.tiktok]) await salvar(idea);
 
   // Uma rejeição não pode deixar a plataforma sem nada. Tenta outra vez, uma
   // só, com o motivo da recusa por escrito — sem isso o modelo repete o mesmo
@@ -229,7 +229,7 @@ export async function runDailyContentPlan(
         audienceTilt: [
           'A TENTATIVA ANTERIOR FOI RECUSADA. Motivos, um por um:',
           ...reasons.map((r) => `- ${r}`),
-          'Não repitas o mesmo erro. Se te disseram que estava a dar aulas, conta uma história em vez de ensinar.',
+          'Não repitas o mesmo erro. Se te disseram que estava dando aulas, conta uma história em vez de ensinar.',
         ].join('\n'),
         trends: describeTrends(trends),
         milestones: describeMilestones(milestones),
@@ -246,7 +246,7 @@ export async function runDailyContentPlan(
 
     if (segunda.ok) {
       for (const idea of [segunda.output.instagram, segunda.output.tiktok]) {
-        if (porGravar.has(idea.platform)) await guardar(idea);
+        if (porGravar.has(idea.platform)) await salvar(idea);
       }
     } else {
       failures.push(`A segunda tentativa também falhou: ${segunda.message}`);
@@ -438,7 +438,7 @@ async function saveIdea(input: {
     .select('id')
     .maybeSingle();
 
-  if (error || !data) return { ok: false, because: 'Não consegui guardar a ideia.' };
+  if (error || !data) return { ok: false, because: 'Não consegui salvar a ideia.' };
 
   // Um marco só se usa uma vez: a segunda seria a mesma história outra vez.
   if (usedMilestone) await markMilestoneUsed(usedMilestone.id);
@@ -511,7 +511,7 @@ function describeTrends(trends: readonly TrendRow[]): string {
     .map(
       (t) =>
         `- [${t.platform} · ${t.kind} · ${t.freshness}] ${t.title}: ${t.description} ` +
-        `Porque está a subir: ${t.whyTrending}. Encaixe: ${t.fitReason} ` +
+        `Porque está subindo: ${t.whyTrending}. Encaixe: ${t.fitReason} ` +
         `Prova: ${t.evidence.map((e) => e.url).slice(0, 2).join(', ')}`,
     )
     .join('\n');
@@ -519,7 +519,7 @@ function describeTrends(trends: readonly TrendRow[]): string {
 
 function describeBrief(platform: Platform): string {
   const b = PLATFORM_BRIEF[platform];
-  return `Objectivo: ${b.objective}\nTratamento: ${b.treatment}\nA evitar: ${b.avoid}`;
+  return `objetivo: ${b.objective}\nTratamento: ${b.treatment}\nA evitar: ${b.avoid}`;
 }
 
 async function archiveStale(now: Date): Promise<number> {

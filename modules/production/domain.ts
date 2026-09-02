@@ -3,7 +3,7 @@
  *  Vive separada do serviço porque a bancada de produção é um componente de
  *  cliente e precisa destas constantes. Se estivessem no serviço, importá-las
  *  arrastava o cliente Supabase e a chave de service role para o browser — que
- *  é exactamente o que o `server-only` no serviço está lá para impedir. */
+ *  é exatamente o que o `server-only` no serviço está lá para impedir. */
 
 export const COLLABORATION_STATUS = [
   'accepted', 'awaiting_terms', 'awaiting_product', 'awaiting_brief',

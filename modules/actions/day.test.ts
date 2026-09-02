@@ -18,7 +18,7 @@ test('sem nada em curso, não inventa linhas', () => {
   assert.deepEqual(describeBackground(vazio), []);
 });
 
-/** O ponto da secção inteira: nenhuma destas frases pede nada. Se uma delas
+/** O ponto da seção inteira: nenhuma destas frases pede nada. Se uma delas
  *  virar imperativo, voltou a ser uma tarefa disfarçada de estado. */
 test('nenhuma frase de fundo pede uma ação', () => {
   const itens = describeBackground({
@@ -33,7 +33,7 @@ test('nenhuma frase de fundo pede uma ação', () => {
   assert.equal(itens.length, 5);
   const imperativos = /^(Envi|Respond|Cobr|Reve|Confirm|Clarific|Prepar|Fech|Abr|Veja|Faça)/i;
   for (const i of itens) {
-    assert.doesNotMatch(i.label, imperativos, `«${i.label}» está a mandar fazer alguma coisa`);
+    assert.doesNotMatch(i.label, imperativos, `«${i.label}» está mandando fazer alguma coisa`);
   }
 });
 

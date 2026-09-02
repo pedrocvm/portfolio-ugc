@@ -232,7 +232,7 @@ export async function markDue(db: Db): Promise<number> {
 
 /** Cobre a lacuna do backfill: oportunidades ativas importadas do painel
  *  antigo não têm follow-up nenhum, e sem isto continuavam a depender da
- *  memória da Carol — que é exactamente o que o produto existe para resolver. */
+ *  memória da Carol — que é exatamente o que o produto existe para resolver. */
 export async function seedMissingFollowUps(db: Db): Promise<number> {
   const { data: opps } = await db
     .from('opportunity')

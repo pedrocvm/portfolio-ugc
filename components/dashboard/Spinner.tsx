@@ -7,7 +7,7 @@ export default function Spinner({ label }: { label?: string }) {
         <circle className="spinTrack" cx="12" cy="12" r="9" />
         <circle className="spinArc" cx="12" cy="12" r="9" />
       </svg>
-      <span className="visually-hidden">{label ?? 'A carregar'}</span>
+      <span className="visually-hidden">{label ?? 'Carregando'}</span>
     </span>
   );
 }

@@ -5,11 +5,11 @@ import {
   groupByDay, statusLabel, summarize, summarySentence, type HistoryRow,
 } from '@/modules/outreach/history';
 
-/** Quem já foi prospectado, e se a prospecção presta.
+/** Quem já foi prospectado, e se a prospeção presta.
  *
  *  A revisão diária esconde as recusadas, porque lá só interessa o que falta
  *  decidir. Aqui aparecem todas: o que ficou de fora é metade do que diz se
- *  isto está a acertar. */
+ *  isto está acertando. */
 
 export type HistoryCandidate = HistoryRow & {
   website: string | null;
@@ -41,7 +41,7 @@ export type Run = {
 const FILTERS = [
   ['todas', 'Todas'],
   ['sent', 'Enviadas'],
-  ['needs_review', 'A precisar de olhos'],
+  ['needs_review', 'Precisando de olhos'],
   ['ready', 'Prontas'],
   ['rejected', 'Recusadas'],
   ['skipped', 'De lado'],
@@ -123,13 +123,13 @@ function Detail({ c }: { c: HistoryCandidate }) {
         </Field>
       ) : null}
 
-      {/* Ver o que já publicam é metade da decisão, e é o primeiro sítio onde
+      {/* Ver o que já publicam é metade da decisão, e é o primeiro lugar onde
           ela vai olhar antes de escrever seja o que for. */}
       <Field label="Onde publicam">
         <Socials socials={c.socials} />
       </Field>
 
-      <Field label="Contacto">
+      <Field label="contato">
         {c.contact_email ? (
           <>
             {c.contact_email}
@@ -172,7 +172,7 @@ function Detail({ c }: { c: HistoryCandidate }) {
           // custa uma frase e poupa a procura.
           <span className="histNone">
             Não escrevi o email: ficou abaixo do corte de encaixe. Pode pedi-lo
-            em <Link href="/dashboard/outreach">Prospecção</Link>.
+            em <Link href="/dashboard/outreach">Prospeção</Link>.
           </span>
         )}
       </Field>
@@ -258,7 +258,7 @@ export default function OutreachHistory({
       {days.length === 0 ? (
         <p className="osEmpty">
           {filter === 'todas'
-            ? 'Ainda não correu nenhuma prospecção.'
+            ? 'Ainda não correu nenhuma prospeção.'
             : 'Nenhuma marca neste estado.'}
         </p>
       ) : null}

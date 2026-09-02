@@ -8,10 +8,10 @@ import Spinner from '@/components/dashboard/Spinner';
 import { pushToast } from './Toasts';
 import { useExit } from './useExit';
 
-/** Captura de qualquer sítio.
+/** Captura de qualquer lugar.
  *
  *  Havia uma tela chamada «Captura», e uma tela que se tem de ir procurar não é
- *  captura rápida — quando ela está a olhar para uma marca no telemóvel, o
+ *  captura rápida — quando ela está olhando para uma marca no celular, o
  *  caminho até lá é o custo todo. Saiu do menu e passou a viver aqui: um botão
  *  em todas as telas, e colar em qualquer lado abre isto já com o conteúdo
  *  dentro.
@@ -46,7 +46,7 @@ export default function QuickCapture() {
   const [open, setOpen] = useState(false);
   const [raw, setRaw] = useState('');
   const [nota, setNota] = useState('');
-  const [ficheiro, setFicheiro] = useState<{ name: string; path: string } | null>(null);
+  const [arquivo, setFicheiro] = useState<{ name: string; path: string } | null>(null);
   const [manual, setManual] = useState<string | null>(null);
   const [erro, setErro] = useState('');
   const [pending, start] = useTransition();
@@ -55,7 +55,7 @@ export default function QuickCapture() {
   const campo = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
 
-  const palpite: Guess = detectKind(raw, ficheiro?.name ?? null);
+  const palpite: Guess = detectKind(raw, arquivo?.name ?? null);
   const tipo = manual ?? palpite.kind;
 
   const abrir = useCallback((texto?: string) => {
@@ -71,7 +71,7 @@ export default function QuickCapture() {
     form.set('file', file);
     const r = await uploadScreenshot(form);
     setASubir(false);
-    if (r.error || !r.path) setErro(r.error ?? 'Não consegui guardar a imagem.');
+    if (r.error || !r.path) setErro(r.error ?? 'Não consegui salvar a imagem.');
     else setFicheiro({ name: file.name, path: r.path });
   }, []);
 
@@ -111,10 +111,10 @@ export default function QuickCapture() {
     };
   }, [open]);
 
-  const guardar = () =>
+  const salvar = () =>
     start(async () => {
       setErro('');
-      const r = await capture(tipo, raw.trim(), nota.trim(), ficheiro?.path ?? null);
+      const r = await capture(tipo, raw.trim(), nota.trim(), arquivo?.path ?? null);
       if (r.error) {
         setErro(r.error);
         return;
@@ -124,11 +124,11 @@ export default function QuickCapture() {
       setFicheiro(null);
       setManual(null);
       close();
-      pushToast('Guardado. Vou ver o que consigo perceber.', 'ok', '/dashboard/capture');
+      pushToast('Salvo. Vou ver o que com você entender.', 'ok', '/dashboard/capture');
       router.refresh();
     });
 
-  const podeGuardar = Boolean(raw.trim() || ficheiro);
+  const podeGuardar = Boolean(raw.trim() || arquivo);
 
   return (
     <>
@@ -159,14 +159,14 @@ export default function QuickCapture() {
             }}
           >
             <header className="focusTop">
-              <span className="focusAt">Guardar para o Carol OS</span>
+              <span className="focusAt">salvar para o Carol OS</span>
               <button type="button" onClick={close} aria-label="Fechar">
                 ×
               </button>
             </header>
 
             <label className="visually-hidden" htmlFor="capRaw">
-              O que quer guardar
+              O que quer salvar
             </label>
             <textarea
               id="capRaw"
@@ -181,9 +181,9 @@ export default function QuickCapture() {
               }}
             />
 
-            {ficheiro ? (
+            {arquivo ? (
               <p className="capFile">
-                {ficheiro.name}
+                {arquivo.name}
                 <button type="button" onClick={() => setFicheiro(null)}>
                   tirar
                 </button>
@@ -191,7 +191,7 @@ export default function QuickCapture() {
             ) : null}
             {aSubir ? (
               <p className="capFile">
-                <Spinner label="A guardar a imagem" />A guardar a imagem…
+                <Spinner label="Salvando a imagem" />Salvando a imagem…
               </p>
             ) : null}
 
@@ -200,7 +200,7 @@ export default function QuickCapture() {
               <div className="capGuess">
                 {manual ? (
                   <span>
-                    Vou guardar como <b>{TIPOS.find((t) => t.id === manual)?.label.toLowerCase()}</b>.
+                    Vou salvar como <b>{TIPOS.find((t) => t.id === manual)?.label.toLowerCase()}</b>.
                   </span>
                 ) : (
                   <span>
@@ -247,10 +247,10 @@ export default function QuickCapture() {
                 className="osGo"
                 type="button"
                 disabled={pending || aSubir || !podeGuardar}
-                onClick={guardar}
+                onClick={salvar}
               >
-                {pending ? <Spinner label="A guardar" /> : null}
-                Guardar
+                {pending ? <Spinner label="Salvando" /> : null}
+                Salvar
               </button>
               <button className="focusSkip" type="button" onClick={close}>
                 Deixa estar

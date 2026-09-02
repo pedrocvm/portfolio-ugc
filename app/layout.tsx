@@ -24,8 +24,8 @@ const sans = Instrument_Sans({
   preload: false,
 });
 /* A Instrument Serif é uma fonte de cartaz: linda a 60px, ilegível a 15.
- * A Lora é uma serifa de texto, desenhada para corpo em ecrã, e o itálico
- * continua a existir onde o design o pede — mas agora lê-se. */
+ * A Lora é uma serifa de texto, desenhada para corpo em tela, e o itálico
+ * continua existindo onde o design o pede — mas agora lê-se. */
 const serif = Lora({
   subsets: ['latin'],
   weight: ['400', '500'],
@@ -60,7 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: meta.ogTitle,
       description: meta.ogDescription,
-      locale: 'pt_PT',
+      locale: 'pt_BR',
       type: 'website',
       images: [meta.ogImage],
     },

@@ -65,7 +65,7 @@ export default function FitPanel({
       {excluded ? (
         <p className="osWarn">
           Skincare e haircare estão fora da estratégia. Esta marca pode continuar no histórico, mas
-          não recebe bónus de categoria nem entra em sugestões de prospecção.
+          não recebe bónus de categoria nem entra em sugestões de prospeção.
         </p>
       ) : null}
 
@@ -181,10 +181,10 @@ export default function FitPanel({
                   })
                 }
               >
-                Guardar
+                salvar
               </button>
             </div>
-            <p className="osRowSub">O cálculo original fica guardado ao lado. Nada é apagado.</p>
+            <p className="osRowSub">O cálculo original fica salvo ao lado. Nada é apagado.</p>
           </details>
         </>
       ) : null}

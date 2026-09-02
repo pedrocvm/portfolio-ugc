@@ -7,7 +7,7 @@ import { pushToast } from './Toasts';
 
 /** Vigia a procura que ficou a correr.
  *
- *  Vive no layout, não na tela da Prospecção: ela carrega em «procurar» e vai
+ *  Vive no layout, não na tela da Prospeção: ela carrega em «procurar» e vai
  *  para o Inbox, e é lá que quer saber que acabou. O instante de arranque fica
  *  no browser, por isso o aviso sobrevive à navegação e a um recarregamento.
  *
@@ -62,7 +62,7 @@ export default function DiscoveryWatch() {
 
       if (Date.now() - new Date(since).getTime() > GIVE_UP_MS) {
         stop();
-        pushToast('A procura demorou demais e eu deixei de esperar. Veja em Prospecção.', 'warn');
+        pushToast('A procura demorou demais e eu deixei de esperar. Veja em Prospeção.', 'warn');
         return;
       }
 
@@ -105,7 +105,7 @@ export default function DiscoveryWatch() {
   return (
     <div className="findingChip" role="status">
       <span className="findingDot" aria-hidden="true" />
-      A procurar marcas
+      Procurando marcas
     </div>
   );
 }

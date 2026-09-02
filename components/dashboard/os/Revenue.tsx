@@ -12,7 +12,7 @@ import type { PaymentRow, RelationshipRow, RevenueSummary } from '@/modules/reve
 /** Receita, licenças e relação.
  *
  *  Dinheiro e permuta aparecem sempre em colunas separadas. Somá-los daria à
- *  Carol a sensação de estar a ganhar mais do que ganha, que é exactamente o
+ *  Carol a sensação de estar a ganhar mais do que ganha, que é exatamente o
  *  contrário do que esta tela existe para fazer.
  *
  *  A ordem é a de quem pergunta «como está o meu dinheiro»: primeiro o que
@@ -52,7 +52,7 @@ export default function Revenue({
       {vazio ? (
         <p className="osBrief">
           Ainda não há dinheiro registado. Assim que um trabalho fechar com valor, ele aparece aqui
-          — e o que estiver em atraso vem ter consigo no Hoje, sem ser preciso vir cá ver.
+          — e o que estiver em atraso vem ter com você no Hoje, sem ser preciso vir cá ver.
         </p>
       ) : (
         <div className="osStats">
@@ -155,7 +155,7 @@ export default function Revenue({
         ) : (
           <p className="osEmpty">
             Ainda não há valores registados. O histórico anterior ao CarolOS não foi reconstruído —
-            a partir daqui fica tudo guardado.
+            a partir daqui fica tudo salvo.
           </p>
         )}
         <AddPayment brands={brands} />

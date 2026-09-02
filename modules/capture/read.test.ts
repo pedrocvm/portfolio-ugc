@@ -109,15 +109,15 @@ test('fora do foco não é um não: diz o que é, sem julgar a marca', () => {
 
 /* ── o que acontece a seguir ────────────────────────────────────────────── */
 
-/** Substitui a lista de ausências. Ela não precisa de saber que campos ficaram
- *  vazios — precisa de saber que alguém trata deles. */
-test('sem contacto, promete procurá-lo em vez de listar o que falta', () => {
+/** Substitui a lista de ausências. Ela não precisa saber que campos ficaram
+ *  vazios — precisa saber que alguém trata deles. */
+test('sem contato, promete procurá-lo em vez de listar o que falta', () => {
   const r = readCapture(factos({ brandName: 'Systekshop' }), FOCO);
-  assert.match(r.next, /vou procurar quem contactar/i);
+  assert.match(r.next, /vou procurar quem contatar/i);
   assert.deepEqual(r.blocking, []);
 });
 
-test('com contacto, não promete procurar o que já tem', () => {
+test('com contato, não promete procurar o que já tem', () => {
   const r = readCapture(factos({ brandName: 'X', contactEmail: 'a@b.pt' }), FOCO);
   assert.match(r.next, /já ligado/i);
 });
@@ -127,9 +127,9 @@ test('uma conversa com um pedido vira oportunidade, e diz isso', () => {
   assert.match(r.next, /oportunidade/i);
 });
 
-test('uma marca excluída não promete prospecção nenhuma', () => {
+test('uma marca excluída não promete prospeção nenhuma', () => {
   const r = readCapture(factos({ brandName: 'Creme X', nicheId: 'beauty' }), FOCO);
-  assert.match(r.next, /registo/i);
+  assert.match(r.next, /registro/i);
   assert.doesNotMatch(r.next, /vou procurar/i);
 });
 

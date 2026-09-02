@@ -17,7 +17,7 @@ import { researchCandidate } from './research';
  *  escrito e ordena por relevância ao pedido. Misturá-las foi o que fez
  *  «hotéis» devolver apps.
  *
- *  Também não guarda nada no CRM: uma busca exploratória não tem de sujar a
+ *  Também não salva nada no CRM: uma busca exploratória não tem de sujar a
  *  base. O resultado fica marcado `saved = false` até ela decidir. */
 
 export type ManualResult = {
@@ -202,7 +202,7 @@ export async function runManualSearch(
 
   if (rows.length) {
     const { error } = await db.from('outreach_candidate').insert(rows);
-    if (error) failures.push('Encontrei marcas mas não as consegui guardar.');
+    if (error) failures.push('Encontrei marcas mas não as consegui salvar.');
   }
 
   return finish(rows.length, failures.length ? 'partial' : 'success');

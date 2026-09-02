@@ -1,6 +1,6 @@
 /** Dinheiro é sempre um inteiro em cêntimos. Nenhuma operação comercial do
  *  CarolOS pode passar por vírgula flutuante: somar 0.1 + 0.2 uma vez basta
- *  para uma proposta sair com um cêntimo a menos e ninguém perceber porquê. */
+ *  para uma proposta sair com um cêntimo a menos e ninguém entender porquê. */
 
 export type Currency = 'EUR' | 'USD' | 'GBP' | 'BRL';
 

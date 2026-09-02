@@ -41,7 +41,7 @@ export default function Documents({
   /* trocar de separador fecha o que estiver aberto: o formulário é de outro
      tipo e os campos não têm nada a ver uns com os outros */
   function trocar(proximo: DocKind) {
-    if (dirty && !confirm('Há alterações por guardar. Sair mesmo assim?')) return;
+    if (dirty && !confirm('Há alterações por salvar. Sair mesmo assim?')) return;
     setKind(proximo);
     setOpenId(null);
     setDirty(false);
@@ -76,7 +76,7 @@ export default function Documents({
     if (!openId) return;
     start(async () => {
       const r = await saveDoc(openId, kind, data);
-      setMsg(r.error ?? 'Guardado.');
+      setMsg(r.error ?? 'Salvo.');
       if (!r.error) setDirty(false);
       router.refresh();
     });
@@ -97,10 +97,10 @@ export default function Documents({
       <div className="dashBar noPrint">
         <h1>Documentos</h1>
         <span className="dashState" data-tone={dirty ? 'dirty' : undefined}>
-          {pending ? <Spinner label="A guardar" /> : null}
+          {pending ? <Spinner label="Salvando" /> : null}
           {pending
-            ? 'A processar'
-            : msg ?? (dirty ? 'Alterações por guardar' : `${rows.length} guardados`)}
+            ? 'Processando'
+            : msg ?? (dirty ? 'Alterações por salvar' : `${rows.length} salvos`)}
         </span>
         {openId ? (
           <>
@@ -118,7 +118,7 @@ export default function Documents({
               disabled={dirty}
               title={
                 dirty
-                  ? 'Guarda antes de imprimir.'
+                  ? 'Salva antes de imprimir.'
                   : 'Na janela que abre, desliga «Cabeçalhos e rodapés» para a folha sair sem margens.'
               }
             >
@@ -130,7 +130,7 @@ export default function Documents({
               onClick={save}
               disabled={pending || !dirty}
             >
-              Guardar
+              salvar
             </button>
           </>
         ) : (

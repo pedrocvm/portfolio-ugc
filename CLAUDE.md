@@ -30,3 +30,5 @@ Oito regras que não se mudam sem uma decisão explícita:
 Regras puras vivem em `modules/<área>/domain.ts` e têm teste. Acesso a dados
 vive em `service.ts`, marcado `server-only`. Um componente de cliente nunca
 importa de um `service.ts`.
+
+É proibido permanentemente e inegociavelmente usar PT-PT... Use sempre PT-BR, independente do caso.

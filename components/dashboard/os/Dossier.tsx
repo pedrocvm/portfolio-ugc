@@ -54,7 +54,7 @@ export default function Dossier({
                 })
               }
             >
-              {pending ? 'A ler o que sabemos…' : dossier ? 'Voltar a analisar' : 'Analisar a marca'}
+              {pending ? 'A ler o que sabemos…' : dossier ? 'analisar de novo' : 'Analisar a marca'}
             </button>
             {generatedAt ? <span className="osRowSub">último a {formatDate(generatedAt)}</span> : null}
           </div>

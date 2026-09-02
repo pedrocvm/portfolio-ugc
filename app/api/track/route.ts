@@ -7,7 +7,7 @@ const cut = (v: unknown, n: number) =>
   typeof v === 'string' ? v.slice(0, n) : '';
 
 /** Só o domínio de origem. O caminho completo diria que página a pessoa
- *  estava a ler, e isso não é preciso para saber de onde vêm as visitas. */
+ *  estava lendo, e isso não é preciso para saber de onde vêm as visitas. */
 function origem(referrer: unknown) {
   const raw = cut(referrer, 500);
   if (!raw) return '';

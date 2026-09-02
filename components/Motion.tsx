@@ -6,7 +6,7 @@ export default function Motion() {
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* os vídeos da sessão só carregam ao aproximarem-se do ecrã, e o primeiro
+    /* os vídeos da sessão só carregam ao aproximarem-se do tela, e o primeiro
        fotograma fica visível assim que carregam — não dependem de "motion
        reduzido" porque não são decorativos, são o conteúdo em si */
     document

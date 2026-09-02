@@ -1,7 +1,7 @@
 /** O dia, em três estados.
  *
  *  A fila antiga misturava duas coisas muito diferentes: o que precisa de uma
- *  decisão dela, e o que o sistema já está a fazer e vai acabar sozinho. Postas
+ *  decisão dela, e o que o sistema já está fazendo e vai acabar sozinho. Postas
  *  na mesma lista, as segundas parecem trabalho — e uma lista de dez em que
  *  seis não são para ela é uma lista que ensina a não confiar na lista.
  *
@@ -36,7 +36,7 @@ export type BackgroundInput = {
   scheduledFollowUps: readonly { brandName: string; dueAt: string }[];
   /** Cartões que ela adiou. */
   snoozed: readonly { brandName: string; title: string; until: string }[];
-  /** Buscas de prospecção a decorrer agora. */
+  /** Buscas de prospeção a decorrer agora. */
   runningSearches: number;
   /** Pagamentos com data futura. Em atraso não entram: esses são fila. */
   pendingPayments: readonly { brandName: string; amountCents: number; currency: string; dueAt: string }[];
@@ -58,7 +58,7 @@ function quando(at: string, now: Date): string {
   return `daqui a ${Math.round(d / 7)} semanas`;
 }
 
-/** O que o CarolOS está a tratar, em frases que não pedem nada.
+/** O que o CarolOS está tratando, em frases que não pedem nada.
  *
  *  Ordenado pelo que volta a mexer mais cedo. Sem data vai para o fim: uma
  *  busca a decorrer não tem prazo, tem duração. */
@@ -125,7 +125,7 @@ export function describeBackground(input: BackgroundInput): BackgroundItem[] {
 /** A frase de fecho do dia.
  *
  *  Só aparece quando não há nada para ela. É o oposto de uma notificação: diz
- *  que pode fechar, e diz o que continua a acontecer sem ela — que é o que
+ *  que pode fechar, e diz o que continua acontecendo sem ela — que é o que
  *  torna «não há nada» crível em vez de suspeito. */
 export function closingLine(background: readonly BackgroundItem[]): string {
   if (background.length === 0) {

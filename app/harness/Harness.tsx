@@ -99,9 +99,9 @@ const CONTAS = { openOpportunities: 12, dueFollowUps: 3, needsReview: 2, overdue
 const TOMADAS = [
   { shot: 'Gancho: mostrar a janela suja', note: 'Plano fechado, 3-5s. Luz natural de lado.', required: true },
   { shot: 'Produto a sair da caixa', note: 'Mãos em primeiro plano.', required: true },
-  { shot: 'A limpar, em movimento contínuo', note: '8-10s sem cortes.', required: true },
+  { shot: 'Limpando, em movimento contínuo', note: '8-10s sem cortes.', required: true },
   { shot: 'Antes e depois, lado a lado', required: true },
-  { shot: 'Reacção à cara', note: 'Sem falar. Só a expressão.', required: true },
+  { shot: 'Reação à cara', note: 'Sem falar. Só a expressão.', required: true },
   { shot: 'Plano do detalhe do vidro', required: false },
   { shot: 'Vista da sala com a janela limpa', required: false },
 ];
@@ -112,7 +112,7 @@ const TOMADAS = [
 const MANHA = {
   date: '2026-09-02',
   status: 'partial' as const,
-  headline: '4 coisas precisam de si — cerca de 6 minutos.',
+  headline: '4 coisas precisam de você — cerca de 6 minutos.',
   decisionCount: 4,
   estimatedMinutes: 6,
   openedAt: null,
@@ -157,7 +157,7 @@ const MANHA = {
         threadId: '00000000-0000-4000-8000-000000000001',
         draftSubject: 'Re: Colaboração UGC — briefing aprovado',
         draftBody:
-          'Olá, Julia,\n\nÓptimo saber que o briefing está aprovado. Fico à espera do produto e aviso assim que chegar, com a data de gravação.\n\nAté já,\nCarol',
+          'Olá, Julia,\n\nótimo saber que o briefing está aprovado. Fico à espera do produto e aviso assim que chegar, com a data de gravação.\n\nAté já,\nCarol',
         replyTo: 'julia@cecotec.pt',
         whatChanged: 'Aprovaram o briefing e enviaram o produto.',
         whatIsMissing: '',
@@ -183,7 +183,7 @@ const MANHA = {
       id: 'outreach:batch',
       kind: 'outreach_batch',
       subject: 'Marcas novas',
-      headline: 'Tenho 6 emails de prospecção prontos.',
+      headline: 'Tenho 6 emails de prospeção prontos.',
       because: '4 destas marcas já têm referências e um conceito separado.',
       covers: 6,
       weightCents: null,
@@ -264,7 +264,7 @@ export default function Harness({ modo }: { modo?: string }) {
         doneToday: 5,
         insights: [],
         // `modo=fila` mostra o Hoje sem manhã preparada, e `modo=passos` tira
-        // a resposta da frente: sem sessão nenhuma acção de servidor corre, e
+        // a resposta da frente: sem sessão nenhuma ação de servidor corre, e
         // essa é a única decisão do fluxo que precisa de uma para avançar.
         morning:
           modo === 'fila'

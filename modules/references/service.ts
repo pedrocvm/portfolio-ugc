@@ -43,7 +43,7 @@ export type ReferenceRunResult = {
   failures: string[];
 };
 
-/** Quantas marcas por corrida. A prospecção traz 5-10; isto acompanha. */
+/** Quantas marcas por corrida. A prospeção traz 5-10; isto acompanha. */
 const MAX_CANDIDATES = 10;
 
 export async function runReferencePass(
@@ -127,7 +127,7 @@ export type CandidateReferenceResult = {
   error: string | null;
 };
 
-/** Procura, analisa, ordena, guarda — e transforma numa ideia gravável. */
+/** Procura, analisa, ordena, salva — e transforma numa ideia gravável. */
 export async function referencesForCandidate(input: {
   candidateId: string;
   name: string;
@@ -243,10 +243,10 @@ export async function referencesForCandidate(input: {
     return { saved: 0, idea: false, error: null };
   }
 
-  // ── 3. Guardar ──────────────────────────────────────────────────────────
+  // ── 3. Salvar ──────────────────────────────────────────────────────────
   let saved = 0;
   const problemas: string[] = [];
-  const guardadas: { ref: Reference; link: ReferenceLink }[] = [];
+  const salvas: { ref: Reference; link: ReferenceLink }[] = [];
 
   for (const [i, item] of top.entries()) {
     const url = normalizeReferenceUrl(item.ref.sourceUrl);
@@ -308,10 +308,10 @@ export async function referencesForCandidate(input: {
     }
 
     saved++;
-    guardadas.push({ ref: item.ref, link: item.link });
+    salvas.push({ ref: item.ref, link: item.link });
   }
 
-  // Guardar zero depois de analisar três não é «não encontrei»: é uma falha, e
+  // Salvar zero depois de analisar três não é «não encontrei»: é uma falha, e
   // tem de se ver na tela com o motivo.
   if (saved === 0) {
     await db
@@ -319,14 +319,14 @@ export async function referencesForCandidate(input: {
       .update({
         references_state: 'failed',
         references_at: new Date().toISOString(),
-        references_note: `Analisei ${top.length} mas não consegui guardar nenhuma: ${problemas[0] ?? 'motivo desconhecido'}`.slice(0, 300),
+        references_note: `Analisei ${top.length} mas não consegui salvar nenhuma: ${problemas[0] ?? 'motivo desconhecido'}`.slice(0, 300),
       })
       .eq('id', input.candidateId);
-    return { saved: 0, idea: false, error: problemas[0] ?? 'Não consegui guardar as referências.' };
+    return { saved: 0, idea: false, error: problemas[0] ?? 'Não consegui salvar as referências.' };
   }
 
   // ── 4. Da referência para o que ela grava ───────────────────────────────
-  const idea = await readyIdeaFor(input, guardadas);
+  const idea = await readyIdeaFor(input, salvas);
 
   await db
     .from('outreach_candidate')
@@ -349,7 +349,7 @@ export async function referencesForCandidate(input: {
   return { saved, idea: Boolean(idea), error: null };
 }
 
-/** A ideia pronta a gravar, a partir das referências guardadas. */
+/** A ideia pronta a gravar, a partir das referências salvas. */
 async function readyIdeaFor(
   input: { candidateId: string; name: string; product: string },
   refs: readonly { ref: Reference; link: ReferenceLink }[],

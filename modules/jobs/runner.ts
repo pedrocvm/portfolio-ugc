@@ -48,9 +48,9 @@ export function processedCount(result: JobResult): number {
 
 /** O que correu mal, tirado do detalhe do trabalho.
  *
- *  Um trabalho pode devolver `success` e ter falhado metade — a prospecção
+ *  Um trabalho pode devolver `success` e ter falhado metade — a prospeção
  *  encontra marcas e não consegue escrever três emails. Quem lê a manhã precisa
- *  de saber isso, e o único sítio onde essa informação existe é aqui. */
+ *  de saber isso, e o único lugar onde essa informação existe é aqui. */
 function failuresOf(result: JobResult): string[] {
   const d = result.detail as Record<string, unknown>;
   const list = Array.isArray(d.failures) ? d.failures : [];
@@ -87,7 +87,7 @@ async function record(job: JobName, result: JobResult): Promise<void> {
       error_summary: falhas[0]?.slice(0, 500) ?? null,
     });
   } catch {
-    // Um registo que falha não pode derrubar o trabalho que correu bem.
+    // Um registro que falha não pode derrubar o trabalho que correu bem.
   }
 }
 
@@ -152,7 +152,7 @@ async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobRes
 
       case 'outreach': {
         if (!flags.daily_outreach) {
-          return { job, status: 'skipped', detail: { reason: 'o interruptor «Prospecção diária» está desligado.' } };
+          return { job, status: 'skipped', detail: { reason: 'o interruptor «Prospeção diária» está desligado.' } };
         }
         const { runDailyOutreach } = await import('@/modules/outreach/pipeline');
         const r = await runDailyOutreach({ kind: 'daily' });

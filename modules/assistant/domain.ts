@@ -117,7 +117,7 @@ export const OFF_TOPIC_REPLY =
 export type Turn = { role: 'user' | 'assistant'; content: string; id: string };
 
 /** Mandar a conversa toda a cada mensagem é pagar duas vezes pelo mesmo texto.
- *  Guarda-se tudo, envia-se o fim — e o princípio vai como resumo. */
+ *  salva-se tudo, envia-se o fim — e o princípio vai como resumo. */
 export function windowTurns(turns: readonly Turn[], keep = 12): {
   recent: Turn[];
   needsSummary: boolean;

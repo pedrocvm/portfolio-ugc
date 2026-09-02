@@ -60,7 +60,7 @@ export const daysBetween = (a: Date, b: Date) =>
 export const isOverdue = (due: string | null | undefined, now = new Date()) =>
   Boolean(due) && new Date(due as string).getTime() <= now.getTime();
 
-/** «há 3 dias», «amanhã», «hoje». Usado nos cartões, onde a data exacta pesa
+/** «há 3 dias», «amanhã», «hoje». Usado nos cartões, onde a data exata pesa
  *  mais do que ajuda. */
 export function relativeDays(target: string | Date, now = new Date()) {
   const at = typeof target === 'string' ? new Date(target) : target;

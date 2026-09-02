@@ -17,13 +17,13 @@ import type { Decision } from '@/modules/morning/domain';
 
 /** A manhã, uma decisão de cada vez.
  *
- *  A diferença para o modo focus antigo é a única que interessa: aqui a acção
+ *  A diferença para o modo focus antigo é a única que interessa: aqui a ação
  *  produtiva RESOLVE-SE dentro da fila. Antes, das quatro escolhas, três faziam
  *  avançar e a única que trabalhava navegava para fora e destruía a fila — o
  *  modo focus só funcionava para quem não queria trabalhar.
  *
  *  Cada tipo de decisão tem a sua própria forma, mas a arquitectura é a mesma:
- *  resumo por cima, acção preparada no meio, e três botões — fazer, mudar,
+ *  resumo por cima, ação preparada no meio, e três botões — fazer, mudar,
  *  depois. */
 
 const NUDGES = [
@@ -53,7 +53,7 @@ export default function MorningFlow({
   const caixa = useRef<HTMLDivElement>(null);
 
   const restantes = decisions.filter((d) => !resolvidas.includes(d.id));
-  const actual = restantes[Math.min(at, Math.max(0, restantes.length - 1))];
+  const atual = restantes[Math.min(at, Math.max(0, restantes.length - 1))];
   const acabou = restantes.length === 0;
 
   const abrir = useCallback(() => {
@@ -133,8 +133,8 @@ export default function MorningFlow({
                   Fechar
                 </button>
               </div>
-            ) : actual ? (
-              <Step key={actual.id} decision={actual} onResolved={() => resolver(actual.id)} onSkip={() => resolver(actual.id)} />
+            ) : atual ? (
+              <Step key={atual.id} decision={atual} onResolved={() => resolver(atual.id)} onSkip={() => resolver(atual.id)} />
             ) : null}
           </div>
         </div>
@@ -286,7 +286,7 @@ function ReplyStep({
         {confirmar ? (
           <>
             <button className="osGo" type="button" disabled={pending} onClick={enviar}>
-              {pending ? <Spinner label="A enviar" /> : null}
+              {pending ? <Spinner label="Enviando" /> : null}
               Sim, enviar
             </button>
             <button className="osPageBtn" type="button" disabled={pending} onClick={() => setConfirmar(false)}>
@@ -313,7 +313,7 @@ function ReplyStep({
   );
 }
 
-/** Conteúdo: o plano por cima, e três saídas — gravar, guardar, outra ideia. */
+/** Conteúdo: o plano por cima, e três saídas — gravar, salvar, outra ideia. */
 function ContentStep({
   decision,
   onResolved,
@@ -334,7 +334,7 @@ function ContentStep({
 
   const decidir = (status: string, frase: string) =>
     start(async () => {
-      const r = await decideOnIdea(ideaId, status).catch(() => ({ error: 'Não consegui guardar agora.' }));
+      const r = await decideOnIdea(ideaId, status).catch(() => ({ error: 'Não consegui salvar agora.' }));
       if (r.error) {
         setErro(r.error);
         return;
@@ -393,9 +393,9 @@ function ContentStep({
           className="osPageBtn"
           type="button"
           disabled={pending}
-          onClick={() => decidir('saved', `«${decision.headline}» ficou guardada.`)}
+          onClick={() => decidir('saved', `«${decision.headline}» ficou salva.`)}
         >
-          Guardar para depois
+          salvar para depois
         </button>
         <button className="osPageBtn" type="button" disabled={pending} onClick={() => setATrocar((v) => !v)}>
           Quero outra
@@ -408,7 +408,7 @@ function ContentStep({
   );
 }
 
-/** Dinheiro, prospecção e gravação: a acção vive noutra tela, mas o cartão diz
+/** Dinheiro, prospeção e gravação: a ação vive noutra tela, mas o cartão diz
  *  tudo o que é preciso saber antes de lá ir. */
 function LinkStep({ decision, onSkip }: { decision: Decision; onSkip: () => void }) {
   const cta =

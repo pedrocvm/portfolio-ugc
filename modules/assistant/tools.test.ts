@@ -9,7 +9,7 @@ import { HIGH_RISK, needsConfirmetion } from './domain';
  *  `tools.ts` importa o cliente do Supabase e meia dúzia de módulos
  *  `server-only`: carregá-lo neste runner não é possível. O que se verifica
  *  aqui é a forma — que classificação cada ferramenta declara, e que o gate
- *  está mesmo ligado no sítio onde as ferramentas correm.
+ *  está mesmo ligado no lugar onde as ferramentas correm.
  *
  *  É mais fraco do que exercitar o orquestrador, e diz-se. Mas o que estes
  *  testes protegem é a regra 3 do CarolOS — nada sai para fora sozinho — e
@@ -66,8 +66,8 @@ test('nenhuma ferramenta de alto risco está registada', () => {
  *  primeira excepção. */
 test('nenhuma ferramenta envia seja o que for', () => {
   // `sendReply` e `sendPreparedReply` são o caminho novo do envio de dentro do
-  // CarolOS. Continuam a exigir um clique dela, e por isso nenhuma ferramenta
-  // do assistente lhes pode chegar — nem por importação directa.
+  // CarolOS. Continuam exigindo um clique dela, e por isso nenhuma ferramenta
+  // do assistente lhes pode chegar — nem por importação direta.
   const suspeitas = [
     /\bsendCandidate\b/, /\bsendApprovedOutreach\b/, /\bsendOutreach\b/, /messages\/send/,
     /\bsendReply\b/, /\bsendPreparedReply\b/, /email\/send-service/,
@@ -146,10 +146,10 @@ test('preparar uma resposta diz, no que devolve, que não enviou', () => {
   const i = TOOLS.indexOf("'prepare_reply'");
   assert.ok(i > 0, 'a ferramenta de preparar resposta desapareceu');
   const corpo = TOOLS.slice(i, TOOLS.indexOf('\n);', i));
-  assert.match(corpo, /exigir o sim dela/);
+  assert.match(corpo, /exigindo o sim dela/);
 });
 
-/** O gate tem de estar no sítio onde as ferramentas correm — não só na lista
+/** O gate tem de estar no lugar onde as ferramentas correm — não só na lista
  *  onde são declaradas. Uma lista certa e um executor sem verificação é uma
  *  garantia que dura até ao próximo `define`. */
 test('o orquestrador recusa alto risco antes de correr a ferramenta', () => {

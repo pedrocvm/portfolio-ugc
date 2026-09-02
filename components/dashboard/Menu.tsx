@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SECTIONS, UTILITY, isCurrent, sectionFor } from './nav';
 
-/** O carril. Cinco secções e duas utilidades — e mais nada.
+/** O carril. Cinco seções e duas utilidades — e mais nada.
  *
  *  O acordeão saiu. Um acordeão é um menu que pede para ser operado antes de
- *  levar a algum lado: abrir o grupo, ler, escolher. Agora a secção é o
+ *  levar a algum lado: abrir o grupo, ler, escolher. Agora a seção é o
  *  destino, e o que está lá dentro só aparece depois de se lá estar. */
 export default function Menu() {
   const path = usePathname();

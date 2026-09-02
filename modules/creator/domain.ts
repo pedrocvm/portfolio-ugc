@@ -2,7 +2,7 @@
  *  dela de uma ideia de qualquer creator.
  *
  *  Os pilares e a estratégia vivem em `strategy.ts`, que é a auditoria do
- *  Instagram feita estrutura. Este ficheiro é o que decide, caso a caso, se uma
+ *  Instagram feita estrutura. Este arquivo é o que decide, caso a caso, se uma
  *  ideia concreta passa.
  *
  *  Três regras governam-no:
@@ -87,7 +87,7 @@ export function pillarDebt(
  *
  *  Primeiro o que está mais em falta face ao peso alvo; entre iguais, o que
  *  não sai há mais tempo. Sem história nenhuma, a ordem é a dos pesos — o que
- *  põe «A sala» em primeiro, que é exactamente o que a auditoria diz que está
+ *  põe «A sala» em primeiro, que é exatamente o que a auditoria diz que está
  *  a ser desperdiçado. */
 export function pillarPriority(
   history: readonly { pillar: string; at: string }[],
@@ -183,7 +183,7 @@ export function isRepeat(
  *
  *  Isto comparava o título da tendência com o texto da ideia por igualdade de
  *  cadeia — exigia que o modelo repetisse o título ao caractere, o que nunca
- *  aconteceu. Resultado: `trend_ids` sempre vazio, e a secção «de onde veio»
+ *  aconteceu. Resultado: `trend_ids` sempre vazio, e a seção «de onde veio»
  *  sempre em branco numa tela que promete que toda a tendência é clicável.
  *
  *  Compara-se agora por sobreposição de palavras, que é como se reconhece um
@@ -205,10 +205,10 @@ export function matchTrends<T extends { id: string; title: string; description?:
 /* ── «A Carol é substituível?» ────────────────────────────────────────────── */
 
 /** Marcas do que só ela tem. Não é uma lista de palavras-chave bonita: cada
- *  uma sai de um facto da auditoria — dez anos de sala, o namorado que
+ *  uma sai de um fato da auditoria — dez anos de sala, o namorado que
  *  constrói, a rosácea, a Paraíba, a casa a nascer. */
 const SIGNATURE = [
-  /\b(sala|mesa|pedido|turno|servi[çc]o|restaurante|fine dining|ementa|cliente|gar[çc]on|atend|maitre|ma[îi]tre|pizzaria|bal[cç][ãa]o)\b/i,
+  /\b(sala|mesa|pedido|turno|servi[çc]o|restaurante|fine dining|ementa|cliente|gar[çc]on|card[áa]pio|atend|maitre|ma[îi]tre|pizzaria|bal[cç][ãa]o)\b/i,
   /\b(namorado|ele construiu|ele fez|a dois|casa nova|apartamento|mud[áa]mos|c[ée]tic|emburrad|sem facilitar|[àa] bruta)\b/i,
   /\b(ros[áa]cea|pele a arder|pele reativa|cabelo estragado|incêndio|bombeiro)\b/i,
   /\b(para[íi]ba|\bPB\b|porto|braga|brasileira em portugal|sotaque|portugu[êe]s de portugal)\b/i,
@@ -219,7 +219,7 @@ const SIGNATURE = [
  *  de UGC?»
  *
  *  É o teste mais importante que a auditoria propõe, e o mais fácil de falhar
- *  sem dar por isso: uma ideia correcta, bem escrita e completamente anónima
+ *  sem dar por isso: uma ideia correta, bem escrita e completamente anónima
  *  passa em todos os outros portões. */
 export function replaceability(idea: {
   hook: string;
@@ -270,9 +270,9 @@ export function guruProblems(idea: { hook: string; title?: string; script?: stri
 /* ── Anti-catálogo ────────────────────────────────────────────────────────── */
 
 /** Uma peça que é só produto bonito, lista de funcionalidades ou montagem
- *  estética. Continua a valer como portefólio; não vale como post orgânico.
+ *  estética. Continua valendo como portfólio; não vale como post orgânico.
  *
- *  A auditoria chama-lhe o erro do perfil actual: quarenta e cinco por cento do
+ *  A auditoria chama-lhe o erro do perfil atual: quarenta e cinco por cento do
  *  grid é inventário de cliente, e é onde ela desaparece do próprio feed. */
 export function catalogProblems(idea: {
   hook: string;
@@ -287,17 +287,17 @@ export function catalogProblems(idea: {
     out.push('é montagem muda: sem voz dela, qualquer creator europeia a substitui');
   }
   // Sem `\b` a fechar: o «:» não é caractere de palavra, e `\binclui:\b`
-  // nunca casa. É o terceiro sítio hoje onde a fronteira de palavra do
+  // nunca casa. É o terceiro lugar hoje onde a fronteira de palavra do
   // JavaScript me apanhou — ela só conhece [A-Za-z0-9_].
   if (/(\bfuncionalidades\b|\bfeatures\b|\bm[óo]dulos\b|\binclui\s*:|\btudo o que (o|a) \w+ faz)/i.test(texto)) {
     out.push('é uma lista de funcionalidades, não uma história');
   }
 
-  // Inglês de stock no ecrã. A auditoria nomeia os três casos reais.
+  // Inglês de stock no tela. A auditoria nomeia os três casos reais.
   const stock = (idea.onScreenText ?? []).filter((t) =>
     /^\s*(home|rituals|welcome to my|unwind|my daily|self ?care|good vibes)\b/i.test(t),
   );
-  if (stock.length) out.push(`tem inglês de stock no ecrã (${stock[0]})`);
+  if (stock.length) out.push(`tem inglês de stock no tela (${stock[0]})`);
 
   return out;
 }
@@ -375,7 +375,7 @@ export type QualityDims = {
    *  vídeo é de qualquer pessoa. */
   carolIdentity: number;
   story: number;
-  /** Prova no plano: ecrã, produto na mão, antes/depois. Não é slogan. */
+  /** Prova no plano: tela, produto na mão, antes/depois. Não é slogan. */
   proof: number;
   humanConflict: number;
   /** O que um comprador de marca aprende sobre a competência dela. */
@@ -413,7 +413,7 @@ export function qualityVerdict(dims: Partial<QualityDims>): {
     [(dims.carolIdentity ?? 100) < 40, 'Qualquer creator gravava isto trocando o rosto.'],
     [(dims.originality ?? 100) < 40, 'Isto podia ser de qualquer pessoa. Não vale gravar.'],
     [(dims.recordability ?? 100) < 40, 'Boa ideia, mas não dá para gravar sozinha.'],
-    [(dims.authorityWithoutPreaching ?? 100) < 40, 'Põe-na a dar aulas — não é o sítio dela.'],
+    [(dims.authorityWithoutPreaching ?? 100) < 40, 'Põe-na a dar aulas — não é o lugar dela.'],
   ];
 
   const falhou = vetos.find(([v]) => v);
@@ -437,7 +437,7 @@ export function genericProblems(idea: { hook: string; script?: string; title?: s
   }
   // «Mastigado significa mastigado»: sem guião, não é trabalho preparado.
   if ((idea.script ?? '').trim().split(/\s+/).filter(Boolean).length < 30) {
-    out.push('não há guião suficiente para pegar no telemóvel e gravar');
+    out.push('não há guião suficiente para pegar no celular e gravar');
   }
   return out;
 }
@@ -450,9 +450,9 @@ export function genericProblems(idea: { hook: string; script?: string; title?: s
 export const PLATFORM_BRIEF: Record<Platform, { objective: string; treatment: string; avoid: string }> = {
   instagram: {
     objective:
-      'Autoridade e prova de competência. O vídeo é portefólio: uma marca que o veja tem de perceber que ela sabe o que faz.',
+      'Autoridade e prova de competência. O vídeo é portfólio: uma marca que o veja tem de entender que ela sabe o que faz.',
     treatment:
-      'Mais cuidado, mais limpo, identidade visual consistente. Feito para guardar e partilhar. Legenda que acrescenta, não que repete.',
+      'Mais cuidado, mais limpo, identidade visual consistente. Feito para salvar e partilhar. Legenda que acrescenta, não que repete.',
     avoid: 'Espontaneidade descuidada; humor interno de creators; conteúdo que só faz sentido para quem já a segue.',
   },
   tiktok: {
@@ -561,10 +561,10 @@ export function estimateMinutes(idea: {
 
 /* ── Um portão só ─────────────────────────────────────────────────────────── */
 
-/** Tudo o que reprova uma ideia, num sítio.
+/** Tudo o que reprova uma ideia, num lugar.
  *
  *  Existia espalhado — genérico aqui, repetição ali — e a auditoria acrescentou
- *  três verificações novas. Quatro chamadas em quatro sítios é como uma delas
+ *  três verificações novas. Quatro chamadas em quatro sites é como uma delas
  *  se esquece no caminho seguinte. */
 export function ideaProblems(idea: {
   hook: string;

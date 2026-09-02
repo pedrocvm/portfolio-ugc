@@ -9,8 +9,8 @@ export const CONTENT_TAG = 'site-content';
 export const MEDIA_TAG = 'library-media';
 
 /** Publicar e mexer na biblioteca invalidam logo pela etiqueta; isto é para o
- *  outro caso: uma leitura que falhou guarda um resultado vazio, e sem prazo
- *  esse vazio ficava no site até alguém voltar a publicar. Cinco minutos é o
+ *  outro caso: uma leitura que falhou salva um resultado vazio, e sem prazo
+ *  esse vazio ficava no site até alguém publicar de novo. Cinco minutos é o
  *  tempo máximo que um engano desses sobrevive. */
 const REPESCAGEM = 300;
 

@@ -5,7 +5,7 @@ import { useId } from 'react';
 /** Escolher o país sem sair do teclado.
  *
  *  Um `<datalist>` e não um combobox à mão: o browser já sabe filtrar enquanto
- *  se escreve, já é navegável por teclado e já é lido pelos leitores de ecrã.
+ *  se escreve, já é navegável por teclado e já é lido pelos leitores de tela.
  *  Escrever isso outra vez em JavaScript era garantir uma versão pior. */
 
 export const COUNTRIES = [

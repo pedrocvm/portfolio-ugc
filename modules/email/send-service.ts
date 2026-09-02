@@ -10,7 +10,7 @@ import { rememberEdit } from './triage-service';
  *  tudo e não fechava nada. Todo o trabalho acabava noutra aplicação.
  *
  *  A regra 3 do CarolOS — nada sai para fora sozinho — continua intacta, e é
- *  importante perceber porquê: essa regra protege o ENVIO, não a preparação.
+ *  importante entender porquê: essa regra protege o ENVIO, não a preparação.
  *  Aqui há sempre um clique dela, e não existe caminho por onde um trabalho de
  *  fundo chegue a esta função. `external_send` continua fechada, e é a
  *  bandeira que governaria envio SEM aprovação — que não é isto.
@@ -36,7 +36,7 @@ export function validateReply(input: { to: string | null; subject: string; body:
  *
  *  Depois de sair: o evento fica no histórico, o follow-up pendente é
  *  cancelado — quem respondeu foi ela, e insistir a seguir seria ridículo — e
- *  a correcção que ela fez ao rascunho vira memória de voz. */
+ *  a correção que ela fez ao rascunho vira memória de voz. */
 export async function sendReply(input: {
   threadId: string;
   body: string;

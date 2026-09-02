@@ -172,7 +172,7 @@ export type ParsedBrief = z.infer<typeof BriefSchema>;
 /** ── brand_dossier ─────────────────────────────────────────────────────── */
 /** Os sinais que o motor de encaixe pontua, um por critério e todos nomeados.
  *
- *  Era um `z.record` nos dois sítios que o usam. O Gemini não sabe o que pôr num
+ *  Era um `z.record` nos dois sites que o usam. O Gemini não sabe o que pôr num
  *  objeto sem propriedades declaradas: aceitava o pedido e devolvia `{}`, todos
  *  os critérios ficavam por saber, e como desconhecido conta como neutro todas
  *  as marcas saíam com a mesma nota. Um erro seria melhor do que isto, porque
@@ -281,7 +281,7 @@ export const DailyReadSchema = z.object({
 });
 export type DailyRead = z.infer<typeof DailyReadSchema>;
 
-/* ── Prospecção diária ──────────────────────────────────────────────────── */
+/* ── Prospeção diária ──────────────────────────────────────────────────── */
 
 export const OutreachStyleSchema = z.object({
   formality: z.string(),
@@ -299,7 +299,7 @@ export const OutreachResearchSchema = z.object({
   product: z.string().nullable(),
   category: z.string().nullable(),
   /** Onde estão, de verdade. Um site em português não faz uma empresa
-   *  portuguesa: só conta com prova — morada, registo, domínio nacional. */
+   *  portuguesa: só conta com prova — endereço, registro, domínio nacional. */
   city: z.string().nullable().describe('cidade da sede, se houver prova'),
   country: z.string().nullable().describe('país da sede, com prova; null se não souberes'),
   why_fit: z.string(),
@@ -327,16 +327,16 @@ export const OutreachResearchSchema = z.object({
       email: z.string().nullable(),
       /** Só se for mesmo WhatsApp: um fixo aqui é pior do que campo vazio. */
       whatsapp: z.string().nullable().describe('número de WhatsApp com indicativo, ou null'),
-      instagram: z.string().nullable().describe('@utilizador do perfil da marca'),
+      instagram: z.string().nullable().describe('@usuário do perfil da marca'),
       confidence: z.enum(['verified', 'high', 'medium', 'low', 'unknown']),
       source: z.string().nullable(),
     })
     .nullable(),
-  /** Cada fato usado, com o sítio onde foi visto. */
+  /** Cada fato usado, com o lugar onde foi visto. */
   sources: z.array(z.object({ label: z.string(), url: z.string().nullable() })),
   /** Onde a marca publica. É por aqui que ela vê o que já fazem antes de falar. */
   socials: z.object({
-    instagram: z.string().nullable().describe('@utilizador ou URL do perfil'),
+    instagram: z.string().nullable().describe('@usuário ou URL do perfil'),
     tiktok: z.string().nullable(),
     youtube: z.string().nullable(),
     linkedin: z.string().nullable(),
@@ -360,7 +360,7 @@ export type OutreachEmail = z.infer<typeof OutreachEmailSchema>;
 /** A leitura de uma conversa, feita de madrugada.
  *
  *  Uma chamada em vez de duas. Antes, a Carol pedia «Analisar a negociação»
- *  (30 s), lia, escolhia um objectivo num dropdown de cinco e pedia «Escrever
+ *  (30 s), lia, escolhia um objetivo num dropdown de cinco e pedia «Escrever
  *  rascunho» (25 s). Os dois passos eram o mesmo raciocínio partido ao meio, e
  *  o segundo saía muitas vezes a contradizer o primeiro. */
 export const ThreadIntelSchema = z.object({
@@ -498,7 +498,7 @@ export const ContentIdeaSchema = z.object({
   pillar: z.string(),
   objective: z.string(),
   format: z.string(),
-  /** Porquê hoje. Facto, não entusiasmo. */
+  /** Porquê hoje. fato, não entusiasmo. */
   why_now: z.string(),
   title: z.string(),
   hook: z.string(),
@@ -548,7 +548,7 @@ export const ContentIdeaSchema = z.object({
     platform_native: z.number().min(0).max(100),
     authority_without_preaching: z.number().min(0).max(100),
   }),
-  /** Que energia o dia dela precisa de ter para isto acontecer. */
+  /** Que energia o dia dela precisa ter para isto acontecer. */
   energy: z.enum(['low', 'normal', 'high']),
   /** A frase que explica porque é HOJE e não noutro dia qualquer. Vai para o
    *  Hoje ao lado da ideia — «porquê» é metade da recomendação. */

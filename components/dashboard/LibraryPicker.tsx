@@ -46,7 +46,7 @@ export default function LibraryPicker({
           </button>
         </div>
         {items === null ? (
-          <p className="hint">A carregar…</p>
+          <p className="hint">Carregando…</p>
         ) : shown.length === 0 ? (
           <p className="hint">
             A biblioteca ainda não tem nada deste tipo. Carrega arquivos na tela

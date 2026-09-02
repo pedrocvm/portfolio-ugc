@@ -1,6 +1,6 @@
 /** Verificar um endereço antes de enviar.
  *
- *  Não é um serviço pago: é o registo MX do domínio, que é público e não custa
+ *  Não é um serviço pago: é o registro MX do domínio, que é público e não custa
  *  nada. Apanha a causa mais comum de devolução — o domínio não recebe email de
  *  todo — e é a diferença entre «por confirmar» e uma resposta.
  *
@@ -33,7 +33,7 @@ export type CheckResult = {
 const SHAPE = /^[^\s@,;:<>()[\]\\"]+@[^\s@.]+(\.[^\s@.]+)+$/;
 
 const ROLE = new Set([
-  'info', 'geral', 'general', 'contact', 'contacto', 'contato', 'hello', 'ola', 'olá',
+  'info', 'geral', 'general', 'contact', 'contato', 'contato', 'hello', 'ola', 'olá',
   'support', 'suporte', 'admin', 'office', 'mail', 'email', 'sales', 'comercial',
   'noreply', 'no-reply', 'nao-responda',
 ]);

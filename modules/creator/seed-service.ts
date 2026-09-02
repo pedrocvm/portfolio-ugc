@@ -11,7 +11,7 @@ import { STRATEGY_SOURCE, STRATEGY_VERSION, ideaFingerprint } from './domain';
  *  auditoria como fonte de conhecimento com autoridade declarada, e as trinta
  *  ideias como semente.
  *
- *  Idempotente importa aqui mais do que noutro sítio: isto corre no arranque do
+ *  Idempotente importa aqui mais do que noutro lugar: isto corre no arranque do
  *  plano de conteúdo, todos os dias, e uma segunda passagem não pode duplicar
  *  trinta ideias nem apagar o que ela já decidiu sobre elas. */
 

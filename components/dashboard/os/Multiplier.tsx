@@ -69,7 +69,7 @@ export default function Multiplier({ collaborationId }: { collaborationId: strin
       ) : null}
 
       <button className="osPageBtn" type="button" disabled={pending} onClick={pedir}>
-        {pending ? <Spinner label="A pensar" /> : null}
+        {pending ? <Spinner label="Pensando" /> : null}
         {suggestions ? 'Ver outra vez' : 'O que mais posso gravar?'}
       </button>
     </div>

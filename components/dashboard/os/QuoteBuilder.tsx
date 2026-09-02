@@ -85,7 +85,7 @@ export default function QuoteBuilder({
       const final = manual.trim() ? parseMoneyToCents(manual) : null;
       const out = await saveQuote(opportunityId, scope, final, reason);
       if (out.error) return setError(out.error);
-      setSaved('Orçamento guardado. Fica congelado assim que o marcares como enviado.');
+      setSaved('Orçamento salvo. Fica congelado assim que o marcares como enviado.');
     });
 
   return (
@@ -285,7 +285,7 @@ export default function QuoteBuilder({
 
               <div className="osActs">
                 <button className="btn" type="button" disabled={pending} onClick={persist}>
-                  Guardar orçamento
+                  salvar orçamento
                 </button>
               </div>
             </>

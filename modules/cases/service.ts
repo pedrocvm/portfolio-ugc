@@ -79,7 +79,7 @@ export async function getCase(id: string): Promise<CaseRow | null> {
 
 /** Monta o rascunho do case a partir do que o sistema já sabe. A Carol edita;
  *  não reescreve do zero. Escrever um case à mão depois de cada entrega é
- *  exactamente o trabalho administrativo que ela não vai fazer. */
+ *  exatamente o trabalho administrativo que ela não vai fazer. */
 export async function draftCase(
   collaborationId: string,
   actorUserId: string,
@@ -326,7 +326,7 @@ export async function publishToPortfolio(input: {
   return { ok: true };
 }
 
-/** Retira do site sem apagar nada: o nicho vazio é exactamente o que o RLS
+/** Retira do site sem apagar nada: o nicho vazio é exatamente o que o RLS
  *  público usa para não devolver a linha. */
 export async function unpublishFromPortfolio(caseId: string) {
   const db = await supabaseServer();

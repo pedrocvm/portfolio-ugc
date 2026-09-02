@@ -33,7 +33,7 @@ test('a ordem é por nível, não por atraso', () => {
   // que nunca respondeu — o item mais morto da lista.
   const ordem = orderDecisions([
     d({ id: 'conteudo', kind: 'content', subject: 'Instagram' }),
-    d({ id: 'frio', kind: 'outreach_batch', subject: 'Prospecção', waitingDays: 40 }),
+    d({ id: 'frio', kind: 'outreach_batch', subject: 'Prospeção', waitingDays: 40 }),
     d({ id: 'resposta', kind: 'reply', subject: 'Cecotec', waitingDays: 2 }),
     d({ id: 'gravar', kind: 'recording', subject: 'Dreame' }),
     d({ id: 'dinheiro', kind: 'money', subject: 'Charabanc', waitingDays: 12 }),
@@ -125,7 +125,7 @@ test('a manhã nunca abre com uma acusação', () => {
     gaps: [],
     minutes: 4,
   });
-  assert.equal(frase, '3 coisas precisam de si — cerca de 4 minutos.');
+  assert.equal(frase, '3 coisas precisam de você — cerca de 4 minutos.');
   assert.equal(/atras|fora de prazo|vencid/i.test(frase), false);
 });
 
@@ -146,7 +146,7 @@ test('sem decisões e sem trabalho feito, diz-se isso e não outra coisa', () =>
 
 test('uma decisão só está no singular', () => {
   const frase = headline({ decisions: [d()], prepared: EMPTY_PREPARED, gaps: [], minutes: 1 });
-  assert.equal(frase, 'Uma coisa precisa de si — cerca de 1 minuto.');
+  assert.equal(frase, 'Uma coisa precisa de você — cerca de 1 minuto.');
 });
 
 test('a frase de fecho diz o que continua sem ela', () => {

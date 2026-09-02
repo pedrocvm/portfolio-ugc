@@ -9,7 +9,7 @@
  *
  *  A ordem não é uma preferência estética. É dinheiro: uma marca que está à
  *  espera de resposta há dois dias vale mais do que dezasseis follow-ups
- *  frios, e o Hoje antigo ordenava exactamente ao contrário — por atraso, que
+ *  frios, e o Hoje antigo ordenava exatamente ao contrário — por atraso, que
  *  é priorizar o mais morto.
  *
  *  Puro. */
@@ -40,9 +40,9 @@ export type Decision = {
   subject: string;
   /** O que o sistema recomenda, numa frase. */
   headline: string;
-  /** Porquê. Facto, não regra de política. */
+  /** Porquê. fato, não regra de política. */
   because: string;
-  /** Quantas coisas resolve de uma vez. A revisão de prospecção resolve seis. */
+  /** Quantas coisas resolve de uma vez. A revisão de prospeção resolve seis. */
   covers: number;
   /** Dentro do nível: dinheiro conhecido, urgência, dias de espera. */
   weightCents: number | null;
@@ -142,7 +142,7 @@ const plural = (n: number, um: string, muitos: string) => (n === 1 ? um : muitos
  *
  *  A Deep Review apontou que nove trabalhos correm todas as manhãs e o Hoje
  *  não menciona nenhum: ela vê a dívida dela e nunca vê o trabalho dele. Isto
- *  é a correcção, e só conta o que aconteceu mesmo. */
+ *  é a correção, e só conta o que aconteceu mesmo. */
 export function describePrepared(p: PreparedCounts): string[] {
   const linhas: string[] = [];
 
@@ -213,11 +213,11 @@ export function headline(input: {
     if (fez.length === 0) {
       return input.gaps.length
         ? 'Não consegui preparar a manhã. Está aqui em baixo o que falhou.'
-        : 'Nada precisa de si agora.';
+        : 'Nada precisa de você agora.';
     }
-    return 'A manhã está tratada. Não sobrou nada que precise de si.';
+    return 'A manhã está tratada. Não sobrou nada que precise de você.';
   }
-  const coisas = n === 1 ? 'Uma coisa precisa de si' : `${n} coisas precisam de si`;
+  const coisas = n === 1 ? 'Uma coisa precisa de você' : `${n} coisas precisam de você`;
   return `${coisas} — cerca de ${input.minutes} ${plural(input.minutes, 'minuto', 'minutos')}.`;
 }
 

@@ -80,7 +80,7 @@ test('a ordem de chegada não muda o resultado', () => {
 /* ── O bug que este módulo existe para matar ──────────────────────────────── */
 
 test('a intenção sai da mensagem da marca, nunca da mensagem dela', () => {
-  // A Carol respondeu por último a dizer que manda o portefólio. Ler a última
+  // A Carol respondeu por último a dizer que manda o portfólio. Ler a última
   // mensagem dava PORTFOLIO_REQUEST — foi assim que UGREEN, Govee e HBADA
   // apareceram na Inbox com uma etiqueta de um pedido que nunca fizeram.
   const state = readThreadState(
@@ -89,7 +89,7 @@ test('a intenção sai da mensagem da marca, nunca da mensagem dela', () => {
         bodyText: 'Podemos avançar com uma colaboração paga? Temos budget disponível.',
       }),
       msg('2', 'outbound', '2026-08-26T10:00:00Z', {
-        bodyText: 'Claro! Envio já o meu portefólio com exemplos de trabalhos.',
+        bodyText: 'Claro! Envio já o meu portfólio com exemplos de trabalhos.',
       }),
     ],
     NOW,
@@ -111,7 +111,7 @@ test('o palpite reconhece os assuntos que não podem esperar', () => {
     ['Precisamos dos direitos de uso para anúncios pagos', 'USAGE_RIGHTS'],
     ['Queremos fazer whitelisting no perfil', 'WHITELISTING'],
     ['Qual é a tua tabela de preços?', 'RATE_REQUEST'],
-    ['Podes enviar o portefólio?', 'PORTFOLIO_REQUEST'],
+    ['Podes enviar o portfólio?', 'PORTFOLIO_REQUEST'],
     ['Infelizmente não vamos avançar este ano', 'REJECTION'],
   ];
   for (const [texto, esperado] of casos) {

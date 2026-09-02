@@ -2,8 +2,8 @@
  *
  *  Antes isto era `JSON.stringify(detail)` na tela: a Carol carregava em
  *  «Sincronizar Gmail» e recebia `{"mailbox":null,"status":"success",
- *  "processed":0,...}`. É a máquina a falar consigo própria à frente de quem a
- *  usa — e num sítio onde ela só quer saber se aconteceu alguma coisa. */
+ *  "processed":0,...}`. É a máquina a falar com você própria à frente de quem a
+ *  usa — e num lugar onde ela só quer saber se aconteceu alguma coisa. */
 
 const n = (v: unknown) => (typeof v === 'number' ? v : 0);
 const plural = (v: number, um: string, muitos: string) => `${v} ${v === 1 ? um : muitos}`;

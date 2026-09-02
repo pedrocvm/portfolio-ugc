@@ -48,7 +48,7 @@ export default function CreativeIdeas({
       <h3>Hipóteses criativas</h3>
       <p className="osNote">
         Uma ideia principal por vídeo, e funções diferentes no funil. Para tecnologia, o padrão é
-        fricção real → gancho → produto em contexto → transformação credível.
+        frição real → gancho → produto em contexto → transformação credível.
       </p>
 
       {hypotheses.length ? (
@@ -58,7 +58,7 @@ export default function CreativeIdeas({
               <div>
                 <span className="osRowName" style={{ fontSize: 17 }}>{h.title}</span>
                 <p className="osRowSub">
-                  <b>Fricção:</b> {h.friction}
+                  <b>Frição:</b> {h.friction}
                   <br />
                   <b>Gancho:</b> {h.hook}
                   <br />
@@ -124,7 +124,7 @@ export default function CreativeIdeas({
                 })
               }
             >
-              {pending ? 'A pensar…' : 'Gerar hipóteses'}
+              {pending ? 'Pensando…' : 'Gerar hipóteses'}
             </button>
           </div>
           {error ? <p className="osWarn" role="alert">{error}</p> : null}

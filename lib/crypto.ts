@@ -2,7 +2,7 @@ import 'server-only';
 
 /** Cifra dos refresh tokens de OAuth antes de tocarem na base de dados.
  *  AES-256-GCM do WebCrypto, que o Node 22 e a Vercel já trazem: uma
- *  dependência de criptografia é exactamente o tipo de coisa que não se
+ *  dependência de criptografia é exatamente o tipo de coisa que não se
  *  acrescenta quando a plataforma já resolve. */
 
 const ALGO = 'AES-GCM';

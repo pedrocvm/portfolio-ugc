@@ -24,7 +24,7 @@ type PromptShape = {
   schema: z.ZodType<unknown>;
 };
 
-/** O registro exporta prompts com tipos de entrada diferentes; para inspecção
+/** O registro exporta prompts com tipos de entrada diferentes; para inspeção
  *  interessa só a forma comum. */
 const PROMPTS: PromptShape[] = (Object.values(registry) as unknown[]).filter(
   (v): v is PromptShape =>
@@ -163,7 +163,7 @@ test('entusiasmo e aceitação estão ambos no conjunto, e são diferentes', () 
   assert.equal(acceptance.expect.explicitAcceptance, true);
 });
 
-test('o caso de aceitação traz o valor exacto, em cêntimos inteiros', () => {
+test('o caso de aceitação traz o valor exato, em cêntimos inteiros', () => {
   const f = FIXTURES.find((x) => x.id === 'explicit_acceptance_with_price')!;
   assert.equal(f.expect.cashAmountCents, 19500);
   assert.equal(Number.isInteger(f.expect.cashAmountCents), true);

@@ -48,8 +48,8 @@ export const tokens = (s: string) => strip(s).split(' ').filter((t) => t.length 
 /** Singular e plural da mesma palavra são a mesma coisa para uma busca. */
 export function stem(word: string): string {
   const w = strip(word);
-  // A guarda era pelo comprimento da palavra e cortava cedo demais: «apps»
-  // ficava «apps» e nunca batia com «app». Cada regra abaixo guarda-se a si
+  // A salva era pelo comprimento da palavra e cortava cedo demais: «apps»
+  // ficava «apps» e nunca batia com «app». Cada regra abaixo salva-se a si
   // própria — o que sobra tem de continuar a ser uma palavra.
   if (w.length < 4) return w;
   if (w.endsWith('oes') || w.endsWith('aes')) return `${w.slice(0, -3)}ao`;
@@ -234,7 +234,7 @@ export type Relevance = {
 /** Mede a distância entre a candidata e o pedido.
  *
  *  Não conta encaixe com o perfil dela: isso é outra pontuação, e misturá-las
- *  era exactamente o defeito. Aqui só se pergunta se é a coisa certa. */
+ *  era exatamente o defeito. Aqui só se pergunta se é a coisa certa. */
 export function relevanceFor(c: Candidate, intent: ManualIntent): Relevance {
   const texto = [c.name, c.category ?? '', c.description].join(' ');
   const stems = new Set(tokens(texto).map(stem));
@@ -245,7 +245,7 @@ export function relevanceFor(c: Candidate, intent: ManualIntent): Relevance {
 
   if (required.length === 0) {
     // A exclusão só se nomeia quando explica alguma coisa: dizer «é software»
-    // ajuda-a a perceber porque a rejeitei; dizer «não bateu» não ajuda nada.
+    // ajuda-a a entender porque a rejeitei; dizer «não bateu» não ajuda nada.
     const familia = familyFor(texto);
     return {
       // O corte é quem decide, aqui como em todo o lado: devolver `false` à mão
@@ -264,8 +264,8 @@ export function relevanceFor(c: Candidate, intent: ManualIntent): Relevance {
   let score = Math.round(40 + cobertura * 50 + Math.min(10, optional.length * 5));
 
   // Uma candidata ambígua — bate no pedido e também noutras famílias — desce.
-  // Estava a descer até ao corte e a parar lá, o que garantia que passava
-  // sempre: um piso no valor exacto do corte é um corte que não corta.
+  // Estava descendo até ao corte e a parar lá, o que garantia que passava
+  // sempre: um piso no valor exato do corte é um corte que não corta.
   if (excluded.length) score -= 20 * Math.min(3, excluded.length);
 
   return {
@@ -303,7 +303,7 @@ const PESO = {
  *
  *  Deliberadamente cego ao nicho. Um hotel não perde pontos por não ser SaaS —
  *  se ela pediu hotéis, o que interessa é qual dos hotéis é a melhor
- *  oportunidade. O encaixe tech-first continua a existir e continua a mandar na
+ *  oportunidade. O encaixe tech-first continua existindo e continua mandando na
  *  busca automática; aqui não entra.
  *
  *  Desconhecido conta como neutro e fica assinalado, como em todo o resto do
@@ -350,7 +350,7 @@ export function opportunityFor(s: OpportunitySignals): Opportunity {
 
   possivel += PESO.reachable;
   pontos += s.reachable ? PESO.reachable : 0;
-  lines.push(s.reachable ? 'Há como falar com eles' : 'Sem contacto direto');
+  lines.push(s.reachable ? 'Há como falar com eles' : 'Sem contato direto');
 
   possivel += PESO.sameLanguage;
   pontos += s.sameLanguage ? PESO.sameLanguage : 0;
@@ -361,7 +361,7 @@ export function opportunityFor(s: OpportunitySignals): Opportunity {
   return { score, band, lines };
 }
 
-/** «Portugal» e «PT» são o mesmo sítio; «Portugal» e «Espanha» não são.
+/** «Portugal» e «PT» são o mesmo lugar; «Portugal» e «Espanha» não são.
  *  Compara-se por prefixo normalizado para não falhar em «Brasil»/«Brazil». */
 export function sameCountry(a: string, b: string): boolean {
   const n = (s: string) =>

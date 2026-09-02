@@ -35,7 +35,7 @@ const ref = (over: Partial<Reference> = {}): Reference => ({
 });
 
 const link = (over: Partial<ReferenceLink> = {}): ReferenceLink => ({
-  fitReason: 'A Cecotec vende exactamente o robô que resolve esta frustração.',
+  fitReason: 'A Cecotec vende exatamente o robô que resolve esta frustração.',
   adaptation:
     'Abrir a limpar a janela do apartamento à mão, parar a meio e lembrar que tem o robô da Cecotec.',
   doNotCopy: 'Não repetir a fala nem a música: a estrutura é que se aproveita.',
@@ -70,7 +70,7 @@ test('uma referência sem análise é um link, e um link não poupa trabalho', (
 });
 
 /* ── O que a primeira corrida real apanhou ────────────────────────────────
-   Nove pesquisas, três referências analisadas, zero guardadas. As duas causas
+   Nove pesquisas, três referências analisadas, zero salvas. As duas causas
    estavam ambas do meu lado. */
 
 test('uma data em prosa não vai para uma coluna de data', () => {
@@ -102,7 +102,7 @@ test('um endereço de exemplo não passa por endereço', () => {
   }
 });
 
-test('um endereço verdadeiro continua a passar', () => {
+test('um endereço verdadeiro continua passando', () => {
   assert.equal(referenceIsUsable(ref({ sourceUrl: 'https://www.facebook.com/watch/?v=3097483783856230' })), true);
   assert.equal(referenceIsUsable(ref({ sourceUrl: 'https://www.tiktok.com/@alguem/video/7412345678901234567' })), true);
 });
@@ -134,9 +134,9 @@ test('a deduplicação usa o endereço normalizado', () => {
 
 test('três milhões de visualizações não fazem uma boa referência', () => {
   // Nada aqui olha para métricas: o que conta é transferível, gravável e
-  // recente. Uma produção com equipa perde para uma ideia adaptável.
+  // recente. Uma produção com equipe perde para uma ideia adaptável.
   const comEquipa = scoreReference(
-    ref({ structure: 'plano de drone sobre a cidade, equipa de três pessoas' }),
+    ref({ structure: 'plano de drone sobre a cidade, equipe de três pessoas' }),
     link(),
     NOW,
   );

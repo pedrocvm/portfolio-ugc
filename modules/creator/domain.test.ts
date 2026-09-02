@@ -90,13 +90,13 @@ test('a mesma ideia com outras palavras é a mesma ideia', () => {
 
 test('o mesmo gancho repetido é apanhado mesmo com a impressão digital diferente', () => {
   const anterior = [
-    { fingerprint: 'outra', hook: 'Demorei meses a perceber que UGC bonito não vende nada' },
+    { fingerprint: 'outra', hook: 'Demorei meses a entender que UGC bonito não vende nada' },
   ];
   const { repeat, because } = isRepeat(
     {
       platform: 'tiktok',
       pillar: 'A_SALA',
-      hook: 'Demorei meses a perceber que UGC bonito não vende',
+      hook: 'Demorei meses a entender que UGC bonito não vende',
     },
     anterior,
   );
@@ -150,7 +150,7 @@ test('«o que ninguém diz sobre» é a mesma fórmula e também não passa', ()
 
 test('a tendência liga-se à ideia por assunto, não por título ao caractere', () => {
   const trends = [
-    { id: 't1', title: 'Breakdown de edição em ecrã dividido', description: 'A timeline do CapCut ao lado do vídeo final.' },
+    { id: 't1', title: 'Breakdown de edição em tela dividido', description: 'A timeline do CapCut ao lado do vídeo final.' },
     { id: 't2', title: 'Micro-vlog matinal com voz por cima', description: 'Rotina filmada em planos curtos.' },
   ];
   // A ideia fala do mesmo assunto sem repetir o título — que é o que o modelo
@@ -159,7 +159,7 @@ test('a tendência liga-se à ideia por assunto, não por título ao caractere',
     {
       whyNow: 'Mostrar a timeline do CapCut ao lado do resultado final explica a edição sem a explicar.',
       hook: 'O corte que faz um vídeo parecer um anúncio verdadeiro',
-      script: 'Ecrã dividido: à esquerda a timeline, à direita o vídeo final.',
+      script: 'tela dividido: à esquerda a timeline, à direita o vídeo final.',
     },
     trends,
   );
@@ -169,7 +169,7 @@ test('a tendência liga-se à ideia por assunto, não por título ao caractere',
 test('uma ideia sem relação nenhuma não cita tendência nenhuma', () => {
   const ligadas = matchTrends(
     { whyNow: 'Contar como consegui o primeiro cliente de fora.', hook: 'Primeiro cliente gringo', script: 'História do email ao pagamento.' },
-    [{ id: 't1', title: 'Breakdown de edição em ecrã dividido', description: 'A timeline do CapCut.' }],
+    [{ id: 't1', title: 'Breakdown de edição em tela dividido', description: 'A timeline do CapCut.' }],
   );
   assert.deepEqual(ligadas, []);
 });
@@ -228,7 +228,7 @@ test('quatro dimensões têm veto, e nenhuma se compensa com média', () => {
 /* ── Os portões da auditoria ──────────────────────────────────────────────── */
 
 test('«a Carol é substituível?» é o teste que reprova mais', () => {
-  // Correcto, bem escrito, e de qualquer pessoa.
+  // correto, bem escrito, e de qualquer pessoa.
   const anonima = replaceability({
     hook: 'Três formas de melhorar a iluminação num vídeo curto',
     script: 'Mostro a janela, mostro o candeeiro, comparo os dois resultados.',
@@ -239,7 +239,7 @@ test('«a Carol é substituível?» é o teste que reprova mais', () => {
   // A mesma técnica, com a vida dela lá dentro.
   const dela = replaceability({
     hook: 'Passei dez anos a anotar pedido e nunca reparei na luz da sala',
-    script: 'No restaurante dos meus pais a luz era amarela. Fui perceber isso a gravar em casa.',
+    script: 'No restaurante dos meus pais a luz era amarela. Fui entender isso a gravar em casa.',
   });
   assert.equal(dela.replaceable, false);
   assert.ok(dela.marks >= 1);
@@ -274,7 +274,7 @@ test('o filtro anti-guru apanha a personagem de professora', () => {
   );
 });
 
-test('o filtro anti-catálogo apanha o que é portefólio, não post', () => {
+test('o filtro anti-catálogo apanha o que é portfólio, não post', () => {
   assert.ok(
     catalogProblems({ hook: 'A casa', format: 'montagem estética muda' }).some((p) => p.includes('muda')),
   );
@@ -353,7 +353,7 @@ test('tratamentos nativos diferentes passam', () => {
     {
       platform: 'tiktok',
       hook: 'Consegui o primeiro cliente de fora antes de o meu inglês ficar bom',
-      format: 'talking head com capturas de ecrã',
+      format: 'talking head com capturas de tela',
       script: 'Conto a história desde o email até ao pagamento, com as capturas por cima.',
     },
   );

@@ -7,7 +7,7 @@ import { classify, domainOf, type CheckInput, type CheckResult } from './mailche
  *  email. É uma consulta pública, não custa nada e não precisa de conta. */
 
 /** O DNS repete-se muito numa corrida — várias candidatas do mesmo domínio, e
- *  o mesmo domínio outra vez no envio. Guarda-se por processo. */
+ *  o mesmo domínio outra vez no envio. salva-se por processo. */
 const seen = new Map<string, { mx: boolean | null; at: number }>();
 const TTL = 30 * 60 * 1000;
 

@@ -16,7 +16,7 @@ import { rightsRisks, BLANK_RIGHTS } from '../rights/engine.ts';
  *  ads rights, a NOVOTECK a oferecer um pau de selfie, o lead que prometeu
  *  responder na sexta — e verifica que o sistema faz o que o produto diz que
  *  tem de fazer. É esta suite que falha se alguém mexer numa regra comercial
- *  sem perceber o que ela protege. */
+ *  sem entender o que ela protege. */
 
 const MONDAY = new Date('2026-08-31T12:00:00Z');
 

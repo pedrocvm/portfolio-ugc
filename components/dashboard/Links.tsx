@@ -14,7 +14,7 @@ import { setIn } from './paths';
 
 type State = { tone: 'idle' | 'dirty' | 'ok' | 'bad'; text: string };
 
-const CLEAN: State = { tone: 'idle', text: 'Sem alterações para guardar' };
+const CLEAN: State = { tone: 'idle', text: 'Sem alterações para salvar' };
 
 const APARELHO: Record<string, string> = {
   mobile: 'Celular',
@@ -44,7 +44,7 @@ export default function Links({
   function change(path: string, value: unknown) {
     setContent((c) => setIn(c, path, value));
     setDirty(true);
-    setState({ tone: 'dirty', text: 'Alterações não guardadas' });
+    setState({ tone: 'dirty', text: 'Alterações não salvas' });
   }
 
   function save() {
@@ -52,7 +52,7 @@ export default function Links({
       const res = await saveDraft({ links: content.links });
       if (res.error) return setState({ tone: 'bad', text: res.error });
       setDirty(false);
-      setState({ tone: 'ok', text: 'Guardado. Ainda não está no ar.' });
+      setState({ tone: 'ok', text: 'Salvo. Ainda não está no ar.' });
     });
   }
 
@@ -94,7 +94,7 @@ export default function Links({
           Restaurar
         </button>
         <button type="button" className="btn" onClick={save} disabled={pending || !dirty}>
-          Guardar
+          salvar
         </button>
         <button
           type="button"
@@ -122,7 +122,7 @@ export default function Links({
         <div className="secHead">
           <h2>Quem chegou até aqui</h2>
           <p className="said">
-            Contado sem cookies e sem guardar nada no aparelho de quem visita.
+            Contado sem cookies e sem salvar nada no aparelho de quem visita.
           </p>
         </div>
 

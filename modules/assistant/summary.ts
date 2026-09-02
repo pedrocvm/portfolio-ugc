@@ -56,7 +56,7 @@ export async function summariseThread(threadId: string): Promise<{ updated: bool
       maxTokens: 600,
       system:
         'Resumes uma conversa de trabalho entre a Carol e o assistente do negócio dela. ' +
-        'Escreve em português europeu, em tópicos curtos. Guarda: decisões tomadas, ' +
+        'Escreve em português europeu, em tópicos curtos. Salva: decisões tomadas, ' +
         'valores e datas mencionados, marcas e oportunidades faladas, e o que ficou por ' +
         'fazer. Não inventes nada que não esteja no texto. Não repitas cortesias.',
       user: older

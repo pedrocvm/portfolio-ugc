@@ -5,7 +5,7 @@
  *  decisão que o sistema consegue tomar quase sempre, e nas vezes em que não
  *  consegue não importa muito, porque a extração olha para o conteúdo na mesma.
  *
- *  Puro de propósito: é a regra, e tem teste. O seletor continua a existir
+ *  Puro de propósito: é a regra, e tem teste. O seletor continua existindo
  *  atrás de «não é isso», para as vezes em que o palpite sai ao lado. */
 
 import type { CaptureKind } from './service';
@@ -26,7 +26,7 @@ const PERFIS = [
   { host: 'youtube.com', nome: 'um canal de YouTube' },
 ];
 
-/** Palavras que só aparecem quando alguém está a descrever um trabalho. */
+/** Palavras que só aparecem quando alguém está descrevendo um trabalho. */
 const BRIEF = [
   'briefing', 'brief', 'entregáveis', 'entregaveis', 'deliverables',
   'campanha', 'deadline', 'prazo de entrega', 'guidelines', 'moodboard',

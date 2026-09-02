@@ -156,9 +156,9 @@ export function guessNiche(...texts: (string | null | undefined)[]): Niche | nul
   return best?.niche ?? null;
 }
 
-/** O nicho como se diz, não como se guarda.
+/** O nicho como se diz, não como se salva.
  *
- *  `home_tech` numa etiqueta é o sistema a falar consigo próprio. Um nicho que
+ *  `home_tech` numa etiqueta é o sistema a falar com você próprio. Um nicho que
  *  não esteja na lista devolve null em vez de inventar: melhor uma etiqueta a
  *  menos do que uma etiqueta errada. */
 export function nicheLabel(id: string | null | undefined): string | null {

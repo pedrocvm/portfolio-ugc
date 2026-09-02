@@ -172,7 +172,7 @@ export default async function AnalyticsPage() {
           </div>
           <div className="osStat">
             <b>{health.duplicatesPrevented}</b>
-            <span>mensagens guardadas</span>
+            <span>mensagens salvas</span>
           </div>
         </div>
 
@@ -201,7 +201,7 @@ export default async function AnalyticsPage() {
           <>
             <h3 style={{ marginTop: 26 }}>IA</h3>
             <p className="osNote">
-              A taxa de correcção é o sinal que interessa: mostra onde é que o modelo ainda não é de
+              A taxa de correção é o sinal que interessa: mostra onde é que o modelo ainda não é de
               confiança.
             </p>
             <div className="osRows">

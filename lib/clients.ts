@@ -7,7 +7,7 @@
 import type { Brand } from './brands';
 import type { DocKind, DocRow } from './documents';
 
-/** Onde cada tipo de documento guarda o nome da marca e o valor. */
+/** Onde cada tipo de documento salva o nome da marca e o valor. */
 const NAME_FIELD: Record<DocKind, string> = {
   proposal: 'brand',
   contract: 'clientName',

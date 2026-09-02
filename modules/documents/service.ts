@@ -8,7 +8,7 @@ import { USAGE_TERM_DAYS, USAGE_TERM_LABEL, type UsageTerm } from '@/modules/pri
 
 /** Ponte entre o CarolOS e o motor de documentos que já existia.
  *
- *  O motor não foi reescrito: continua a salvar JSON por template e a
+ *  O motor não foi reescrito: continua salvando JSON por template e a
  *  renderizar da mesma forma. O que muda é que uma proposta passa a nascer da
  *  oportunidade e do orçamento — com o escopo, o valor e os direitos já lá
  *  dentro — em vez de ser reconstruída à mão a partir da memória.
@@ -48,7 +48,7 @@ export async function documentsFor(opportunityId: string): Promise<LinkedDocumen
 }
 
 /** Documentos da mesma marca ainda sem oportunidade. Candidatos a ligar à mão:
- *  o backfill só ligou os que batiam exactamente, de propósito. */
+ *  o backfill só ligou os que batiam exatamente, de propósito. */
 export async function unlinkedDocumentsFor(brandId: string): Promise<LinkedDocument[]> {
   const db = await supabaseServer();
   const { data } = await db
@@ -274,7 +274,7 @@ export async function markDocumentSent(
 }
 
 /** Autorização de uso a partir de uma licença registada, para o documento
- *  legal dizer exactamente o que a licença diz. */
+ *  legal dizer exatamente o que a licença diz. */
 export async function usageDocFromLicense(
   licenseId: string,
   actorUserId: string,

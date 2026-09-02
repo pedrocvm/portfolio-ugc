@@ -1,7 +1,7 @@
 /** O que correu mal com a IA, dito à Carol.
  *
  *  O SDK da Google devolve o JSON inteiro da resposta dentro de `error.message`.
- *  Dez sítios faziam `error.message` para a tela, por isso ela recebia
+ *  Dez sites faziam `error.message` para a tela, por isso ela recebia
  *  `{"error":{"code":429,"status":"RESOURCE_EXHAUSTED",...}}` colado a meio de
  *  uma frase em português. A tradução é aqui, uma vez, à saída do fornecedor —
  *  nos chamadores era o mesmo erro dez vezes. */

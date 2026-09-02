@@ -37,7 +37,7 @@ export default function Cases({
       </div>
 
       <p className="osNote">
-        Um trabalho aprovado só vira prova comercial quando tem resultado, permissão e um sítio
+        Um trabalho aprovado só vira prova comercial quando tem resultado, permissão e um lugar
         onde se veja. É daqui que sai a justificação para subir o preço da próxima proposta.
       </p>
 
@@ -142,11 +142,11 @@ function CaseCard({
               onClick={() =>
                 start(async () => {
                   await saveCase(study.id, { title, challenge, hypothesis, result });
-                  setMessage('Guardado.');
+                  setMessage('Salvo.');
                 })
               }
             >
-              Guardar
+              salvar
             </button>
           </div>
 

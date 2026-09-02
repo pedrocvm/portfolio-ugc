@@ -1,7 +1,7 @@
 import { guessNiche, isExcludedNiche, prospectableNiches } from '@/modules/brands/niches';
 import { normalizeDomain, normalizeName } from '@/modules/brands/identity';
 
-/** Regras puras do agente de prospecção.
+/** Regras puras do agente de prospeção.
  *
  *  Tudo o que decide se uma marca entra, se um email presta e por que ordem
  *  aparecem vive aqui: sem rede, sem base de dados, sem modelo. É o que se
@@ -98,7 +98,7 @@ export type Candidate = {
   domain?: string | null;
   nicheId?: string | null;
   /** O que a descoberta diz que a marca faz. Texto livre, e é por isso que
-   *  precisa de ser lido: um id de nicho pode vir errado ou não vir. */
+   *  precisa ser lido: um id de nicho pode vir errado ou não vir. */
   description?: string | null;
 };
 
@@ -243,7 +243,7 @@ export function scoreEmail(input: EmailInput): QualityResult {
   );
 
   // Personalização e factualidade não se compensam com o resto: um email
-  // impecável sobre fatos inventados continua a ser um email a rejeitar.
+  // impecável sobre fatos inventados continua sendo um email a rejeitar.
   const hardFail = scores.personalization < 50 || scores.factuality < 70 || scores.genericness < 60;
 
   return { pass: !hardFail && score >= 70, score, failures, scores };
@@ -285,7 +285,7 @@ export function selectDaily<T extends Rankable>(
 
 /** Separa em duas listas em vez de deitar uma fora.
  *
- *  O corte de encaixe decide quem leva email escrito, e continua a decidir. O
+ *  O corte de encaixe decide quem leva email escrito, e continua decidindo. O
  *  que mudou é o que acontece às outras: eram descartadas depois de a pesquisa
  *  já estar paga, e num dia em que nenhuma chegasse ao corte a corrida acabava
  *  a dizer «nenhuma chegou ao mínimo» sem mostrar nenhuma. Quem decide se uma
@@ -322,7 +322,7 @@ export type RunSummary = {
   screened: number;
   researched: number;
   selected: number;
-  /** Pesquisadas abaixo do corte, guardadas para ela decidir. */
+  /** Pesquisadas abaixo do corte, salvas para ela decidir. */
   below?: number;
   failures: string[];
   blocked: string | null;
@@ -341,7 +341,7 @@ export function runMessage(r: RunSummary): { ok: boolean; message: string } {
     return { ok: true, message: `${r.selected} ${marcas}, de ${r.discovered} encontradas.${extra}` };
   }
 
-  // Nenhuma passou o corte, mas as pesquisas ficaram guardadas. Dizer só «nenhuma
+  // Nenhuma passou o corte, mas as pesquisas ficaram salvas. Dizer só «nenhuma
   // chegou ao mínimo» escondia trabalho já feito e pago, e tirava-lhe a decisão.
   if (abaixo > 0) {
     const plural = abaixo === 1 ? 'marca' : 'marcas';
@@ -366,10 +366,10 @@ export function runMessage(r: RunSummary): { ok: boolean; message: string } {
 
 /* ── A revisão do dia, agrupada ──────────────────────────────────────────── */
 
-/** Em que secção da revisão cai cada marca.
+/** Em que seção da revisão cai cada marca.
  *
  *  Vinte cartões seguidos são um muro: ela abre a tela para fazer a primeira
- *  coisa, não para ler tudo. As secções não são categorias — são o que ela faz a
+ *  coisa, não para ler tudo. As seções não são categorias — são o que ela faz a
  *  seguir, e por isso a ordem delas é a ordem do trabalho: o que só precisa de
  *  um sim, o que precisa de olhos, o que é decisão dela, e o que já saiu. */
 export type ReviewSection = 'ready' | 'review' | 'below' | 'sent';
@@ -383,7 +383,7 @@ export function sectionFor(status: string): ReviewSection {
 
 export const SECTION_TITLE: Record<ReviewSection, string> = {
   ready: 'Prontas para enviar',
-  review: 'Precisam de si',
+  review: 'precisam de você',
   below: 'Abaixo do corte',
   sent: 'Já enviadas',
 };
@@ -395,7 +395,7 @@ export const SECTION_HINT: Record<ReviewSection, string> = {
   sent: 'Saíram hoje. Ficam aqui para se saber o que já foi.',
 };
 
-/** A ordem em que aparecem. Enviadas por último: são registo, não trabalho. */
+/** A ordem em que aparecem. Enviadas por último: são registro, não trabalho. */
 export const SECTION_ORDER: readonly ReviewSection[] = ['ready', 'review', 'below', 'sent'];
 
 export function groupForReview<T extends { status: string }>(

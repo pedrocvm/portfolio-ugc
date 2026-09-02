@@ -202,10 +202,10 @@ export const CONTRACT_BLANK = {
 export const CONTRACT_FIELDS: Field[] = [
   { k: 'text', path: 'creatorName', label: 'Nome da criadora' },
   { k: 'text', path: 'creatorNif', label: 'NIF da criadora' },
-  { k: 'text', path: 'creatorAddress', label: 'Morada da criadora' },
+  { k: 'text', path: 'creatorAddress', label: 'endereço da criadora' },
   { k: 'text', path: 'clientName', label: 'Nome ou empresa do cliente' },
   { k: 'text', path: 'clientNif', label: 'NIF do cliente' },
-  { k: 'text', path: 'clientAddress', label: 'Morada do cliente' },
+  { k: 'text', path: 'clientAddress', label: 'endereço do cliente' },
   { k: 'text', path: 'clientRep', label: 'Representante do cliente' },
   { k: 'text', path: 'date', label: 'Data', hint: 'No formato AAAA-MM-DD.' },
   { k: 'text', path: 'place', label: 'Local' },
@@ -426,7 +426,7 @@ function usage(d: Record<string, unknown>, author: Author): Rendered {
         blocks: [
           {
             t: 'p',
-            text: `O vídeo continua a ser propriedade de ${criadora}, que mantém os direitos de autor. Este documento concede a ${marca} uma licença de utilização — não é uma compra nem uma cedência de direitos.`,
+            text: `O vídeo continua sendo propriedade de ${criadora}, que mantém os direitos de autor. Este documento concede a ${marca} uma licença de utilização — não é uma compra nem uma cedência de direitos.`,
           },
         ],
       },

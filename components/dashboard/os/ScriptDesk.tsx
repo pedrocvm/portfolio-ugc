@@ -121,7 +121,7 @@ export default function ScriptDesk({
                 })
               }
             >
-              Guardar peça
+              salvar peça
             </button>
           </div>
           {error ? <p className="osWarn" role="alert">{error}</p> : null}
@@ -220,7 +220,7 @@ function ContentItem({ item, collaborationId }: { item: ContentRow; collaboratio
               <RecordingMode contentId={item.id} title={item.title} shots={shots} />
               <span className="osNote">
                 {shots.length === 1 ? 'Uma tomada' : `${shots.length} tomadas`}, uma de cada vez, com
-                o sítio guardado.
+                o lugar salvo.
               </span>
             </div>
           ) : null}

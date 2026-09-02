@@ -1,7 +1,7 @@
 /** Decisão de permuta.
  *
  *  A conta ingénua — «preço de retalho ≥ preço do vídeo, logo compensa» — é
- *  exactamente a que faz a Carol trocar horas de produção por um pau de selfie.
+ *  exatamente a que faz a Carol trocar horas de produção por um pau de selfie.
  *  O que conta é o valor que o produto tem PARA ELA, não o que a marca diz que
  *  custa: um produto que ela nunca compraria vale perto de zero por muito que
  *  a etiqueta diga o contrário.
@@ -77,7 +77,7 @@ const effortCostCents = (effort: number | null, reference: number) =>
 
 /** Bónus só acima de neutro. Um valor estratégico "aceitável" (3) não
  *  acrescenta nada: se acrescentasse, qualquer permuta ficava atraente por
- *  omissão, que é exactamente o erro que este motor existe para evitar. */
+ *  omissão, que é exatamente o erro que este motor existe para evitar. */
 const aboveNeutral = (value: number | null | undefined) => Math.max(0, ((value ?? 2) - 3) / 2);
 
 export function decideBarter(input: BarterInput): BarterResult {
@@ -153,7 +153,7 @@ export function decideBarter(input: BarterInput): BarterResult {
       reasons.push('Produto que ela não usaria ocupa tempo de produção sem devolver valor.');
     } else {
       decision = 'ASK_INFO';
-      reasons.push('Sem política de preço não há régua económica; falta perceber orçamento e objetivo.');
+      reasons.push('Sem política de preço não há régua económica; falta entender orçamento e objetivo.');
     }
   } else if (effectiveValueCents >= estimatedCostCents) {
     decision = 'ACCEPT_BARTER';

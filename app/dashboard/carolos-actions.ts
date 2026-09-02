@@ -144,7 +144,7 @@ export async function updateOpportunity(
     })
     .eq('id', opportunityId);
 
-  if (error) return { error: 'Não foi possível guardar.' };
+  if (error) return { error: 'Não foi possível salvar.' };
   revalidatePath(`/dashboard/opportunities/${opportunityId}`);
   return { ok: true };
 }
@@ -225,7 +225,7 @@ export async function logConcession(
 }
 
 /** Cria um rascunho na caixa do Gmail. É o limite do automático: a mensagem
- *  fica escrita, o envio continua a ser um clique dela no Gmail. */
+ *  fica escrita, o envio continua sendo um clique dela no Gmail. */
 export async function pushDraftToGmail(
   opportunityId: string,
   subject: string,
@@ -428,7 +428,7 @@ export async function uploadScreenshot(form: FormData): Promise<Result & { path?
     upsert: false,
   });
 
-  if (error) return { error: 'Não foi possível guardar a imagem.' };
+  if (error) return { error: 'Não foi possível salvar a imagem.' };
   return { ok: true, path };
 }
 
@@ -737,7 +737,7 @@ export async function toggleFlag(key: string, value: boolean): Promise<Result> {
 }
 
 /** Devolve uma frase, não um objecto. A tela mostra o que vier daqui, e um
- *  `JSON.stringify` numa caixa de aviso é a máquina a falar consigo própria. */
+ *  `JSON.stringify` numa caixa de aviso é a máquina a falar com você própria. */
 export async function triggerJob(job: string): Promise<Result & { message?: string }> {
   await requireUser();
   const { jobOutcome } = await import('@/modules/jobs/outcome');
@@ -900,7 +900,7 @@ export type MailThread = {
    *  falta, o risco, a recomendação e a resposta já escrita.
    *
    *  Nulo quando a triagem ainda não correu para esta conversa — e nesse caso a
-   *  gaveta continua a funcionar como funcionava, com a recomendação
+   *  gaveta continua funcionando como funcionava, com a recomendação
    *  determinística do planeador. */
   intel: {
     intentLabel: string;

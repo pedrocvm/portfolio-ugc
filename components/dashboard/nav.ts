@@ -1,14 +1,14 @@
-/** A navegação do CarolOS, num sítio só.
+/** A navegação do CarolOS, num lugar só.
  *
  *  Eram dezoito destinos no primeiro nível — dois fixos e cinco grupos que se
  *  abriam. Ler dezoito nomes para escolher um é trabalho, e quase todos os dias
  *  a escolha certa era a mesma: o Hoje.
  *
- *  Agora são cinco secções. As sub-áreas continuam a existir, com as mesmas
- *  rotas, mas só aparecem depois de se entrar na secção a que pertencem — é o
+ *  Agora são cinco seções. As sub-áreas continuam existindo, com as mesmas
+ *  rotas, mas só aparecem depois de se entrar na seção a que pertencem — é o
  *  `SectionNav` que as mostra. Nada foi apagado; foi arrumado por altura.
  *
- *  A Captura saiu do menu de propósito: passou a caber em qualquer sítio, pelo
+ *  A Captura saiu do menu de propósito: passou a caber em qualquer lugar, pelo
  *  botão global e por colar na página. Uma tela que se tem de ir procurar não é
  *  captura rápida. */
 
@@ -16,14 +16,14 @@ export type NavItem = {
   href: string;
   label: string;
   /** Base de conhecimento em vez de operação: existe, consulta-se, mas não
-   *  compete pela atenção na barra da secção. Vive atrás do «mais». */
+   *  compete pela atenção na barra da seção. Vive atrás do «mais». */
   quiet?: boolean;
 };
 
 export type Section = {
   id: string;
   label: string;
-  /** Para onde vai quem carrega na secção. É sempre a sub-área mais acionável,
+  /** Para onde vai quem carrega na seção. É sempre a sub-área mais acionável,
    *  não uma página-índice: um índice é mais um clique para chegar ao mesmo. */
   href: string;
   items: readonly NavItem[];
@@ -55,7 +55,7 @@ export const SECTIONS: readonly Section[] = [
   },
   {
     id: 'prospecting',
-    label: 'Prospecção',
+    label: 'Prospeção',
     href: '/dashboard/outreach',
     items: [
       { href: '/dashboard/outreach', label: 'Prontas' },
@@ -83,14 +83,14 @@ export const SECTIONS: readonly Section[] = [
   },
 ] as const;
 
-/** Fora das secções: não é trabalho dela, é manutenção do sistema. */
+/** Fora das seções: não é trabalho dela, é manutenção do sistema. */
 export const UTILITY: readonly NavItem[] = [
   { href: '/dashboard/settings', label: 'Definições' },
   { href: '/dashboard/account', label: 'A minha conta' },
 ] as const;
 
 /** Rotas que respondem mas não pertencem a barra nenhuma: são sub-vistas de um
- *  ecrã que já as abre, ou restos anteriores ao CarolOS. Estão aqui nomeadas
+ *  tela que já as abre, ou restos anteriores ao CarolOS. Estão aqui nomeadas
  *  para a paleta de comandos as encontrar e o teste de portas não falhar por
  *  distração. */
 export const EXTRA: readonly NavItem[] = [
@@ -98,15 +98,15 @@ export const EXTRA: readonly NavItem[] = [
 ] as const;
 
 /** «/dashboard» só está ativo em si mesmo; as outras contam também os filhos,
- *  para uma oportunidade aberta manter a secção acesa. */
+ *  para uma oportunidade aberta manter a seção acesa. */
 export const isCurrent = (path: string, href: string) =>
   href === '/dashboard' ? path === href : path === href || path.startsWith(`${href}/`);
 
-/** A secção a que um caminho pertence.
+/** A seção a que um caminho pertence.
  *
- *  A primeira que casa chega, porque nenhuma secção é prefixo de outra — o que
+ *  A primeira que casa chega, porque nenhuma seção é prefixo de outra — o que
  *  o teste abaixo garante, para o dia em que alguém acrescentar uma que seja. O
- *  Hoje só ganha por igualdade exacta; com prefixo, apanhava tudo. */
+ *  Hoje só ganha por igualdade exata; com prefixo, apanhava tudo. */
 export function sectionFor(path: string): Section | null {
   return (
     SECTIONS.find((s) =>

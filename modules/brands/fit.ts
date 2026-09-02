@@ -56,7 +56,7 @@ export const FIT_LABEL: Record<FitCriterion, string> = {
 };
 
 /** Notas de 0 a 5. Ausente significa desconhecido — e desconhecido não é zero:
- *  zero afirma «incompatível», e afirmar isso sem prova é exactamente o que o
+ *  zero afirma «incompatível», e afirmar isso sem prova é exatamente o que o
  *  briefing proíbe. Um critério sem sinal fica em 3 (neutro) e é assinalado. */
 export type FitSignals = Partial<Record<FitCriterion, number>> & {
   nicheId?: string | null;
@@ -101,7 +101,7 @@ export const BAND_ACTION: Record<FitBand, string> = {
   B: 'Prioridade B — vale abordar com um ângulo concreto.',
   C: 'Prioridade C — só com produto forte, timing ou contato quente.',
   low: 'Prioridade baixa — pouca energia até aparecer sinal novo.',
-  ignore: 'Sem prospecção ativa — manter apenas em observação.',
+  ignore: 'Sem prospeção ativa — manter apenas em observação.',
 };
 
 const clamp = (v: number) => Math.max(0, Math.min(5, v));
@@ -128,8 +128,8 @@ export function scoreBrandFit(
 
     if (criterion === 'category') {
       // A categoria não se adivinha a partir de um sinal solto: vem da política
-      // de nichos, que é o único sítio onde skincare/haircare valem zero.
-      // A exclusão continua a ganhar a tudo: skincare e haircare estão fora por
+      // de nichos, que é o único lugar onde skincare/haircare valem zero.
+      // A exclusão continua ganhando a tudo: skincare e haircare estão fora por
       // decisão de produto, e o foco não os pode trazer de volta.
       if (excluded) {
         raw = niche.fit;

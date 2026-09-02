@@ -1,7 +1,7 @@
 /** O que a auditoria observou, embutido.
  *
  *  A auditoria vive em `docs.local/`, que está fora do repositório — em
- *  produção esse ficheiro não existe. O que interessa dela tem de estar aqui,
+ *  produção esse arquivo não existe. O que interessa dela tem de estar aqui,
  *  em código, ou o sistema em produção não sabe nada disto.
  *
  *  Três coisas: o retrato de criadora que foi mesmo observado, as trinta ideias
@@ -36,7 +36,7 @@ export const OBSERVED_PROFILE = {
     talking_head_tolerance: 0.85,
     voiceover_usage:
       'Quase ausente, e é o maior desperdício: Sweek, Charabanc e Wella morrem mudos.',
-    b_roll_usage: 'Boa: produto na mão, ecrã do WhatsApp, textura, antes/depois.',
+    b_roll_usage: 'Boa: produto na mão, tela do WhatsApp, textura, antes/depois.',
     personal_exposure:
       'Aberta sem ser oversharer: rosácea, período, «emburrada com o namorado». Não faz drama.',
     educational_style:
@@ -60,7 +60,7 @@ export const OBSERVED_PROFILE = {
     'talking head com história',
     'storytime com prova no plano',
     'antes/depois',
-    'reacção e ceticismo',
+    'reação e ceticismo',
     'opinião',
   ],
   avoidedFormats: [
@@ -74,7 +74,7 @@ export const OBSERVED_PROFILE = {
   evidence: [
     'Cenlo (44s): ceticismo, prova no WhatsApp, «tava meio emburrada» — a melhor peça.',
     'The Ordinary (43s): rosácea, metáfora «cidade cheia de incêndios / bombeiro», antes/depois.',
-    'Enna (24s): à vontade com tema íntimo, em inglês com erros de ecrã.',
+    'Enna (24s): à vontade com tema íntimo, em inglês com erros de tela.',
     'Sweek (21s) e Charabanc (35s): montagens mudas, bonitas, sem ela.',
     'Treino Fácil (60s): lapela à vista, lista de funcionalidades — o formato a matar.',
     'Bio: «Larguei 10 anos de restaurante pra viver do digital» — a melhor frase, nunca filmada.',
@@ -95,7 +95,7 @@ export const SEED_IDEAS: readonly SeedIdea[] = [
   { pillar: 'A_SALA', title: 'O que um serviço de 12 horas faz à cara no dia seguinte', hook: 'A minha pele sabia o turno antes de mim.', seconds: 25 },
   { pillar: 'A_SALA', title: 'Por que pizzaria morre no WhatsApp às 21h', hook: 'A hora em que todo pedido chega junto.', seconds: 35 },
   { pillar: 'A_SALA', title: 'Eu não sou extrovertida. Eu sou treinada.', hook: 'Dez anos de sala fazem isso.', seconds: 20 },
-  { pillar: 'A_SALA', title: 'A primeira vez que me pediram a ementa em inglês no Porto', hook: 'Eu não sabia dizer «bacalhau» em inglês.', seconds: 25 },
+  { pillar: 'A_SALA', title: 'A primeira vez que me pediram a cardápio em inglês no Porto', hook: 'Eu não sabia dizer «bacalhau» em inglês.', seconds: 25 },
   { pillar: 'A_SALA', title: 'Coisa que um maître me ensinou', hook: 'Serviço, não aula de creator.', seconds: 20 },
   // Testei
   { pillar: 'TESTEI', title: 'Testei sem ler o site', hook: 'Se precisa de manual, já falhou.', seconds: 30 },
@@ -108,7 +108,7 @@ export const SEED_IDEAS: readonly SeedIdea[] = [
   // Casa a dois
   { pillar: 'CASA_A_DOIS', title: 'A primeira peça que compramos para esta casa', hook: 'A sala estava vazia. Começou por aqui.', seconds: 25 },
   { pillar: 'CASA_A_DOIS', title: 'Ele escolhe o filme, eu escolho o cheiro', hook: 'É assim que a gente divide a noite.', seconds: 25 },
-  { pillar: 'CASA_A_DOIS', title: 'Antes faltava um sítio para ficar', hook: 'Não é que uma mesa mude a casa. É que passou a haver onde ficar.', seconds: 25 },
+  { pillar: 'CASA_A_DOIS', title: 'Antes faltava um lugar para ficar', hook: 'Não é que uma mesa mude a casa. É que passou a haver onde ficar.', seconds: 25 },
   { pillar: 'CASA_A_DOIS', title: 'Tour honesto: o que ainda é caixa', hook: 'A casa bonita do Instagram tem caixas atrás da câmera.', seconds: 30 },
   { pillar: 'CASA_A_DOIS', title: 'Domingo a dois sem reserva de restaurante', hook: 'Ironia de quem veio da sala.', seconds: 25 },
   // Corpo
@@ -148,7 +148,7 @@ export const EXEMPLAR_SCRIPTS: readonly { id: string; pillar: Pillar; text: stri
   {
     id: 'R4',
     pillar: 'CASA_A_DOIS',
-    text: 'A sala estava vazia. A primeira coisa que fizemos juntos foi isto. Não é que uma mesa mude uma casa — é que finalmente há um sítio onde a gente fica. Trabalho, jantar, mão dada. Eu vinha de anos em que a mesa era dos outros.',
+    text: 'A sala estava vazia. A primeira coisa que fizemos juntos foi isto. Não é que uma mesa mude uma casa — é que finalmente há um lugar onde a gente fica. Trabalho, jantar, mão dada. Eu vinha de anos em que a mesa era dos outros.',
   },
   {
     id: 'R5',

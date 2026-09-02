@@ -34,7 +34,7 @@ export default function ReviewMode({ candidates }: { candidates: Candidate[] }) 
   const { closing, close } = useExit(() => setOpen(false), 220);
   const caixa = useRef<HTMLDivElement>(null);
 
-  const actual = candidates[at];
+  const atual = candidates[at];
   const acabou = at >= candidates.length;
 
   useEffect(() => {
@@ -181,7 +181,7 @@ export default function ReviewMode({ candidates }: { candidates: Candidate[] }) 
                         disabled={pending}
                         onClick={enviar}
                       >
-                        {running === 'send' ? <Spinner label="A enviar" /> : null}
+                        {running === 'send' ? <Spinner label="Enviando" /> : null}
                         Enviar {aprovadas.length}
                       </button>
                       <button
@@ -208,14 +208,14 @@ export default function ReviewMode({ candidates }: { candidates: Candidate[] }) 
                   </>
                 )}
               </div>
-            ) : actual ? (
+            ) : atual ? (
               <Draft
-                key={actual.id}
-                candidate={actual}
+                key={atual.id}
+                candidate={atual}
                 pending={pending}
                 running={running}
                 onApprove={aprovar}
-                onSkip={() => correr('skip', () => skipOutreach(actual.id), avanca)}
+                onSkip={() => correr('skip', () => skipOutreach(atual.id), avanca)}
               />
             ) : null}
           </div>
@@ -274,8 +274,8 @@ function Draft({
           disabled={pending || !body.trim()}
           onClick={() => onApprove(candidate.id, subject, body, mexido)}
         >
-          {running === 'approve' ? <Spinner label="A aprovar" /> : null}
-          {mexido ? 'Guardar e aprovar' : 'Aprovar'}
+          {running === 'approve' ? <Spinner label="Aprovando" /> : null}
+          {mexido ? 'Salvar e aprovar' : 'Aprovar'}
         </button>
 
         <button
@@ -288,7 +288,7 @@ function Draft({
         </button>
 
         <button className="focusSkip" type="button" disabled={pending} onClick={onSkip}>
-          {running === 'skip' ? <Spinner label="A saltar" /> : null}
+          {running === 'skip' ? <Spinner label="Saltando" /> : null}
           Hoje não
         </button>
       </div>

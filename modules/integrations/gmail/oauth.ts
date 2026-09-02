@@ -20,8 +20,8 @@ const REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
  *
  *  O scope `gmail.send` continua a não existir aqui, e isso é de propósito: o
  *  que existe é envio a pedido de uma pessoa. Nenhum trabalho de fundo envia —
- *  a prospecção diária pesquisa, escreve e prepara, e pára. A regra 3 do
- *  CarolOS é que nada sai sozinho, e continua a ser verdade: sai quando ela
+ *  a prospeção diária pesquisa, escreve e prepara, e pára. A regra 3 do
+ *  CarolOS é que nada sai sozinho, e continua sendo verdade: sai quando ela
  *  clica em enviar. */
 export const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
@@ -47,7 +47,7 @@ export const googleConfigured = () => googleConfig() !== null;
 
 /** O `state` é assinado e amarrado ao id do usuário da sessão. Sem isto,
  *  qualquer pessoa podia mandar a Carol a um callback preparado e ligar a
- *  conta de Gmail dela a outro sítio. */
+ *  conta de Gmail dela a outro lugar. */
 export async function buildState(appUserId: string): Promise<string> {
   const payload = `${appUserId}.${Date.now()}.${crypto.randomUUID()}`;
   return `${Buffer.from(payload).toString('base64url')}.${await signPayload(payload)}`;

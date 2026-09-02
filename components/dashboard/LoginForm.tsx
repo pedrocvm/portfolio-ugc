@@ -34,7 +34,7 @@ export default function LoginForm() {
       </div>
       {state.error ? <p className="loginErr">{state.error}</p> : null}
       <button className="btn solid" type="submit" disabled={pending}>
-        {pending ? 'A entrar…' : 'Entrar'}
+        {pending ? 'Entrando…' : 'Entrar'}
       </button>
     </form>
   );

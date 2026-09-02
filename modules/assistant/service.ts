@@ -138,7 +138,7 @@ export type Notification = {
   href: string | null;
 };
 
-/** Tudo o que precisa dela, num sítio só e alcançável de qualquer tela.
+/** Tudo o que precisa dela, num lugar só e alcançável de qualquer tela.
  *
  *  Junta duas coisas que ela vive como uma: o que já passou do prazo, que é
  *  trabalho concreto e por isso vem primeiro, e os avisos do negócio, que são
@@ -156,7 +156,7 @@ export async function notifications(): Promise<Notification[]> {
       .order('priority_score', { ascending: false })
       .limit(6),
     openInsights(8),
-    // A manhã é a única coisa que a campainha precisa de dizer no dia em que
+    // A manhã é a única coisa que a campainha precisa dizer no dia em que
     // ainda não foi aberta. O sino dizia 2, o Hoje dizia 17 e o motor de avisos
     // tinha produzido 9 — três números do mesmo dia que não batiam certo em
     // lado nenhum.
@@ -172,7 +172,7 @@ export async function notifications(): Promise<Notification[]> {
       {
         id: `morning:${morning.date}`,
         severity: morning.decisions.some((d) => d.urgent) ? 'urgent' : 'info',
-        title: n === 1 ? 'Uma coisa precisa de si hoje.' : `${n} coisas precisam de si hoje.`,
+        title: n === 1 ? 'Uma coisa precisa de você hoje.' : `${n} coisas precisam de você hoje.`,
         detail: `A manhã está preparada. Cerca de ${morning.estimatedMinutes} ${
           morning.estimatedMinutes === 1 ? 'minuto' : 'minutos'
         }.`,

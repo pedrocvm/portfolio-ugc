@@ -1,5 +1,5 @@
 /** Só as chaves conhecidas do modelo sobrevivem: um rascunho gravado por uma
- *  versão antiga continua a abrir, e campos novos entram com o valor de origem. */
+ *  versão antiga continua abrindo, e campos novos entram com o valor de origem. */
 export function merge<T>(base: T, over: unknown): T {
   if (over === undefined || over === null) return base;
   if (Array.isArray(base)) {

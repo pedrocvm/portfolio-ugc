@@ -4,14 +4,14 @@ import ActionCard from './ActionCard';
 /** O que precisa dela, por ordem.
  *
  *  Saiu daqui a paginação com escolha de 5, 10 ou 20 por página. Era uma
- *  preferência a manter, guardada no browser, para resolver um problema que a
+ *  preferência a manter, salva no browser, para resolver um problema que a
  *  fila não tem: quem quer resolver o dia carrega em «Resolver agora» e nunca
  *  vê esta lista inteira. Quem quer ver, rola.
  *
  *  Saíram também os dois cabeçalhos, «Primeiro isto» e «Depois». A lista já vem
  *  ordenada pela pontuação, e o cartão já diz o risco e o atraso — os títulos
  *  repetiam isso e partiam-se quando nenhum cartão era urgente: a primeira
- *  secção ficava vazia e a segunda ficava sem nome.
+ *  seção ficava vazia e a segunda ficava sem nome.
  *
  *  Deixou de ser um componente cliente: não sobrou estado nenhum. */
 
@@ -24,7 +24,7 @@ export default function Queue({ actions }: { actions: ActionRow[] }) {
   return (
     <section className="osSection">
       <h2>
-        Precisa de si <span className="osCount">{actions.length}</span>
+        precisa de você <span className="osCount">{actions.length}</span>
       </h2>
       {vaiAPena ? (
         <p className="osNote">

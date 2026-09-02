@@ -41,8 +41,8 @@ export default function Brands({ brands }: { brands: Brand[] }) {
       <div className="dashBar">
         <h1>Marcas</h1>
         <span className="dashState">
-          {pending ? <Spinner label="A processar" /> : null}
-          {pending ? 'A processar' : `${brands.length} registadas`}
+          {pending ? <Spinner label="Processando" /> : null}
+          {pending ? 'Processando' : `${brands.length} registadas`}
         </span>
         <button
           type="button"
@@ -240,7 +240,7 @@ function BrandForm({
       {state.error ? <p className="loginErr">{state.error}</p> : null}
       <div className="mediaRow">
         <button className="btn solid" type="submit" disabled={pending}>
-          {pending ? 'A guardar…' : 'Guardar'}
+          {pending ? 'Salvando…' : 'Salvar'}
         </button>
         <button type="button" className="btn quiet" onClick={onDone}>
           Cancelar

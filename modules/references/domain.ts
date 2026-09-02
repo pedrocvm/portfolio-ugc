@@ -2,7 +2,7 @@
  *
  *  A tentação é ordenar por views. Um vídeo com três milhões de visualizações
  *  não é uma boa referência se a Carol não o consegue gravar sozinha em casa —
- *  é uma boa referência para quem tem equipa. O que interessa é o que se
+ *  é uma boa referência para quem tem equipe. O que interessa é o que se
  *  transfere: a estrutura, o gancho, o ritmo, a ideia.
  *
  *  Puro. Quem vai à web é o serviço. */
@@ -188,9 +188,9 @@ export function scoreReference(
     lines.push('Diz porque encaixa nesta marca em concreto.');
   }
 
-  // Gravável sozinha, em casa, com telemóvel. É o filtro que separa uma
-  // referência útil de uma produção com equipa.
-  const heavy = /(drone|est[úu]dio|studio|equipa de|crew|actores|atores|figura[çc][ãa]o|cen[áa]rio constru)/i;
+  // Gravável sozinha, em casa, com celular. É o filtro que separa uma
+  // referência útil de uma produção com equipe.
+  const heavy = /(drone|est[úu]dio|studio|equipa de|equipe de|crew|actores|atores|figura[çc][ãa]o|cen[áa]rio constru)/i;
   const feasible = !heavy.test(`${ref.structure} ${ref.editingStyle} ${ref.whyItWorks}`);
   if (feasible) {
     score += 20;

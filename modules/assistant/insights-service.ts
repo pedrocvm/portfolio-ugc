@@ -3,7 +3,7 @@ import 'server-only';
 import { supabaseService } from '@/lib/supabase/service';
 import { buildInsights, type Insight } from './insights';
 
-/** Alimenta o motor de insights com o estado real e guarda o resultado.
+/** Alimenta o motor de insights com o estado real e salva o resultado.
  *
  *  Corre no agendador do Supabase, não à espera de ela abrir a aplicação — é
  *  esse o ponto de um aviso proativo. Idempotente pela chave de deduplicação:

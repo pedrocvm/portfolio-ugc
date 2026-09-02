@@ -42,17 +42,17 @@ async function write(key: 'draft' | 'published', data: Content) {
   return error?.message;
 }
 
-/** Guarda só as secções tocadas, por cima do rascunho que está na base: o
+/** salva só as seções tocadas, por cima do rascunho que está na base: o
  *  resto do site não depende do que esta janela tinha em memória. */
 export async function saveDraft(patch: Record<string, unknown>): Promise<Result> {
   await requireEditor();
   const current = await getDraft().catch(() => null);
   if (!current) {
-    return { error: 'Não foi possível guardar: o rascunho atual não pôde ser lido. Volta a tentar.' };
+    return { error: 'Não foi possível salvar: o rascunho atual não pôde ser lido. Volta a tentar.' };
   }
 
   const error = await write('draft', merge(DEFAULT_CONTENT, { ...current, ...patch }));
-  if (error) return { error: `Não foi possível guardar: ${error}` };
+  if (error) return { error: `Não foi possível salvar: ${error}` };
   revalidatePath('/preview');
   return { ok: true };
 }

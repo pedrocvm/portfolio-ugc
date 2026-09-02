@@ -22,7 +22,7 @@ export type RunResult = {
   screened: number;
   researched: number;
   selected: number;
-  /** Pesquisadas que não chegaram ao corte mas foram guardadas na mesma. */
+  /** Pesquisadas que não chegaram ao corte mas foram salvas na mesma. */
   below: number;
   failures: string[];
   /** Porque é que a corrida não chegou a andar. Zero marcas porque a pesquisa
@@ -37,7 +37,7 @@ export async function runDailyOutreach(
   const db = supabaseService();
   const kind = opts.kind ?? 'daily';
   // A rota morre aos 300s e leva com ela tudo o que a corrida já fez. Parar por
-  // decisão própria antes disso guarda o que há e diz o que ficou por fazer.
+  // decisão própria antes disso salva o que há e diz o que ficou por fazer.
   const deadline = Date.now() + 4.5 * 60 * 1000;
   const semTempo = () => Date.now() > deadline;
   const now = opts.date ?? new Date();
@@ -49,7 +49,7 @@ export async function runDailyOutreach(
 
   // A corrida diária é idempotente pelo dia: o cron pode disparar duas vezes e
   // não faz dois lotes. Uma busca que ela pediu é outra coisa — pedir duas no
-  // mesmo dia é exactamente o que se espera de um botão «procurar agora», e
+  // mesmo dia é exatamente o que se espera de um botão «procurar agora», e
   // bloqueá-la era o que fazia a busca parecer que não devolvia nada.
   if (kind === 'daily') {
     const { data: existing } = await db
@@ -66,7 +66,7 @@ export async function runDailyOutreach(
   }
 
   const recent = await recentNiches(db);
-  // O foco que ela configurou manda; a rotação por nicho continua a existir
+  // O foco que ela configurou manda; a rotação por nicho continua existindo
   // dentro dele. Antes vinha de uma lista no código.
   const { readFocus } = await import('./focus-service');
   const { nichesForDay } = await import('./focus');
@@ -285,7 +285,7 @@ export async function runDailyOutreach(
 
   if (rows.length) {
     const { error } = await db.from('outreach_candidate').insert(rows);
-    if (error) failures.push('Encontrei marcas mas não as consegui guardar.');
+    if (error) failures.push('Encontrei marcas mas não as consegui salvar.');
   }
 
   return finish({
