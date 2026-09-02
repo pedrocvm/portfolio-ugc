@@ -19,6 +19,7 @@ import {
   ideaFingerprint,
   ENERGY_LABEL,
   describeStrategy,
+  describeRejections,
   energyBudget,
   energyOf,
   isPillar,
@@ -33,6 +34,7 @@ import {
   seriesIsViable,
   shouldGenerate,
   type Pillar,
+  type RejectionReason,
   type Platform,
 } from './domain';
 import { describeExemplars } from './audit-seed';
@@ -104,13 +106,14 @@ export async function runDailyContentPlan(
   if (carga.refreshOnly) reasons.push(carga.because);
 
   // ── Contexto ────────────────────────────────────────────────────────────
-  const [profile, trends, milestones, history, series, jobs] = await Promise.all([
+  const [profile, trends, milestones, history, series, jobs, recusadas] = await Promise.all([
     profileFresh(),
     usableTrends(6),
     contentWorthyMilestones(4),
     recentIdeas(30),
     activeSeries(),
     upcomingJobs(),
+    rejectedIdeas(12),
   ]);
 
   // Um dia com gravação de marca não comporta uma segunda produção. A melhor
@@ -153,6 +156,7 @@ export async function runDailyContentPlan(
         .slice(0, 12)
         .map((h) => `- [${h.platform}] ${h.hook}`)
         .join('\n'),
+      rejected: describeRejections(recusadas),
       series,
       seeds: (await seedsForPillar(ordem[0], 4))
         .map((sd) => `- ${sd.title}: «${sd.hook}»`)
@@ -235,6 +239,7 @@ export async function runDailyContentPlan(
         milestones: describeMilestones(milestones),
         jobs,
         recentIdeas: history.slice(0, 12).map((h) => `- [${h.platform}] ${h.hook}`).join('\n'),
+        rejected: describeRejections(recusadas),
         series,
         seeds: (await seedsForPillar(ordem[0], 4)).map((sd) => `- ${sd.title}: «${sd.hook}»`).join('\n'),
         exemplars: describeExemplars(),
@@ -685,9 +690,44 @@ export async function contentIdea(id: string): Promise<ContentIdeaRow | null> {
   return data ? toIdeaRow(data as unknown as RawIdea) : null;
 }
 
-export async function setIdeaStatus(id: string, status: string): Promise<void> {
+/** Uma decisão dela sobre uma ideia. O motivo só existe quando é recusa.
+ *
+ *  Guardar o motivo é o que separa «sumiu da tela» de «não volta»: é ele que
+ *  o plano da manhã seguinte lê antes de escrever. Voltar atrás limpa-o — uma
+ *  ideia que ela recuperou não é uma ideia recusada. */
+export async function setIdeaStatus(
+  id: string,
+  status: string,
+  reason?: RejectionReason,
+): Promise<void> {
+  const recusa = status === 'discarded' || status === 'archived';
   await supabaseService()
     .from('creator_content_idea')
-    .update({ status, decided_at: new Date().toISOString() })
+    .update({
+      status,
+      decided_at: new Date().toISOString(),
+      rejected_reason: recusa ? (reason ?? null) : null,
+    })
     .eq('id', id);
+}
+
+/** O que ela recusou e porquê, para o gerador não repetir o caminho.
+ *
+ *  Só as que trazem motivo: uma recusa sem motivo não ensina nada e enchia o
+ *  prompt de ruído. */
+export async function rejectedIdeas(
+  limit = 12,
+): Promise<{ hook: string; platform: string; reason: string | null }[]> {
+  const { data } = await supabaseService()
+    .from('creator_content_idea')
+    .select('hook, platform, rejected_reason')
+    .not('rejected_reason', 'is', null)
+    .order('decided_at', { ascending: false })
+    .limit(limit);
+
+  return (data ?? []).map((r) => ({
+    hook: r.hook,
+    platform: r.platform,
+    reason: r.rejected_reason,
+  }));
 }

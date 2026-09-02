@@ -588,3 +588,65 @@ export function ideaProblems(idea: {
       : []),
   ];
 }
+
+/* ── Recusa ───────────────────────────────────────────────────────────────── */
+
+/** Porque é que ela recusou uma ideia.
+ *
+ *  Recusar sem dizer porquê é um estado morto: a ideia sai da tela e a manhã
+ *  seguinte escreve a mesma coisa com outras palavras. O motivo é o único
+ *  sinal que faz o gerador mudar de caminho, e por isso a lista é curta — cinco
+ *  botões que ela toca sem pensar valem mais do que um campo de texto que ela
+ *  nunca preenche.
+ *
+ *  Cada motivo tem um contrário acionável, que é o que vai para o prompt. Um
+ *  motivo que não muda nada no que se pede a seguir não devia estar aqui. */
+export const REJECTION_REASONS = {
+  off_profile: 'Não tem nada a ver comigo',
+  teaching: 'Está me pondo a dar aula',
+  too_hard: 'Dá trabalho demais para o que vale',
+  seen_it: 'Já vi isso em todo lugar',
+  wrong_moment: 'Não é o momento',
+} as const;
+
+export type RejectionReason = keyof typeof REJECTION_REASONS;
+
+export const isRejectionReason = (v: string): v is RejectionReason =>
+  Object.prototype.hasOwnProperty.call(REJECTION_REASONS, v);
+
+/** O que fazer diferente por causa de cada recusa. É isto que o modelo lê. */
+const REJECTION_FIX: Record<RejectionReason, string> = {
+  off_profile:
+    'fica no território dela — comunicação, cliente, marca, o dia de quem grava — e nunca num assunto que qualquer perfil podia ter',
+  teaching:
+    'mostra em vez de explicar: uma cena concreta que aconteceu, não uma lição em tópicos',
+  too_hard: 'menos tomadas, menos adereços, menos edição — que dê para gravar hoje',
+  seen_it: 'evita o formato que já está em todo lugar; procura o ângulo que ninguém usa',
+  wrong_moment: 'evita o gancho preso a esta semana; escolhe algo que continue certo daqui a um mês',
+};
+
+/** As recusas ditas ao modelo como proibição, não como histórico.
+ *
+ *  Agrupa por motivo de propósito: três recusas pelo mesmo motivo são um
+ *  padrão, e um padrão muda o que se pede. Três linhas soltas não mudam nada. */
+export function describeRejections(
+  rows: readonly { hook: string; platform?: string; reason: string | null }[],
+): string {
+  const porMotivo = new Map<RejectionReason, string[]>();
+  for (const r of rows) {
+    if (!r.reason || !isRejectionReason(r.reason)) continue;
+    const lista = porMotivo.get(r.reason) ?? [];
+    if (lista.length < 3) lista.push(r.hook.trim());
+    porMotivo.set(r.reason, lista);
+  }
+  if (porMotivo.size === 0) return '';
+
+  const ordenados = [...porMotivo.entries()].sort((a, b) => b[1].length - a[1].length);
+  return ordenados
+    .map(([motivo, ganchos]) => {
+      const quantas = ganchos.length === 1 ? 'Recusou uma' : `Recusou ${ganchos.length}`;
+      const exemplos = ganchos.map((g) => `«${g}»`).join('; ');
+      return `- ${quantas} por «${REJECTION_REASONS[motivo]}»: ${exemplos}\n  → ${REJECTION_FIX[motivo]}.`;
+    })
+    .join('\n');
+}

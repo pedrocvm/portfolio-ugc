@@ -8,6 +8,7 @@ import {
   RESEARCH_MARKET,
   STRATEGY,
   STRATEGY_SOURCE,
+  describeRejections,
   genericProblems,
   guruProblems,
   platformTreatmentsDiffer,
@@ -324,5 +325,64 @@ test('auditoria · fica gravada como fonte versionada, e sem métricas', () => {
   assert.match(STRATEGY_SOURCE.authority, /none for metrics/);
   for (const h of STRATEGY.hypotheses) {
     assert.equal(h.status, 'untested', `${h.id} foi dado como testado sem dados`);
+  }
+});
+
+/* ── Recusa · o que ela recusa tem de chegar ao gerador ───────────────────── */
+
+test('recusa · o motivo entra no prompt do plano, com o que fazer em vez disso', () => {
+  // Sem isto, recusar era um estado morto: a ideia saía da tela e a manhã
+  // seguinte escrevia a mesma coisa com outras palavras. O teste protege a
+  // ligação inteira — motivo salvo, motivo descrito, motivo no prompt.
+  const texto = registry.planDailyContent.render({
+    today: '2026-09-03',
+    strategy: '',
+    profile: '',
+    pillars: '',
+    avoidPillars: '',
+    audienceTilt: '',
+    trends: '',
+    milestones: '',
+    jobs: '',
+    energy: '',
+    recentIdeas: '',
+    rejected: describeRejections([
+      { hook: '3 erros que as marcas cometem', reason: 'teaching' },
+      { hook: 'o guia completo de UGC', reason: 'teaching' },
+    ]),
+    series: '',
+    seeds: '',
+    exemplars: '',
+    instagramBrief: '',
+    tiktokBrief: '',
+  });
+
+  assert.match(texto, /JÁ RECUSOU/);
+  assert.match(texto, /Recusou 2 por «Está me pondo a dar aula»/);
+  assert.match(texto, /mostra em vez de explicar/);
+});
+
+test('recusa · sem recusas o prompt não inventa um padrão', () => {
+  const texto = registry.planDailyContent.render({
+    today: '2026-09-03',
+    strategy: '', profile: '', pillars: '', avoidPillars: '', audienceTilt: '',
+    trends: '', milestones: '', jobs: '', energy: '', recentIdeas: '',
+    rejected: describeRejections([]),
+    series: '', seeds: '', exemplars: '', instagramBrief: '', tiktokBrief: '',
+  });
+  assert.match(texto, /não inventes um padrão/);
+});
+
+test('recusa · mudar o que se pede obriga a subir a versão do prompt', () => {
+  assert.equal(registry.planDailyContent.version, 'v3');
+});
+
+test('recusa · o plano é escrito em português do Brasil, sem exceção', () => {
+  // «A primeira vez que me pediram a ementa em inglês» saiu numa corrida real.
+  // A regra da língua estava só no bloco partilhado e não chegava aqui.
+  const sistema = registry.planDailyContent.system;
+  assert.match(sistema, /Português do Brasil, sempre/);
+  for (const palavra of ['ementa', 'ecrã', 'telemóvel', 'ficheiro', 'equipa']) {
+    assert.ok(sistema.includes(`«${palavra}»`), `o prompt não proíbe «${palavra}»`);
   }
 });

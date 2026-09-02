@@ -1154,10 +1154,10 @@ const getContentIdea = define(
 
 const regenerateContentIdea = define(
   'regenerate_content_idea',
-  'Escreve outra ideia no lugar de uma. A direção é uma de quatro: easier (mais fácil de gravar), personal (mais pessoal), educational (mais educativa), edited (mais trabalhada na edição). Usa isto para «quero outra», «quero algo mais fácil».',
+  'Escreve outra ideia no lugar de uma, e diz porque é que a anterior não servia: off_profile (não tem nada a ver com ela), teaching (estava dando aula), too_hard (dava trabalho demais), seen_it (já está em todo lugar), wrong_moment (não é o momento). Usa isto para «quero outra», «isso não é a minha cara», «quero algo mais fácil».',
   z.object({
     idea_id: z.string().uuid(),
-    direction: z.enum(['easier', 'personal', 'educational', 'edited']).optional(),
+    direction: z.enum(['off_profile', 'teaching', 'too_hard', 'seen_it', 'wrong_moment']).optional(),
   }),
   async ({ idea_id, direction }) => {
     const { replaceIdea } = await import('@/modules/creator/replace-service');

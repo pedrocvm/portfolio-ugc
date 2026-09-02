@@ -14,6 +14,7 @@ import {
   sendPreparedReply,
 } from '@/app/dashboard/morning-actions';
 import type { Decision } from '@/modules/morning/domain';
+import { REJECTION_REASONS, type RejectionReason } from '@/modules/creator/domain';
 
 /** A manhã, uma decisão de cada vez.
  *
@@ -26,12 +27,8 @@ import type { Decision } from '@/modules/morning/domain';
  *  resumo por cima, ação preparada no meio, e três botões — fazer, mudar,
  *  depois. */
 
-const NUDGES = [
-  { key: 'easier', label: 'mais fácil' },
-  { key: 'personal', label: 'mais pessoal' },
-  { key: 'educational', label: 'mais educativa' },
-  { key: 'edited', label: 'mais editada' },
-];
+/** Os motivos pela ordem em que ela pensa neles: primeiro «isto não sou eu». */
+const MOTIVOS = Object.entries(REJECTION_REASONS) as [RejectionReason, string][];
 
 type Payload = Record<string, unknown>;
 const str = (p: Payload | undefined, k: string) => (typeof p?.[k] === 'string' ? (p[k] as string) : '');
@@ -313,7 +310,11 @@ function ReplyStep({
   );
 }
 
-/** Conteúdo: o plano por cima, e três saídas — gravar, salvar, outra ideia. */
+/** Conteúdo: o plano por cima, e as saídas — gravar, salvar, outra, fora.
+ *
+ *  «Hoje não» adia; «Não é para mim» recusa, e a recusa leva sempre o motivo.
+ *  São coisas diferentes e estavam no mesmo botão: adiar uma ideia que ela
+ *  detesta faz o plano de amanhã sugeri-la outra vez. */
 function ContentStep({
   decision,
   onResolved,
@@ -326,7 +327,7 @@ function ContentStep({
   const p = decision.payload as Payload | undefined;
   const ideaId = str(p, 'ideaId');
   const [pending, start] = useTransition();
-  const [aTrocar, setATrocar] = useState(false);
+  const [aPerguntar, setAPerguntar] = useState<'outra' | 'fora' | null>(null);
   const [erro, setErro] = useState('');
 
   const gravar = str(p, 'recordMinutes') || num(p, 'recordMinutes');
@@ -345,16 +346,34 @@ function ContentStep({
       onResolved();
     });
 
-  const trocar = (nudge: string) =>
+  const trocar = (motivo: RejectionReason) =>
     start(async () => {
       setErro('');
-      const r = await anotherIdea(ideaId, nudge).catch(() => ({ error: 'Não consegui escrever outra agora.' }));
+      const r = await anotherIdea(ideaId, motivo).catch(() => ({ error: 'Não consegui escrever outra agora.' }));
       if (r.error) {
         setErro(r.error);
         return;
       }
       // A ideia nova entra na fila de amanhã; esta sai de hoje.
       onSkip();
+    });
+
+  /** Recusar não é adiar: a ideia sai da manhã com o motivo escrito, e é o
+   *  motivo que impede a mesma coisa de voltar amanhã. */
+  const recusar = (motivo: RejectionReason) =>
+    start(async () => {
+      setErro('');
+      const r = await decideOnIdea(ideaId, 'discarded', motivo).catch(() => ({
+        error: 'Não consegui salvar agora.',
+      }));
+      if (r.error) {
+        setErro(r.error);
+        return;
+      }
+      pushUndo(`Fora: ${REJECTION_REASONS[motivo].toLowerCase()}.`, async () => {
+        await decideOnIdea(ideaId, 'ready');
+      });
+      onResolved();
     });
 
   return (
@@ -373,13 +392,20 @@ function ContentStep({
         </p>
       ) : null}
 
-      {aTrocar ? (
+      {aPerguntar ? (
         <div className="mornNudges">
-          <span className="mornNudgeLabel">Como deve ser a próxima?</span>
-          {NUDGES.map((n) => (
-            <button key={n.key} type="button" disabled={pending} onClick={() => trocar(n.key)}>
-              {pending ? <Spinner label="A escrever" /> : null}
-              {n.label}
+          <span className="mornNudgeLabel">
+            {aPerguntar === 'outra' ? 'O que estava errado nesta?' : 'Por quê?'}
+          </span>
+          {MOTIVOS.map(([chave, rotulo]) => (
+            <button
+              key={chave}
+              type="button"
+              disabled={pending}
+              onClick={() => (aPerguntar === 'outra' ? trocar(chave) : recusar(chave))}
+            >
+              {pending ? <Spinner label="Escrevendo" /> : null}
+              {rotulo}
             </button>
           ))}
         </div>
@@ -397,8 +423,21 @@ function ContentStep({
         >
           salvar para depois
         </button>
-        <button className="osPageBtn" type="button" disabled={pending} onClick={() => setATrocar((v) => !v)}>
+        <button
+          className="osPageBtn"
+          type="button"
+          disabled={pending}
+          onClick={() => setAPerguntar((v) => (v === 'outra' ? null : 'outra'))}
+        >
           Quero outra
+        </button>
+        <button
+          className="focusSkip"
+          type="button"
+          disabled={pending}
+          onClick={() => setAPerguntar((v) => (v === 'fora' ? null : 'fora'))}
+        >
+          Não é para mim
         </button>
         <button className="focusSkip" type="button" disabled={pending} onClick={onSkip}>
           Hoje não

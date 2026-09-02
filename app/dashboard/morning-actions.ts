@@ -81,33 +81,32 @@ export async function postponeReply(threadId: string): Promise<Result> {
 
 const IDEA_STATUS = z.enum(['ready', 'saved', 'recorded', 'published', 'discarded', 'archived']);
 
-export async function decideOnIdea(ideaId: string, status: string): Promise<Result> {
+export async function decideOnIdea(ideaId: string, status: string, reason?: string): Promise<Result> {
   await requireUser();
   if (!uuid.safeParse(ideaId).success) return { error: 'Ideia inválida.' };
   const parsed = IDEA_STATUS.safeParse(status);
   if (!parsed.success) return { error: 'Estado inválido.' };
 
+  const { isRejectionReason } = await import('@/modules/creator/domain');
   const { setIdeaStatus } = await import('@/modules/creator/plan-service');
-  await setIdeaStatus(ideaId, parsed.data);
+  await setIdeaStatus(ideaId, parsed.data, reason && isRejectionReason(reason) ? reason : undefined);
   refresh();
   return { ok: true };
 }
 
-/** «Quero outra ideia.»
+/** «Quero outra ideia.» e «não é para mim.»
  *
- *  Não regenera às cegas: recebe uma direção de um toque — mais fácil, mais
- *  pessoal, mais educativa, mais editada — e a ideia velha fica descartada com
- *  o motivo, para não voltar. */
-const NUDGES = ['easier', 'personal', 'educational', 'edited'] as const;
-export type Nudge = (typeof NUDGES)[number];
-
-export async function anotherIdea(ideaId: string, nudge?: string): Promise<Result & { newId?: string }> {
+ *  São o mesmo gesto com dois destinos: em ambos ela diz porquê, e é o porquê
+ *  que muda o plano de amanhã. Sem motivo, recusar era um estado morto — a
+ *  ideia saía da tela e voltava no dia seguinte com outras palavras. */
+export async function anotherIdea(ideaId: string, reason?: string): Promise<Result & { newId?: string }> {
   await requireUser();
   if (!uuid.safeParse(ideaId).success) return { error: 'Ideia inválida.' };
 
-  const direction = NUDGES.includes(nudge as Nudge) ? (nudge as Nudge) : undefined;
+  const { isRejectionReason } = await import('@/modules/creator/domain');
+  const motivo = reason && isRejectionReason(reason) ? reason : undefined;
   const { replaceIdea } = await import('@/modules/creator/replace-service');
-  const result = await replaceIdea(ideaId, direction);
+  const result = await replaceIdea(ideaId, motivo);
   if (!result.ok) return { error: result.error };
 
   refresh();

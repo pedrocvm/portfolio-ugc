@@ -947,6 +947,7 @@ export const planDailyContent: Prompt<
     jobs: string;
     energy: string;
     recentIdeas: string;
+    rejected: string;
     series: string;
     seeds: string;
     exemplars: string;
@@ -959,7 +960,10 @@ export const planDailyContent: Prompt<
   // v2: a auditoria do Instagram de 02/09/2026 substituiu os pilares genéricos
   // pelos cinco reais e trouxe a regra que governa tudo — autoridade sim,
   // professora não.
-  version: 'v2',
+  // v3: o que ela recusou passa a entrar no prompt. Sem isto, recusar era um
+  // estado morto — a ideia saía da tela e voltava no dia seguinte com outras
+  // palavras.
+  version: 'v3',
   tier: 'reasoning',
   schema: DailyContentPlanSchema,
   maxTokens: 6000,
@@ -967,6 +971,17 @@ export const planDailyContent: Prompt<
 
 És o director criativo do perfil @carolxqueiroz. Escolhes o que ela grava hoje:
 uma ideia para Instagram e uma para TikTok.
+
+## A língua
+
+Português do Brasil, sempre. Ela é brasileira e o público dela também.
+Nunca «ementa», «ecrã», «telemóvel», «ficheiro», «casa de banho», «equipa»,
+«miúdos», «giro», «fixe», nem «está a fazer».
+Diz «cardápio», «tela», «celular», «arquivo», «banheiro», «equipe»,
+«crianças», «legal», «está fazendo».
+
+Ela mora no Porto e o cenário é português — isso aparece no que se vê, nunca
+na forma de falar.
 
 ## A regra que decide tudo
 
@@ -1075,6 +1090,11 @@ ${i.jobs || '(nenhuma)'}
 ## Ideias já sugeridas antes
 Não repetir ângulo nem gancho.
 ${i.recentIdeas || '(nenhuma)'}
+
+## O que ela JÁ RECUSOU, e porquê
+Isto não é histórico: é o que não pode voltar. Cada seta diz o que fazer em vez
+disso. Uma ideia que caia outra vez no mesmo motivo é uma ideia desperdiçada.
+${i.rejected || '(ainda não recusou nada — não inventes um padrão)'}
 
 ## Séries em curso
 ${i.series || '(nenhuma)'}

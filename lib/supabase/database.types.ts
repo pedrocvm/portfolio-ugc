@@ -1921,6 +1921,7 @@ export type Database = {
           provenance: string | null
           quality: Json
           reference_ids: string[]
+          rejected_reason: string | null
           script: string
           series_id: string | null
           shot_list: Json
@@ -1968,6 +1969,7 @@ export type Database = {
           provenance?: string | null
           quality?: Json
           reference_ids?: string[]
+          rejected_reason?: string | null
           script?: string
           series_id?: string | null
           shot_list?: Json
@@ -2015,6 +2017,7 @@ export type Database = {
           provenance?: string | null
           quality?: Json
           reference_ids?: string[]
+          rejected_reason?: string | null
           script?: string
           series_id?: string | null
           shot_list?: Json

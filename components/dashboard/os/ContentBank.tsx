@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Spinner from '@/components/dashboard/Spinner';
 import { pushToast, pushUndo } from '@/components/dashboard/Toasts';
 import { anotherIdea, decideOnIdea } from '@/app/dashboard/morning-actions';
+import { REJECTION_REASONS, type RejectionReason } from '@/modules/creator/domain';
 import type { ContentIdeaRow } from '@/modules/creator/plan-service';
 import type { TrendRow } from '@/modules/trends/service';
 import RecordingMode from './RecordingMode';
@@ -27,12 +28,8 @@ const STATUS_LABEL: Record<string, string> = {
   discarded: 'descartada',
 };
 
-const NUDGES = [
-  { key: 'easier', label: 'mais fácil' },
-  { key: 'personal', label: 'mais pessoal' },
-  { key: 'educational', label: 'mais educativa' },
-  { key: 'edited', label: 'mais editada' },
-];
+/** Os motivos pela ordem em que ela pensa neles: primeiro «isto não sou eu». */
+const MOTIVOS = Object.entries(REJECTION_REASONS) as [RejectionReason, string][];
 
 export default function ContentBank({
   today,
@@ -47,7 +44,9 @@ export default function ContentBank({
 }) {
   const salvas = bank.filter((i) => i.status === 'saved');
   const feitas = bank.filter((i) => i.status === 'recorded' || i.status === 'published');
-  const arquivo = bank.filter((i) => i.status === 'archived' || i.status === 'discarded');
+  // As recusadas não voltam à tela. Quem se enganou tem o desfazer no aviso; o
+  // arquivo é só o que envelheceu sozinho, que ela nunca decidiu.
+  const arquivo = bank.filter((i) => i.status === 'archived');
 
   return (
     <>
@@ -127,7 +126,8 @@ function Idea({
 }) {
   const [pending, start] = useTransition();
   const [status, setStatus] = useState(idea.status);
-  const [aTrocar, setATrocar] = useState(false);
+  const [aPerguntar, setAPerguntar] = useState<'outra' | 'fora' | null>(null);
+  const [fora, setFora] = useState(false);
   const [erro, setErro] = useState('');
 
   const usadas = trends.filter((t) => idea.trendIds.includes(t.id));
@@ -147,17 +147,39 @@ function Idea({
       });
     });
 
-  const trocar = (nudge: string) =>
+  const trocar = (motivo: RejectionReason) =>
     start(async () => {
       setErro('');
-      const r = await anotherIdea(idea.id, nudge).catch(() => ({ error: 'Não consegui escrever outra agora.' }));
+      const r = await anotherIdea(idea.id, motivo).catch(() => ({ error: 'Não consegui escrever outra agora.' }));
       if (r.error) {
         setErro(r.error);
         return;
       }
-      setStatus('discarded');
+      setFora(true);
       pushToast('Escrevi outra. Está aqui em cima.');
     });
+
+  /** Recusar tira-a da tela. O motivo vai junto: é ele que impede a mesma
+   *  ideia de voltar amanhã com outras palavras. */
+  const recusar = (motivo: RejectionReason) =>
+    start(async () => {
+      setErro('');
+      const r = await decideOnIdea(idea.id, 'discarded', motivo).catch(() => ({
+        error: 'Não consegui salvar agora.',
+      }));
+      if (r.error) {
+        setErro(r.error);
+        return;
+      }
+      const anterior = status;
+      setFora(true);
+      pushUndo(`Fora: ${REJECTION_REASONS[motivo].toLowerCase()}.`, async () => {
+        await decideOnIdea(idea.id, anterior);
+        setFora(false);
+      });
+    });
+
+  if (fora) return null;
 
   return (
     <details className="cbIdea" open={open} data-platform={idea.platform} data-status={status}>
@@ -346,13 +368,20 @@ function Idea({
           </p>
         ) : null}
 
-        {aTrocar ? (
+        {aPerguntar ? (
           <div className="mornNudges">
-            <span className="mornNudgeLabel">Como deve ser a próxima?</span>
-            {NUDGES.map((n) => (
-              <button key={n.key} type="button" disabled={pending} onClick={() => trocar(n.key)}>
-                {pending ? <Spinner label="A escrever" /> : null}
-                {n.label}
+            <span className="mornNudgeLabel">
+              {aPerguntar === 'outra' ? 'O que estava errado nesta?' : 'Por quê?'}
+            </span>
+            {MOTIVOS.map(([chave, rotulo]) => (
+              <button
+                key={chave}
+                type="button"
+                disabled={pending}
+                onClick={() => (aPerguntar === 'outra' ? trocar(chave) : recusar(chave))}
+              >
+                {pending ? <Spinner label="Escrevendo" /> : null}
+                {rotulo}
               </button>
             ))}
           </div>
@@ -398,7 +427,12 @@ function Idea({
             </button>
           )}
 
-          <button className="osPageBtn" type="button" disabled={pending} onClick={() => setATrocar((v) => !v)}>
+          <button
+            className="osPageBtn"
+            type="button"
+            disabled={pending}
+            onClick={() => setAPerguntar((v) => (v === 'outra' ? null : 'outra'))}
+          >
             Quero outra
           </button>
 
@@ -406,7 +440,7 @@ function Idea({
             className="focusSkip"
             type="button"
             disabled={pending}
-            onClick={() => decidir('discarded', 'Descartada.')}
+            onClick={() => setAPerguntar((v) => (v === 'fora' ? null : 'fora'))}
           >
             Não é para mim
           </button>

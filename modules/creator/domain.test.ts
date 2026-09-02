@@ -3,8 +3,10 @@ import test from 'node:test';
 
 import {
   PILLARS,
+  REJECTION_REASONS,
   PILLAR_SPEC,
   catalogProblems,
+  describeRejections,
   energyBudget,
   energyOf,
   estimateMinutes,
@@ -415,4 +417,54 @@ test('a estimativa cresce com as tomadas e com o peso da edição', () => {
 
   const muitas = estimateMinutes({ shots: 8, durationSeconds: 45, editingComplexity: 'medium' });
   assert.ok(muitas.record > simples.record);
+});
+
+/* ── Recusa ───────────────────────────────────────────────────────────────── */
+
+test('sem recusas não se diz nada ao modelo', () => {
+  assert.equal(describeRejections([]), '');
+  assert.equal(describeRejections([{ hook: 'a', reason: null }]), '');
+  assert.equal(describeRejections([{ hook: 'a', reason: 'inventado' }]), '');
+});
+
+test('as recusas agrupam-se por motivo, e o motivo traz o que fazer diferente', () => {
+  const texto = describeRejections([
+    { hook: '3 erros que marcas cometem', reason: 'teaching' },
+    { hook: 'o guia definitivo de UGC', reason: 'teaching' },
+    { hook: 'grava isto com drone', reason: 'too_hard' },
+  ]);
+
+  assert.match(texto, /Recusou 2 por «Está me pondo a dar aula»/);
+  assert.match(texto, /«3 erros que marcas cometem»; «o guia definitivo de UGC»/);
+  assert.match(texto, /mostra em vez de explicar/);
+  assert.match(texto, /Recusou uma por «Dá trabalho demais/);
+  assert.match(texto, /menos tomadas/);
+});
+
+test('o motivo mais repetido vem primeiro: é o padrão, não o último clique', () => {
+  const texto = describeRejections([
+    { hook: 'um', reason: 'off_profile' },
+    { hook: 'dois', reason: 'teaching' },
+    { hook: 'três', reason: 'teaching' },
+  ]);
+  assert.ok(
+    texto.indexOf('dar aula') < texto.indexOf('nada a ver comigo'),
+    texto,
+  );
+});
+
+test('não se despeja o histórico inteiro: três exemplos por motivo chegam', () => {
+  const texto = describeRejections(
+    Array.from({ length: 9 }, (_, i) => ({ hook: `gancho ${i}`, reason: 'seen_it' })),
+  );
+  assert.equal(texto.match(/«gancho \d»/g)?.length, 3);
+  assert.match(texto, /Recusou 3 por/);
+});
+
+test('todo o motivo que ela pode tocar muda alguma coisa no que se pede', () => {
+  // Um botão que não muda o prompt é um botão que mente.
+  for (const motivo of Object.keys(REJECTION_REASONS)) {
+    const texto = describeRejections([{ hook: 'seja o que for', reason: motivo }]);
+    assert.match(texto, /→ .{20,}/, motivo);
+  }
 });
