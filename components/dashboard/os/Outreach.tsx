@@ -162,6 +162,8 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
    *  depois de a mensagem sair, porque «enviado» sem endereço não prova nada a
    *  quem carregou no botão. */
   const [comprovativo, setComprovativo] = useState<{ from: string; to: string } | null>(null);
+  /** Quando o rascunho foi salvo da última vez. Serve para lhe dizer. */
+  const [salvoEm, setSalvoEm] = useState<string | null>(null);
   // Abaixo do corte de encaixe: pesquisada, salva, sem email escrito. O
   // email custa uma chamada ao modelo e só se escreve se ela quiser esta marca.
   const semEmail = !subject && !body;
@@ -201,6 +203,33 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
   };
 
   const dirty = subject !== c.subject || body !== c.body;
+
+  /** Salva o rascunho sem ela ter de pedir.
+   *
+   *  O que ela escrevia vivia só no estado do componente: o «Salvar» era um
+   *  botão a mais para carregar, e quem não carregasse perdia a edição ao
+   *  recarregar a página. Pior — o envio lê o assunto e o corpo da BASE, por
+   *  isso uma edição por salvar saía com o texto antigo, sem aviso nenhum.
+   *
+   *  Salva-se quando ela sai do campo, e outra vez antes de enviar. */
+  const salvarRascunho = async (): Promise<{ error?: string }> => {
+    if (!dirty) return {};
+    setRunning('save');
+    const r = await updateOutreachDraft(c.id, subject, body);
+    setRunning('');
+    if (r.error) {
+      setMsg(r.error);
+      pushToast(`${c.name}: ${r.error}`, 'warn');
+      return r;
+    }
+    setStatus('edited');
+    setSalvoEm(new Date().toISOString());
+    return {};
+  };
+
+  const salvarAoSair = () => {
+    if (dirty) start(() => void salvarRascunho());
+  };
 
   // As outras caixas que a pesquisa viu e não escolheu. Trocar tem de ser um
   // toque: quando o palpite sai ao lado, ela já sabe qual é o certo.
@@ -379,10 +408,26 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
             id={`s-${c.id}`}
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
+            onBlur={salvarAoSair}
             placeholder="Assunto"
           />
           <label className="visually-hidden" htmlFor={`b-${c.id}`}>Mensagem</label>
-          <textarea id={`b-${c.id}`} rows={12} value={body} onChange={(e) => setBody(e.target.value)} />
+          <textarea
+            id={`b-${c.id}`}
+            rows={12}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            onBlur={salvarAoSair}
+          />
+          <p className="outSaved" aria-live="polite">
+            {running === 'save'
+              ? 'Salvando…'
+              : dirty
+                ? 'Por salvar — salva sozinho quando sair do campo.'
+                : salvoEm
+                  ? 'Alterações salvas.'
+                  : ''}
+          </p>
 
           {aTrocarPara ? (
             <div className="outTo">
@@ -482,9 +527,14 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
               type="button"
               disabled={pending}
               onClick={() => {
-                setRunning('send');
                 setMsg('');
                 start(async () => {
+                  // O envio lê o assunto e o corpo da base. Uma edição por
+                  // salvar saía com o texto antigo — salva-se primeiro, e se
+                  // isso falhar não se envia nada.
+                  const salvou = await salvarRascunho();
+                  if (salvou.error) return;
+                  setRunning('send');
                   const r = await sendOutreach(c.id);
                   setRunning('');
                   if (r.error) {
@@ -521,7 +571,7 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
                 className="osPageBtn"
                 type="button"
                 disabled={pending}
-                onClick={() => run('save', () => updateOutreachDraft(c.id, subject, body), () => setStatus('edited'))}
+                onClick={() => start(() => void salvarRascunho())}
               >
                 {running === 'save' ? <Spinner label="Salvando" /> : null}
                 Salvar

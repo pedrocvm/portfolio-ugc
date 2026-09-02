@@ -6008,6 +6008,15 @@ a.aiSource:hover {
   flex-wrap: wrap;
   gap: 8px;
 }
+/* O estado do rascunho. Ela escrevia e não sabia se aquilo tinha ficado
+   guardado — e o envio lê da base, por isso a dúvida era legítima. */
+.outSaved {
+  margin: 2px 0 0;
+  min-height: 18px;
+  font-size: 13px;
+  color: var(--tinta3);
+}
+
 /* O comprovativo do envio. Fica no lugar do botão que ela carregou, com os dois
    endereços: durante semanas nenhuma abordagem saiu e nada na tela o disse. */
 .outSent {

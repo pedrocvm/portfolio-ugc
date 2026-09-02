@@ -10,6 +10,7 @@ import { parseCapture } from '@/modules/ai/prompts/registry';
 import type { CaptureExtraction } from '@/modules/ai/schemas';
 import { normalizeDomain, normalizeEmail, normalizeHandle } from '@/modules/brands/identity';
 import { guessNiche, prospectableNiches } from '@/modules/brands/niches';
+import { upsertContactByEmail } from '@/modules/contacts/service';
 import { resolveOrCreateBrand } from '@/modules/brands/service';
 import { ensureOpportunity } from '@/modules/opportunities/service';
 import { CAPTURE_KIND_LABEL, type CaptureKind } from './detect';
@@ -227,17 +228,14 @@ export async function applyCapture(
   });
 
   if (extracted.contact_email) {
-    await db.from('contact').upsert(
-      {
-        brand_id: resolved.brandId,
-        name: extracted.contact_name ?? '',
-        role: extracted.contact_role ?? '',
-        email: extracted.contact_email,
-        preferred_channel: 'email' as const,
-        source: `capture:${capture.kind}`,
-      },
-      { onConflict: 'email', ignoreDuplicates: true },
-    );
+    await upsertContactByEmail(db, {
+      brandId: resolved.brandId,
+      email: extracted.contact_email,
+      name: extracted.contact_name,
+      role: extracted.contact_role,
+      preferredChannel: 'email',
+      source: `capture:${capture.kind}`,
+    });
   }
 
   if (extracted.product_name) {

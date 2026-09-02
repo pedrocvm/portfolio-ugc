@@ -9,6 +9,7 @@ import { runPrompt } from '@/modules/ai/gateway';
 import { classifyThread, extractCommercial } from '@/modules/ai/prompts/registry';
 import type { CommercialExtraction } from '@/modules/ai/schemas';
 import { resolveOrCreateBrand } from '@/modules/brands/service';
+import { upsertContactByEmail } from '@/modules/contacts/service';
 import { emailDomain, normalizeEmail } from '@/modules/brands/identity';
 import { scheduleFor } from '@/modules/followups/service';
 import { applyStageSignal, ensureOpportunity } from '@/modules/opportunities/service';
@@ -247,22 +248,15 @@ export async function ingestMessage(
 
   let contactId = thread.contact_id;
   if (!contactId && counterpart) {
-    const { data: contact } = await db
-      .from('contact')
-      .upsert(
-        {
-          brand_id: brandId,
-          name: extraction?.contact_name ?? (msg.direction === 'inbound' ? msg.fromName : ''),
-          role: extraction?.contact_role ?? '',
-          email: counterpart,
-          preferred_channel: msg.provider === 'gmail' ? ('email' as const) : ('other' as const),
-          source: msg.provider,
-        },
-        { onConflict: 'email', ignoreDuplicates: false },
-      )
-      .select('id')
-      .maybeSingle();
-    contactId = contact?.id ?? null;
+    const contact = await upsertContactByEmail(db, {
+      brandId,
+      email: counterpart,
+      name: extraction?.contact_name ?? (msg.direction === 'inbound' ? msg.fromName : ''),
+      role: extraction?.contact_role ?? '',
+      preferredChannel: msg.provider === 'gmail' ? 'email' : 'other',
+      source: msg.provider,
+    });
+    contactId = 'error' in contact ? null : contact.id;
 
     if (contactId) {
       await recordEvent(db, {
