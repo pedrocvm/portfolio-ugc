@@ -7004,3 +7004,289 @@ a.aiSource:hover {
   outline: 2px solid var(--tinta);
   outline-offset: 1px;
 }
+
+/* ── a manhã preparada ─────────────────────────────────────────────────────
+   O Hoje deixou de abrir com uma acusação. A primeira coisa é a frase, a
+   segunda é um botão, e o trabalho que o sistema fez fica dobrado por baixo —
+   presente para ser visto, discreto para não competir com a decisão. */
+
+.dash .morn {
+  margin: 0 0 32px;
+}
+
+.dash .mornLead {
+  margin: 0 0 18px;
+  font-family: var(--serif);
+  font-size: clamp(21px, 2.6vw, 27px);
+  line-height: 1.32;
+  color: var(--tinta);
+  max-width: 34ch;
+  text-wrap: balance;
+}
+
+/* O que o sistema fez sozinho. Fechado por omissão: é prova de vida, não é
+   trabalho dela. Aberto, muda a relação — de sistema que cobra para sistema
+   que trabalhou. */
+.dash .mornWork {
+  margin-top: 22px;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+.dash .mornWork > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  cursor: pointer;
+  list-style: none;
+}
+.dash .mornWork > summary::-webkit-details-marker {
+  display: none;
+}
+.dash .mornWork > summary:hover {
+  color: var(--tinta);
+}
+.dash .mornWork[open] > summary span {
+  transform: rotate(180deg);
+}
+.dash .mornWork > summary span {
+  display: inline-block;
+  transition: transform var(--t-fast) var(--ease);
+}
+.dash .mornWork ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  columns: 2;
+  column-gap: 26px;
+}
+.dash .mornWork li {
+  break-inside: avoid;
+  padding: 3px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+@media (max-width: 639px) {
+  .dash .mornWork ul {
+    columns: 1;
+  }
+}
+
+/* A honestidade tem de ser visível sem gritar. Não é um erro: é o que ficou
+   por fazer, e dizê-lo é o que torna o resto credível. */
+.dash .mornGaps {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--alertaLeve);
+  border-left: 2px solid var(--alerta);
+}
+.dash .mornGapsTitle {
+  margin: 0 0 4px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--alerta);
+}
+.dash .mornGaps ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+
+/* ── o fluxo, um passo de cada vez ─────────────────────────────────────── */
+
+.dash .mornBox {
+  width: min(680px, 100%);
+}
+
+.dash .mornFacts {
+  display: grid;
+  grid-template-columns: minmax(88px, auto) 1fr;
+  gap: 4px 14px;
+  margin: 18px 0 0;
+  font-size: 15px;
+}
+.dash .mornFacts dt {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  padding-top: 2px;
+}
+.dash .mornFacts dd {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+.dash .mornFacts dd[data-risk='high'] {
+  color: var(--alerta);
+}
+
+/* A mensagem pronta. Lê-se antes de se decidir, por isso é o bloco maior. */
+.dash .mornMsg {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: var(--areia);
+}
+.dash .mornTo {
+  margin: 0;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.dash .mornSubject {
+  margin: 2px 0 10px;
+  font-weight: 500;
+  color: var(--tinta);
+}
+.dash .mornBody p {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--tinta);
+}
+.dash .mornBody p:last-child {
+  margin-bottom: 0;
+}
+
+.dash .mornDraft {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--areia2);
+  background: var(--papel);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--tinta);
+  resize: vertical;
+}
+.dash .mornDraft:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 1px;
+}
+
+/* ── conteúdo ──────────────────────────────────────────────────────────── */
+
+.dash .mornHook {
+  margin: 18px 0 6px;
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--tinta);
+}
+.dash .mornMeta {
+  margin: 0;
+  font-size: 14px;
+  color: var(--tinta3);
+}
+.dash .mornVerdict {
+  margin: 10px 0 0;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 15px;
+  color: var(--umbra);
+}
+.dash .mornProof {
+  max-width: 46ch;
+  margin-inline: auto;
+}
+
+/* «Quero outra»: quatro direcções, um toque. Nunca uma caixa de texto. */
+.dash .mornNudges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--areia);
+}
+.dash .mornNudgeLabel {
+  flex-basis: 100%;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.dash .mornNudges button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--areia2);
+  background: var(--papel);
+  font: inherit;
+  font-size: 15px;
+  color: var(--tinta);
+  cursor: pointer;
+  transition:
+    border-color var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease);
+}
+.dash .mornNudges button:hover {
+  border-color: var(--umbra);
+}
+.dash .mornNudges button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 559px) {
+  .dash .mornNudges button {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+  }
+}
+
+/* A fila antiga, quando já existe manhã preparada. Não desaparece — continua a
+   ser onde vive o que a manhã não cobriu — mas deixa de competir pela atenção
+   com o que está pronto a resolver. */
+.dash .osRest {
+  margin-top: 28px;
+  border-top: 1px solid var(--rule);
+  padding-top: 10px;
+}
+.dash .osRest > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  cursor: pointer;
+  list-style: none;
+}
+.dash .osRest > summary::-webkit-details-marker {
+  display: none;
+}
+.dash .osRest > summary:hover {
+  color: var(--tinta);
+}
+.dash .osRest > summary b {
+  font-weight: 500;
+  color: var(--tinta);
+}
+.dash .osRest .osSection h2 {
+  display: none;
+}

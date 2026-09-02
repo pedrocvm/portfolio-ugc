@@ -1,6 +1,7 @@
 import type { ActionRow } from '@/modules/actions/service';
 import Today from '@/components/dashboard/os/Today';
 import { dailyBrief } from '@/modules/actions/brief';
+import { EMPTY_PREPARED, describePrepared, orderDecisions } from '@/modules/morning/domain';
 import { describeBackground } from '@/modules/actions/day';
 import RecordingMode from '@/components/dashboard/os/RecordingMode';
 
@@ -105,6 +106,117 @@ const TOMADAS = [
   { shot: 'Vista da sala com a janela limpa', required: false },
 ];
 
+/** A manhã preparada, como sai da consolidação. Serve a bancada de capturas:
+ *  o Morning Brief só existe depois de os trabalhos correrem, e não se espera
+ *  por uma madrugada para ver se a tela está bem. */
+const MANHA = {
+  date: '2026-09-02',
+  status: 'partial' as const,
+  headline: '4 coisas precisam de si — cerca de 6 minutos.',
+  decisionCount: 4,
+  estimatedMinutes: 6,
+  openedAt: null,
+  completedAt: null,
+  prepared: {
+    ...EMPTY_PREPARED,
+    brandsFound: 8,
+    referencesFound: 21,
+    threadsOrganized: 9,
+    repliesPrepared: 3,
+    trendsFound: 12,
+    contentIdeas: 2,
+    mailboxesSynced: 2,
+    followUpsCancelled: 1,
+  },
+  preparedLines: describePrepared({
+    ...EMPTY_PREPARED,
+    brandsFound: 8,
+    referencesFound: 21,
+    threadsOrganized: 9,
+    repliesPrepared: 3,
+    trendsFound: 12,
+    contentIdeas: 2,
+    mailboxesSynced: 2,
+    followUpsCancelled: 1,
+  }),
+  gaps: [{ area: 'trends', message: 'Não consegui ver o TikTok Creative Center esta manhã.' }],
+  decisions: orderDecisions([
+    {
+      id: 'reply:1',
+      kind: 'reply',
+      subject: 'Cecotec',
+      headline: 'A Julia aprovou o briefing e o produto está a caminho.',
+      because: 'Não pediu nada — só confirmou. Agradecer e dizer quando grava.',
+      covers: 1,
+      weightCents: null,
+      urgent: false,
+      waitingDays: 2,
+      minutes: 1,
+      href: '/dashboard/inbox',
+      payload: {
+        threadId: '00000000-0000-4000-8000-000000000001',
+        draftSubject: 'Re: Colaboração UGC — briefing aprovado',
+        draftBody:
+          'Olá, Julia,\n\nÓptimo saber que o briefing está aprovado. Fico à espera do produto e aviso assim que chegar, com a data de gravação.\n\nAté já,\nCarol',
+        replyTo: 'julia@cecotec.pt',
+        whatChanged: 'Aprovaram o briefing e enviaram o produto.',
+        whatIsMissing: '',
+        risk: '',
+        riskLevel: 'none',
+        intentLabel: 'aprovou',
+      },
+    },
+    {
+      id: 'rights:1',
+      kind: 'money',
+      subject: 'Charabanc',
+      headline: 'A licença acaba daqui a 11 dias.',
+      because: 'Uma licença que expira em silêncio é receita que se perde sem ninguém dar por ela.',
+      covers: 1,
+      weightCents: null,
+      urgent: false,
+      waitingDays: null,
+      minutes: 1,
+      href: '/dashboard/revenue',
+    },
+    {
+      id: 'outreach:batch',
+      kind: 'outreach_batch',
+      subject: 'Marcas novas',
+      headline: 'Tenho 6 emails de prospecção prontos.',
+      because: '4 destas marcas já têm referências e um conceito separado.',
+      covers: 6,
+      weightCents: null,
+      urgent: false,
+      waitingDays: null,
+      minutes: 3,
+      href: '/dashboard/outreach',
+    },
+    {
+      id: 'content:1',
+      kind: 'content',
+      subject: 'Instagram',
+      headline: 'Um UGC bonito pode ser um anúncio mau.',
+      because: 'Já há material visual para mostrar a comparação lado a lado.',
+      covers: 1,
+      weightCents: null,
+      urgent: false,
+      waitingDays: null,
+      minutes: 2,
+      href: '/dashboard/content',
+      payload: {
+        ideaId: '00000000-0000-4000-8000-000000000002',
+        platform: 'instagram',
+        hook: 'O maior erro que cometi quando comecei em UGC foi tentar deixar tudo bonito.',
+        recordMinutes: 12,
+        editMinutes: 25,
+        verdict: 'Eu gravaria este hoje.',
+        pillarLabel: 'Estratégia criativa',
+      },
+    },
+  ]),
+};
+
 export default function Harness({ modo }: { modo?: string }) {
   if (modo === 'gravacao') {
     return (
@@ -151,6 +263,15 @@ export default function Harness({ modo }: { modo?: string }) {
         }),
         doneToday: 5,
         insights: [],
+        // `modo=fila` mostra o Hoje sem manhã preparada, e `modo=passos` tira
+        // a resposta da frente: sem sessão nenhuma acção de servidor corre, e
+        // essa é a única decisão do fluxo que precisa de uma para avançar.
+        morning:
+          modo === 'fila'
+            ? null
+            : modo === 'passos'
+              ? { ...MANHA, decisions: MANHA.decisions.filter((d) => d.kind !== 'reply') }
+              : MANHA,
         flags: { shadow_mode: true } as never,
         integration: { status: 'connected', lastSuccessAt: dia(0), account: 'carol@exemplo.pt' },
       }}

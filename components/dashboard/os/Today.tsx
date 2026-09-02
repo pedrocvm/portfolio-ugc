@@ -3,8 +3,10 @@ import type { ActionRow } from '@/modules/actions/service';
 import type { BackgroundItem } from '@/modules/actions/day';
 import type { Flags } from '@/lib/flags';
 import { closingLine } from '@/modules/actions/day';
+import type { MorningBrief } from '@/modules/morning/service';
 import Insights, { type InsightRow } from './Insights';
 import Focus from './Focus';
+import Morning from './Morning';
 import Queue from './Queue';
 import Replan from './Replan';
 
@@ -30,6 +32,9 @@ export type TodayData = {
   background: BackgroundItem[];
   doneToday: number;
   insights: InsightRow[];
+  /** O que a noite preparou. Nulo quando a consolidação não correu — e nesse
+   *  caso mostra-se a fila de sempre em vez de inventar uma manhã. */
+  morning: MorningBrief | null;
   flags: Flags;
   integration: { status: string; lastSuccessAt: string | null; account: string };
 };
@@ -60,18 +65,36 @@ export default function Today({ data, read }: { data: TodayData; read?: React.Re
         </p>
       ) : null}
 
-      <p className="osBrief">{data.brief}</p>
-      {read}
-
-      {actions.length ? (
-        <div className="osLead">
-          <Focus actions={actions} />
-        </div>
-      ) : null}
-
-      {actions.length ? (
-        <Queue actions={actions} />
+      {/* A manhã preparada substitui o resumo genérico. Sem ela — cron
+          desligado, ou consolidação falhada — o Hoje continua a funcionar como
+          antes, que é o que impede um trabalho em baixo de apagar a tela. */}
+      {data.morning ? (
+        <Morning brief={data.morning} />
       ) : (
+        <>
+          <p className="osBrief">{data.brief}</p>
+          {read}
+          {actions.length ? (
+            <div className="osLead">
+              <Focus actions={actions} />
+            </div>
+          ) : null}
+        </>
+      )}
+
+      {/* Com a manhã preparada, a fila antiga deixa de ser a superfície
+          principal e passa a arquivo. Duas listas a competir pela mesma
+          atenção é o que fazia o Hoje parecer uma dívida. */}
+      {actions.length && data.morning ? (
+        <details className="osRest">
+          <summary>
+            O resto da fila <b>{actions.length}</b>
+          </summary>
+          <Queue actions={actions} />
+        </details>
+      ) : actions.length ? (
+        <Queue actions={actions} />
+      ) : data.morning ? null : (
         <section className="osSection osQuiet">
           <h2>Está tudo.</h2>
           <p className="osNote">{closingLine(background)}</p>
