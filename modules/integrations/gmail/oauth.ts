@@ -195,7 +195,18 @@ export async function listMailboxes(appUserId?: string): Promise<Mailbox[]> {
 
 export type Mailbox = { id: string; account: string; status: string };
 
-/** Sem `connectionId` devolve a primeira caixa. Isso serve para um pedido
+/** A caixa de onde a prospeção sai.
+ *
+ *  Há duas contas do Gmail ligadas, e a escolha era «a mais antiga» — que é o
+ *  mesmo que não escolher. A abordagem podia sair de uma conta enquanto a
+ *  verificação de «já falei com esta marca» lia a outra, e ela não tinha como
+ *  saber de onde tinha saído. Quem escolhe é o código, num sítio só.
+ *
+ *  Se esta conta não estiver ligada, usa-se a que houver: uma conta trocada é
+ *  um problema, deixar de enviar é outro maior. */
+export const OUTREACH_ACCOUNT = 'carolxqueiroz05@gmail.com';
+
+/** Sem `connectionId` devolve a caixa da prospeção. Isso serve para um pedido
  *  avulso; quem sincroniza percorre `listMailboxes` e nomeia a caixa, senão
  *  lia sempre a mesma e a segunda conta nunca era vista. */
 export async function accessTokenFor(connectionId?: string): Promise<{ token: string; connectionId: string; account: string } | null> {
@@ -210,8 +221,12 @@ export async function accessTokenFor(connectionId?: string): Promise<{ token: st
     .order('created_at');
   if (connectionId) query = query.eq('id', connectionId);
 
-  const { data } = await query.limit(1).maybeSingle();
-  if (!data || data.status === 'revoked') return null;
+  const { data: rows } = await query.limit(connectionId ? 1 : 20);
+  const ligadas = (rows ?? []).filter((r) => r.status !== 'revoked');
+  const data = connectionId
+    ? ligadas[0]
+    : (ligadas.find((r) => r.account_identifier === OUTREACH_ACCOUNT) ?? ligadas[0]);
+  if (!data) return null;
 
   const stillValid =
     data.encrypted_access_token &&

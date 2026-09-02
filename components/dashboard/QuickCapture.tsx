@@ -159,7 +159,7 @@ export default function QuickCapture() {
             }}
           >
             <header className="focusTop">
-              <span className="focusAt">salvar para o Carol OS</span>
+              <span className="focusAt">Salvar para o CarolOS</span>
               <button type="button" onClick={close} aria-label="Fechar">
                 ×
               </button>

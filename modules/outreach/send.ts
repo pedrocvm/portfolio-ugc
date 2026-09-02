@@ -10,7 +10,7 @@ import { addBusinessDays } from '@/lib/time';
  *  tivesse de fazer isso à mão depois de enviar, não teríamos poupado nada. */
 
 export type SendResult =
-  | { ok: true; messageId: string; threadId: string }
+  | { ok: true; messageId: string; threadId: string; from: string; to: string }
   | { ok: false; error: string };
 
 /** Verificações antes de sair. São baratas e evitam o irreversível. */
@@ -57,7 +57,7 @@ export async function sendCandidate(candidateId: string): Promise<SendResult> {
   // Uma candidata que ela nunca enviou não tem de sujar o CRM.
   let brandId = c.brand_id;
   if (!brandId) {
-    const { data: brand } = await db
+    const { data: brand, error } = await db
       .from('brand')
       .upsert(
         {
@@ -70,7 +70,12 @@ export async function sendCandidate(candidateId: string): Promise<SendResult> {
           fit_score: c.fit_score,
           fit_band: c.fit_band,
           fit_breakdown: c.fit_breakdown,
-          stage: 'outreach',
+          // A marca e a oportunidade falam vocabulários diferentes, e não é
+          // por descuido: `brand.stage` é o funil que ela vê, em português, e
+          // tem uma restrição na base. Escrever aqui o `outreach` da
+          // oportunidade fazia a escrita ser recusada, e o envio parava antes
+          // de chegar ao Gmail — foi o que impediu todas as abordagens até hoje.
+          stage: 'abordada',
           source: 'daily_outreach',
           last_activity_at: new Date().toISOString(),
         },
@@ -78,13 +83,14 @@ export async function sendCandidate(candidateId: string): Promise<SendResult> {
       )
       .select('id')
       .maybeSingle();
+    if (error) return { ok: false, error: `Não consegui registar a marca: ${error.message}` };
     brandId = brand?.id ?? null;
   }
   if (!brandId) return { ok: false, error: 'Não consegui registar a marca.' };
 
   let contactId: string | null = null;
   if (c.contact_email) {
-    const { data: contact } = await db
+    const { data: contact, error } = await db
       .from('contact')
       .upsert(
         { brand_id: brandId, name: c.contact_name ?? '', email: c.contact_email, role: c.contact_role ?? '' },
@@ -92,12 +98,13 @@ export async function sendCandidate(candidateId: string): Promise<SendResult> {
       )
       .select('id')
       .maybeSingle();
+    if (error) return { ok: false, error: `Não consegui registar o contato: ${error.message}` };
     contactId = contact?.id ?? null;
   }
 
   let opportunityId = c.opportunity_id;
   if (!opportunityId) {
-    const { data: opp } = await db
+    const { data: opp, error } = await db
       .from('opportunity')
       .insert({
         brand_id: brandId,
@@ -111,8 +118,10 @@ export async function sendCandidate(candidateId: string): Promise<SendResult> {
       })
       .select('id')
       .maybeSingle();
+    if (error) return { ok: false, error: `Não consegui abrir a oportunidade: ${error.message}` };
     opportunityId = opp?.id ?? null;
   }
+  if (!opportunityId) return { ok: false, error: 'Não consegui abrir a oportunidade.' };
 
   // ── Sai ─────────────────────────────────────────────────────────────────
   let sent: { id: string; threadId: string };
@@ -156,18 +165,22 @@ export async function sendCandidate(candidateId: string): Promise<SendResult> {
   });
 
   // O motor de follow-up assume daqui para a frente. Fica agendado, não enviado.
-  if (opportunityId) {
-    await db.from('follow_up').insert({
-      opportunity_id: opportunityId,
-      brand_id: brandId,
-      policy_version: 'followup-v1',
-      situation: 'cold_outreach',
-      sequence_index: 1,
-      due_at: addBusinessDays(now, 4).toISOString(),
-      reason: 'Primeiro follow-up: 3 a 5 dias úteis após a abordagem.',
-      status: 'scheduled',
-    });
-  }
+  await db.from('follow_up').insert({
+    opportunity_id: opportunityId,
+    brand_id: brandId,
+    policy_version: 'followup-v1',
+    situation: 'cold_outreach',
+    sequence_index: 1,
+    due_at: addBusinessDays(now, 4).toISOString(),
+    reason: 'Primeiro follow-up: 3 a 5 dias úteis após a abordagem.',
+    status: 'scheduled',
+  });
 
-  return { ok: true, messageId: sent.id, threadId: sent.threadId };
+  return {
+    ok: true,
+    messageId: sent.id,
+    threadId: sent.threadId,
+    from: auth.account,
+    to: c.contact_email as string,
+  };
 }

@@ -29,7 +29,7 @@ export default function Morning({ brief }: { brief: MorningBrief }) {
       {preparedLines.length ? (
         <details className="mornWork">
           <summary>
-            Enquanto não estava, o Carol OS trabalhou
+            Enquanto não estava, o CarolOS trabalhou
             <span aria-hidden="true"> ↓</span>
           </summary>
           <ul>

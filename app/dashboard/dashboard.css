@@ -2111,7 +2111,7 @@
   font-variation-settings: var(--narrow);
   font-size: 14px;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  /* Sem caixa alta: o nome é CarolOS, e em maiúsculas lê-se CAROLOS. */
   color: var(--tinta3);
 }
 .focusTop button {
@@ -6008,6 +6008,24 @@ a.aiSource:hover {
   flex-wrap: wrap;
   gap: 8px;
 }
+/* O comprovativo do envio. Fica no lugar do botão que ela carregou, com os dois
+   endereços: durante semanas nenhuma abordagem saiu e nada na tela o disse. */
+.outSent {
+  display: block;
+  padding: 10px 12px;
+  border: 1px solid var(--areia2);
+  border-left: 3px solid var(--umbra);
+  border-radius: 8px;
+  background: var(--areia);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--tinta2);
+  overflow-wrap: anywhere;
+}
+.outSent b {
+  color: var(--tinta);
+}
+
 /* O «trocar» vive dentro de uma frase, por isso é um link e não um botão — mas
    continua a ter os 44px de alvo no telefone. */
 .outLink {
@@ -7116,7 +7134,7 @@ a.aiSource:hover {
   font-variation-settings: var(--narrow);
   font-size: 14px;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  /* Sem caixa alta: o nome é CarolOS, e em maiúsculas lê-se CAROLOS. */
   color: var(--tinta3);
   cursor: pointer;
   list-style: none;

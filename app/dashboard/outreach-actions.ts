@@ -167,6 +167,36 @@ export async function updateOutreachEmail(id: string, email: string): Promise<Re
   return { ok: true, note: fit === 'target' ? undefined : `Atenção: ${MAILBOX_FIT_NOTE[fit]}.` };
 }
 
+/** Rever as caixas de email das marcas que já estão na base.
+ *
+ *  A escolha da caixa passou a ser código, mas as marcas pesquisadas antes
+ *  disso ficaram com o que o modelo tinha escolhido. Isto vai buscar o email de
+ *  marketing de quem ficou numa caixa errada — e não toca em quem já está na
+ *  caixa certa nem no que ela escreveu à mão. */
+export async function recheckOutreachEmails(): Promise<
+  Result & { message?: string; changed?: number; remaining?: number }
+> {
+  await requireUser();
+  const { recheckOutreachEmails: rever } = await import('@/modules/outreach/recheck');
+  const r = await rever();
+  revalidatePath('/dashboard/outreach');
+
+  if (r.looked === 0) {
+    return { ok: true, message: 'Todas as marcas já estão numa caixa de quem decide.', changed: 0 };
+  }
+
+  const linhas = [
+    r.changed.length
+      ? `${r.changed.length} trocadas: ${r.changed.map((c) => `${c.name} → ${c.to}`).join('; ')}`
+      : 'Nenhuma trocada',
+    r.kept ? `${r.kept} ficaram como estavam` : '',
+    r.failed.length ? `${r.failed.length} sem resposta` : '',
+    r.remaining ? `faltam ${r.remaining} — carregue outra vez` : '',
+  ].filter(Boolean);
+
+  return { ok: true, message: `${linhas.join(' · ')}.`, changed: r.changed.length, remaining: r.remaining };
+}
+
 export async function approveOutreach(id: string): Promise<Result> {
   await requireUser();
   if (!Uuid.safeParse(id).success) return { error: 'Candidata inválida.' };
@@ -233,8 +263,14 @@ export async function suppressBrand(
 }
 
 /** Envia. É a única ação irreversível desta tela, e por isso é a única que a
- *  interface pede para confirmar. */
-export async function sendOutreach(id: string): Promise<Result & { messageId?: string }> {
+ *  interface pede para confirmar.
+ *
+ *  Devolve de onde saiu e para onde foi. Um «enviado» sozinho não prova nada a
+ *  quem está do outro lado da tela — e o envio esteve semanas a falhar sem que
+ *  ninguém percebesse, porque a resposta não dizia nem que tinha falhado. */
+export async function sendOutreach(
+  id: string,
+): Promise<Result & { messageId?: string; from?: string; to?: string; sentAt?: string }> {
   await requireUser();
   if (!Uuid.safeParse(id).success) return { error: 'Candidata inválida.' };
 
@@ -242,10 +278,14 @@ export async function sendOutreach(id: string): Promise<Result & { messageId?: s
   const r = await sendCandidate(id);
   revalidatePath('/dashboard/outreach');
   revalidatePath('/dashboard');
-  return r.ok ? { ok: true, messageId: r.messageId } : { error: r.error };
+  return r.ok
+    ? { ok: true, messageId: r.messageId, from: r.from, to: r.to, sentAt: new Date().toISOString() }
+    : { error: r.error };
 }
 
-export async function sendApprovedOutreach(): Promise<Result & { sent?: number; failed?: number }> {
+export async function sendApprovedOutreach(): Promise<
+  Result & { sent?: number; failed?: number; firstError?: string }
+> {
   await requireUser();
   const db = await supabaseServer();
   const { data } = await db.from('outreach_candidate').select('id').eq('status', 'approved').limit(10);
@@ -253,14 +293,21 @@ export async function sendApprovedOutreach(): Promise<Result & { sent?: number; 
   const { sendCandidate } = await import('@/modules/outreach/send');
   let sent = 0;
   let failed = 0;
+  // A razão da primeira falha volta com a contagem: «2 enviados, 3 falharam» é
+  // um número, não uma informação — e enquanto o erro ficou por dizer, ninguém
+  // soube que nenhuma abordagem saía.
+  let firstError: string | undefined;
   for (const row of data ?? []) {
     const r = await sendCandidate(row.id);
     if (r.ok) sent++;
-    else failed++;
+    else {
+      failed++;
+      firstError ??= r.error;
+    }
   }
   revalidatePath('/dashboard/outreach');
   revalidatePath('/dashboard');
-  return { ok: true, sent, failed };
+  return { ok: true, sent, failed, firstError };
 }
 
 /** «Procurar marcas agora», e a busca dirigida. Mesmo pipeline, sem duplicar. */

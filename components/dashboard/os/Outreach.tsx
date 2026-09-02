@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import {
   approveOutreach, clearManualSearch, discardMany, draftOutreach, saveCandidates,
+  recheckOutreachEmails,
   sendApprovedOutreach, sendOutreach, skipOutreach, startDiscovery, startManualSearch,
   updateOutreachEmail,
   suppressBrand, updateOutreachDraft, type BrandReferenceRow,
@@ -157,6 +158,10 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
   const [status, setStatus] = useState(c.status);
   const [para, setPara] = useState(c.contact_email ?? '');
   const [aTrocarPara, setATrocarPara] = useState(false);
+  /** O comprovativo do envio: de onde saiu e para onde foi. Fica no cartão
+   *  depois de a mensagem sair, porque «enviado» sem endereço não prova nada a
+   *  quem carregou no botão. */
+  const [comprovativo, setComprovativo] = useState<{ from: string; to: string } | null>(null);
   // Abaixo do corte de encaixe: pesquisada, salva, sem email escrito. O
   // email custa uma chamada ao modelo e só se escreve se ela quiser esta marca.
   const semEmail = !subject && !body;
@@ -166,13 +171,32 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
   const score = scoreFor(c);
   const pronta = status === 'ready' || status === 'approved' || status === 'edited';
 
-  const run = (id: string, fn: () => Promise<{ error?: string }>, after?: () => void) => {
+  /** Nenhuma ação acaba em silêncio.
+   *
+   *  O erro aparecia numa linha no topo do cartão e o botão está no fim dele:
+   *  ela carregava em «enviar», nada mudava à frente dos olhos, e a razão
+   *  ficava a um ecrã de distância. Agora a mensagem fica ao pé do botão e
+   *  também salta num aviso, que se vê com o cartão fechado. */
+  const run = (
+    id: string,
+    fn: () => Promise<{ error?: string; note?: string }>,
+    after?: () => void,
+  ) => {
     setRunning(id);
+    setMsg('');
     start(async () => {
       const r = await fn();
       setRunning('');
-      if (r.error) setMsg(r.error);
-      else after?.();
+      if (r.error) {
+        setMsg(r.error);
+        pushToast(r.error, 'warn');
+        return;
+      }
+      if (r.note) {
+        setMsg(r.note);
+        pushToast(r.note, 'warn');
+      }
+      after?.();
     });
   };
 
@@ -281,7 +305,6 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
           {c.contact_source?.split(' · ')[1] ?? 'Não consegui confirmar este endereço.'}
         </p>
       ) : null}
-      {msg ? <p className="osWarn">{msg}</p> : null}
 
       {/* As referências servem por dentro: nunca vão no cold email — mandar
           links de concorrentes a uma marca é uma forma rápida de não ter
@@ -422,7 +445,15 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
 
       <footer className="osCardActs">
         {status === 'sent' ? (
-          <span className="osTag" data-tone="ok">enviado {c.sent_at ? formatDate(c.sent_at) : ''}</span>
+          comprovativo ? (
+            <span className="outSent" role="status">
+              <b>Enviado.</b> De {comprovativo.from} para {comprovativo.to}.
+            </span>
+          ) : (
+            <span className="osTag" data-tone="ok">
+              enviado{c.sent_at ? ` ${formatDate(c.sent_at)}` : ''}
+            </span>
+          )
         ) : semEmail ? (
           <button
             className="osGo"
@@ -450,12 +481,23 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
               className="osGo"
               type="button"
               disabled={pending}
-              onClick={() =>
-                run('send', () => sendOutreach(c.id), () => {
+              onClick={() => {
+                setRunning('send');
+                setMsg('');
+                start(async () => {
+                  const r = await sendOutreach(c.id);
+                  setRunning('');
+                  if (r.error) {
+                    setMsg(r.error);
+                    pushToast(`${c.name}: ${r.error}`, 'warn');
+                    return;
+                  }
+                  setComprovativo({ from: r.from ?? '', to: r.to ?? para });
                   setStatus('sent');
                   setConfirming(false);
-                })
-              }
+                  pushToast(`Enviado para ${r.to ?? para}.`);
+                });
+              }}
             >
               {running === 'send' ? <Spinner label="Enviando" /> : null}
               Sim, enviar
@@ -516,6 +558,14 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
             </details>
           </>
         )}
+
+        {/* Ao pé do botão, não no topo do cartão: é aqui que ela está a olhar
+            quando carrega. */}
+        {msg ? (
+          <p className="osWarn" role="alert">
+            {msg}
+          </p>
+        ) : null}
         </footer>
       </div>
     </details>
@@ -556,12 +606,32 @@ export default function Outreach({
   // revisão sequencial consegue despachar sem abrir mais nada.
   const prontas = candidates.filter((c) => sectionFor(c.status) === 'ready' && c.body);
 
-  const run = (id: string, fn: () => Promise<{ error?: string; sent?: number; message?: string }>) => {
+  const run = (
+    id: string,
+    fn: () => Promise<{
+      error?: string;
+      sent?: number;
+      failed?: number;
+      firstError?: string;
+      message?: string;
+    }>,
+  ) => {
     setRunning(id);
     start(async () => {
       const r = await fn();
       setRunning('');
-      setMsg(r.error ?? (r.sent !== undefined ? `${r.sent} enviados.` : (r.message ?? '')));
+      // «3 enviados» não diz o que aconteceu aos outros dois. Quando falha
+      // alguma, a razão da primeira vem junto — foi o que faltou durante
+      // semanas em que nenhuma abordagem saía.
+      const lote =
+        r.sent === undefined
+          ? null
+          : r.failed
+            ? `${r.sent} enviados, ${r.failed} falharam${r.firstError ? `: ${r.firstError}` : '.'}`
+            : `${r.sent} enviados.`;
+      const texto = r.error ?? lote ?? r.message ?? '';
+      setMsg(texto);
+      if (texto) pushToast(texto, r.error || r.failed ? 'warn' : 'ok');
     });
   };
 
@@ -641,6 +711,18 @@ export default function Outreach({
                 Enviar os {approved} aprovados
               </button>
             ) : null}
+            {/* As marcas pesquisadas antes de a escolha da caixa virar código
+                ficaram em «suporte@» e «reservas@». Isto vai buscar o email de
+                marketing dessas, e só dessas. */}
+            <button
+              className="osJob"
+              type="button"
+              disabled={pending}
+              onClick={() => run('caixas', () => recheckOutreachEmails())}
+            >
+              {running === 'caixas' ? <Spinner label="Procurando" /> : null}
+              Procurar o email de marketing das que estão na caixa errada
+            </button>
           </div>
         </>
       ) : null}
