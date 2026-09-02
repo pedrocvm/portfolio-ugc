@@ -1113,6 +1113,98 @@ export type Database = {
           },
         ]
       }
+      business_milestone: {
+        Row: {
+          brand_id: string | null
+          created_at: string
+          dedupe_key: string
+          evidence: Json
+          id: string
+          kind: string
+          occurred_at: string
+          summary: string
+          used_for_content: boolean
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string
+          dedupe_key: string
+          evidence?: Json
+          id?: string
+          kind: string
+          occurred_at: string
+          summary: string
+          used_for_content?: boolean
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string
+          dedupe_key?: string
+          evidence?: Json
+          id?: string
+          kind?: string
+          occurred_at?: string
+          summary?: string
+          used_for_content?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_milestone_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_reference: {
+        Row: {
+          adaptation: string
+          created_at: string
+          creative_reference_id: string
+          do_not_copy: string
+          fit_reason: string
+          id: string
+          outreach_candidate_id: string
+          rank: number
+        }
+        Insert: {
+          adaptation?: string
+          created_at?: string
+          creative_reference_id: string
+          do_not_copy?: string
+          fit_reason?: string
+          id?: string
+          outreach_candidate_id: string
+          rank?: number
+        }
+        Update: {
+          adaptation?: string
+          created_at?: string
+          creative_reference_id?: string
+          do_not_copy?: string
+          fit_reason?: string
+          id?: string
+          outreach_candidate_id?: string
+          rank?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_reference_creative_reference_id_fkey"
+            columns: ["creative_reference_id"]
+            isOneToOne: false
+            referencedRelation: "creative_reference"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_reference_outreach_candidate_id_fkey"
+            columns: ["outreach_candidate_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_candidate"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       capture_item: {
         Row: {
           brand_id: string | null
@@ -1518,6 +1610,107 @@ export type Database = {
           },
         ]
       }
+      content_performance: {
+        Row: {
+          comments: number | null
+          created_at: string
+          follows: number | null
+          id: string
+          idea_id: string | null
+          inbound_leads: number | null
+          likes: number | null
+          measured_at: string
+          platform: string
+          post_url: string | null
+          profile_visits: number | null
+          saves: number | null
+          shares: number | null
+          source: string
+          views: number | null
+          watch_time_seconds: number | null
+        }
+        Insert: {
+          comments?: number | null
+          created_at?: string
+          follows?: number | null
+          id?: string
+          idea_id?: string | null
+          inbound_leads?: number | null
+          likes?: number | null
+          measured_at?: string
+          platform: string
+          post_url?: string | null
+          profile_visits?: number | null
+          saves?: number | null
+          shares?: number | null
+          source?: string
+          views?: number | null
+          watch_time_seconds?: number | null
+        }
+        Update: {
+          comments?: number | null
+          created_at?: string
+          follows?: number | null
+          id?: string
+          idea_id?: string | null
+          inbound_leads?: number | null
+          likes?: number | null
+          measured_at?: string
+          platform?: string
+          post_url?: string | null
+          profile_visits?: number | null
+          saves?: number | null
+          shares?: number | null
+          source?: string
+          views?: number | null
+          watch_time_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_performance_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "creator_content_idea"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_series: {
+        Row: {
+          created_at: string
+          episodes: number
+          id: string
+          last_episode_at: string | null
+          name: string
+          next_topics: Json
+          premise: string
+          status: string
+          structure: string
+        }
+        Insert: {
+          created_at?: string
+          episodes?: number
+          id?: string
+          last_episode_at?: string | null
+          name: string
+          next_topics?: Json
+          premise?: string
+          status?: string
+          structure?: string
+        }
+        Update: {
+          created_at?: string
+          episodes?: number
+          id?: string
+          last_episode_at?: string | null
+          name?: string
+          next_topics?: Json
+          premise?: string
+          status?: string
+          structure?: string
+        }
+        Relationships: []
+      }
       creative_hypothesis: {
         Row: {
           ai_run_id: string | null
@@ -1603,6 +1796,389 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      creative_reference: {
+        Row: {
+          ai_run_id: string | null
+          brand_name: string | null
+          captured_at: string
+          content_type: string | null
+          created_at: string
+          creator_handle: string | null
+          duration_seconds: number | null
+          editing_style: string
+          format: string
+          freshness: string
+          hook: string
+          id: string
+          metrics: Json
+          published_at: string | null
+          purpose: string
+          signals: Json
+          source_confidence: string
+          source_platform: string
+          source_url: string
+          structure: string
+          title: string
+          url_hash: string
+          why_it_works: string
+        }
+        Insert: {
+          ai_run_id?: string | null
+          brand_name?: string | null
+          captured_at?: string
+          content_type?: string | null
+          created_at?: string
+          creator_handle?: string | null
+          duration_seconds?: number | null
+          editing_style?: string
+          format?: string
+          freshness?: string
+          hook?: string
+          id?: string
+          metrics?: Json
+          published_at?: string | null
+          purpose?: string
+          signals?: Json
+          source_confidence?: string
+          source_platform: string
+          source_url: string
+          structure?: string
+          title?: string
+          url_hash: string
+          why_it_works?: string
+        }
+        Update: {
+          ai_run_id?: string | null
+          brand_name?: string | null
+          captured_at?: string
+          content_type?: string | null
+          created_at?: string
+          creator_handle?: string | null
+          duration_seconds?: number | null
+          editing_style?: string
+          format?: string
+          freshness?: string
+          hook?: string
+          id?: string
+          metrics?: Json
+          published_at?: string | null
+          purpose?: string
+          signals?: Json
+          source_confidence?: string
+          source_platform?: string
+          source_url?: string
+          structure?: string
+          title?: string
+          url_hash?: string
+          why_it_works?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_reference_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_run"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_content_idea: {
+        Row: {
+          ai_run_id: string | null
+          alt_hooks: Json
+          app_user_id: string
+          authority_signal: string
+          b_roll: Json
+          brand_audience_effect: string
+          caption: string
+          collaboration_id: string | null
+          cover_note: string
+          created_at: string
+          cta: string
+          decided_at: string | null
+          duration_seconds: number | null
+          editing_plan: Json
+          engagement_mechanism: string
+          episode: number | null
+          estimated_edit_minutes: number | null
+          estimated_record_minutes: number | null
+          fingerprint: string
+          format: string
+          fresh_until: string | null
+          generated_at: string
+          hook: string
+          id: string
+          mentorship_signal: boolean
+          milestone_id: string | null
+          objective: string
+          on_screen_text: Json
+          pillar: string
+          plan_date: string
+          platform: string
+          posting_notes: string
+          quality: Json
+          reference_ids: string[]
+          script: string
+          series_id: string | null
+          shot_list: Json
+          source_reason: string
+          status: string
+          title: string
+          trend_ids: string[]
+          why_it_can_work: string
+        }
+        Insert: {
+          ai_run_id?: string | null
+          alt_hooks?: Json
+          app_user_id: string
+          authority_signal?: string
+          b_roll?: Json
+          brand_audience_effect?: string
+          caption?: string
+          collaboration_id?: string | null
+          cover_note?: string
+          created_at?: string
+          cta?: string
+          decided_at?: string | null
+          duration_seconds?: number | null
+          editing_plan?: Json
+          engagement_mechanism?: string
+          episode?: number | null
+          estimated_edit_minutes?: number | null
+          estimated_record_minutes?: number | null
+          fingerprint: string
+          format?: string
+          fresh_until?: string | null
+          generated_at?: string
+          hook?: string
+          id?: string
+          mentorship_signal?: boolean
+          milestone_id?: string | null
+          objective?: string
+          on_screen_text?: Json
+          pillar?: string
+          plan_date: string
+          platform: string
+          posting_notes?: string
+          quality?: Json
+          reference_ids?: string[]
+          script?: string
+          series_id?: string | null
+          shot_list?: Json
+          source_reason?: string
+          status?: string
+          title?: string
+          trend_ids?: string[]
+          why_it_can_work?: string
+        }
+        Update: {
+          ai_run_id?: string | null
+          alt_hooks?: Json
+          app_user_id?: string
+          authority_signal?: string
+          b_roll?: Json
+          brand_audience_effect?: string
+          caption?: string
+          collaboration_id?: string | null
+          cover_note?: string
+          created_at?: string
+          cta?: string
+          decided_at?: string | null
+          duration_seconds?: number | null
+          editing_plan?: Json
+          engagement_mechanism?: string
+          episode?: number | null
+          estimated_edit_minutes?: number | null
+          estimated_record_minutes?: number | null
+          fingerprint?: string
+          format?: string
+          fresh_until?: string | null
+          generated_at?: string
+          hook?: string
+          id?: string
+          mentorship_signal?: boolean
+          milestone_id?: string | null
+          objective?: string
+          on_screen_text?: Json
+          pillar?: string
+          plan_date?: string
+          platform?: string
+          posting_notes?: string
+          quality?: Json
+          reference_ids?: string[]
+          script?: string
+          series_id?: string | null
+          shot_list?: Json
+          source_reason?: string
+          status?: string
+          title?: string
+          trend_ids?: string[]
+          why_it_can_work?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_content_idea_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_content_idea_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_content_idea_collaboration_id_fkey"
+            columns: ["collaboration_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_content_idea_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "business_milestone"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_content_idea_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "content_series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_profile: {
+        Row: {
+          ai_run_id: string | null
+          app_user_id: string
+          avoided_formats: Json
+          coverage: string
+          created_at: string
+          dimensions: Json
+          evidence: Json
+          handle: string
+          id: string
+          sample_size: number
+          successful_formats: Json
+          topics: Json
+          updated_at: string
+        }
+        Insert: {
+          ai_run_id?: string | null
+          app_user_id: string
+          avoided_formats?: Json
+          coverage?: string
+          created_at?: string
+          dimensions?: Json
+          evidence?: Json
+          handle?: string
+          id?: string
+          sample_size?: number
+          successful_formats?: Json
+          topics?: Json
+          updated_at?: string
+        }
+        Update: {
+          ai_run_id?: string | null
+          app_user_id?: string
+          avoided_formats?: Json
+          coverage?: string
+          created_at?: string
+          dimensions?: Json
+          evidence?: Json
+          handle?: string
+          id?: string
+          sample_size?: number
+          successful_formats?: Json
+          topics?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_profile_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_profile_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: true
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_trend: {
+        Row: {
+          adaptation: string
+          created_at: string
+          description: string
+          detected_at: string
+          evidence: Json
+          fingerprint: string
+          fit_reason: string
+          fit_score: number | null
+          fit_verdict: string
+          freshness: string
+          id: string
+          kind: string
+          platform: string
+          published_at: string | null
+          run_id: string | null
+          source_url: string | null
+          title: string
+          why_trending: string
+        }
+        Insert: {
+          adaptation?: string
+          created_at?: string
+          description?: string
+          detected_at?: string
+          evidence?: Json
+          fingerprint: string
+          fit_reason?: string
+          fit_score?: number | null
+          fit_verdict?: string
+          freshness?: string
+          id?: string
+          kind?: string
+          platform?: string
+          published_at?: string | null
+          run_id?: string | null
+          source_url?: string | null
+          title: string
+          why_trending?: string
+        }
+        Update: {
+          adaptation?: string
+          created_at?: string
+          description?: string
+          detected_at?: string
+          evidence?: Json
+          fingerprint?: string
+          fit_reason?: string
+          fit_score?: number | null
+          fit_verdict?: string
+          freshness?: string
+          id?: string
+          kind?: string
+          platform?: string
+          published_at?: string | null
+          run_id?: string | null
+          source_url?: string | null
+          title?: string
+          why_trending?: string
+        }
+        Relationships: []
       }
       cron_dispatch: {
         Row: {
@@ -2155,6 +2731,65 @@ export type Database = {
         }
         Relationships: []
       }
+      morning_brief: {
+        Row: {
+          app_user_id: string
+          brief_date: string
+          completed_at: string | null
+          created_at: string
+          decision_count: number
+          decisions: Json
+          estimated_minutes: number | null
+          gaps: Json
+          headline: string
+          id: string
+          opened_at: string | null
+          prepared: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          app_user_id: string
+          brief_date: string
+          completed_at?: string | null
+          created_at?: string
+          decision_count?: number
+          decisions?: Json
+          estimated_minutes?: number | null
+          gaps?: Json
+          headline?: string
+          id?: string
+          opened_at?: string | null
+          prepared?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          app_user_id?: string
+          brief_date?: string
+          completed_at?: string | null
+          created_at?: string
+          decision_count?: number
+          decisions?: Json
+          estimated_minutes?: number | null
+          gaps?: Json
+          headline?: string
+          id?: string
+          opened_at?: string | null
+          prepared?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "morning_brief_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunity: {
         Row: {
           barter_value_to_carol_cents: number | null
@@ -2262,6 +2897,7 @@ export type Database = {
           content_ideas: Json
           country: string | null
           created_at: string
+          creative_angle: string | null
           creative_opportunity: string
           domain: string | null
           email_confidence: string | null
@@ -2285,7 +2921,11 @@ export type Database = {
           product: string | null
           quality: Json | null
           rank: number
+          ready_idea: Json | null
           red_flags: Json
+          references_at: string | null
+          references_note: string | null
+          references_state: string
           reject_reason: string | null
           researched_at: string | null
           risk: string
@@ -2320,6 +2960,7 @@ export type Database = {
           content_ideas?: Json
           country?: string | null
           created_at?: string
+          creative_angle?: string | null
           creative_opportunity?: string
           domain?: string | null
           email_confidence?: string | null
@@ -2343,7 +2984,11 @@ export type Database = {
           product?: string | null
           quality?: Json | null
           rank?: number
+          ready_idea?: Json | null
           red_flags?: Json
+          references_at?: string | null
+          references_note?: string | null
+          references_state?: string
           reject_reason?: string | null
           researched_at?: string | null
           risk?: string
@@ -2378,6 +3023,7 @@ export type Database = {
           content_ideas?: Json
           country?: string | null
           created_at?: string
+          creative_angle?: string | null
           creative_opportunity?: string
           domain?: string | null
           email_confidence?: string | null
@@ -2401,7 +3047,11 @@ export type Database = {
           product?: string | null
           quality?: Json | null
           rank?: number
+          ready_idea?: Json | null
           red_flags?: Json
+          references_at?: string | null
+          references_note?: string | null
+          references_state?: string
           reject_reason?: string | null
           researched_at?: string | null
           risk?: string
@@ -3427,6 +4077,196 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thread_intel: {
+        Row: {
+          brand_id: string | null
+          created_at: string
+          draft_body: string
+          draft_language: string
+          draft_reason: string
+          draft_run_id: string | null
+          draft_state: string
+          draft_subject: string
+          failure: string | null
+          id: string
+          intent: string
+          intent_confidence: number | null
+          last_carol_message_id: string | null
+          last_external_message_id: string | null
+          opportunity_id: string | null
+          prepared_at: string | null
+          recommendation: string
+          risk: string
+          risk_level: string
+          secondary_intents: Json
+          source_fingerprint: string
+          thread_id: string
+          updated_at: string
+          waiting_on: string
+          waiting_since: string | null
+          what_changed: string
+          what_is_missing: string
+          what_they_want: string
+          who_wrote: string
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string
+          draft_body?: string
+          draft_language?: string
+          draft_reason?: string
+          draft_run_id?: string | null
+          draft_state?: string
+          draft_subject?: string
+          failure?: string | null
+          id?: string
+          intent?: string
+          intent_confidence?: number | null
+          last_carol_message_id?: string | null
+          last_external_message_id?: string | null
+          opportunity_id?: string | null
+          prepared_at?: string | null
+          recommendation?: string
+          risk?: string
+          risk_level?: string
+          secondary_intents?: Json
+          source_fingerprint?: string
+          thread_id: string
+          updated_at?: string
+          waiting_on?: string
+          waiting_since?: string | null
+          what_changed?: string
+          what_is_missing?: string
+          what_they_want?: string
+          who_wrote?: string
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string
+          draft_body?: string
+          draft_language?: string
+          draft_reason?: string
+          draft_run_id?: string | null
+          draft_state?: string
+          draft_subject?: string
+          failure?: string | null
+          id?: string
+          intent?: string
+          intent_confidence?: number | null
+          last_carol_message_id?: string | null
+          last_external_message_id?: string | null
+          opportunity_id?: string | null
+          prepared_at?: string | null
+          recommendation?: string
+          risk?: string
+          risk_level?: string
+          secondary_intents?: Json
+          source_fingerprint?: string
+          thread_id?: string
+          updated_at?: string
+          waiting_on?: string
+          waiting_since?: string | null
+          what_changed?: string
+          what_is_missing?: string
+          what_they_want?: string
+          who_wrote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_intel_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_intel_draft_run_id_fkey"
+            columns: ["draft_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_intel_last_carol_message_id_fkey"
+            columns: ["last_carol_message_id"]
+            isOneToOne: false
+            referencedRelation: "source_message"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_intel_last_external_message_id_fkey"
+            columns: ["last_external_message_id"]
+            isOneToOne: false
+            referencedRelation: "source_message"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_intel_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_intel_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: true
+            referencedRelation: "source_thread"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_memory: {
+        Row: {
+          ai_text: string
+          brand_id: string | null
+          created_at: string
+          final_text: string
+          id: string
+          kind: string
+          language: string
+          observations: Json
+          thread_id: string | null
+        }
+        Insert: {
+          ai_text?: string
+          brand_id?: string | null
+          created_at?: string
+          final_text?: string
+          id?: string
+          kind: string
+          language?: string
+          observations?: Json
+          thread_id?: string | null
+        }
+        Update: {
+          ai_text?: string
+          brand_id?: string | null
+          created_at?: string
+          final_text?: string
+          id?: string
+          kind?: string
+          language?: string
+          observations?: Json
+          thread_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_memory_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_memory_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "source_thread"
             referencedColumns: ["id"]
           },
         ]
