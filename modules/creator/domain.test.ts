@@ -30,7 +30,7 @@ import {
   shouldGenerate,
   similarity,
 } from './domain';
-import { EXEMPLAR_SCRIPTS, SEED_IDEAS } from './audit-seed';
+import { EXEMPLAR_SCRIPTS, SEED_IDEAS, exemplarsAsPrevious } from './audit-seed';
 
 const NOW = new Date('2026-09-02T00:00:00Z');
 
@@ -557,5 +557,38 @@ test('uma semente não conta como ideia já sugerida', () => {
     ).repeat,
     true,
     'se a semente entrasse na lista, o portão travava a ideia que ela devia gerar',
+  );
+});
+
+test('os exemplares de voz não podem ser reciclados como ideia', () => {
+  // Assim que as sementes deixaram de bloquear tudo, o modelo devolveu o
+  // exemplar R4 quase palavra a palavra: «A sala estava vazia. A primeira
+  // coisa que a gente fez junto foi montar esta mesa». O prompt já dizia para
+  // não reciclar frases — uma instrução não é um portão.
+  const anteriores = exemplarsAsPrevious();
+  assert.equal(anteriores.length, EXEMPLAR_SCRIPTS.length);
+
+  const copiado = EXEMPLAR_SCRIPTS[3];
+  assert.equal(
+    isRepeat(
+      { platform: 'instagram', pillar: copiado.pillar, hook: copiado.text.slice(0, 90), title: '' },
+      anteriores,
+    ).repeat,
+    true,
+    'um exemplar copiado passou o portão de repetição',
+  );
+
+  // E uma ideia nova de verdade continua a passar.
+  assert.equal(
+    isRepeat(
+      {
+        platform: 'tiktok',
+        pillar: 'TESTEI',
+        hook: 'Se um produto precisa de um manual de dez páginas para funcionar, ele já falhou.',
+        title: '',
+      },
+      anteriores,
+    ).repeat,
+    false,
   );
 });

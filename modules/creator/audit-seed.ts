@@ -191,3 +191,16 @@ export function describeExemplars(): string {
     ...EXEMPLAR_SCRIPTS.map((e) => `- [${e.pillar}] ${e.text}`),
   ].join('\n');
 }
+
+/** Os exemplares vistos como coisas que já existem.
+ *
+ *  O prompt diz «servem para calibrar a VOZ, nunca para reciclar frases», e
+ *  isso não chegava: assim que as sementes deixaram de bloquear tudo, o modelo
+ *  devolveu o exemplar R4 quase palavra a palavra — «A sala estava vazia. A
+ *  primeira coisa que fizemos juntos foi isto». Uma instrução não é um portão.
+ *
+ *  Não têm impressão digital porque nunca foram ideias; o que os identifica é o
+ *  texto, e é sobre o texto que `isRepeat` decide. */
+export function exemplarsAsPrevious(): { fingerprint: string; hook: string }[] {
+  return EXEMPLAR_SCRIPTS.map((e) => ({ fingerprint: `exemplar:${e.id}`, hook: e.text }));
+}

@@ -26,7 +26,7 @@ import {
   type Platform,
   type RejectionReason,
 } from './domain';
-import { describeExemplars } from './audit-seed';
+import { describeExemplars, exemplarsAsPrevious } from './audit-seed';
 import { describeProfile, profileFresh } from './profile-service';
 import { rejectedIdeas } from './plan-service';
 
@@ -133,7 +133,11 @@ export async function replaceIdea(ideaId: string, motivo?: RejectionReason): Pro
   const pillar: Pillar = isPillar(idea.pillar) ? idea.pillar : 'TESTEI';
   const repetida = isRepeat(
     { platform, pillar, hook: idea.hook, title: idea.title },
-    [{ fingerprint: '', hook: old.hook }, ...history.map((h) => ({ fingerprint: h.fingerprint, hook: h.hook }))],
+    [
+      { fingerprint: '', hook: old.hook },
+      ...history.map((h) => ({ fingerprint: h.fingerprint, hook: h.hook })),
+      ...exemplarsAsPrevious(),
+    ],
   );
   if (repetida.repeat) return { ok: false, error: 'A alternativa era a mesma ideia outra vez.' };
 

@@ -38,7 +38,7 @@ import {
   type RejectionReason,
   type Platform,
 } from './domain';
-import { describeExemplars } from './audit-seed';
+import { describeExemplars, exemplarsAsPrevious } from './audit-seed';
 import { describeProfile, profileFresh } from './profile-service';
 
 export * from './domain';
@@ -192,7 +192,19 @@ export async function runDailyContentPlan(
 
   let generated = 0;
   let rejected = 0;
-  const porGravar = new Set<Platform>(['instagram', 'tiktok']);
+
+  // Só as plataformas que ainda não têm plano hoje.
+  //
+  // A verificação de idempotência é «já há duas?» — e com uma só, corria e
+  // salvava as duas, deixando o dia com dois TikToks e um Instagram. O plano
+  // pede sempre as duas ao modelo porque é o contraste entre elas que impede o
+  // mesmo vídeo republicado; o que muda aqui é qual delas se guarda.
+  const jaTem = new Set<Platform>(
+    (hoje ?? []).map((r) => r.platform as Platform).filter((p): p is Platform => p === 'instagram' || p === 'tiktok'),
+  );
+  const porGravar = new Set<Platform>(
+    (['instagram', 'tiktok'] as Platform[]).filter((p) => !jaTem.has(p)),
+  );
 
   const salvar = async (idea: ContentIdea) => {
     const saved = await saveIdea({
@@ -215,7 +227,9 @@ export async function runDailyContentPlan(
     return saved;
   };
 
-  for (const idea of [plano.instagram, plano.tiktok]) await salvar(idea);
+  for (const idea of [plano.instagram, plano.tiktok]) {
+    if (porGravar.has(idea.platform)) await salvar(idea);
+  }
 
   // Uma rejeição não pode deixar a plataforma sem nada. Tenta outra vez, uma
   // só, com o motivo da recusa por escrito — sem isso o modelo repete o mesmo
@@ -292,7 +306,10 @@ async function saveIdea(input: {
 
   const repetida = isRepeat(
     { platform: idea.platform, pillar, hook: idea.hook, title: idea.title },
-    input.history.map((h) => ({ fingerprint: h.fingerprint, hook: h.hook })),
+    [
+      ...input.history.map((h) => ({ fingerprint: h.fingerprint, hook: h.hook })),
+      ...exemplarsAsPrevious(),
+    ],
   );
   if (repetida.repeat) return { ok: false, because: repetida.because ?? 'repetida' };
 
