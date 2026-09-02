@@ -78,6 +78,30 @@ export type ReferenceLink = {
   doNotCopy: string;
 };
 
+/** Uma data que o Postgres aceite, ou nada.
+ *
+ *  O modelo devolve `published_at` em prosa — «13 de maio de 2026», «há duas
+ *  semanas» — e o schema aceita-o como texto. Escrito assim numa coluna `date`
+ *  o INSERT rebenta, e a referência perdia-se em silêncio. Uma data que não se
+ *  consegue ler é uma data que não se sabe: `null`, e a frescura passa a
+ *  «sem data», que é verdade. */
+export function asDate(raw: string | null | undefined): string | null {
+  const v = (raw ?? '').trim();
+  if (!v) return null;
+  const iso = v.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (iso) return Number.isNaN(Date.parse(iso[1])) ? null : iso[1];
+  return null;
+}
+
+/** Endereços que o modelo escreve quando não tem um.
+ *
+ *  `https://www.youtube.com/watch?v=...` passa em qualquer teste de forma —
+ *  tem esquema, tem ponto, não tem espaços — e não leva a lado nenhum. Foi o
+ *  que entrou na primeira corrida real: o prompt proíbe inventar links e o
+ *  modelo obedeceu escrevendo reticências, que é a versão honesta da invenção
+ *  e igualmente inútil. */
+const FAKE_URL = /(\.\.\.|…|\bVIDEO_?ID\b|\bEXAMPLE\b|\bexemplo\b|\bxxx+\b|\{|\}|<|>)/i;
+
 /** O portão de qualidade.
  *
  *  Uma referência sem endereço não é uma referência: é uma alegação. Uma sem
@@ -88,6 +112,7 @@ export function referenceProblems(ref: Partial<Reference>): string[] {
   const url = (ref.sourceUrl ?? '').trim();
 
   if (!/^https?:\/\/\S+\.\S+/.test(url)) out.push('sem endereço verificável');
+  else if (FAKE_URL.test(url)) out.push('o endereço é um exemplo, não um vídeo');
   if ((ref.whyItWorks ?? '').trim().length < 20) out.push('sem explicação do que a faz funcionar');
   if ((ref.structure ?? '').trim().length < 10 && (ref.hook ?? '').trim().length < 10) {
     out.push('sem estrutura nem gancho — não há nada para adaptar');

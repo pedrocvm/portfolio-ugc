@@ -7,6 +7,7 @@ import { runPrompt } from '@/modules/ai/gateway';
 import { aiSetup } from '@/modules/ai/provider';
 import { brandCreativeIdea, findBrandReferences } from '@/modules/ai/prompts/registry';
 import {
+  asDate,
   dedupeReferences,
   freshnessOf,
   isReferencePlatform,
@@ -203,7 +204,8 @@ export async function referencesForCandidate(input: {
         editingStyle: r.editing_style,
         whyItWorks: r.why_it_works,
         format: r.format,
-        publishedAt: r.published_at,
+        // O modelo devolve datas em prosa. O que não for legível é `null`.
+        publishedAt: asDate(r.published_at),
         durationSeconds: r.duration_seconds,
         creatorHandle: r.creator_handle,
         brandName: r.brand_name,
@@ -237,13 +239,18 @@ export async function referencesForCandidate(input: {
 
   // ── 3. Guardar ──────────────────────────────────────────────────────────
   let saved = 0;
+  const problemas: string[] = [];
   const guardadas: { ref: Reference; link: ReferenceLink }[] = [];
 
   for (const [i, item] of top.entries()) {
     const url = normalizeReferenceUrl(item.ref.sourceUrl);
     const urlHash = await hashContent(url);
 
-    const { data: reference } = await db
+    // O erro é lido, não ignorado. O cliente do Supabase devolve em vez de
+    // lançar, e na primeira corrida real três referências analisadas
+    // desapareceram entre a análise e a tela sem deixar rasto — porque uma data
+    // em prosa fazia o INSERT falhar e ninguém olhava para o resultado.
+    const { data: reference, error: refError } = await db
       .from('creative_reference')
       .upsert(
         {
@@ -272,9 +279,12 @@ export async function referencesForCandidate(input: {
       .select('id')
       .maybeSingle();
 
-    if (!reference) continue;
+    if (refError || !reference) {
+      problemas.push(refError?.message ?? 'a base recusou a referência sem dizer porquê');
+      continue;
+    }
 
-    await db.from('candidate_reference').upsert(
+    const { error: linkError } = await db.from('candidate_reference').upsert(
       {
         outreach_candidate_id: input.candidateId,
         creative_reference_id: reference.id,
@@ -286,8 +296,27 @@ export async function referencesForCandidate(input: {
       { onConflict: 'outreach_candidate_id,creative_reference_id' },
     );
 
+    if (linkError) {
+      problemas.push(linkError.message);
+      continue;
+    }
+
     saved++;
     guardadas.push({ ref: item.ref, link: item.link });
+  }
+
+  // Guardar zero depois de analisar três não é «não encontrei»: é uma falha, e
+  // tem de se ver na tela com o motivo.
+  if (saved === 0) {
+    await db
+      .from('outreach_candidate')
+      .update({
+        references_state: 'failed',
+        references_at: new Date().toISOString(),
+        references_note: `Analisei ${top.length} mas não consegui guardar nenhuma: ${problemas[0] ?? 'motivo desconhecido'}`.slice(0, 300),
+      })
+      .eq('id', input.candidateId);
+    return { saved: 0, idea: false, error: problemas[0] ?? 'Não consegui guardar as referências.' };
   }
 
   // ── 4. Da referência para o que ela grava ───────────────────────────────
@@ -298,7 +327,14 @@ export async function referencesForCandidate(input: {
     .update({
       references_state: 'done',
       references_at: new Date().toISOString(),
-      references_note: rejeitadas ? `Deixei ${rejeitadas} de fora por não terem endereço ou análise.` : null,
+      references_note:
+        [
+          rejeitadas ? `Deixei ${rejeitadas} de fora por não terem endereço ou análise.` : '',
+          problemas.length ? `${problemas.length} não entraram: ${problemas[0]}` : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .slice(0, 300) || null,
       creative_angle: idea?.creative_angle ?? null,
       ready_idea: idea ? asJson(idea) : null,
     })

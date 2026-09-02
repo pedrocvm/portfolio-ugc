@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  asDate,
   dedupeReferences,
   freshnessOf,
   normalizeReferenceUrl,
@@ -66,6 +67,44 @@ test('uma referência sem análise é um link, e um link não poupa trabalho', (
       'sem estrutura nem gancho — não há nada para adaptar',
     ),
   );
+});
+
+/* ── O que a primeira corrida real apanhou ────────────────────────────────
+   Nove pesquisas, três referências analisadas, zero guardadas. As duas causas
+   estavam ambas do meu lado. */
+
+test('uma data em prosa não vai para uma coluna de data', () => {
+  // «13 de maio de 2026» fazia o INSERT rebentar, e o erro era engolido.
+  assert.equal(asDate('13 de maio de 2026'), null);
+  assert.equal(asDate('25 de agosto de 2026'), null);
+  assert.equal(asDate('há duas semanas'), null);
+  assert.equal(asDate(''), null);
+  assert.equal(asDate(null), null);
+  assert.equal(asDate('2026-08-26'), '2026-08-26');
+  assert.equal(asDate('2026-08-26T10:00:00Z'), '2026-08-26');
+  assert.equal(asDate('2026-13-45'), null);
+});
+
+test('um endereço de exemplo não passa por endereço', () => {
+  // Isto tem esquema, tem ponto e não tem espaços: passava em qualquer teste
+  // de forma e não leva a lado nenhum. O prompt proíbe inventar links, e o
+  // modelo obedeceu escrevendo reticências.
+  const exemplo = referenceProblems(ref({ sourceUrl: 'https://www.youtube.com/watch?v=...' }));
+  assert.ok(exemplo.includes('o endereço é um exemplo, não um vídeo'), exemplo.join('; '));
+
+  for (const falso of [
+    'https://www.tiktok.com/@user/video/VIDEO_ID',
+    'https://instagram.com/reel/xxxxx',
+    'https://example.com/reel/{id}',
+    'https://tiktok.com/@exemplo/video/123',
+  ]) {
+    assert.equal(referenceIsUsable(ref({ sourceUrl: falso })), false, falso);
+  }
+});
+
+test('um endereço verdadeiro continua a passar', () => {
+  assert.equal(referenceIsUsable(ref({ sourceUrl: 'https://www.facebook.com/watch/?v=3097483783856230' })), true);
+  assert.equal(referenceIsUsable(ref({ sourceUrl: 'https://www.tiktok.com/@alguem/video/7412345678901234567' })), true);
 });
 
 test('uma referência completa passa', () => {
