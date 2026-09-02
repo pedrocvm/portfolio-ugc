@@ -145,3 +145,20 @@ test('a escolha é a mesma venha a marca da busca automática ou da manual', () 
   assert.equal(chooseFromResearch(null).chosen, null);
   assert.equal(chooseFromResearch({ emails: [] }).chosen, null);
 });
+
+test('os endereços que já estavam salvos são classificados como o que são', () => {
+  // Sete das doze marcas pesquisadas até aqui tinham caixa de outro
+  // departamento. É a medida do problema, e cada uma destas é real.
+  for (const errado of [
+    'suporte@keyinvoice.com',
+    'support@shopk.it',
+    'meajuda@cora.com.br',
+    'reservations@barrocal.pt',
+    'support@nomadglobal.com',
+  ]) {
+    assert.equal(mailboxFit(errado), 'wrong_team', errado);
+  }
+  assert.equal(mailboxFit('marketing.manager@torelboutiques.com'), 'target');
+  assert.equal(mailboxFit('geral@casasdomorgadio.pt'), 'front_door');
+  assert.equal(mailboxFit('info@jumpseller.com'), 'front_door');
+});

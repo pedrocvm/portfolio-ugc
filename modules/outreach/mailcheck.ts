@@ -142,7 +142,11 @@ const FRONT_DOOR = [
 
 /** Outro departamento. Não é que não respondam — é que respondem outra coisa. */
 const WRONG_TEAM = [
-  'suporte', 'support', 'ajuda', 'help', 'helpdesk', 'sac', 'apoio', 'atendimento',
+  'suporte', 'support', 'ajuda', 'meajuda', 'help', 'helpdesk', 'sac', 'apoio', 'atendimento',
+  // Hotelaria e restauração: a caixa de reservas trata de quartos e mesas, e
+  // uma proposta de parceria ali fica à espera de uma data.
+  'reservations', 'reservas', 'reserva', 'booking', 'bookings', 'eventos', 'events',
+  'recepcao', 'recepção', 'reception', 'frontdesk',
   'faturacao', 'faturação', 'faturamento', 'billing', 'financeiro', 'contabilidade',
   'rh', 'hr', 'jobs', 'careers', 'recrutamento', 'emprego',
   'dev', 'tech', 'ti', 'sistemas', 'webmaster', 'hosting',
