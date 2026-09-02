@@ -187,8 +187,9 @@ export async function runDailyContentPlan(
 
   let generated = 0;
   let rejected = 0;
+  const porGravar = new Set<Platform>(['instagram', 'tiktok']);
 
-  for (const idea of [plano.instagram, plano.tiktok]) {
+  const guardar = async (idea: ContentIdea) => {
     const saved = await saveIdea({
       idea,
       appUserId: me.id,
@@ -199,10 +200,56 @@ export async function runDailyContentPlan(
       milestones,
       runId: run.runId,
     });
-    if (saved.ok) generated++;
-    else {
+    if (saved.ok) {
+      generated++;
+      porGravar.delete(idea.platform);
+    } else {
       rejected++;
       reasons.push(`${idea.platform}: ${saved.because}`);
+    }
+    return saved;
+  };
+
+  for (const idea of [plano.instagram, plano.tiktok]) await guardar(idea);
+
+  // Uma rejeição não pode deixar a plataforma sem nada. Tenta outra vez, uma
+  // só, com o motivo da recusa por escrito — sem isso o modelo repete o mesmo
+  // erro, que foi o que aconteceu na primeira corrida real: o portão
+  // anti-guru travou a ideia de Instagram e o dia ficou com uma.
+  if (porGravar.size > 0 && rejected > 0) {
+    const segunda = await runPrompt(
+      planDailyContent,
+      {
+        today: planDate,
+        strategy: describeStrategy(),
+        profile: describeProfile(profile),
+        energy: `Energia disponível: ${ENERGY_LABEL[orcamento.max]}. ${orcamento.because}`,
+        pillars: ordem.map((p, i) => `${i + 1}. ${p} — ${PILLAR_LABEL[p]}`).join('\n'),
+        avoidPillars: evitar.map((p) => PILLAR_LABEL[p]).join(', '),
+        audienceTilt: [
+          'A TENTATIVA ANTERIOR FOI RECUSADA. Motivos, um por um:',
+          ...reasons.map((r) => `- ${r}`),
+          'Não repitas o mesmo erro. Se te disseram que estava a dar aulas, conta uma história em vez de ensinar.',
+        ].join('\n'),
+        trends: describeTrends(trends),
+        milestones: describeMilestones(milestones),
+        jobs,
+        recentIdeas: history.slice(0, 12).map((h) => `- [${h.platform}] ${h.hook}`).join('\n'),
+        series,
+        seeds: (await seedsForPillar(ordem[0], 4)).map((sd) => `- ${sd.title}: «${sd.hook}»`).join('\n'),
+        exemplars: describeExemplars(),
+        instagramBrief: describeBrief('instagram'),
+        tiktokBrief: describeBrief('tiktok'),
+      },
+      { entityType: 'creator_content_idea', entityId: me.id, timeoutMs: 90_000 },
+    );
+
+    if (segunda.ok) {
+      for (const idea of [segunda.output.instagram, segunda.output.tiktok]) {
+        if (porGravar.has(idea.platform)) await guardar(idea);
+      }
+    } else {
+      failures.push(`A segunda tentativa também falhou: ${segunda.message}`);
     }
   }
 
