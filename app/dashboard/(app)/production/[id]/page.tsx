@@ -7,6 +7,7 @@ import { closeoutStatus } from '@/modules/cases/service';
 import { contentFor } from '@/modules/content/service';
 import { deliverablesFor, getCollaboration, STATUS_LABEL } from '@/modules/production/service';
 import ProductionDesk from '@/components/dashboard/os/ProductionDesk';
+import Multiplier from '@/components/dashboard/os/Multiplier';
 import ScriptDesk from '@/components/dashboard/os/ScriptDesk';
 import Timeline from '@/components/dashboard/os/Timeline';
 
@@ -43,6 +44,8 @@ export default async function CollaborationPage({ params }: { params: Promise<{ 
         deliverables={deliverables}
         closeout={closeout}
       />
+
+      <Multiplier collaborationId={id} />
 
       <ScriptDesk
         collaborationId={id}

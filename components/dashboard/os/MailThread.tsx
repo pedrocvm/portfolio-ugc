@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { readMailThread, replyToMailThread, type MailThread as Thread } from '@/app/dashboard/carolos-actions';
+import { sendPreparedReply } from '@/app/dashboard/morning-actions';
 import Spinner from '@/components/dashboard/Spinner';
 import { useExit } from '@/components/dashboard/useExit';
 import { formatDate } from '@/lib/time';
@@ -52,6 +53,10 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState('');
+  const [confirmar, setConfirmar] = useState(false);
+  // O que a madrugada escreveu, antes de ela mexer. É a diferença entre os dois
+  // que ensina o sistema a parar de escrever em português do Brasil.
+  const [rascunhoOriginal, setRascunhoOriginal] = useState('');
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,7 +64,15 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
     readMailThread(threadId).then((r) => {
       if (!alive) return;
       if ('error' in r) setError(r.error);
-      else setThread(r);
+      else {
+        setThread(r);
+        // A caixa de resposta abria vazia e o botão ficava desactivado até ela
+        // escrever. Com o rascunho já preparado, abre escrita.
+        if (r.intel?.draftBody) {
+          setReply(r.intel.draftBody);
+          setRascunhoOriginal(r.intel.draftBody);
+        }
+      }
     });
     return () => {
       alive = false;
@@ -79,15 +92,34 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
     };
   }, [close]);
 
-  async function send() {
+  async function draft() {
     setSending(true);
     setDone('');
+    setError('');
     const r = await replyToMailThread(threadId, reply);
     setSending(false);
     if ('error' in r && r.error) setError(r.error);
+    else setDone('Rascunho criado no Gmail, dentro desta conversa.');
+  }
+
+  /** Enviar daqui. Sai para fora, por isso pede um segundo sim — e é o único
+   *  sítio desta gaveta que o pede. */
+  async function send() {
+    setSending(true);
+    setDone('');
+    setError('');
+    const r = await sendPreparedReply({
+      threadId,
+      body: reply,
+      subject: thread?.intel?.draftSubject,
+      aiDraft: rascunhoOriginal,
+    }).catch(() => ({ error: 'Não consegui enviar agora. A mensagem continua aqui.' }));
+    setSending(false);
+    setConfirmar(false);
+    if (r.error) setError(r.error);
     else {
-      setDone('Rascunho criado no Gmail, dentro desta conversa. Abra o Gmail para revisar e enviar.');
-      setReply('');
+      setDone('Enviada.');
+      setRascunhoOriginal('');
     }
   }
 
@@ -142,13 +174,47 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
             <div className="mailScroll">
               {/* O resumo primeiro. Se o sistema já sabe o que pediram, ela não
                   tem de o descobrir a ler. */}
-              {resumo ? (
+              {/* A leitura da madrugada ganha à frase genérica: já sabe quem
+                  escreveu, o que quer, o que falta e o que recomendar. */}
+              {thread.intel ? (
+                <div className="mailGist">
+                  <p className="mailGistAsk">
+                    {thread.intel.whoWrote ? `${thread.intel.whoWrote}: ` : ''}
+                    {thread.intel.whatTheyWant}
+                  </p>
+                  <dl className="mornFacts">
+                    {thread.intel.whatChanged ? (
+                      <>
+                        <dt>O que mudou</dt>
+                        <dd>{thread.intel.whatChanged}</dd>
+                      </>
+                    ) : null}
+                    {thread.intel.whatIsMissing ? (
+                      <>
+                        <dt>O que falta</dt>
+                        <dd>{thread.intel.whatIsMissing}</dd>
+                      </>
+                    ) : null}
+                    {thread.intel.risk ? (
+                      <>
+                        <dt>Risco</dt>
+                        <dd data-risk={thread.intel.riskLevel}>{thread.intel.risk}</dd>
+                      </>
+                    ) : null}
+                  </dl>
+                </div>
+              ) : resumo ? (
                 <div className="mailGist">
                   <p className="mailGistAsk">{resumo}</p>
                 </div>
               ) : null}
 
-              {thread.next ? (
+              {thread.intel?.recommendation ? (
+                <div className="mailNext">
+                  <span className="mailNextLabel">O que eu faria</span>
+                  <p>{thread.intel.recommendation}</p>
+                </div>
+              ) : thread.next ? (
                 <div className="mailNext">
                   <span className="mailNextLabel">O que eu faria</span>
                   <b>{thread.next.title}</b>
@@ -163,7 +229,9 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
                     ? `Ver a conversa (${thread.messages.length})`
                     : 'Ver a conversa'}
                 </summary>
-                {thread.messages.map((m) => (
+                {/* A mais recente primeiro: o que interessa é o que a marca
+                    acabou de dizer, não como a conversa começou. */}
+                {[...thread.messages].reverse().map((m) => (
                   <article className="mailMsg" key={m.id} data-dir={m.direction}>
                     <div className="mailMeta">
                       <b>{m.direction === 'outbound' ? 'Eu' : m.fromName || m.fromAddress}</b>
@@ -200,15 +268,42 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
                 </p>
               ) : null}
               <div className="mailActs">
-                <button
-                  className="osPageBtn"
-                  type="button"
-                  onClick={send}
-                  disabled={!thread.replyTo || sending || reply.trim().length < 2}
-                >
-                  {sending ? <Spinner label="A preparar" /> : null}
-                  Preparar rascunho no Gmail
-                </button>
+                {confirmar ? (
+                  <>
+                    <button className="osGo" type="button" onClick={send} disabled={sending}>
+                      {sending ? <Spinner label="A enviar" /> : null}
+                      Sim, enviar
+                    </button>
+                    <button
+                      className="osPageBtn"
+                      type="button"
+                      onClick={() => setConfirmar(false)}
+                      disabled={sending}
+                    >
+                      Afinal não
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="osGo"
+                      type="button"
+                      onClick={() => setConfirmar(true)}
+                      disabled={!thread.replyTo || sending || reply.trim().length < 2}
+                    >
+                      Enviar
+                    </button>
+                    <button
+                      className="osPageBtn"
+                      type="button"
+                      onClick={draft}
+                      disabled={!thread.replyTo || sending || reply.trim().length < 2}
+                    >
+                      {sending ? <Spinner label="A preparar" /> : null}
+                      Deixar rascunho no Gmail
+                    </button>
+                  </>
+                )}
                 {thread.opportunityId ? (
                   <Link className="chip" href={`/dashboard/opportunities/${thread.opportunityId}`}>
                     Abrir a oportunidade
@@ -221,8 +316,9 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
                 ) : null}
               </div>
               <p className="osRowSub">
-                O CarolOS não envia emails sozinho. Isto deixa o rascunho na caixa dela, pronto a
-                rever e a enviar.
+                {thread.intel?.draftState === 'ready'
+                  ? 'Esta resposta foi escrita de madrugada. Nada sai sem o sim dela.'
+                  : 'O CarolOS não envia nada sozinho. Sai quando ela carregar em enviar.'}
               </p>
             </div>
           </>

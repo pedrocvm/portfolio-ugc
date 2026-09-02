@@ -896,6 +896,28 @@ export type MailThread = {
   next: { title: string; reason: string; cta: string } | null;
   /** Há quantos dias a marca está à espera. Nulo se a bola não é dela. */
   waitingDays: number | null;
+  /** O que a triagem da madrugada preparou: quem escreveu, o que quer, o que
+   *  falta, o risco, a recomendação e a resposta já escrita.
+   *
+   *  Nulo quando a triagem ainda não correu para esta conversa — e nesse caso a
+   *  gaveta continua a funcionar como funcionava, com a recomendação
+   *  determinística do planeador. */
+  intel: {
+    intentLabel: string;
+    waitingOn: 'carol' | 'brand' | 'nobody';
+    whoWrote: string;
+    whatTheyWant: string;
+    whatChanged: string;
+    whatIsMissing: string;
+    risk: string;
+    riskLevel: string;
+    recommendation: string;
+    draftSubject: string;
+    draftBody: string;
+    draftState: string;
+    draftReason: string;
+    preparedAt: string | null;
+  } | null;
 };
 
 /** O corpo das mensagens já está salvo na ingestão, por isso ler uma
@@ -959,6 +981,9 @@ export async function readMailThread(threadId: string): Promise<MailThread | { e
   const proxima = acoes.data?.[0] ?? null;
   const payload = (classificacao.data?.[0]?.payload ?? {}) as { replyTypes?: string[] };
 
+  const { intelForThread } = await import('@/modules/email/triage-service');
+  const intel = await intelForThread(threadId).catch(() => null);
+
   return {
     id: thread.id,
     subject: thread.subject,
@@ -979,6 +1004,24 @@ export async function readMailThread(threadId: string): Promise<MailThread | { e
       last?.direction === 'inbound'
         ? Math.max(0, Math.round((Date.now() - new Date(last.sentAt).getTime()) / 86400000))
         : null,
+    intel: intel
+      ? {
+          intentLabel: intel.intentLabel,
+          waitingOn: intel.waitingOn,
+          whoWrote: intel.whoWrote,
+          whatTheyWant: intel.whatTheyWant,
+          whatChanged: intel.whatChanged,
+          whatIsMissing: intel.whatIsMissing,
+          risk: intel.risk,
+          riskLevel: intel.riskLevel,
+          recommendation: intel.recommendation,
+          draftSubject: intel.draftSubject,
+          draftBody: intel.draftBody,
+          draftState: intel.draftState,
+          draftReason: intel.draftReason,
+          preparedAt: intel.preparedAt,
+        }
+      : null,
   };
 }
 

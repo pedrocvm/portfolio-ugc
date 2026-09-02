@@ -7590,3 +7590,34 @@ a.aiSource:hover {
     padding: 0 12px 14px;
   }
 }
+
+/* ── o que mais sai da mesma gravação ──────────────────────────────────── */
+.dash .multList {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+.dash .multList > li {
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+}
+.dash .multPlat {
+  display: block;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.dash .multList b {
+  font-weight: 500;
+  color: var(--tinta);
+}
+.dash .multHook {
+  margin: 4px 0;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--tinta);
+}

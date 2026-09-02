@@ -1308,6 +1308,27 @@ const getBusinessMilestones = define(
   },
 );
 
+
+const getContentMultiplier = define(
+  'get_content_multiplier',
+  'O que ela pode gravar PARA ELA aproveitando uma gravação de marca já marcada, sem acrescentar horas. Usa isto para «que conteúdo posso tirar do job de hoje?».',
+  z.object({ collaboration_id: z.string().uuid() }),
+  async ({ collaboration_id }) => {
+    const { multiplierFor } = await import('@/modules/creator/multiplier-service');
+    const r = await multiplierFor(collaboration_id);
+    return {
+      data: r.ok
+        ? { brand: r.brandName, suggestions: r.suggestions }
+        : { ok: false, reason: r.reason },
+      sources: [{
+        id: collaboration_id, type: 'portfolio' as const, label: 'Gravação', at: null,
+        href: `/dashboard/production/${collaboration_id}`,
+      }],
+    };
+  },
+  'write',
+);
+
 export const TOOLS: Tool[] = [
   searchBrands, getBrand, getBrandActivity,
   searchOpportunities, getOpportunity,
@@ -1325,7 +1346,7 @@ export const TOOLS: Tool[] = [
   getMorningBrief, getEmailTriage, prepareReply,
   getDailyContentPlan, getContentIdea, regenerateContentIdea, saveContentIdea,
   getBrandReferences, searchCreativeReferences, adaptReferenceToBrand,
-  getCreatorTrends, getCreatorProfile, getBusinessMilestones,
+  getCreatorTrends, getCreatorProfile, getBusinessMilestones, getContentMultiplier,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));

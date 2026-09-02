@@ -147,7 +147,7 @@ export async function notifications(): Promise<Notification[]> {
   const db = await supabaseServer();
   const now = new Date().toISOString();
 
-  const [late, insights] = await Promise.all([
+  const [late, insights, morning] = await Promise.all([
     db
       .from('action_item')
       .select('id, title, reason, due_at, opportunity_id, brand:brand_id ( name )')
@@ -156,7 +156,32 @@ export async function notifications(): Promise<Notification[]> {
       .order('priority_score', { ascending: false })
       .limit(6),
     openInsights(8),
+    // A manhã é a única coisa que a campainha precisa de dizer no dia em que
+    // ainda não foi aberta. O sino dizia 2, o Hoje dizia 17 e o motor de avisos
+    // tinha produzido 9 — três números do mesmo dia que não batiam certo em
+    // lado nenhum.
+    (async () => {
+      const { readMorningBrief } = await import('@/modules/morning/service');
+      return readMorningBrief().catch(() => null);
+    })(),
   ]);
+
+  if (morning && !morning.openedAt && morning.decisionCount > 0) {
+    const n = morning.decisionCount;
+    return [
+      {
+        id: `morning:${morning.date}`,
+        severity: morning.decisions.some((d) => d.urgent) ? 'urgent' : 'info',
+        title: n === 1 ? 'Uma coisa precisa de si hoje.' : `${n} coisas precisam de si hoje.`,
+        detail: `A manhã está preparada. Cerca de ${morning.estimatedMinutes} ${
+          morning.estimatedMinutes === 1 ? 'minuto' : 'minutos'
+        }.`,
+        href: '/dashboard',
+      },
+      // Os avisos do negócio continuam: são outra coisa, e não estão na manhã.
+      ...insights.map((i) => ({ ...i, id: `insight:${i.id}` })),
+    ];
+  }
 
   const overdue: Notification[] = (late.data ?? []).map((a) => {
     const b = a.brand as { name: string } | { name: string }[] | null;

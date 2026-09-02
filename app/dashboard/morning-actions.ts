@@ -114,6 +114,21 @@ export async function anotherIdea(ideaId: string, nudge?: string): Promise<Resul
   return { ok: true, newId: result.id };
 }
 
+/** «Que conteúdo meu sai desta mesma gravação?»
+ *
+ *  Gasta uma chamada ao modelo, e por isso corre quando ela pergunta — não em
+ *  todas as gravações de madrugada. */
+export async function contentFromJob(
+  collaborationId: string,
+): Promise<Result & { suggestions?: import('@/modules/creator/multiplier-service').MultiplierSuggestion[] }> {
+  await requireUser();
+  if (!uuid.safeParse(collaborationId).success) return { error: 'Gravação inválida.' };
+
+  const { multiplierFor } = await import('@/modules/creator/multiplier-service');
+  const r = await multiplierFor(collaborationId);
+  return r.ok ? { ok: true, suggestions: r.suggestions } : { error: r.reason };
+}
+
 /* ── A manhã ──────────────────────────────────────────────────────────────── */
 
 export async function openMorning(): Promise<Result> {
