@@ -945,6 +945,8 @@ export const planDailyContent: Prompt<
     energy: string;
     recentIdeas: string;
     series: string;
+    seeds: string;
+    exemplars: string;
     instagramBrief: string;
     tiktokBrief: string;
   },
@@ -1073,6 +1075,14 @@ ${i.recentIdeas || '(nenhuma)'}
 
 ## Séries em curso
 ${i.series || '(nenhuma)'}
+
+## Sementes do pilar prioritário
+Vêm da auditoria do perfil dela. Não são ordens: são matéria-prima com o
+território certo. Se uma servir, desenvolve-a até ao guião; se não, ignora.
+${i.seeds || '(nenhuma)'}
+
+## Como ela soa quando está certa
+${i.exemplars}
 
 ## INSTAGRAM
 ${i.instagramBrief}

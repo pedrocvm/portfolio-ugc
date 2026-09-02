@@ -103,6 +103,8 @@ test('a Carol AI alcança a manhã, o conteúdo e as referências', () => {
     'get_creator_trends',
     'get_creator_profile',
     'get_business_milestones',
+    'get_content_multiplier',
+    'get_content_strategy',
   ]) {
     const f = todas.find((x) => x.nome === nome);
     assert.ok(f, `«${nome}» não existe`);
@@ -111,6 +113,18 @@ test('a Carol AI alcança a manhã, o conteúdo e as referências', () => {
   assert.match(lista, /getMorningBrief/);
   assert.match(lista, /getDailyContentPlan/);
   assert.match(lista, /regenerateContentIdea/);
+  assert.match(lista, /getContentStrategy/);
+});
+
+/** A auditoria diz que pôr a Carol a ensinar creators é o erro estratégico
+ *  maior. O assistente é onde isso escaparia primeiro — basta ela pedir «uma
+ *  ideia sobre UGC» e ele devolver dicas. */
+test('o assistente sabe que autoridade não é dar aulas', () => {
+  const PROMPT = readFileSync(path.join(ROOT, 'modules/assistant/prompt.ts'), 'utf8');
+  assert.match(PROMPT, /AUTORIDADE SIM, PROFESSORA NÃO/);
+  assert.match(PROMPT, /Nunca\s+proponhas dicas para creators/);
+  // E sabe onde ler a estratégia em vez de a inventar.
+  assert.match(PROMPT, /get_content_strategy/);
 });
 
 /** Trocar uma ideia, refazer um rascunho e procurar referências mudam o

@@ -1329,6 +1329,46 @@ const getContentMultiplier = define(
   'write',
 );
 
+
+const getContentStrategy = define(
+  'get_content_strategy',
+  'A estratégia de conteúdo dela: posicionamento, ADN, os cinco pilares com peso, o que parar, e as séries candidatas. Vem da auditoria do Instagram. Consulta isto ANTES de sugerir qualquer ideia — «me dá uma ideia» não se responde ao acaso.',
+  z.object({}),
+  async () => {
+    const { STRATEGY, describeStrategy } = await import('@/modules/creator/strategy');
+    const { seedsForPillar } = await import('@/modules/creator/seed-service');
+    const db = await supabaseServer();
+
+    // O que já saiu, para saber que pilar está em falta.
+    const { data: recentes } = await db
+      .from('creator_content_idea')
+      .select('pillar, platform, hook, generated_at')
+      .neq('status', 'seed')
+      .order('generated_at', { ascending: false })
+      .limit(12);
+
+    const { pillarDebt, PILLAR_LABEL } = await import('@/modules/creator/domain');
+    const debt = pillarDebt((recentes ?? []).map((r) => ({ pillar: r.pillar })));
+    const emFalta = Object.entries(debt)
+      .filter(([, v]) => v > 0.05)
+      .sort((a, b) => b[1] - a[1])
+      .map(([p]) => p);
+
+    return {
+      data: {
+        version: STRATEGY.version,
+        source: STRATEGY.source,
+        summary: describeStrategy(),
+        pillarsBehind: emFalta.map((p) => PILLAR_LABEL[p as keyof typeof PILLAR_LABEL] ?? p),
+        seedsForTopPillar: emFalta[0] ? await seedsForPillar(emFalta[0], 4) : [],
+        recent: (recentes ?? []).map((r) => ({ pillar: r.pillar, platform: r.platform, hook: r.hook })),
+        note: 'Autoridade sim, professora não. Nunca proponhas dicas para creators nem tutorial.',
+      },
+      sources: [],
+    };
+  },
+);
+
 export const TOOLS: Tool[] = [
   searchBrands, getBrand, getBrandActivity,
   searchOpportunities, getOpportunity,
@@ -1347,6 +1387,7 @@ export const TOOLS: Tool[] = [
   getDailyContentPlan, getContentIdea, regenerateContentIdea, saveContentIdea,
   getBrandReferences, searchCreativeReferences, adaptReferenceToBrand,
   getCreatorTrends, getCreatorProfile, getBusinessMilestones, getContentMultiplier,
+  getContentStrategy,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));

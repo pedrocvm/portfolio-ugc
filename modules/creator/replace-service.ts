@@ -23,6 +23,7 @@ import {
   type Pillar,
   type Platform,
 } from './domain';
+import { describeExemplars } from './audit-seed';
 import { describeProfile, profileFresh } from './profile-service';
 
 /** «Quero outra ideia.»
@@ -99,6 +100,8 @@ export async function replaceIdea(ideaId: string, nudge?: Nudge): Promise<Replac
         ...history.slice(0, 12).map((h) => `- [${h.platform}] ${h.hook}`),
       ].join('\n'),
       series: '',
+      seeds: '',
+      exemplars: describeExemplars(),
       instagramBrief: describeBrief('instagram'),
       tiktokBrief: describeBrief('tiktok'),
     },

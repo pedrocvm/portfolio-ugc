@@ -35,6 +35,7 @@ import {
   type Pillar,
   type Platform,
 } from './domain';
+import { describeExemplars } from './audit-seed';
 import { describeProfile, profileFresh } from './profile-service';
 
 export * from './domain';
@@ -81,6 +82,11 @@ export async function runDailyContentPlan(
     return { generated: 0, rejected: 0, archived: 0, reasons: ['O plano de hoje já existe.'], failures: [] };
   }
 
+  // A auditoria entra no sistema antes de o plano correr. É idempotente: numa
+  // manhã normal não escreve nada.
+  const { seedFromAudit, seedsForPillar } = await import('./seed-service');
+  await seedFromAudit();
+
   // ── Envelhecimento: o que morreu sai antes de entrar coisa nova ─────────
   const archived = await archiveStale(now);
 
@@ -88,6 +94,7 @@ export async function runDailyContentPlan(
   const { count: prontas } = await db
     .from('creator_content_idea')
     .select('id', { count: 'exact', head: true })
+    // As sementes não contam para a carga: são matéria-prima, não fila.
     .in('status', ['ready', 'saved']);
 
   const carga = shouldGenerate(prontas ?? 0);
@@ -147,6 +154,10 @@ export async function runDailyContentPlan(
         .map((h) => `- [${h.platform}] ${h.hook}`)
         .join('\n'),
       series,
+      seeds: (await seedsForPillar(ordem[0], 4))
+        .map((sd) => `- ${sd.title}: «${sd.hook}»`)
+        .join('\n'),
+      exemplars: describeExemplars(),
       instagramBrief: describeBrief('instagram'),
       tiktokBrief: describeBrief('tiktok'),
     },
