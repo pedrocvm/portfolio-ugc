@@ -21,6 +21,7 @@ import Documents from '@/components/dashboard/os/Documents';
 import QuoteBuilder from '@/components/dashboard/os/QuoteBuilder';
 import StageControl from '@/components/dashboard/os/StageControl';
 import Timeline from '@/components/dashboard/os/Timeline';
+import { describeRisks } from '@/modules/rights/engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,6 +59,8 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
     questions?: string[];
     uncertainties?: string[];
   };
+
+  const riscos = describeRisks(facts.riskFlags ?? []);
 
   return (
     <>
@@ -101,11 +104,11 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
         </p>
       ) : null}
 
-      {facts.riskFlags?.length ? (
+      {riscos ? (
         <p className="osWarn">
-          Riscos comerciais detectados na conversa: {facts.riskFlags.join(', ')}.
+          Riscos comerciais nesta conversa: {riscos}.
           {facts.paidUsageRequested && !facts.usagePeriod
-            ? ' Pediram anúncios pagos sem indicar duração — não fechar valor antes de saber.'
+            ? ' Pediram anúncios pagos sem dizer por quanto tempo — não fechar valor antes de saber.'
             : ''}
         </p>
       ) : null}

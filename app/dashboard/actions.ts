@@ -14,7 +14,7 @@ export type Result = { ok?: true; error?: string };
 export async function signIn(_prev: Result, form: FormData): Promise<Result> {
   const id = String(form.get('id') ?? '').trim();
   const password = String(form.get('password') ?? '');
-  if (!id || !password) return { error: 'Preenche o usuário e a palavra-passe.' };
+  if (!id || !password) return { error: 'Falta o usuário ou a senha.' };
 
   const email = id.includes('@')
     ? id
@@ -24,7 +24,7 @@ export async function signIn(_prev: Result, form: FormData): Promise<Result> {
 
   const supabase = await supabaseServer();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: 'Usuário ou palavra-passe incorretos.' };
+  if (error) return { error: 'Usuário ou senha incorretos.' };
   redirect('/dashboard');
 }
 
@@ -101,27 +101,27 @@ export async function changePassword(
   const next = String(form.get('next') ?? '');
   const repeat = String(form.get('repeat') ?? '');
 
-  if (next !== repeat) return { error: 'A confirmação não é igual à nova palavra-passe.' };
+  if (next !== repeat) return { error: 'A confirmação não é igual à nova senha.' };
   if (next.length < MIN_PASSWORD) {
-    return { error: `A nova palavra-passe precisa de pelo menos ${MIN_PASSWORD} caracteres.` };
+    return { error: `A nova senha precisa de pelo menos ${MIN_PASSWORD} caracteres.` };
   }
-  if (next === current) return { error: 'A nova palavra-passe é igual à atual.' };
+  if (next === current) return { error: 'A nova senha é igual à atual.' };
 
   const supabase = await supabaseServer();
   const { error: wrong } = await supabase.auth.signInWithPassword({
     email: user.email!,
     password: current,
   });
-  if (wrong) return { error: 'A palavra-passe atual não está correta.' };
+  if (wrong) return { error: 'A senha atual não está correta.' };
 
   if (await isPwned(next)) {
     return {
       error:
-        'Essa palavra-passe já apareceu em fugas de dados conhecidas. Escolhe outra.',
+        'Essa senha já apareceu em fugas de dados conhecidas. Escolha outra.',
     };
   }
 
   const { error } = await supabase.auth.updateUser({ password: next });
-  if (error) return { error: 'Não foi possível mudar a palavra-passe.' };
+  if (error) return { error: 'Não foi possível mudar a senha.' };
   return { ok: true };
 }

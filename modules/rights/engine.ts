@@ -49,6 +49,38 @@ export type RiskFlag = {
   humanOnly?: boolean;
 };
 
+/** Os códigos, ditos como ela os lê.
+ *
+ *  O código é a chave estável — é por ele que o planeador decide e é ele que
+ *  fica salvo. Mas ficou salvo e foi impresso tal e qual: «Riscos comerciais
+ *  detectados na conversa: usage_no_period, usage_no_territory». É o sistema a
+ *  falar consigo próprio à frente de quem o usa, e o projeto já tinha a mesma
+ *  tabela para as etapas e para as intenções — faltava aqui.
+ *
+ *  Vive ao lado dos códigos de propósito: quem acrescenta um vê a tabela na
+ *  linha seguinte, e há um teste que falha se a esquecer. */
+export const RISK_LABEL: Record<string, string> = {
+  usage_no_period: 'uso pago sem duração',
+  usage_no_platforms: 'uso pago sem canais nomeados',
+  usage_no_territory: 'território por definir',
+  whitelisting: 'whitelisting pedido',
+  exclusivity: 'exclusividade pedida',
+  raw_footage: 'arquivos em bruto pedidos',
+  third_party: 'uso por terceiros',
+  no_portfolio: 'sem permissão de portfólio',
+  portfolio_unknown: 'permissão de portfólio por confirmar',
+};
+
+/** A lista dos riscos numa frase. Um código sem rótulo não é impresso em
+ *  bruto: some da lista, porque um nome de variável na tela dela é pior do que
+ *  um risco a menos numa enumeração — e o teste apanha a falta antes disso. */
+export function describeRisks(codes: readonly string[]): string {
+  const nomes = codes.map((c) => RISK_LABEL[c]).filter(Boolean);
+  if (nomes.length === 0) return '';
+  if (nomes.length === 1) return nomes[0];
+  return `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`;
+}
+
 /** Tudo o que numa licença tem de acender uma luz antes de ser aceite. */
 export function rightsRisks(scope: RightsScope): RiskFlag[] {
   const flags: RiskFlag[] = [];

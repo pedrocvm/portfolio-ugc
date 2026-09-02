@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  BLANK_RIGHTS, RENEWAL_WINDOW_DAYS, computeEnd, exclusivityConflicts, expiryStatus, rightsRisks,
+  BLANK_RIGHTS, RENEWAL_WINDOW_DAYS, RISK_LABEL, computeEnd, describeRisks, exclusivityConflicts,
+  expiryStatus, rightsRisks,
 } from './engine.ts';
 
 const scope = (over: Partial<typeof BLANK_RIGHTS> = {}) => ({ ...BLANK_RIGHTS, ...over });
@@ -104,4 +105,49 @@ test('exclusividade de escopo vago avisa na mesma', () => {
   );
   assert.equal(conflitos.length, 1);
   assert.match(conflitos[0], /sem prazo/);
+});
+
+/* ── O nome que ela lê ────────────────────────────────────────────────────── */
+
+test('todo o risco que o motor emite tem nome em português', () => {
+  // «Riscos comerciais detectados na conversa: usage_no_period,
+  // usage_no_territory» chegou à tela dela. O código é a chave estável e fica
+  // salvo; o que não pode é ser impresso. Isto obriga quem acrescenta um
+  // código a acrescentar o nome na linha seguinte.
+  const todos = new Set<string>();
+  const variantes = [
+    scope({ paidAllowed: true }),
+    scope({ paidAllowed: true, platforms: ['Meta'], territories: ['PT'] }),
+    scope({ whitelisting: true, exclusivity: true, rawFootage: true, thirdPartyUsage: true }),
+    scope({ portfolioPermission: false }),
+    scope({ portfolioPermission: null }),
+    scope({ exclusivity: true, exclusivityEndAt: '2026-12-31' }),
+  ];
+  for (const v of variantes) for (const f of rightsRisks(v)) todos.add(f.code);
+
+  assert.ok(todos.size >= 9, `só exercitei ${todos.size} códigos`);
+  for (const code of todos) {
+    assert.ok(RISK_LABEL[code], `o código «${code}» não tem nome: ia sair em bruto na tela dela`);
+    assert.equal(/[_]/.test(RISK_LABEL[code]), false, `o nome de «${code}» ainda parece uma variável`);
+  }
+});
+
+test('a frase dos riscos lê-se como frase', () => {
+  assert.equal(describeRisks([]), '');
+  assert.equal(describeRisks(['usage_no_period']), 'uso pago sem duração');
+  assert.equal(
+    describeRisks(['usage_no_period', 'usage_no_territory']),
+    'uso pago sem duração e território por definir',
+  );
+  assert.equal(
+    describeRisks(['usage_no_period', 'usage_no_platforms', 'usage_no_territory']),
+    'uso pago sem duração, uso pago sem canais nomeados e território por definir',
+  );
+});
+
+test('um código sem nome some da frase em vez de aparecer em bruto', () => {
+  // Um risco a menos numa enumeração é melhor do que um nome de variável na
+  // tela. O teste de cima é que impede isto de acontecer com um código real.
+  assert.equal(describeRisks(['codigo_que_nao_existe']), '');
+  assert.equal(describeRisks(['usage_no_period', 'codigo_que_nao_existe']), 'uso pago sem duração');
 });

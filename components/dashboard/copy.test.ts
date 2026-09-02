@@ -19,8 +19,13 @@ import test from 'node:test';
 const ROOT = path.join(import.meta.dirname, '..', '..');
 
 /** Só o que a Carol lê. Os prompts falam com um modelo e são outra língua de
- *  trabalho; os testes e os comentários não vão parar a lado nenhum. */
-const PASTAS = ['components/dashboard', 'components/assistant'];
+ *  trabalho; os testes e os comentários não vão parar a lado nenhum.
+ *
+ *  As páginas entraram depois, e por uma razão concreta: «Riscos comerciais
+ *  detectados na conversa: usage_no_period, usage_no_territory» estava numa
+ *  delas, e este teste olhava só para os componentes. Metade das telas dela
+ *  não estava a ser verificada. */
+const PASTAS = ['components/dashboard', 'components/assistant', 'app/dashboard'];
 
 function arquivos(dir: string): string[] {
   const out: string[] = [];
@@ -72,14 +77,14 @@ test('há telas para verificar', () => {
  *  `\becrã\b` nunca casa. É por isso que o corte é feito com `[^\p{L}]`. */
 test('nenhuma tela fala português europeu', () => {
   const achados = procurar(
-    /(^|[^\p{L}])(ecrãs?|ficheiros?|telemóve(l|is)|utilizador(es)?|portefólios?|equipa|ementa|rapariga|morada|apelido|connosco|percebeste|sítios?)($|[^\p{L}])/iu,
+    /(^|[^\p{L}])(ecrãs?|ficheiros?|telemóve(l|is)|utilizador(es)?|portefólios?|equipa|ementa|rapariga|morada|apelido|connosco|percebeste|sítios?|palavras?-passe)($|[^\p{L}])/iu,
   );
   assert.deepEqual(achados, [], `português europeu: ${achados.join(', ')}`);
 });
 
 test('a grafia é a do Brasil', () => {
   const achados = procurar(
-    /(^|[^\p{L}])(ac(ç|c)ão|ac(ç|c)ões|direc(ç|c)ão|selec(ç|c)ão|colec(ç|c)ão|objectivos?|actual(mente)?|actualiza\w*|contact(o|os|ar)|regist(o|os)|fact(o|os)|direct(o|a|os|as)|exact\w*|correct\w*|óptim(o|a|os|as))($|[^\p{L}])/iu,
+    /(^|[^\p{L}])(ac(ç|c)ão|ac(ç|c)ões|direc(ç|c)ão|selec(ç|c)ão|colec(ç|c)ão|objectivos?|actual(mente)?|actualiza\w*|contact(o|os|ar)|regist(o|os)|fact(o|os)|direct(o|a|os|as)|exact(o|a|os|as|amente)|correct(o|a|os|as|amente)|óptim(o|a|os|as))($|[^\p{L}])/iu,
   );
   assert.deepEqual(achados, [], `grafia europeia: ${achados.join(', ')}`);
 });

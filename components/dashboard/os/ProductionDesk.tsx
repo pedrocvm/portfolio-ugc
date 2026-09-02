@@ -163,7 +163,7 @@ export default function ProductionDesk({
                   </select>
                 </label>
                 <p className="osRowSub">
-                  Nunca escrevas palavras-passe aqui. Pede um convite ou uma conta temporária.
+                  Nunca escreva senhas aqui. Peça um convite ou uma conta temporária.
                 </p>
               </>
             ) : null}

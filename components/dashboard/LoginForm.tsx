@@ -23,7 +23,7 @@ export default function LoginForm() {
       </div>
       <div className="fld">
         <label>
-          Palavra-passe
+          Senha
           <input
             type="password"
             name="password"

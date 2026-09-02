@@ -14,7 +14,7 @@ export default function AccountForm() {
     <form action={action} className="acctForm">
       <div className="fld">
         <label>
-          Palavra-passe atual
+          Senha atual
           <input
             type="password"
             name="current"
@@ -25,7 +25,7 @@ export default function AccountForm() {
       </div>
       <div className="fld">
         <label>
-          Nova palavra-passe
+          Nova senha
           <input
             type="password"
             name="next"
@@ -41,7 +41,7 @@ export default function AccountForm() {
       </div>
       <div className="fld">
         <label>
-          Repetir a nova palavra-passe
+          Repetir a nova senha
           <input
             type="password"
             name="repeat"
@@ -52,9 +52,9 @@ export default function AccountForm() {
         </label>
       </div>
       {state.error ? <p className="loginErr">{state.error}</p> : null}
-      {state.ok ? <p className="okMsg">Palavra-passe alterada.</p> : null}
+      {state.ok ? <p className="okMsg">Senha alterada.</p> : null}
       <button className="btn solid" type="submit" disabled={pending}>
-        {pending ? 'Verificando…' : 'Mudar palavra-passe'}
+        {pending ? 'Verificando…' : 'Mudar senha'}
       </button>
     </form>
   );

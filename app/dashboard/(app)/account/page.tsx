@@ -13,10 +13,10 @@ export default async function AccountPage() {
         <span className="dashState">{user.email}</span>
       </div>
       <div className="acctBox">
-        <h2>Mudar a palavra-passe</h2>
+        <h2>Mudar a senha</h2>
         <p>
-          Precisas da palavra-passe atual para confirmar que és tu. A sessão
-          continua aberta depois da troca.
+          É preciso a senha atual para confirmar quem está do outro lado. A
+          sessão continua aberta depois da troca.
         </p>
         <AccountForm />
       </div>
