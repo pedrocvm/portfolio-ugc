@@ -140,7 +140,7 @@ export default function Meet({
                       }}
                     >
                       <span>{n.name}</span>
-                      <span className="qt">Ver registos</span>
+                      <span className="qt">Ver registros</span>
                     </button>
                   </li>
                 ))}
@@ -223,11 +223,11 @@ export default function Meet({
               ))}
             </ul>
           ) : (
-            <p className="reelVazio">Ainda sem registos neste nicho.</p>
+            <p className="reelVazio">Ainda sem registros nesse nicho.</p>
           )}
           <p className="foot mono">
             <span>{c.shelfFoot}</span>
-            <span>{String(shelf.length).padStart(2, '0')} registos</span>
+            <span>{String(shelf.length).padStart(2, '0')} registros</span>
           </p>
         </div>
       </div>

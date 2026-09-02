@@ -5,6 +5,7 @@ import { supabaseService } from '@/lib/supabase/service';
 import { runPrompt } from '@/modules/ai/gateway';
 import { aiSetup } from '@/modules/ai/provider';
 import { readTrends } from '@/modules/ai/prompts/registry';
+import { RESEARCH_MARKET } from '@/modules/creator/strategy';
 import {
   dedupeTrends,
   shortlistForDeepAnalysis,
@@ -37,9 +38,9 @@ export type TrendRunResult = {
 /** Onde procurar. Não é só UGC: editores, social media, freelancers e
  *  profissionais criativos são a mesma audiência a fazer coisas diferentes. */
 const SEARCHES = [
-  'formatos de vídeo curto que estão a funcionar esta semana entre creators de UGC e editores de vídeo',
-  'padrões de edição, transições e templates de CapCut que os creators estão a usar agora',
-  'ganchos e estruturas de história que estão a segurar o watch time em Reels e TikTok este mês',
+  'formatos de vídeo curto que estão bombando esta semana entre creators brasileiros no Instagram e TikTok',
+  'padrões de edição, transições e templates de CapCut que os creators brasileiros estão usando agora',
+  'ganchos e estruturas de história que estão segurando o watch time em Reels e TikTok no Brasil este mês',
 ];
 
 export async function runTrendDiscovery(
@@ -67,11 +68,20 @@ export async function runTrendDiscovery(
       const prose = await setup.provider.search({
         model: setup.models.chat,
         system:
-          'Procuras o que está a funcionar AGORA em vídeo curto entre criadores. ' +
-          'Para cada coisa que encontrares escreve o endereço de pelo menos um exemplo, quem o publicou, ' +
-          'a data se estiver visível, e porque parece estar a subir. ' +
-          'Se não tens link para um exemplo, não escrevas essa tendência. Não inventes endereços.',
-        user: `${ask}\n\nHoje é ${now.toISOString().slice(0, 10)}. Interessa só o que é recente.`,
+          'Você procura o que está funcionando AGORA em vídeo curto entre criadores BRASILEIROS. ' +
+          RESEARCH_MARKET.instruction +
+          ' Para cada coisa que encontrar, escreva o endereço de pelo menos um exemplo, quem publicou, ' +
+          'a data se estiver visível, e por que parece estar subindo. ' +
+          'Se não tem link para um exemplo, não escreva essa tendência. Não invente endereços.',
+        user: [
+          ask,
+          '',
+          `Hoje é ${now.toISOString().slice(0, 10)}. Interessa só o que é recente.`,
+          `Mercado: ${RESEARCH_MARKET.primary}. Idioma: ${RESEARCH_MARKET.language}.`,
+          profile.topics.length ? `Territórios dela: ${profile.topics.slice(0, 6).join(', ')}.` : '',
+        ]
+          .filter(Boolean)
+          .join('\n'),
         maxTokens: 3000,
       });
       if (prose.trim()) prosas.push(prose);

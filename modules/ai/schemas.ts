@@ -532,16 +532,27 @@ export const ContentIdeaSchema = z.object({
   brand_audience_effect: z.enum(['up', 'neutral', 'down']),
   /** Ajuda a construir audiência que um dia confiaria nela para aprender. */
   mentorship_signal: z.boolean(),
+  /** As dimensões da auditoria do Instagram. Duas são as que decidem:
+   *  `carol_identity` — o que só ela tem lá dentro, dez anos de sala,
+   *  ceticismo, casa, pele — e `authority_without_preaching`, que separa
+   *  mostrar competência de dar aulas. */
   quality: z.object({
-    originality: z.number().min(0).max(100),
-    specificity: z.number().min(0).max(100),
-    carol_fit: z.number().min(0).max(100),
-    authority: z.number().min(0).max(100),
+    carol_identity: z.number().min(0).max(100),
+    story: z.number().min(0).max(100),
+    proof: z.number().min(0).max(100),
+    human_conflict: z.number().min(0).max(100),
+    brand_signal: z.number().min(0).max(100),
     engagement: z.number().min(0).max(100),
+    originality: z.number().min(0).max(100),
     recordability: z.number().min(0).max(100),
     platform_native: z.number().min(0).max(100),
-    freshness: z.number().min(0).max(100),
+    authority_without_preaching: z.number().min(0).max(100),
   }),
+  /** Que energia o dia dela precisa de ter para isto acontecer. */
+  energy: z.enum(['low', 'normal', 'high']),
+  /** A frase que explica porque é HOJE e não noutro dia qualquer. Vai para o
+   *  Hoje ao lado da ideia — «porquê» é metade da recomendação. */
+  recommendation: z.string(),
   /** Uma série só quando a ideia a justifica. Nunca por omissão. */
   series: z
     .object({ name: z.string(), premise: z.string(), structure: z.string(), next_topics: z.array(z.string()) })

@@ -136,7 +136,7 @@ export const DEFAULT_CONTENT: Content = {
   contact: {
     phone: '351913896987',
     whatsappMessage:
-      'Olá Carol, vi o teu portfólio e gostaria de saber mais sobre o teu trabalho.',
+      'Oi Carol, vi seu portfólio e queria saber mais sobre o seu trabalho.',
     instagram: 'https://instagram.com/carolxqueiroz',
     instagramHandle: '@carolxqueiroz',
   },
@@ -160,8 +160,8 @@ export const DEFAULT_CONTENT: Content = {
     eyebrow: 'Antes da sessão',
     titleLead: 'Prazer,',
     titleEm: 'Carol.',
-    bio: 'Falo para a câmera como falo com quem conheço. Gravo, escrevo e edito os meus próprios vídeos, em português, para marcas que querem ver o produto na vida real antes de o vender.',
-    note: '“No vídeo do sérum decidi abrir com a textura no dorso da mão, porque é o que eu verificaria antes de comprar.”',
+    bio: 'Falo para a câmera como falo com quem conheço. Gravo, escrevo e edito os meus próprios vídeos, em português, para marcas que querem ver o produto na vida real antes de vender.',
+    note: '“No vídeo do sérum eu decidi abrir com a textura no dorso da mão, porque é o que eu olharia antes de comprar.”',
     niches: [
       { name: 'Casa & Decor', reel: [] },
       { name: 'Cabelo', reel: [] },
@@ -188,7 +188,7 @@ export const DEFAULT_CONTENT: Content = {
   },
   photos: {
     num: '01',
-    eyebrow: 'Registos',
+    eyebrow: 'Registros',
     titleLead: 'Fotos',
     titleEm: 'UGC.',
     items: [
@@ -212,18 +212,18 @@ export const DEFAULT_CONTENT: Content = {
       {
         n: '01',
         title: 'Briefing',
-        text: 'Contas-me o produto, o objetivo e onde vai o vídeo.',
+        text: 'Você me conta o produto, o objetivo e onde o vídeo vai rodar.',
       },
       {
         n: '02',
         title: 'Proposta',
-        text: 'Proponho o formato, a abordagem e o que preciso de receber.',
+        text: 'Eu proponho o formato, a abordagem e o que preciso receber.',
       },
-      { n: '03', title: 'Conceito', text: 'Validamos o conceito antes de gravar.' },
+      { n: '03', title: 'Conceito', text: 'A gente valida o conceito antes de gravar.' },
       {
         n: '04',
         title: 'Gravação',
-        text: 'Gravo e edito, e envias comentários sobre a primeira versão.',
+        text: 'Eu gravo e edito, e você comenta a primeira versão.',
       },
       {
         n: '05',
@@ -247,7 +247,7 @@ export const DEFAULT_CONTENT: Content = {
         qty: '1 vídeo',
         unit: '150€ por vídeo',
         feat: [
-          '1 formato à escolha',
+          '1 formato à sua escolha',
           'Roteiro, gravação e edição',
           'Legendas incluídas',
           '1 revisão',
@@ -263,7 +263,7 @@ export const DEFAULT_CONTENT: Content = {
         qty: '3 vídeos',
         unit: '135€ por vídeo',
         feat: [
-          'Formatos à escolha',
+          'Formatos à sua escolha',
           'Roteiro, gravação e edição',
           'Legendas incluídas',
           '2 aberturas alternativas para testar',
@@ -280,7 +280,7 @@ export const DEFAULT_CONTENT: Content = {
         qty: '5 vídeos',
         unit: '125€ por vídeo',
         feat: [
-          'Formatos à escolha',
+          'Formatos à sua escolha',
           'Roteiro, gravação e edição',
           'Legendas incluídas',
           '4 aberturas alternativas para testar',
@@ -298,7 +298,7 @@ export const DEFAULT_CONTENT: Content = {
         qty: '4 vídeos por mês',
         unit: '125€ por vídeo',
         feat: [
-          'Formatos à escolha',
+          'Formatos à sua escolha',
           'Roteiro, gravação e edição',
           'Legendas incluídas',
           '1 revisão por vídeo',
@@ -309,7 +309,7 @@ export const DEFAULT_CONTENT: Content = {
     ],
     includedTitle: 'Incluído em todos',
     includedText:
-      'Roteiro meu, gravação, edição, legendas, revisão e uso orgânico. Entrega em 7 dias úteis depois de o produto chegar.',
+      'Roteiro meu, gravação, edição, legendas, revisão e uso orgânico. Entrega em 7 dias úteis depois que o produto chega.',
     addonsTitle: 'Add-ons',
     addons: [
       { label: 'Direitos para Ads · 6 meses', value: '+75€' },
@@ -322,15 +322,15 @@ export const DEFAULT_CONTENT: Content = {
     num: '04',
     eyebrow: 'FAQ',
     titleLead: 'Antes de',
-    titleEm: 'perguntares.',
+    titleEm: 'perguntar.',
     items: [
       {
-        q: 'Tenho de trazer guião?',
-        a: 'Não. Diz-me o produto e para onde vai o vídeo, e eu proponho a abordagem.',
+        q: 'Preciso levar roteiro?',
+        a: 'Não. Me diz o produto e para onde vai o vídeo, que eu proponho a abordagem.',
       },
       {
         q: 'Quanto tempo demora?',
-        a: 'Até 7 dias úteis depois de o produto chegar. Se tiveres um prazo mais apertado, diz-me no primeiro contato e eu digo-te se consigo.',
+        a: 'Até 7 dias úteis depois que o produto chega. Se o seu prazo for mais apertado, me fala no primeiro contato que eu digo se consigo.',
       },
       {
         q: 'Quantas revisões estão incluídas?',
@@ -341,27 +341,27 @@ export const DEFAULT_CONTENT: Content = {
         a: 'Sim. Os direitos para Ads são um extra de 75€ por vídeo, válidos por 6 meses.',
       },
       {
-        q: 'Preciso de enviar o produto?',
-        a: 'Sim. O prazo de entrega começa a contar quando o produto chega.',
+        q: 'Preciso enviar o produto?',
+        a: 'Sim. O prazo de entrega só começa a contar quando o produto chega.',
       },
       {
-        q: 'Fazes variações do mesmo vídeo?',
-        a: 'Sim. Gravo aberturas diferentes na mesma sessão para poderes testar qual funciona melhor.',
+        q: 'Você faz variações do mesmo vídeo?',
+        a: 'Sim. Gravo aberturas diferentes na mesma sessão para você testar qual funciona melhor.',
       },
       {
-        q: 'Apareces com o rosto nos vídeos?',
+        q: 'Você aparece com o rosto nos vídeos?',
         a: 'Sim, e também gravo com voice-over quando o produto pede.',
       },
-      { q: 'Em que idiomas gravas?', a: 'Em português.' },
+      { q: 'Em que idiomas você grava?', a: 'Em português.' },
     ],
   },
   footer: {
     eyebrow: 'Fim da sessão',
-    titleLead: 'Diz-me o que precisas de',
+    titleLead: 'Me conta o que você precisa',
     titleEm: 'gravar.',
-    lead: 'Não precisas de trazer briefing nem guião. Ajuda se me disseres a marca, o produto, o tipo de vídeo, quantos e para onde vão.',
-    cta: 'Contar o que precisas gravar',
-    igPrefix: 'Ou manda mensagem no Instagram,',
+    lead: 'Você não precisa trazer briefing nem roteiro. Ajuda se me disser a marca, o produto, o tipo de vídeo, quantos e para onde vão.',
+    cta: 'Contar o que preciso gravar',
+    igPrefix: 'Ou me chama no Instagram,',
     image: '/img/img-14.jpg',
     imageAlt: 'Retrato de Carol Queiroz ao fim da tarde',
     video: {

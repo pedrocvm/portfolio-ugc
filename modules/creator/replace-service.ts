@@ -10,10 +10,11 @@ import { contentWorthyMilestones, describeMilestones } from '@/modules/milestone
 import { usableTrends } from '@/modules/trends/service';
 import {
   PILLAR_LABEL,
+  describeStrategy,
   PLATFORM_BRIEF,
   estimateMinutes,
   freshUntilFor,
-  genericProblems,
+  ideaProblems,
   ideaFingerprint,
   isPillar,
   isRepeat,
@@ -82,9 +83,11 @@ export async function replaceIdea(ideaId: string, nudge?: Nudge): Promise<Replac
     planDailyContent,
     {
       today: localDay(now),
+      strategy: describeStrategy(),
       profile: describeProfile(profile),
+      energy: NUDGE_BRIEF[nudge ?? 'personal'],
       pillars: ordem.map((p, i) => `${i + 1}. ${p} — ${PILLAR_LABEL[p]}`).join('\n'),
-      avoidPillars: PILLAR_LABEL[(isPillar(old.pillar) ? old.pillar : 'UGC_AUTHORITY') as Pillar],
+      avoidPillars: PILLAR_LABEL[(isPillar(old.pillar) ? old.pillar : 'TESTEI') as Pillar],
       audienceTilt: NUDGE_BRIEF[nudge ?? 'personal'],
       trends: trends
         .map((t) => `- [${t.platform} · ${t.freshness}] ${t.title}: ${t.description} (${t.evidence[0]?.url ?? ''})`)
@@ -107,10 +110,17 @@ export async function replaceIdea(ideaId: string, nudge?: Nudge): Promise<Replac
   // O plano vem com as duas; aproveita-se a da plataforma que ela recusou.
   const idea: ContentIdea = platform === 'instagram' ? run.output.instagram : run.output.tiktok;
 
-  const problemas = genericProblems({ hook: idea.hook, script: idea.script, title: idea.title });
+  const problemas = ideaProblems({
+    hook: idea.hook,
+    script: idea.script,
+    title: idea.title,
+    whyNow: idea.why_now,
+    format: idea.format,
+    onScreenText: idea.on_screen_text,
+  });
   if (problemas.length) return { ok: false, error: `A alternativa não era melhor: ${problemas[0]}.` };
 
-  const pillar: Pillar = isPillar(idea.pillar) ? idea.pillar : 'UGC_AUTHORITY';
+  const pillar: Pillar = isPillar(idea.pillar) ? idea.pillar : 'TESTEI';
   const repetida = isRepeat(
     { platform, pillar, hook: idea.hook, title: idea.title },
     [{ fingerprint: '', hook: old.hook }, ...history.map((h) => ({ fingerprint: h.fingerprint, hook: h.hook }))],
@@ -118,14 +128,16 @@ export async function replaceIdea(ideaId: string, nudge?: Nudge): Promise<Replac
   if (repetida.repeat) return { ok: false, error: 'A alternativa era a mesma ideia outra vez.' };
 
   const verdict = qualityVerdict({
-    originality: idea.quality.originality,
-    specificity: idea.quality.specificity,
-    carolFit: idea.quality.carol_fit,
-    authority: idea.quality.authority,
+    carolIdentity: idea.quality.carol_identity,
+    story: idea.quality.story,
+    proof: idea.quality.proof,
+    humanConflict: idea.quality.human_conflict,
+    brandSignal: idea.quality.brand_signal,
     engagement: idea.quality.engagement,
+    originality: idea.quality.originality,
     recordability: idea.quality.recordability,
     platformNative: idea.quality.platform_native,
-    freshness: idea.quality.freshness,
+    authorityWithoutPreaching: idea.quality.authority_without_preaching,
   });
   if (verdict.verdict === 'reject') return { ok: false, error: verdict.phrase };
 

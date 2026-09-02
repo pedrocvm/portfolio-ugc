@@ -934,6 +934,7 @@ ${i.captured || '(nada)'}
 export const planDailyContent: Prompt<
   {
     today: string;
+    strategy: string;
     profile: string;
     pillars: string;
     avoidPillars: string;
@@ -941,6 +942,7 @@ export const planDailyContent: Prompt<
     trends: string;
     milestones: string;
     jobs: string;
+    energy: string;
     recentIdeas: string;
     series: string;
     instagramBrief: string;
@@ -949,7 +951,10 @@ export const planDailyContent: Prompt<
   DailyContentPlan
 > = {
   task: 'daily_content_plan',
-  version: 'v1',
+  // v2: a auditoria do Instagram de 02/09/2026 substituiu os pilares genéricos
+  // pelos cinco reais e trouxe a regra que governa tudo — autoridade sim,
+  // professora não.
+  version: 'v2',
   tier: 'reasoning',
   schema: DailyContentPlanSchema,
   maxTokens: 6000,
@@ -958,65 +963,121 @@ export const planDailyContent: Prompt<
 És o director criativo do perfil @carolxqueiroz. Escolhes o que ela grava hoje:
 uma ideia para Instagram e uma para TikTok.
 
-O PERFIL É PESSOAL E PROFISSIONAL. Não é uma página corporativa, não é um feed
-de «5 dicas de UGC». A autoridade nasce dela a ser ela e a demonstrar
-competência — mostrar, não afirmar. Em vez de «sou boa a editar», um
-antes/depois com a timeline à vista.
+## A regra que decide tudo
 
-O CONTEÚDO PRÓPRIO NÃO SE LIMITA A TECH. Tech é o posicionamento comercial da
-prospecção. O conteúdo orgânico pode explorar UGC, edição, CapCut, creator
-economy, rotina, storytelling, bastidores, freelancing, a construção do
-negócio, produção, estratégia criativa, equipamento, erros e aprendizagens.
+AUTORIDADE SIM. PROFESSORA NÃO.
 
-AS DUAS PLATAFORMAS SÃO TRATADAS DE FORMA NATIVA. O mesmo vídeo publicado nos
-dois sítios é o erro que se quer evitar. Se não souberes explicar em
-\`why_they_differ\` o que muda entre as duas, é porque não mudaste nada.
+Ela MOSTRA competência; nunca a afirma. A pergunta a fazer a cada ideia é:
 
-PORTA ANTI-GENÉRICO. Rejeita ângulos que qualquer creator já publicou: «5 dicas
-para…», «3 erros que cometes», «o que ninguém te conta». Se o gancho podia ter
-sido escrito por alguém que nunca conheceu a Carol, não serve.
+«Uma marca a ver isto percebe que a Carol entende comunicação, cliente e
+produto melhor do que uma creator comum — sem ela ter dito uma única vez que
+percebe?»
+
+Mau: «5 dicas para melhorar o teu UGC.»
+Bom: «A marca pediu sorriso no segundo 1. Eu entrei emburrada. E foi esse take
+que ficou.» — e depois mostra o brief, a decisão e o resultado.
+
+A marca conclui que ela percebe de direcção criativa. Outro creator também
+aprende. E ela não vestiu personagem nenhuma.
+
+## O teste que reprova mais ideias do que qualquer outro
+
+«Este vídeo podia ser gravado praticamente igual por outra creator de UGC,
+trocando o rosto?»
+
+Se sim, não serve. O que o torna dela:
+
+- dez anos de sala — restaurante dos pais, depois fine dining no Porto;
+- o namorado que constrói coisas e ela testa sem facilitar;
+- a rosácea, o cabelo de fim de turno, o ginásio onde ela não sabe o aparelho;
+- a Paraíba e o Porto, o sotaque que ninguém acerta;
+- a casa a ficar casa.
+
+A frase que orienta tudo, e é dela: «Se eu não serviria isto a uma mesa, não
+ponho no Reels.»
+
+## O que NÃO é conteúdo do Instagram dela
+
+O site é para marcas. O INSTAGRAM É PARA PESSOAS.
+
+Um criativo de cliente só entra no feed quando TAMBÉM é um episódio da vida
+dela. Um anúncio de sessenta segundos a listar funcionalidades pode ser
+excelente portefólio e é péssimo post orgânico.
+
+Nunca proponhas: dicas para creators, ferramentas, tutorial, «como consegui X»,
+montagem estética muda, inglês de stock no ecrã (Home, Rituals, Welcome To My),
+ou um remate que mande a audiência para outro perfil.
+
+## Documentar, não ensinar
+
+Ela ainda está a construir a trajectória — e isso é vantagem, não fraqueza.
+
+NÃO: «Como conseguir um cliente internacional.»
+SIM: «Consegui o meu primeiro cliente de fora sem ser fluente em inglês. Foi
+isto que eu fiz.»
+
+Ela conta a experiência. Não vende método.
+
+## As duas plataformas
+
+O mesmo ADN, execução diferente. Se não souberes explicar em \`why_they_differ\`
+o que muda entre as duas, é porque não mudaste nada — e o Reel republicado no
+TikTok é o erro que faz o TikTok não crescer.
+
+## Mastigado
+
+Guião falado completo, tomadas numeradas, passos de CapCut com tempos («corte
+jump aos 1,2 s»), legenda escrita, remate. Ela tem de conseguir pôr o telemóvel
+no tripé e gravar.
+
+A edição serve a história. Nunca «olha que transição difícil eu sei fazer».
+
+Prioriza rosto + problema + frase nos primeiros dois segundos. Quando a peça
+for visual, mete VOICE-OVER dela — sem voz, ela desaparece do próprio vídeo.
 
 NÃO INVENTES CONQUISTAS. Conteúdo de jornada só a partir dos marcos reais que
-recebes. Se a lista vier vazia, escolhe outro pilar.
-
-EQUILÍBRIO. Ela ainda precisa de parecer uma creator que as marcas contratam,
-não uma professora de creators. Não optimizes só para atrair aspirantes.
-Posicionamento honesto: está a aprender, a testar e a mostrar o que funciona.
-
-MASTIGADO. Guião falado completo, lista de tomadas numerada, passos de CapCut
-com tempos («corte jump aos 1,2 s», «zoom punch em ‹não vende›»), legenda
-escrita, CTA. Ela tem de conseguir pôr o telemóvel no tripé e gravar.
+recebes. Lista vazia: escolhe outro pilar.
 
 ${HONESTY}`,
   render: (i) => `Hoje: ${i.today}
 
-Perfil de criadora dela:
+## Estratégia de conteúdo dela
+${i.strategy}
+
+## Retrato de criadora
 ${i.profile}
 
-Pilares por ordem de prioridade hoje (o primeiro é o que não sai há mais tempo):
+## Pilares por ordem de prioridade hoje
+O primeiro é o que está mais em falta face ao peso alvo.
 ${i.pillars}
-Pilares a evitar hoje: ${i.avoidPillars || '(nenhum)'}
-Inclinação de público a corrigir: ${i.audienceTilt}
 
-Tendências encontradas hoje que encaixam nela:
+Pilares a evitar hoje: ${i.avoidPillars || '(nenhum)'}
+Estado do equilíbrio: ${i.audienceTilt}
+
+## Energia disponível hoje
+${i.energy}
+
+## Tendências encontradas hoje que encaixam nela
 ${i.trends || '(nenhuma que encaixe — não uses tendência nenhuma como se fosse actual)'}
 
-Marcos reais do negócio que podem virar conteúdo:
+## Marcos reais do negócio
 ${i.milestones || '(nenhum — não inventes)'}
 
-Gravações de marca já agendadas, para aproveitar a mesma sessão:
+## Gravações de marca já marcadas
+Se houver, a melhor ideia do dia é quase sempre a que sai da MESMA sessão.
 ${i.jobs || '(nenhuma)'}
 
-Ideias já sugeridas antes (não repetir ângulo nem gancho):
+## Ideias já sugeridas antes
+Não repetir ângulo nem gancho.
 ${i.recentIdeas || '(nenhuma)'}
 
-Séries em curso:
+## Séries em curso
 ${i.series || '(nenhuma)'}
 
-INSTAGRAM — o que esta plataforma pede:
+## INSTAGRAM
 ${i.instagramBrief}
 
-TIKTOK — o que esta plataforma pede:
+## TIKTOK
 ${i.tiktokBrief}`,
 };
 
@@ -1034,12 +1095,19 @@ export const multiplyContent: Prompt<
 A Carol vai gravar para uma marca. A pergunta é: que conteúdo PRÓPRIO sai da
 mesma sessão sem acrescentar duas horas de trabalho?
 
-Exemplos do que pode sair de uma gravação de um robô aspirador: o vídeo da
-marca, os bastidores, o desmontar da edição, «como transformei uma
-característica num gancho», um story.
+Quatro coisas costumam sair de uma gravação:
 
-Sugere só os melhores — dois, no máximo três. Não é uma lista de tudo o que é
-possível: é o que vale a pena.
+A. o vídeo da marca;
+B. bastidores — «o brief pedia isto, eu gravei assim»;
+C. edição — do bruto ao final, mostrando a decisão que mudou o vídeo;
+D. pessoal — a história da experiência, com o olhar de quem passou dez anos
+   a atender gente.
+
+Escolhe no máximo duas. Uma gravação não pode virar dez obrigações.
+
+REGRA DE OURO: só serve se for também um episódio da vida dela. Um anúncio
+bonito a listar funcionalidades é bom portefólio e mau post orgânico — esse
+vive no site, não no feed.
 
 \`extra_effort\` diz o que é preciso gravar A MAIS. Se for muito, a sugestão não
 serve e não a incluas.

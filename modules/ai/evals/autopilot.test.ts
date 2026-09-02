@@ -3,9 +3,16 @@ import test from 'node:test';
 
 import * as registry from '../prompts/registry.ts';
 import {
+  PILLARS,
+  PILLAR_SPEC,
+  RESEARCH_MARKET,
+  STRATEGY,
+  STRATEGY_SOURCE,
   genericProblems,
+  guruProblems,
   platformTreatmentsDiffer,
   qualityVerdict,
+  replaceability,
 } from '../../creator/domain.ts';
 import { deriveMilestones } from '../../milestones/domain.ts';
 import { referenceProblems } from '../../references/domain.ts';
@@ -62,8 +69,9 @@ test('caso 1 · comportamental: um ângulo genérico sobre UGC não passa', () =
 
 test('caso 1 · comportamental: sem originalidade a média não salva a ideia', () => {
   const generica = qualityVerdict({
-    originality: 25, specificity: 95, carolFit: 95, authority: 95,
-    engagement: 95, recordability: 95, platformNative: 95, freshness: 95,
+    carolIdentity: 95, story: 95, proof: 95, humanConflict: 95, brandSignal: 95,
+    engagement: 95, originality: 25, recordability: 95, platformNative: 95,
+    authorityWithoutPreaching: 95,
   });
   assert.equal(generica.verdict, 'reject');
 });
@@ -106,8 +114,9 @@ test('caso 3 · comportamental: o mesmo vídeo nas duas plataformas é apanhado'
 
 test('caso 3 · estrutural: o prompt diz o que cada plataforma pede, e exige a diferença', () => {
   const p = prompt('daily_content_plan');
-  assert.match(p, /TRATADAS DE FORMA NATIVA/);
+  assert.match(p, /O mesmo ADN, execução diferente/);
   assert.match(p, /why_they_differ/);
+  assert.match(p, /Reel republicado no\s+TikTok/);
 });
 
 /* ── 4. Tendência antiga não é recomendada como actual ───────────────────── */
@@ -248,5 +257,72 @@ test('os prompts do autopilot têm versão e não carregam preço', () => {
     assert.ok(p, `falta o prompt «${task}»`);
     assert.match(p.version, /^v\d+$/, `${task}: versão tem de ser vN`);
     assert.doesNotMatch(p.system, PRICE, `${task}: tem um valor escrito no prompt`);
+  }
+});
+
+/* ── A auditoria do Instagram (02/09/2026) ────────────────────────────────
+   Sete verificações novas. As três primeiras são as correcções que a auditoria
+   forçou; as outras são regras que ela acrescentou. */
+
+test('auditoria · os pilares são os cinco reais, não os genéricos', () => {
+  assert.deepEqual([...PILLARS], ['A_SALA', 'TESTEI', 'CASA_A_DOIS', 'CORPO', 'LARGUEI_O_TURNO']);
+  // «FORÇADO e errado para este perfil», nas palavras da auditoria.
+  for (const morto of ['CREATOR_EDUCATION', 'UGC_AUTHORITY', 'CREATIVE_STRATEGY']) {
+    assert.equal(PILLARS.includes(morto as never), false, morto);
+  }
+});
+
+test('auditoria · a sala tem o maior peso, e é o que estava desperdiçado', () => {
+  const pesos = PILLARS.map((p) => PILLAR_SPEC[p].weight);
+  assert.equal(Math.max(...pesos), PILLAR_SPEC.A_SALA.weight);
+  assert.equal(PILLAR_SPEC.A_SALA.weight, 0.3);
+});
+
+test('auditoria · autoridade sim, professora não — no código e no prompt', () => {
+  assert.ok(guruProblems({ hook: '5 dicas para ser UGC creator' }).length > 0);
+  const p = prompt('daily_content_plan');
+  assert.match(p, /AUTORIDADE SIM\. PROFESSORA NÃO\./);
+  assert.match(p, /MOSTRA competência; nunca a afirma/);
+});
+
+test('auditoria · «é substituível?» está no código e é veto de qualidade', () => {
+  assert.equal(
+    replaceability({ hook: 'Três formas de melhorar a luz num vídeo', script: 'Comparo janela e candeeiro.' })
+      .replaceable,
+    true,
+  );
+  const semElaLaDentro = qualityVerdict({
+    carolIdentity: 20, story: 95, proof: 95, humanConflict: 95, brandSignal: 95,
+    engagement: 95, originality: 95, recordability: 95, platformNative: 95,
+    authorityWithoutPreaching: 95,
+  });
+  assert.equal(semElaLaDentro.verdict, 'reject');
+});
+
+test('auditoria · o Instagram é para pessoas e o site para marcas', () => {
+  const p = prompt('daily_content_plan');
+  assert.match(p, /O INSTAGRAM É PARA PESSOAS/);
+  assert.match(p, /só entra no feed quando TAMBÉM é um episódio da vida/);
+});
+
+test('auditoria · documentar, não ensinar', () => {
+  const p = prompt('daily_content_plan');
+  assert.match(p, /Ela conta a experiência\. Não vende método/);
+});
+
+test('auditoria · as referências e as tendências são brasileiras', () => {
+  assert.equal(RESEARCH_MARKET.primary, 'Brasil');
+  assert.match(RESEARCH_MARKET.instruction, /SÓ criadores brasileiros/);
+  assert.match(RESEARCH_MARKET.instruction, /Não devolvas creators portugueses/);
+});
+
+test('auditoria · fica gravada como fonte versionada, e sem métricas', () => {
+  assert.equal(STRATEGY.version, 'CAROL_CONTENT_STRATEGY_V1');
+  assert.equal(STRATEGY_SOURCE.observedAt, '2026-09-02');
+  // A auditoria não conseguiu ver views nem retenção. A autoridade dela sobre
+  // números é nenhuma, e isso tem de estar escrito onde alguém o leia.
+  assert.match(STRATEGY_SOURCE.authority, /none for metrics/);
+  for (const h of STRATEGY.hypotheses) {
+    assert.equal(h.status, 'untested', `${h.id} foi dado como testado sem dados`);
   }
 });

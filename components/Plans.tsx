@@ -52,7 +52,7 @@ export default function Plans({
                     phone,
                     `Olá Carol, quero o pacote ${p.name} — ${p.qty}${
                       c.showPrices ? `, ${p.price}€${p.suffix}` : ''
-                    }. Podes dizer-me os próximos passos?`,
+                    }. Pode me dizer os próximos passos?`,
                   )}
                   target="_blank"
                   rel="noopener"

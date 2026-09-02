@@ -1,62 +1,42 @@
-/** O conteúdo próprio da Carol: pilares, repetição, e o que separa uma ideia
- *  de um lugar-comum.
+/** O conteúdo próprio da Carol: repetição, energia, e o que separa uma ideia
+ *  dela de uma ideia de qualquer creator.
  *
- *  Duas regras governam este módulo:
+ *  Os pilares e a estratégia vivem em `strategy.ts`, que é a auditoria do
+ *  Instagram feita estrutura. Este ficheiro é o que decide, caso a caso, se uma
+ *  ideia concreta passa.
  *
- *  1. Uma ideia genérica é pior do que nenhuma. «5 dicas para ser UGC creator»
- *     é conteúdo que qualquer pessoa podia ter escrito sem conhecer a Carol —
- *     e conteúdo que qualquer pessoa podia ter escrito não constrói autoridade
- *     nenhuma.
+ *  Três regras governam-no:
  *
- *  2. O Instagram e o TikTok não são o mesmo vídeo com outro tamanho. Publicar
- *     o Reel tal e qual no TikTok é o erro que faz o TikTok não crescer.
+ *  1. Uma ideia que qualquer creator podia gravar trocando o rosto é fraca. O
+ *     que é forte nasce dos dez anos de sala, do ceticismo, da casa, da pele —
+ *     coisas que só ela tem.
+ *
+ *  2. Autoridade sim, professora não. A Carol mostra competência; não a
+ *     afirma. «5 dicas de UGC» não é conteúdo dela, é conteúdo de guru.
+ *
+ *  3. O Instagram e o TikTok não são o mesmo vídeo com outro tamanho.
  *
  *  Puro. Sem base de dados, sem modelo. */
 
-export const PILLARS = [
-  'UGC_AUTHORITY',
-  'CREATIVE_STRATEGY',
-  'EDITING',
-  'BEHIND_THE_SCENES',
-  'CREATOR_JOURNEY',
-  'BUSINESS',
-  'PORTFOLIO',
-  'LIFESTYLE',
-  'CREATOR_EDUCATION',
-] as const;
+export {
+  PILLARS, PILLAR_LABEL, PILLAR_SPEC, isPillar,
+  AUDIENCE_PRIORITY, AUDIENCE_SPEC, CONTENT_DNA, ANTI_PATTERNS,
+  PREFERRED_FORMATS, WEAK_FORMATS, SERIES_CANDIDATES, RESEARCH_TERRITORIES,
+  HYPOTHESES, SUCCESS_SIGNALS, STRATEGY, STRATEGY_VERSION, STRATEGY_SOURCE, RESEARCH_MARKET,
+  POSITIONING, NORTH_STAR, describeStrategy,
+  type Pillar, type PillarSpec, type Audience, type SeriesCandidate,
+  type CreatorContentStrategy, type Hypothesis,
+} from './strategy';
 
-export type Pillar = (typeof PILLARS)[number];
+import {
+  ANTI_PATTERNS as _ANTI,
+  PILLARS,
+  PILLAR_SPEC,
+  isPillar,
+  type Pillar,
+} from './strategy';
 
-export const isPillar = (v: string): v is Pillar => (PILLARS as readonly string[]).includes(v);
-
-export const PILLAR_LABEL: Record<Pillar, string> = {
-  UGC_AUTHORITY: 'Autoridade em UGC',
-  CREATIVE_STRATEGY: 'Estratégia criativa',
-  EDITING: 'Edição e CapCut',
-  BEHIND_THE_SCENES: 'Bastidores',
-  CREATOR_JOURNEY: 'A jornada',
-  BUSINESS: 'Negócio e prospecção',
-  PORTFOLIO: 'Portefólio e casos',
-  LIFESTYLE: 'Vida e contexto',
-  CREATOR_EDUCATION: 'Ensinar creators',
-};
-
-/** Para quem é que cada pilar fala.
- *
- *  Isto existe por uma razão de estratégia: um perfil optimizado só para
- *  atrair creators aspirantes deixa de parecer uma creator que as marcas
- *  contratam. Os dois públicos podem coexistir — desde que alguém conte. */
-export const PILLAR_AUDIENCE: Record<Pillar, 'brand' | 'creator' | 'both'> = {
-  UGC_AUTHORITY: 'brand',
-  CREATIVE_STRATEGY: 'brand',
-  EDITING: 'both',
-  BEHIND_THE_SCENES: 'both',
-  CREATOR_JOURNEY: 'both',
-  BUSINESS: 'creator',
-  PORTFOLIO: 'brand',
-  LIFESTYLE: 'both',
-  CREATOR_EDUCATION: 'creator',
-};
+void _ANTI;
 
 export type Platform = 'instagram' | 'tiktok';
 
@@ -69,8 +49,8 @@ export const PLATFORM_LABEL: Record<Platform, string> = {
 
 /** Que pilares evitar hoje, a partir do que já saiu.
  *
- *  Não é uma grelha rígida — é uma memória. Se os últimos três foram todos de
- *  edição, o quarto não devia ser. */
+ *  Não é uma grelha rígida — é uma memória. Se os últimos três foram todos da
+ *  sala, o quarto não devia ser. */
 export function recentlyUsedPillars(
   history: readonly { pillar: string; at: string }[],
   opts: { window?: number } = {},
@@ -83,59 +63,50 @@ export function recentlyUsedPillars(
     .filter(isPillar);
 }
 
+/** Quanto é que cada pilar está abaixo ou acima do peso que devia ter.
+ *
+ *  A auditoria dá pesos alvo — 30% para a sala, 25% para o teste, e por aí —
+ *  e a única forma de os respeitar é comparar com o que saiu mesmo. Positivo
+ *  quer dizer «está em falta». */
+export function pillarDebt(
+  history: readonly { pillar: string }[],
+): Record<Pillar, number> {
+  const contados = history.filter((h) => isPillar(h.pillar));
+  const total = contados.length;
+  const saida = {} as Record<Pillar, number>;
+
+  for (const p of PILLARS) {
+    const quantos = contados.filter((h) => h.pillar === p).length;
+    const real = total === 0 ? 0 : quantos / total;
+    saida[p] = PILLAR_SPEC[p].weight - real;
+  }
+  return saida;
+}
+
 /** A ordem por que os pilares devem ser tentados hoje.
  *
- *  Primeiro os que não saem há mais tempo. Depois, entre iguais, os que falam
- *  com marcas — porque é isso que paga. */
+ *  Primeiro o que está mais em falta face ao peso alvo; entre iguais, o que
+ *  não sai há mais tempo. Sem história nenhuma, a ordem é a dos pesos — o que
+ *  põe «A sala» em primeiro, que é exactamente o que a auditoria diz que está
+ *  a ser desperdiçado. */
 export function pillarPriority(
   history: readonly { pillar: string; at: string }[],
-  opts: { audienceTilt?: 'brand' | 'creator' | 'balanced' } = {},
 ): Pillar[] {
+  const debt = pillarDebt(history);
   const recentes = recentlyUsedPillars(history, { window: 8 });
   const posicao = new Map<Pillar, number>();
   recentes.forEach((p, i) => {
     if (!posicao.has(p)) posicao.set(p, i);
   });
 
-  const tilt = opts.audienceTilt ?? 'balanced';
-  const bonus = (p: Pillar) => {
-    const a = PILLAR_AUDIENCE[p];
-    if (tilt === 'balanced') return a === 'brand' ? 0.5 : 0;
-    return a === tilt ? 1 : a === 'both' ? 0.5 : 0;
-  };
-
   return [...PILLARS].sort((a, b) => {
+    if (Math.abs(debt[b] - debt[a]) > 0.02) return debt[b] - debt[a];
     // Nunca usado vem primeiro: `Infinity` é literalmente «há mais tempo».
     const ra = posicao.has(a) ? posicao.get(a)! : Infinity;
     const rb = posicao.has(b) ? posicao.get(b)! : Infinity;
     if (ra !== rb) return rb - ra;
-    return bonus(b) - bonus(a);
+    return PILLAR_SPEC[b].weight - PILLAR_SPEC[a].weight;
   });
-}
-
-/** O equilíbrio entre públicos, contado em vez de esperado.
- *
- *  «Não deixar o sistema optimizar só para atrair aspirantes a creator» só é
- *  verificável se alguém contar. */
-export function audienceBalance(
-  history: readonly { pillar: string }[],
-): { brand: number; creator: number; both: number; tilt: 'brand' | 'creator' | 'balanced' } {
-  let brand = 0;
-  let creator = 0;
-  let both = 0;
-  for (const h of history) {
-    if (!isPillar(h.pillar)) continue;
-    const a = PILLAR_AUDIENCE[h.pillar];
-    if (a === 'brand') brand++;
-    else if (a === 'creator') creator++;
-    else both++;
-  }
-  const total = brand + creator + both;
-  if (total < 3) return { brand, creator, both, tilt: 'balanced' };
-  // Inclina-se para o lado que está a faltar, não para o que já domina.
-  if (creator > brand * 2) return { brand, creator, both, tilt: 'brand' };
-  if (brand > creator * 3) return { brand, creator, both, tilt: 'creator' };
-  return { brand, creator, both, tilt: 'balanced' };
 }
 
 /* ── Repetição ────────────────────────────────────────────────────────────── */
@@ -231,6 +202,153 @@ export function matchTrends<T extends { id: string; title: string; description?:
     .map((t) => t.id);
 }
 
+/* ── «A Carol é substituível?» ────────────────────────────────────────────── */
+
+/** Marcas do que só ela tem. Não é uma lista de palavras-chave bonita: cada
+ *  uma sai de um facto da auditoria — dez anos de sala, o namorado que
+ *  constrói, a rosácea, a Paraíba, a casa a nascer. */
+const SIGNATURE = [
+  /\b(sala|mesa|pedido|turno|servi[çc]o|restaurante|fine dining|ementa|cliente|gar[çc]on|atend|maitre|ma[îi]tre|pizzaria|bal[cç][ãa]o)\b/i,
+  /\b(namorado|ele construiu|ele fez|a dois|casa nova|apartamento|mud[áa]mos|c[ée]tic|emburrad|sem facilitar|[àa] bruta)\b/i,
+  /\b(ros[áa]cea|pele a arder|pele reativa|cabelo estragado|incêndio|bombeiro)\b/i,
+  /\b(para[íi]ba|\bPB\b|porto|braga|brasileira em portugal|sotaque|portugu[êe]s de portugal)\b/i,
+  /\b(larguei|deixei o restaurante|dez anos|10 anos|mudan[çc]a de carreira|primeiro cliente)\b/i,
+];
+
+/** «Este vídeo podia ser gravado praticamente igual por qualquer outra creator
+ *  de UGC?»
+ *
+ *  É o teste mais importante que a auditoria propõe, e o mais fácil de falhar
+ *  sem dar por isso: uma ideia correcta, bem escrita e completamente anónima
+ *  passa em todos os outros portões. */
+export function replaceability(idea: {
+  hook: string;
+  script: string;
+  title?: string;
+  whyNow?: string;
+}): { replaceable: boolean; marks: number; because: string } {
+  const texto = `${idea.title ?? ''} ${idea.hook} ${idea.script} ${idea.whyNow ?? ''}`;
+  const marks = SIGNATURE.filter((re) => re.test(texto)).length;
+
+  if (marks === 0) {
+    return {
+      replaceable: true,
+      marks,
+      because: 'qualquer creator gravava isto trocando o rosto — não há nada dela lá dentro',
+    };
+  }
+  return { replaceable: false, marks, because: '' };
+}
+
+/* ── Anti-guru ────────────────────────────────────────────────────────────── */
+
+/** Sinais de que a ideia põe a Carol a dar aulas.
+ *
+ *  A auditoria é categórica: com quinze posts e nenhuma autoridade de ensino,
+ *  vestir a personagem de professora atrai creators e afasta as marcas de
+ *  dermocosmética e de casa que a pagariam. Autoridade sim, professora não. */
+const GURU = [
+  /\b(dicas|passos|regras|erros) (para|pra|de) (ser|fazer|come[çc]ar|melhorar)\b/i,
+  /\bcomo (conseguir|ganhar|fechar|cobrar|come[çc]ar) (o teu|a tua|teu|seu|mais)\b/i,
+  /\bo que (todo|toda|todos|todas) (creator|criador)/i,
+  /\b(ensino|vou ensinar|aprende comigo|te ensino|aula|tutorial completo|masterclass|mentoria)\b/i,
+  /\bferramentas que (todo|todos|toda)\b/i,
+  /\bmétodo (infal[íi]vel|que funciona)\b/i,
+  /\bse quiseres viver do digital\b/i,
+];
+
+export function guruProblems(idea: { hook: string; title?: string; script?: string }): string[] {
+  const texto = `${idea.title ?? ''} ${idea.hook}`;
+  for (const re of GURU) {
+    if (re.test(texto)) {
+      return ['põe-na a dar aulas — ela mostra competência, não a ensina'];
+    }
+  }
+  return [];
+}
+
+/* ── Anti-catálogo ────────────────────────────────────────────────────────── */
+
+/** Uma peça que é só produto bonito, lista de funcionalidades ou montagem
+ *  estética. Continua a valer como portefólio; não vale como post orgânico.
+ *
+ *  A auditoria chama-lhe o erro do perfil actual: quarenta e cinco por cento do
+ *  grid é inventário de cliente, e é onde ela desaparece do próprio feed. */
+export function catalogProblems(idea: {
+  hook: string;
+  script?: string;
+  format?: string;
+  onScreenText?: readonly string[];
+}): string[] {
+  const out: string[] = [];
+  const texto = `${idea.hook} ${idea.script ?? ''}`;
+
+  if (/\b(muda|mudo|sem fala|sem voz|aesthetic montage|montagem est[ée]tica)\b/i.test(`${idea.format ?? ''} ${texto}`)) {
+    out.push('é montagem muda: sem voz dela, qualquer creator europeia a substitui');
+  }
+  // Sem `\b` a fechar: o «:» não é caractere de palavra, e `\binclui:\b`
+  // nunca casa. É o terceiro sítio hoje onde a fronteira de palavra do
+  // JavaScript me apanhou — ela só conhece [A-Za-z0-9_].
+  if (/(\bfuncionalidades\b|\bfeatures\b|\bm[óo]dulos\b|\binclui\s*:|\btudo o que (o|a) \w+ faz)/i.test(texto)) {
+    out.push('é uma lista de funcionalidades, não uma história');
+  }
+
+  // Inglês de stock no ecrã. A auditoria nomeia os três casos reais.
+  const stock = (idea.onScreenText ?? []).filter((t) =>
+    /^\s*(home|rituals|welcome to my|unwind|my daily|self ?care|good vibes)\b/i.test(t),
+  );
+  if (stock.length) out.push(`tem inglês de stock no ecrã (${stock[0]})`);
+
+  return out;
+}
+
+/* ── Energia ──────────────────────────────────────────────────────────────── */
+
+export const ENERGY_LEVELS = ['low', 'normal', 'high'] as const;
+export type EnergyLevel = (typeof ENERGY_LEVELS)[number];
+
+export const ENERGY_LABEL: Record<EnergyLevel, string> = {
+  low: 'dia sem paciência',
+  normal: 'dia normal',
+  high: 'dia de produção',
+};
+
+/** Que energia uma ideia exige, a partir do que ela pede.
+ *
+ *  Serve para duas coisas: não propor um Reel de três horas no dia em que ela
+ *  tem uma gravação comercial pesada, e responder ao «hoje não me apetece»
+ *  com outra coisa em vez de com a mesma. */
+export function energyOf(idea: {
+  shots: number;
+  editingComplexity: 'simple' | 'medium' | 'heavy';
+  recordMinutes?: number | null;
+  editMinutes?: number | null;
+}): EnergyLevel {
+  const total = (idea.recordMinutes ?? 0) + (idea.editMinutes ?? 0);
+  if (idea.editingComplexity === 'heavy' || idea.shots >= 6 || total > 45) return 'high';
+  if (idea.editingComplexity === 'simple' && idea.shots <= 3 && total <= 25) return 'low';
+  return 'normal';
+}
+
+/** Quanto tempo sobra para conteúdo próprio, dado o que já está marcado.
+ *
+ *  Um dia com gravação comercial pesada não comporta uma segunda produção. */
+export function energyBudget(input: {
+  commercialShootToday: boolean;
+  minutesCommitted: number;
+}): { max: EnergyLevel; because: string } {
+  if (input.commercialShootToday || input.minutesCommitted > 90) {
+    return {
+      max: 'low',
+      because: 'já há uma gravação de marca hoje: o conteúdo próprio tem de sair da mesma sessão ou custar quase nada',
+    };
+  }
+  if (input.minutesCommitted > 40) {
+    return { max: 'normal', because: 'o dia já tem trabalho marcado' };
+  }
+  return { max: 'high', because: '' };
+}
+
 /* ── Porta anti-genérico ──────────────────────────────────────────────────── */
 
 /** Ganchos que qualquer pessoa podia ter escrito sem conhecer a Carol.
@@ -249,33 +367,40 @@ const GENERIC = [
   /\bverdade que ningu[ée]m\b/i,
 ];
 
+/** As dimensões da auditoria. Duas delas são novas e são as que interessam:
+ *  `carolIdentity` — o que só ela tem lá dentro — e
+ *  `authorityWithoutPreaching` — mostra sem ensinar. */
 export type QualityDims = {
-  /** Podia ter sido escrita sem conhecer a Carol? */
-  originality: number;
-  /** Nomeia uma coisa concreta — um produto, um número, um momento? */
-  specificity: number;
-  /** Parece ela? */
-  carolFit: number;
-  /** Uma marca aprende alguma coisa sobre a competência dela? */
-  authority: number;
-  /** Há razão para comentar, guardar ou partilhar? */
+  /** Dez anos de sala, ceticismo, casa, pele, PB/Porto. Se isto é baixo, o
+   *  vídeo é de qualquer pessoa. */
+  carolIdentity: number;
+  story: number;
+  /** Prova no plano: ecrã, produto na mão, antes/depois. Não é slogan. */
+  proof: number;
+  humanConflict: number;
+  /** O que um comprador de marca aprende sobre a competência dela. */
+  brandSignal: number;
   engagement: number;
-  /** Consegue gravar isto sozinha, hoje? */
+  originality: number;
   recordability: number;
-  /** É nativo desta plataforma? */
   platformNative: number;
-  /** A referência ou tendência de que nasce ainda é actual? */
-  freshness: number;
+  /** Alta quando demonstra sem dar aula. Baixa quando vira professora. */
+  authorityWithoutPreaching: number;
 };
 
 export const QUALITY_KEYS: (keyof QualityDims)[] = [
-  'originality', 'specificity', 'carolFit', 'authority',
-  'engagement', 'recordability', 'platformNative', 'freshness',
+  'carolIdentity', 'story', 'proof', 'humanConflict', 'brandSignal',
+  'engagement', 'originality', 'recordability', 'platformNative',
+  'authorityWithoutPreaching',
 ];
 
 /** Um número por dimensão no backend; uma frase à frente dela.
  *
- *  Mostrar oito números obrigava-a a aprender a escala. A frase não. */
+ *  Quatro dimensões têm veto, e todas por uma razão da auditoria: sem
+ *  identidade dela o vídeo é substituível; sem originalidade é lugar-comum;
+ *  sem possibilidade de gravar não acontece; e a pregar afasta as marcas que
+ *  pagam. Nenhuma delas se compensa com média — foi assim que «O que ninguém
+ *  diz sobre gravar UGC» sobreviveu à primeira corrida. */
 export function qualityVerdict(dims: Partial<QualityDims>): {
   score: number;
   verdict: 'record_today' | 'good_not_urgent' | 'reject';
@@ -284,20 +409,16 @@ export function qualityVerdict(dims: Partial<QualityDims>): {
   const valores = QUALITY_KEYS.map((k) => dims[k]).filter((v): v is number => typeof v === 'number');
   const score = valores.length ? Math.round(valores.reduce((a, b) => a + b, 0) / valores.length) : 0;
 
-  // Uma ideia genérica ou que ela não consegue gravar não sobe por média:
-  // essas duas dimensões têm veto.
-  const generica = (dims.originality ?? 100) < 40;
-  const impossivel = (dims.recordability ?? 100) < 40;
+  const vetos: [boolean, string][] = [
+    [(dims.carolIdentity ?? 100) < 40, 'Qualquer creator gravava isto trocando o rosto.'],
+    [(dims.originality ?? 100) < 40, 'Isto podia ser de qualquer pessoa. Não vale gravar.'],
+    [(dims.recordability ?? 100) < 40, 'Boa ideia, mas não dá para gravar sozinha.'],
+    [(dims.authorityWithoutPreaching ?? 100) < 40, 'Põe-na a dar aulas — não é o sítio dela.'],
+  ];
 
-  if (generica || impossivel) {
-    return {
-      score,
-      verdict: 'reject',
-      phrase: generica
-        ? 'Isto podia ser de qualquer pessoa. Não vale gravar.'
-        : 'Boa ideia, mas não dá para gravar sozinha.',
-    };
-  }
+  const falhou = vetos.find(([v]) => v);
+  if (falhou) return { score, verdict: 'reject', phrase: falhou[1] };
+
   if (score >= 72) return { score, verdict: 'record_today', phrase: 'Eu gravaria este hoje.' };
   return { score, verdict: 'good_not_urgent', phrase: 'Boa ideia, mas não é urgente.' };
 }
@@ -436,4 +557,34 @@ export function estimateMinutes(idea: {
   const peso = { simple: 1, medium: 1.8, heavy: 3 }[idea.editingComplexity];
   const edit = Math.max(8, Math.round(takes * 2 * peso + 6));
   return { record, edit };
+}
+
+/* ── Um portão só ─────────────────────────────────────────────────────────── */
+
+/** Tudo o que reprova uma ideia, num sítio.
+ *
+ *  Existia espalhado — genérico aqui, repetição ali — e a auditoria acrescentou
+ *  três verificações novas. Quatro chamadas em quatro sítios é como uma delas
+ *  se esquece no caminho seguinte. */
+export function ideaProblems(idea: {
+  hook: string;
+  script?: string;
+  title?: string;
+  whyNow?: string;
+  format?: string;
+  onScreenText?: readonly string[];
+}): string[] {
+  return [
+    ...genericProblems(idea),
+    ...guruProblems(idea),
+    ...catalogProblems(idea),
+    ...(replaceability({
+      hook: idea.hook,
+      script: idea.script ?? '',
+      title: idea.title,
+      whyNow: idea.whyNow,
+    }).replaceable
+      ? ['qualquer creator gravava isto trocando o rosto — não há nada dela lá dentro']
+      : []),
+  ];
 }

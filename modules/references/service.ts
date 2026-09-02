@@ -6,6 +6,7 @@ import { supabaseService } from '@/lib/supabase/service';
 import { runPrompt } from '@/modules/ai/gateway';
 import { aiSetup } from '@/modules/ai/provider';
 import { brandCreativeIdea, findBrandReferences } from '@/modules/ai/prompts/registry';
+import { RESEARCH_MARKET } from '@/modules/creator/strategy';
 import {
   asDate,
   dedupeReferences,
@@ -144,24 +145,29 @@ export async function referencesForCandidate(input: {
     prose = await setup.provider.search({
       model: setup.models.chat,
       system:
-        'Procuras vídeos curtos REAIS que sirvam de referência criativa a uma criadora de UGC. ' +
-        'Interessam Reels do Instagram, vídeos do TikTok, YouTube Shorts, criativos da biblioteca ' +
-        'de anúncios da Meta e do TikTok Creative Center. ' +
-        'Para cada vídeo que encontrares escreve: o endereço exacto, quem o publicou, a data se ' +
+        'Você procura vídeos curtos REAIS que sirvam de referência criativa para uma criadora de UGC brasileira. ' +
+        RESEARCH_MARKET.instruction +
+        ' Interessam Reels do Instagram, vídeos do TikTok, YouTube Shorts, criativos da biblioteca ' +
+        'de anúncios da Meta e do TikTok Creative Center — todos de creators brasileiros. ' +
+        'Para cada vídeo que encontrar, escreva: o endereço exato, quem publicou, a data se ' +
         'estiver visível, quanto dura, como começa (o gancho), a estrutura, o estilo de edição, e ' +
         'os números que estiverem à vista. ' +
-        'NUNCA inventes um endereço. Se não tens o link, não escrevas o vídeo.',
+        'NUNCA invente um endereço. Se não tem o link, não escreva o vídeo.',
       user: [
         `Marca: ${input.name}.`,
         input.product ? `Produto: ${input.product}.` : '',
         input.category ? `Categoria: ${input.category}.` : '',
         input.angle ? `Ângulo criativo já detectado: ${input.angle}` : '',
         '',
-        'Procura vídeos que ajudem a responder a «o que é que eu gravaria para esta marca?».',
-        'Podem ser de concorrentes, de creators, anúncios a correr, conteúdo da própria marca,',
-        'ou um formato de outro segmento que se adapte.',
-        'Prefere vídeos dos últimos três meses. Prefere coisas que uma pessoa sozinha consiga',
-        'gravar em casa com telemóvel e tripé — não produções com equipa.',
+        `Mercado das referências: ${RESEARCH_MARKET.primary}. Idioma: ${RESEARCH_MARKET.language}.`,
+        'Procure vídeos que ajudem a responder «o que eu gravaria para essa marca?».',
+        'Podem ser de concorrentes, de creators, anúncios rodando, conteúdo da própria marca,',
+        'ou um formato de outro segmento que dê para adaptar.',
+        'Prefira vídeos dos últimos três meses. Prefira coisas que uma pessoa sozinha consiga',
+        'gravar em casa com celular e tripé — não produções com equipe.',
+        '',
+        'A marca pode ser portuguesa; as REFERÊNCIAS são brasileiras. O que se aproveita é o',
+        'mecanismo — gancho, estrutura, ritmo — e esse ela consegue reproduzir na língua dela.',
       ]
         .filter(Boolean)
         .join('\n'),

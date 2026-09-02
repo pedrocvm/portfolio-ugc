@@ -2,15 +2,23 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  audienceBalance,
+  PILLARS,
+  PILLAR_SPEC,
+  catalogProblems,
+  energyBudget,
+  energyOf,
   estimateMinutes,
   freshUntilFor,
   genericProblems,
+  guruProblems,
+  ideaProblems,
   ideaFingerprint,
   isRepeat,
   isStale,
   matchTrends,
+  pillarDebt,
   pillarPriority,
+  replaceability,
   platformTreatmentsDiffer,
   qualityVerdict,
   seriesIsViable,
@@ -27,37 +35,41 @@ const GUIAO =
 
 /* ── Pilares ──────────────────────────────────────────────────────────────── */
 
-test('o pilar que não sai há mais tempo vem primeiro', () => {
+test('sem história nenhuma, a sala vem primeiro', () => {
+  // É o maior activo dela e tinha zero vídeos. Com a lista vazia, a ordem é a
+  // dos pesos da auditoria — e o peso maior é o da sala.
+  assert.equal(pillarPriority([])[0], 'A_SALA');
+});
+
+test('o pilar que está em falta face ao peso alvo vem primeiro', () => {
+  // Quatro peças, todas do teste: o pilar da sala está com zero e devia ter 30%.
   const historia = [
-    { pillar: 'EDITING', at: '2026-09-01' },
-    { pillar: 'EDITING', at: '2026-08-31' },
-    { pillar: 'CREATOR_JOURNEY', at: '2026-08-30' },
+    { pillar: 'TESTEI', at: '2026-09-01' },
+    { pillar: 'TESTEI', at: '2026-08-31' },
+    { pillar: 'TESTEI', at: '2026-08-30' },
+    { pillar: 'TESTEI', at: '2026-08-29' },
   ];
-  const ordem = pillarPriority(historia);
-  assert.notEqual(ordem[0], 'EDITING');
-  assert.ok(ordem.indexOf('EDITING') > ordem.indexOf('PORTFOLIO'));
+  assert.equal(pillarPriority(historia)[0], 'A_SALA');
+  assert.equal(pillarPriority(historia).at(-1), 'TESTEI');
 });
 
-test('o equilíbrio de públicos inclina-se para o lado que falta', () => {
-  const soCreators = audienceBalance([
-    { pillar: 'CREATOR_EDUCATION' },
-    { pillar: 'BUSINESS' },
-    { pillar: 'CREATOR_EDUCATION' },
-    { pillar: 'BUSINESS' },
-  ]);
-  assert.equal(soCreators.tilt, 'brand');
-
-  const soMarcas = audienceBalance([
-    { pillar: 'UGC_AUTHORITY' },
-    { pillar: 'PORTFOLIO' },
-    { pillar: 'CREATIVE_STRATEGY' },
-    { pillar: 'UGC_AUTHORITY' },
-  ]);
-  assert.equal(soMarcas.tilt, 'creator');
+test('a dívida por pilar é a diferença para o peso alvo', () => {
+  const debt = pillarDebt([{ pillar: 'A_SALA' }, { pillar: 'A_SALA' }]);
+  // A sala saiu 100% das vezes e devia ser 30%: está com excesso.
+  assert.ok(debt.A_SALA < 0);
+  // O teste não saiu nenhuma vez e devia ser 25%: está em falta.
+  assert.ok(debt.TESTEI > 0.2);
 });
 
-test('com pouca história não se inclina para lado nenhum', () => {
-  assert.equal(audienceBalance([{ pillar: 'BUSINESS' }]).tilt, 'balanced');
+test('os pesos dos pilares somam um', () => {
+  const soma = PILLARS.reduce((acc, p) => acc + PILLAR_SPEC[p].weight, 0);
+  assert.ok(Math.abs(soma - 1) < 0.001, `somam ${soma}`);
+});
+
+test('ensinar creators deixou de ser um pilar', () => {
+  // A auditoria: «FORÇADO e errado para este perfil». Estava na lista antiga.
+  assert.equal(PILLARS.includes('CREATOR_EDUCATION' as never), false);
+  assert.equal(PILLARS.includes('UGC_AUTHORITY' as never), false);
 });
 
 /* ── Repetição ────────────────────────────────────────────────────────────── */
@@ -65,12 +77,12 @@ test('com pouca história não se inclina para lado nenhum', () => {
 test('a mesma ideia com outras palavras é a mesma ideia', () => {
   const a = ideaFingerprint({
     platform: 'instagram',
-    pillar: 'CREATIVE_STRATEGY',
+    pillar: 'TESTEI',
     hook: 'Um UGC bonito pode ser um anúncio mau',
   });
   const b = ideaFingerprint({
     platform: 'instagram',
-    pillar: 'CREATIVE_STRATEGY',
+    pillar: 'TESTEI',
     hook: 'Anúncio mau: quando o UGC é bonito',
   });
   assert.equal(a, b);
@@ -83,7 +95,7 @@ test('o mesmo gancho repetido é apanhado mesmo com a impressão digital diferen
   const { repeat, because } = isRepeat(
     {
       platform: 'tiktok',
-      pillar: 'UGC_AUTHORITY',
+      pillar: 'A_SALA',
       hook: 'Demorei meses a perceber que UGC bonito não vende',
     },
     anterior,
@@ -95,7 +107,7 @@ test('o mesmo gancho repetido é apanhado mesmo com a impressão digital diferen
 test('uma ideia nova não é marcada como repetida', () => {
   const anterior = [{ fingerprint: 'x', hook: 'Como consegui o primeiro cliente internacional' }];
   const { repeat } = isRepeat(
-    { platform: 'tiktok', pillar: 'EDITING', hook: 'O corte que faz um vídeo parecer um anúncio verdadeiro' },
+    { platform: 'tiktok', pillar: 'CORPO', hook: 'O corte que faz um vídeo parecer um anúncio verdadeiro' },
     anterior,
   );
   assert.equal(repeat, false);
@@ -180,35 +192,143 @@ test('uma ideia concreta com guião passa a porta', () => {
   );
 });
 
-test('o veredicto é uma frase, não oito números', () => {
-  const boa = qualityVerdict({
-    originality: 85, specificity: 80, carolFit: 78, authority: 82,
-    engagement: 70, recordability: 90, platformNative: 75, freshness: 80,
-  });
+const boaNota = {
+  carolIdentity: 85, story: 80, proof: 78, humanConflict: 82, brandSignal: 80,
+  engagement: 70, originality: 85, recordability: 90, platformNative: 75,
+  authorityWithoutPreaching: 88,
+};
+
+test('o veredicto é uma frase, não dez números', () => {
+  const boa = qualityVerdict(boaNota);
   assert.equal(boa.verdict, 'record_today');
   assert.equal(boa.phrase, 'Eu gravaria este hoje.');
 
   const media = qualityVerdict({
-    originality: 60, specificity: 55, carolFit: 60, authority: 55,
-    engagement: 50, recordability: 70, platformNative: 60, freshness: 60,
+    carolIdentity: 60, story: 55, proof: 60, humanConflict: 55, brandSignal: 55,
+    engagement: 50, originality: 60, recordability: 70, platformNative: 60,
+    authorityWithoutPreaching: 60,
   });
   assert.equal(media.verdict, 'good_not_urgent');
 });
 
-test('originalidade e possibilidade de gravar têm veto, não média', () => {
-  // Tudo excelente menos a originalidade: a média salvaria; o veto não deixa.
-  const generica = qualityVerdict({
-    originality: 20, specificity: 95, carolFit: 95, authority: 95,
-    engagement: 95, recordability: 95, platformNative: 95, freshness: 95,
-  });
-  assert.equal(generica.verdict, 'reject');
+test('quatro dimensões têm veto, e nenhuma se compensa com média', () => {
+  const vetos: [Partial<typeof boaNota>, string][] = [
+    [{ carolIdentity: 20 }, 'trocando o rosto'],
+    [{ originality: 20 }, 'qualquer pessoa'],
+    [{ recordability: 10 }, 'sozinha'],
+    [{ authorityWithoutPreaching: 15 }, 'aulas'],
+  ];
+  for (const [mau, frase] of vetos) {
+    const r = qualityVerdict({ ...boaNota, ...mau });
+    assert.equal(r.verdict, 'reject', JSON.stringify(mau));
+    assert.ok(r.phrase.includes(frase), `«${r.phrase}» não diz «${frase}»`);
+  }
+});
 
-  const impossivel = qualityVerdict({
-    originality: 95, specificity: 95, carolFit: 95, authority: 95,
-    engagement: 95, recordability: 10, platformNative: 95, freshness: 95,
+/* ── Os portões da auditoria ──────────────────────────────────────────────── */
+
+test('«a Carol é substituível?» é o teste que reprova mais', () => {
+  // Correcto, bem escrito, e de qualquer pessoa.
+  const anonima = replaceability({
+    hook: 'Três formas de melhorar a iluminação num vídeo curto',
+    script: 'Mostro a janela, mostro o candeeiro, comparo os dois resultados.',
   });
-  assert.equal(impossivel.verdict, 'reject');
-  assert.ok(impossivel.phrase.includes('sozinha'));
+  assert.equal(anonima.replaceable, true);
+  assert.ok(anonima.because.includes('trocando o rosto'));
+
+  // A mesma técnica, com a vida dela lá dentro.
+  const dela = replaceability({
+    hook: 'Passei dez anos a anotar pedido e nunca reparei na luz da sala',
+    script: 'No restaurante dos meus pais a luz era amarela. Fui perceber isso a gravar em casa.',
+  });
+  assert.equal(dela.replaceable, false);
+  assert.ok(dela.marks >= 1);
+});
+
+test('as cinco marcas dela contam, uma a uma', () => {
+  const casos = [
+    'O pedido meio-a-meio que eu mais odiava anotar na sala',
+    'O meu namorado construiu isto e eu fui testar sem facilitar',
+    'A minha rosácea em Agosto parece uma cidade a arder',
+    'PB, Porto, Braga: ninguém acerta no meu sotaque',
+    'Larguei o restaurante e ainda conto o tempo em covers',
+  ];
+  for (const hook of casos) {
+    assert.equal(replaceability({ hook, script: '' }).replaceable, false, hook);
+  }
+});
+
+test('o filtro anti-guru apanha a personagem de professora', () => {
+  for (const hook of [
+    '5 dicas para ser UGC creator',
+    'Como conseguir o teu primeiro cliente pago',
+    'As ferramentas que todo creator precisa',
+    'Vou ensinar como se faz um bom hook',
+  ]) {
+    assert.ok(guruProblems({ hook }).length > 0, hook);
+  }
+  // Mostrar não é ensinar: isto passa.
+  assert.deepEqual(
+    guruProblems({ hook: 'O brief pedia sorriso no segundo 1. Eu entrei emburrada.' }),
+    [],
+  );
+});
+
+test('o filtro anti-catálogo apanha o que é portefólio, não post', () => {
+  assert.ok(
+    catalogProblems({ hook: 'A casa', format: 'montagem estética muda' }).some((p) => p.includes('muda')),
+  );
+  assert.ok(
+    catalogProblems({ hook: 'O app faz isto', script: 'Inclui: treinos, desafios, comunidade e mais.' })
+      .some((p) => p.includes('funcionalidades')),
+  );
+  assert.ok(
+    catalogProblems({ hook: 'Chegar a casa', onScreenText: ['Home', 'Rituals'] })
+      .some((p) => p.includes('inglês de stock')),
+  );
+  assert.deepEqual(
+    catalogProblems({ hook: 'A sala estava vazia. A primeira coisa que fizemos foi montar esta mesa.', format: 'talking head' }),
+    [],
+  );
+});
+
+test('o portão único corre os quatro filtros de uma vez', () => {
+  // Genérica, de guru, e sem nada dela: três motivos, uma chamada.
+  const problemas = ideaProblems({
+    hook: '5 dicas para melhorar o teu UGC',
+    script: 'Falo das cinco dicas uma a uma, com exemplos genéricos de iluminação e enquadramento.',
+    onScreenText: ['Welcome To My'],
+  });
+  assert.ok(problemas.length >= 3, problemas.join(' | '));
+
+  // Uma ideia da auditoria passa inteira.
+  assert.deepEqual(
+    ideaProblems({
+      hook: 'Meio peperoni, meio frango, sem cebola só no frango. Isto, num papel, era o meu terror.',
+      script:
+        'Passei anos a anotar isto sem errar. O meu namorado passou meses a ensinar um WhatsApp a fazer o mesmo. ' +
+        'Fui testar sem facilitar e pedi o que ele tinha deixado de fora. No fim apareceu o total certo.',
+      format: 'talking head',
+    }),
+    [],
+  );
+});
+
+/* ── Energia ──────────────────────────────────────────────────────────────── */
+
+test('a energia sai do que a ideia pede', () => {
+  assert.equal(energyOf({ shots: 2, editingComplexity: 'simple', recordMinutes: 8, editMinutes: 10 }), 'low');
+  assert.equal(energyOf({ shots: 8, editingComplexity: 'medium', recordMinutes: 25, editMinutes: 30 }), 'high');
+  assert.equal(energyOf({ shots: 3, editingComplexity: 'heavy', recordMinutes: 10, editMinutes: 12 }), 'high');
+  assert.equal(energyOf({ shots: 4, editingComplexity: 'medium', recordMinutes: 12, editMinutes: 18 }), 'normal');
+});
+
+test('num dia com gravação de marca não se propõe outra produção', () => {
+  const cheio = energyBudget({ commercialShootToday: true, minutesCommitted: 120 });
+  assert.equal(cheio.max, 'low');
+  assert.ok(cheio.because.includes('mesma sessão'));
+
+  assert.equal(energyBudget({ commercialShootToday: false, minutesCommitted: 0 }).max, 'high');
 });
 
 /* ── Plataforma ───────────────────────────────────────────────────────────── */

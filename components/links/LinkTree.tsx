@@ -257,7 +257,7 @@ export default function LinkTree({ c, hero, contact, whatsapp }: Props) {
         >
           <span className="lkZapCorpo">
             <span className="lkZapTopo mono">
-              <i className="lkZapPonto" aria-hidden="true" />A tua mensagem já
+              <i className="lkZapPonto" aria-hidden="true" />A sua mensagem já
               está escrita
             </span>
             <span className="lkZapBolha" ref={bolha}>

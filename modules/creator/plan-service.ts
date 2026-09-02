@@ -9,14 +9,20 @@ import type { ContentIdea } from '@/modules/ai/schemas';
 import { contentWorthyMilestones, describeMilestones, markMilestoneUsed } from '@/modules/milestones/service';
 import { usableTrends, type TrendRow } from '@/modules/trends/service';
 import {
+  PILLARS,
   PILLAR_LABEL,
+  STRATEGY_VERSION,
   PLATFORM_BRIEF,
-  audienceBalance,
   estimateMinutes,
   freshUntilFor,
-  genericProblems,
+  ideaProblems,
   ideaFingerprint,
+  ENERGY_LABEL,
+  describeStrategy,
+  energyBudget,
+  energyOf,
   isPillar,
+  pillarDebt,
   isRepeat,
   isStale,
   matchTrends,
@@ -100,11 +106,15 @@ export async function runDailyContentPlan(
     upcomingJobs(),
   ]);
 
-  const balance = audienceBalance(history.map((h) => ({ pillar: h.pillar })));
-  const ordem = pillarPriority(
-    history.map((h) => ({ pillar: h.pillar, at: h.generatedAt })),
-    { audienceTilt: balance.tilt },
-  );
+  // Um dia com gravação de marca não comporta uma segunda produção. A melhor
+  // ideia nesse dia é quase sempre a que sai da mesma sessão.
+  const orcamento = energyBudget({
+    commercialShootToday: jobs.trim().length > 0,
+    minutesCommitted: jobs.trim().length > 0 ? 120 : 0,
+  });
+
+  const ordem = pillarPriority(history.map((h) => ({ pillar: h.pillar, at: h.generatedAt })));
+  const debt = pillarDebt(history.map((h) => ({ pillar: h.pillar })));
   const evitar = recentlyUsedPillars(
     history.map((h) => ({ pillar: h.pillar, at: h.generatedAt })),
     { window: 3 },
@@ -118,15 +128,17 @@ export async function runDailyContentPlan(
     planDailyContent,
     {
       today: planDate,
+      strategy: describeStrategy(),
       profile: describeProfile(profile),
+      energy:
+        orcamento.max === 'high'
+          ? 'O dia está livre. Cabe uma peça mais trabalhada.'
+          : `Energia disponível: ${ENERGY_LABEL[orcamento.max]}. ${orcamento.because}`,
       pillars: ordem.map((p, i) => `${i + 1}. ${p} — ${PILLAR_LABEL[p]}`).join('\n'),
       avoidPillars: evitar.map((p) => PILLAR_LABEL[p]).join(', '),
-      audienceTilt:
-        balance.tilt === 'brand'
-          ? 'Ultimamente tem falado sobretudo para creators. Puxa para o que uma marca aprecia.'
-          : balance.tilt === 'creator'
-            ? 'Ultimamente tem falado sobretudo para marcas. Cabe uma peça que fale a creators.'
-            : 'Está equilibrado. Mantém.',
+      audienceTilt: PILLARS.map(
+        (p) => `${PILLAR_LABEL[p]}: ${debt[p] > 0.05 ? `em falta ${Math.round(debt[p] * 100)} pontos` : debt[p] < -0.05 ? 'já saiu de mais' : 'em dia'}`,
+      ).join(' · '),
       trends: describeTrends(trends),
       milestones: describeMilestones(milestones),
       jobs,
@@ -202,10 +214,17 @@ async function saveIdea(input: {
   const { idea } = input;
 
   // ── Porta anti-genérico ─────────────────────────────────────────────────
-  const problemas = genericProblems({ hook: idea.hook, script: idea.script, title: idea.title });
+  const problemas = ideaProblems({
+    hook: idea.hook,
+    script: idea.script,
+    title: idea.title,
+    whyNow: idea.why_now,
+    format: idea.format,
+    onScreenText: idea.on_screen_text,
+  });
   if (problemas.length) return { ok: false, because: problemas.join('; ') };
 
-  const pillar: Pillar = isPillar(idea.pillar) ? idea.pillar : 'UGC_AUTHORITY';
+  const pillar: Pillar = isPillar(idea.pillar) ? idea.pillar : 'TESTEI';
 
   const repetida = isRepeat(
     { platform: idea.platform, pillar, hook: idea.hook, title: idea.title },
@@ -214,14 +233,16 @@ async function saveIdea(input: {
   if (repetida.repeat) return { ok: false, because: repetida.because ?? 'repetida' };
 
   const verdict = qualityVerdict({
-    originality: idea.quality.originality,
-    specificity: idea.quality.specificity,
-    carolFit: idea.quality.carol_fit,
-    authority: idea.quality.authority,
+    carolIdentity: idea.quality.carol_identity,
+    story: idea.quality.story,
+    proof: idea.quality.proof,
+    humanConflict: idea.quality.human_conflict,
+    brandSignal: idea.quality.brand_signal,
     engagement: idea.quality.engagement,
+    originality: idea.quality.originality,
     recordability: idea.quality.recordability,
     platformNative: idea.quality.platform_native,
-    freshness: idea.quality.freshness,
+    authorityWithoutPreaching: idea.quality.authority_without_preaching,
   });
   if (verdict.verdict === 'reject') return { ok: false, because: verdict.phrase };
 
@@ -332,7 +353,21 @@ async function saveIdea(input: {
       engagement_mechanism: idea.engagement_mechanism,
       brand_audience_effect: idea.brand_audience_effect,
       mentorship_signal: idea.mentorship_signal,
-      quality: asJson({ ...idea.quality, score: verdict.score, verdict: verdict.verdict, phrase: verdict.phrase }),
+      quality: asJson({
+        ...idea.quality,
+        score: verdict.score,
+        verdict: verdict.verdict,
+        phrase: verdict.phrase,
+        energy: idea.energy,
+        recommendation: idea.recommendation,
+        strategyVersion: STRATEGY_VERSION,
+        energyMeasured: energyOf({
+          shots: idea.shot_list.length,
+          editingComplexity: idea.editing.complexity,
+          recordMinutes: tempo.record,
+          editMinutes: tempo.edit,
+        }),
+      }),
       trend_ids: usedTrends,
       series_id: seriesId,
       episode,
