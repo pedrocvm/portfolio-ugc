@@ -84,6 +84,16 @@ test('a grafia é a do Brasil', () => {
   assert.deepEqual(achados, [], `grafia europeia: ${achados.join(', ')}`);
 });
 
+/** «no tela» não é português nenhum.
+ *
+ *  «Ecrã» é masculino e «tela» é feminina. A troca de palavra foi feita por
+ *  substituição e deixou o artigo para trás em quinze sítios — «texto no
+ *  tela», que se lê pior do que o original que se veio corrigir. */
+test('o artigo concorda com a palavra que ficou', () => {
+  const achados = procurar(/(^|[^\p{L}])(no|do|ao|pelo|num|dum)\s+tela($|[^\p{L}])/iu);
+  assert.deepEqual(achados, [], `artigo por concordar: ${achados.join(', ')}`);
+});
+
 /** «Precisa de saber» é a preposição a mais que só existe deste lado. */
 test('não há preposição antes do infinitivo', () => {
   const achados = procurar(

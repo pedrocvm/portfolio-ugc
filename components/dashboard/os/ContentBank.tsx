@@ -16,7 +16,7 @@ import RecordingMode from './RecordingMode';
  *  ideias que ela guardou para uma tarde com tempo.
  *
  *  «Mastigado significa mastigado»: cada plano traz gancho, guião falado,
- *  tomadas numeradas, texto no tela e os passos de CapCut com tempos. Se ela
+ *  tomadas numeradas, texto na tela e os passos de CapCut com tempos. Se ela
  *  precisar de pensar em alguma coisa antes de gravar, o plano falhou. */
 
 const STATUS_LABEL: Record<string, string> = {
@@ -252,7 +252,7 @@ function Idea({
               ) : null}
               {idea.onScreenText.length ? (
                 <>
-                  <dt>Texto no tela</dt>
+                  <dt>Texto na tela</dt>
                   <dd>{idea.onScreenText.join(' · ')}</dd>
                 </>
               ) : null}

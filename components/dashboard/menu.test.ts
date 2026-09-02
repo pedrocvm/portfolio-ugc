@@ -14,7 +14,7 @@ import { SECTIONS, UTILITY, ALL_DESTINATIONS, sectionFor, isCurrent } from './na
 
 const ROOT = path.join(import.meta.dirname, '..', '..');
 
-/** Nem tudo precisa de entrada na barra: uma sub-vista pertence ao tela que a
+/** Nem tudo precisa de entrada na barra: uma sub-vista pertence à tela que a
  *  abre. O que não pode existir é uma tela sem porta nenhuma — por isso vale
  *  também um link a partir de outra tela. */
 function linkedFromScreens(): string[] {

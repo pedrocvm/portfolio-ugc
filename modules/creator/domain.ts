@@ -293,11 +293,11 @@ export function catalogProblems(idea: {
     out.push('é uma lista de funcionalidades, não uma história');
   }
 
-  // Inglês de stock no tela. A auditoria nomeia os três casos reais.
+  // Inglês de stock na tela. A auditoria nomeia os três casos reais.
   const stock = (idea.onScreenText ?? []).filter((t) =>
     /^\s*(home|rituals|welcome to my|unwind|my daily|self ?care|good vibes)\b/i.test(t),
   );
-  if (stock.length) out.push(`tem inglês de stock no tela (${stock[0]})`);
+  if (stock.length) out.push(`tem inglês de stock na tela (${stock[0]})`);
 
   return out;
 }

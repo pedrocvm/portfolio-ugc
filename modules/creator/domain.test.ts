@@ -517,7 +517,7 @@ test('cada família é nomeada com a palavra que a denuncia', () => {
   assert.match(ptPtProblems({ script: 'precisamos de si, tens de ver isto' }).join(' '), /«de si»|«tens»/);
 });
 
-test('o texto no tela também conta: é o que a marca lê primeiro', () => {
+test('o texto na tela também conta: é o que a marca lê primeiro', () => {
   const problemas = ptPtProblems({ hook: 'tudo certo', onScreenText: ['GUARDA NO TELEMÓVEL'] });
   assert.ok(problemas.some((p) => p.includes('«TELEMÓVEL»') || p.includes('«telemóvel»')), problemas.join(' | '));
 });

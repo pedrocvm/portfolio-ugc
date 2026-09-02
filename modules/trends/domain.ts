@@ -54,7 +54,7 @@ export const TREND_KIND_LABEL: Record<TrendKind, string> = {
   structure: 'estrutura',
   series: 'série',
   audio: 'som',
-  text: 'texto no tela',
+  text: 'texto na tela',
   transition: 'transição',
   pov: 'ponto de vista',
   other: 'outro',

@@ -76,7 +76,7 @@ export type ReadyIdea = {
 /** A ideia pronta a gravar, tirada das referências.
  *
  *  «Ideia: fazer um vídeo a mostrar o produto» não é trabalho preparado. Isto é
- *  o que se põe no tripé — e por isso vem com tomadas numeradas, texto no tela
+ *  o que se põe no tripé — e por isso vem com tomadas numeradas, texto na tela
  *  e notas de edição, não com uma frase. */
 function ReadyIdeaBlock({ idea }: { idea: ReadyIdea }) {
   return (
@@ -98,7 +98,7 @@ function ReadyIdeaBlock({ idea }: { idea: ReadyIdea }) {
       <dl className="refPlan">
         {idea.on_screen_text.length ? (
           <>
-            <dt>Texto no tela</dt>
+            <dt>Texto na tela</dt>
             <dd>{idea.on_screen_text.join(' · ')}</dd>
           </>
         ) : null}

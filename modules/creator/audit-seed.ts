@@ -95,7 +95,7 @@ export const SEED_IDEAS: readonly SeedIdea[] = [
   { pillar: 'A_SALA', title: 'O que um serviço de 12 horas faz à cara no dia seguinte', hook: 'A minha pele sabia o turno antes de mim.', seconds: 25 },
   { pillar: 'A_SALA', title: 'Por que pizzaria morre no WhatsApp às 21h', hook: 'A hora em que todo pedido chega junto.', seconds: 35 },
   { pillar: 'A_SALA', title: 'Eu não sou extrovertida. Eu sou treinada.', hook: 'Dez anos de sala fazem isso.', seconds: 20 },
-  { pillar: 'A_SALA', title: 'A primeira vez que me pediram a cardápio em inglês no Porto', hook: 'Eu não sabia dizer «bacalhau» em inglês.', seconds: 25 },
+  { pillar: 'A_SALA', title: 'A primeira vez que me pediram o cardápio em inglês no Porto', hook: 'Eu não sabia dizer «bacalhau» em inglês.', seconds: 25 },
   { pillar: 'A_SALA', title: 'Coisa que um maître me ensinou', hook: 'Serviço, não aula de creator.', seconds: 20 },
   // Testei
   { pillar: 'TESTEI', title: 'Testei sem ler o site', hook: 'Se precisa de manual, já falhou.', seconds: 30 },

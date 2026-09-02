@@ -546,7 +546,7 @@ export async function saveCandidates(ids: string[]): Promise<Result & { saved?: 
   return { ok: true, saved: count ?? validos.length };
 }
 
-/** Limpa os resultados desta busca do tela — não o histórico.
+/** Limpa os resultados desta busca da tela — não o histórico.
  *  O que ela guardou fica; o resto era exploração e não tem de ficar. */
 export async function clearManualSearch(): Promise<Result & { cleared?: number }> {
   await requireUser();

@@ -172,7 +172,7 @@ export const NORTH_STAR = 'Se eu não serviria isto a uma mesa, não ponho no Re
 
 export const ANTI_PATTERNS: readonly string[] = [
   'Criativo de cliente que não é episódio da vida dela — listar features, montagem muda de casa.',
-  'Inglês de stock no tela: Home, Rituals, Welcome To My, sem ironia.',
+  'Inglês de stock na tela: Home, Rituals, Welcome To My, sem ironia.',
   'Conteúdo para creators: dicas de UGC, ferramentas, «como consegui X».',
   'Anúncios de 60 segundos com lapela à vista.',
   'Montagem muda como formato por omissão.',
@@ -310,7 +310,7 @@ export const HYPOTHESES: readonly Hypothesis[] = [
   { id: 'H3', claim: 'CTA para o próprio perfil vale mais do que CTA para o namorado.', test: 'republicar a tese do Cenlo sem mencionar o outro perfil.', metric: 'seguidores ganhos', status: 'untested' },
   { id: 'H4', claim: 'Pele real alcança mais não-seguidores do que casa bonita.', test: '3 peças de rosácea.', metric: 'alcance de contas não seguidoras', status: 'untested' },
   { id: 'H5', claim: 'Mini-vlog com tese termina mais do que mini-vlog estético.', test: '3 vlogs de 20-30s com uma frase no segundo 1.', metric: 'conclusão contra abandono', status: 'untested' },
-  { id: 'H6', claim: 'Inglês no tela piora a identificação em Portugal.', test: 'o mesmo ritual de casa, um em inglês e outro falado em português.', metric: 'comentários escritos contra emoji', status: 'untested' },
+  { id: 'H6', claim: 'Inglês na tela piora a identificação em Portugal.', test: 'o mesmo ritual de casa, um em inglês e outro falado em português.', metric: 'comentários escritos contra emoji', status: 'untested' },
 ];
 
 /* ── Como se mede o sucesso ───────────────────────────────────────────────── */

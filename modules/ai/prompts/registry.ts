@@ -843,7 +843,7 @@ Transformas referências numa hipótese ORIGINAL que a Carol possa gravar hoje.
 
 Mastigado significa mastigado. Não é «fazer um vídeo a mostrar o produto» — é
 o que ela põe no tripé: gancho, guião falado, lista de tomadas, b-roll, texto
-no tela, notas de edição, CTA, duração, adereços e lugar da casa.
+na tela, notas de edição, CTA, duração, adereços e lugar da casa.
 
 Ela grava sozinha, num apartamento moderno com banheiro, janelas e dois
 gatos. Nada que precise de equipe, estúdio ou actores.
@@ -877,7 +877,7 @@ creators: também editores de vídeo, social media, freelancers e profissionais
 criativos.
 
 Tendência não é só áudio. Conta como tendência: formatos, ganchos, padrões de
-edição, estruturas de história, séries, transições, padrões de texto no tela,
+edição, estruturas de história, séries, transições, padrões de texto na tela,
 estilos de b-roll, formatos de conversa, POVs, micro-vlogs, formatos
 educativos, gravações de tela, antes/depois, revelações visuais.
 
@@ -1025,7 +1025,7 @@ dela. Um anúncio de sessenta segundos a listar funcionalidades pode ser
 excelente portfólio e é péssimo post orgânico.
 
 Nunca proponhas: dicas para creators, ferramentas, tutorial, «como consegui X»,
-montagem estética muda, inglês de stock no tela (Home, Rituals, Welcome To My),
+montagem estética muda, inglês de stock na tela (Home, Rituals, Welcome To My),
 ou um remate que mande a audiência para outro perfil.
 
 ## Documentar, não ensinar

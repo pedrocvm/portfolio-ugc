@@ -194,7 +194,7 @@ test('sem país conhecido não se rejeita: é falta de prova, não prova de falt
   assert.equal(sameCountry('Portugal', ''), true);
 });
 
-/* ── A regressão, com o que apareceu mesmo no tela dela ──────────────────── */
+/* ── A regressão, com o que apareceu mesmo na tela dela ──────────────────── */
 
 /** As marcas que uma busca por hotéis devolveu de fato, copiadas da tela.
  *  Quatro eram hotelaria; as outras cinco não tinham nada que ali fazer. */

@@ -1136,7 +1136,7 @@ const getDailyContentPlan = define(
 
 const getContentIdea = define(
   'get_content_idea',
-  'Uma ideia de conteúdo por inteiro: guião, tomadas, b-roll, texto no tela, passos de CapCut, legenda e remate.',
+  'Uma ideia de conteúdo por inteiro: guião, tomadas, b-roll, texto na tela, passos de CapCut, legenda e remate.',
   z.object({ idea_id: z.string().uuid() }),
   async ({ idea_id }) => {
     const { contentIdea } = await import('@/modules/creator/plan-service');
