@@ -9,6 +9,7 @@ import {
   ideaFingerprint,
   isRepeat,
   isStale,
+  matchTrends,
   pillarPriority,
   platformTreatmentsDiffer,
   qualityVerdict,
@@ -118,6 +119,47 @@ test('«5 dicas para ser UGC creator» não passa', () => {
 test('«3 erros que tu cometes» não passa', () => {
   const problemas = genericProblems({ hook: '3 erros que ninguém te conta sobre UGC', script: GUIAO });
   assert.ok(problemas.some((p) => p.includes('lugar-comum')));
+});
+
+test('«o que ninguém diz sobre» é a mesma fórmula e também não passa', () => {
+  // Saiu na primeira corrida real, como título de TikTok. A regra só conhecia
+  // «conta» e «contou», e exigia o «te».
+  for (const gancho of [
+    'O que ninguém diz sobre gravar UGC que vende',
+    'O que ninguém te conta sobre começar em UGC',
+    'A verdade que ninguém quer admitir sobre UGC',
+  ]) {
+    assert.ok(
+      genericProblems({ hook: gancho, script: GUIAO }).some((p) => p.includes('lugar-comum')),
+      gancho,
+    );
+  }
+});
+
+test('a tendência liga-se à ideia por assunto, não por título ao caractere', () => {
+  const trends = [
+    { id: 't1', title: 'Breakdown de edição em ecrã dividido', description: 'A timeline do CapCut ao lado do vídeo final.' },
+    { id: 't2', title: 'Micro-vlog matinal com voz por cima', description: 'Rotina filmada em planos curtos.' },
+  ];
+  // A ideia fala do mesmo assunto sem repetir o título — que é o que o modelo
+  // faz sempre, e que fazia a ligação nunca acontecer.
+  const ligadas = matchTrends(
+    {
+      whyNow: 'Mostrar a timeline do CapCut ao lado do resultado final explica a edição sem a explicar.',
+      hook: 'O corte que faz um vídeo parecer um anúncio verdadeiro',
+      script: 'Ecrã dividido: à esquerda a timeline, à direita o vídeo final.',
+    },
+    trends,
+  );
+  assert.deepEqual(ligadas, ['t1']);
+});
+
+test('uma ideia sem relação nenhuma não cita tendência nenhuma', () => {
+  const ligadas = matchTrends(
+    { whyNow: 'Contar como consegui o primeiro cliente de fora.', hook: 'Primeiro cliente gringo', script: 'História do email ao pagamento.' },
+    [{ id: 't1', title: 'Breakdown de edição em ecrã dividido', description: 'A timeline do CapCut.' }],
+  );
+  assert.deepEqual(ligadas, []);
 });
 
 test('uma ideia sem guião não é trabalho preparado', () => {

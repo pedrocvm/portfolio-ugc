@@ -208,6 +208,29 @@ export function isRepeat(
   return { repeat: false, because: null };
 }
 
+/** Que tendências alimentaram esta ideia.
+ *
+ *  Isto comparava o título da tendência com o texto da ideia por igualdade de
+ *  cadeia — exigia que o modelo repetisse o título ao caractere, o que nunca
+ *  aconteceu. Resultado: `trend_ids` sempre vazio, e a secção «de onde veio»
+ *  sempre em branco numa tela que promete que toda a tendência é clicável.
+ *
+ *  Compara-se agora por sobreposição de palavras, que é como se reconhece um
+ *  assunto. O limiar é baixo de propósito: falhar uma ligação verdadeira é
+ *  pior do que citar uma tendência a mais, porque o custo de citar a mais é
+ *  ela clicar e discordar, e o de falhar é a tela mentir por omissão. */
+export function matchTrends<T extends { id: string; title: string; description?: string }>(
+  idea: { whyNow: string; script: string; hook: string },
+  trends: readonly T[],
+  opts: { threshold?: number } = {},
+): string[] {
+  const limite = opts.threshold ?? 0.34;
+  const texto = `${idea.whyNow} ${idea.hook} ${idea.script}`;
+  return trends
+    .filter((t) => similarity(texto, `${t.title} ${t.description ?? ''}`) >= limite)
+    .map((t) => t.id);
+}
+
 /* ── Porta anti-genérico ──────────────────────────────────────────────────── */
 
 /** Ganchos que qualquer pessoa podia ter escrito sem conhecer a Carol.
@@ -215,11 +238,15 @@ export function isRepeat(
 const GENERIC = [
   /^\s*\d+\s+(dicas|erros|coisas|passos|formas|maneiras)\b/i,
   /\b(dicas|erros) que (voc[êe]|tu|ningu[ée]m)\b/i,
-  /\bo que ningu[ée]m te (conta|contou)\b/i,
+  // «O que ninguém DIZ sobre…» passou na primeira corrida real, porque a regra
+  // só conhecia «conta» e «contou» e exigia o «te». A fórmula é a mesma e o
+  // resultado também: um título que qualquer creator já publicou.
+  /\bo que ningu[ée]m (te )?(conta|contou|diz|disse|fala|falou)\b/i,
   /\bsegredos? (do|da|de)\b/i,
   /\bcomo (ganhar|fazer) dinheiro (com|na|no)\b/i,
   /\bguia (completo|definitivo)\b/i,
   /\btudo o que (precisas?|voc[êe] precisa) (de )?saber\b/i,
+  /\bverdade que ningu[ée]m\b/i,
 ];
 
 export type QualityDims = {

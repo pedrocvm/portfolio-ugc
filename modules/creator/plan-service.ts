@@ -19,6 +19,7 @@ import {
   isPillar,
   isRepeat,
   isStale,
+  matchTrends,
   pillarPriority,
   platformTreatmentsDiffer,
   qualityVerdict,
@@ -272,9 +273,10 @@ async function saveIdea(input: {
   }
 
   // ── Ligações: cada peça diz de onde veio ────────────────────────────────
-  const usedTrends = input.trends
-    .filter((t) => idea.why_now.includes(t.title) || idea.script.includes(t.title))
-    .map((t) => t.id);
+  const usedTrends = matchTrends(
+    { whyNow: idea.why_now, script: idea.script, hook: idea.hook },
+    input.trends,
+  );
 
   const usedMilestone = input.milestones.find(
     (m) => idea.why_now.includes(m.summary.slice(0, 25)) || idea.script.includes(m.summary.slice(0, 25)),

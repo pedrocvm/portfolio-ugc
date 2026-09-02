@@ -382,7 +382,15 @@ async function countPrepared(now: Date): Promise<PreparedCounts> {
     { count: cancelled },
     { count: stages },
   ] = await Promise.all([
-    db.from('outreach_candidate').select('id', { count: 'exact', head: true }).gte('created_at', desde),
+    // Só as que a procura da manhã trouxe. Contar tudo o que entrou em 18h
+    // incluía as buscas dirigidas que ela própria pediu, e a primeira
+    // consolidação real anunciou «encontrei 57 marcas» quando o que havia para
+    // rever eram sete. Uma prova de vida inflacionada vale menos do que nenhuma.
+    db
+      .from('outreach_candidate')
+      .select('id, run:run_id!inner ( kind )', { count: 'exact', head: true })
+      .gte('created_at', desde)
+      .eq('run.kind', 'daily'),
     db.from('candidate_reference').select('id', { count: 'exact', head: true }).gte('created_at', desde),
     db.from('thread_intel').select('id', { count: 'exact', head: true }).gte('prepared_at', desde),
     db
@@ -411,15 +419,18 @@ async function countPrepared(now: Date): Promise<PreparedCounts> {
       .gte('occurred_at', desde),
   ]);
 
-  // Quantas caixas foram sincronizadas: o detalhe do trabalho di-lo, e é a
-  // única fonte que sabe distinguir uma caixa de duas.
+  // Quantas caixas foram sincronizadas.
+  //
+  // O relatório da sincronização não traz uma lista de contas: traz uma frase
+  // com os endereços lá dentro, «a@x.com: … · b@x.com: …». Procurava-se um
+  // campo `accounts` que nunca existiu, e a primeira consolidação real disse
+  // «0 caixas» num dia em que sincronizou duas.
   const caixas = new Set<string>();
   for (const s of syncs ?? []) {
-    const detail = (s.detail ?? {}) as { mailboxes?: unknown; accounts?: unknown };
-    const lista = Array.isArray(detail.accounts) ? detail.accounts : [];
-    for (const a of lista) caixas.add(String(a));
-    if (typeof detail.mailboxes === 'number' && caixas.size === 0) {
-      for (let i = 0; i < detail.mailboxes; i++) caixas.add(`caixa-${i}`);
+    const detail = (s.detail ?? {}) as { detail?: unknown; accounts?: unknown };
+    for (const a of Array.isArray(detail.accounts) ? detail.accounts : []) caixas.add(String(a));
+    if (typeof detail.detail === 'string') {
+      for (const m of detail.detail.matchAll(/[\w.+-]+@[\w-]+\.[\w.-]+/g)) caixas.add(m[0].toLowerCase());
     }
   }
 
