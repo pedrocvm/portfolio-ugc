@@ -399,13 +399,23 @@ async function countPrepared(now: Date): Promise<PreparedCounts> {
       .gte('prepared_at', desde)
       .eq('draft_state', 'ready'),
     db.from('creator_trend').select('id', { count: 'exact', head: true }).gte('detected_at', desde),
-    db.from('creator_content_idea').select('id', { count: 'exact', head: true }).eq('plan_date', hoje),
+    // Só as que ainda valem: contar as descartadas dava «escolhi 4 conteúdos»
+    // num dia em que há dois para gravar.
+    db
+      .from('creator_content_idea')
+      .select('id', { count: 'exact', head: true })
+      .eq('plan_date', hoje)
+      .in('status', ['ready', 'saved', 'recorded', 'published']),
     db
       .from('job_run')
+      // `started_at`, não `created_at`: a tabela não tem essa coluna. A consulta
+      // devolvia erro em silêncio e a prova de vida dizia «0 caixas» num dia em
+      // que sincronizou duas. É o mesmo engano que já tinha corrigido nas falhas
+      // e deixei ficar aqui.
       .select('detail')
       .eq('job_type', 'gmail-sync')
       .eq('status', 'success')
-      .gte('created_at', desde)
+      .gte('started_at', desde)
       .limit(10),
     db
       .from('follow_up')
