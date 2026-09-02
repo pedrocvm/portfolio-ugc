@@ -12,6 +12,7 @@ import { normalizeDomain, normalizeEmail, normalizeHandle } from '@/modules/bran
 import { guessNiche, prospectableNiches } from '@/modules/brands/niches';
 import { resolveOrCreateBrand } from '@/modules/brands/service';
 import { ensureOpportunity } from '@/modules/opportunities/service';
+import { CAPTURE_KIND_LABEL, type CaptureKind } from './detect';
 
 /** Captura rápida: o caminho para tudo o que não passa pelo Gmail.
  *
@@ -22,7 +23,8 @@ import { ensureOpportunity } from '@/modules/opportunities/service';
  *  Funciona sem IA: um URL sozinho já dá domínio, handle e nome provável.
  *  A IA acrescenta contato, produto e pedidos quando está ligada. */
 
-export type CaptureKind = 'url' | 'text' | 'screenshot' | 'profile' | 'product' | 'conversation' | 'brief';
+export { CAPTURE_KINDS, type CaptureKind } from './detect';
+
 
 export type CaptureDraft = {
   id: string;
@@ -269,7 +271,7 @@ export async function applyCapture(
     actorType: 'carol',
     actorUserId,
     channel: capture.kind,
-    summary: extracted.summary ?? `Captura rápida (${capture.kind}) aplicada.`,
+    summary: extracted.summary ?? `Captura rápida: ${CAPTURE_KIND_LABEL[capture.kind as CaptureKind] ?? 'uma nota'}.`,
     payload: {
       captureId,
       kind: capture.kind,

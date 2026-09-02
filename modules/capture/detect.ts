@@ -8,7 +8,13 @@
  *  Puro de propósito: é a regra, e tem teste. O seletor continua existindo
  *  atrás de «não é isso», para as vezes em que o palpite sai ao lado. */
 
-import type { CaptureKind } from './service';
+/** Os tipos vivem aqui, do lado puro, e não no serviço: o serviço é
+ *  `server-only` e um teste não o pode importar. */
+export const CAPTURE_KINDS = [
+  'url', 'text', 'screenshot', 'profile', 'product', 'conversation', 'brief',
+] as const;
+
+export type CaptureKind = (typeof CAPTURE_KINDS)[number];
 
 export type Guess = {
   kind: CaptureKind;
@@ -100,3 +106,18 @@ export function detectKind(raw: string, fileName?: string | null): Guess {
 
   return { kind: 'text', label: 'uma nota', sure: false };
 }
+
+/** O que ela capturou, dito como ela lê.
+ *
+ *  «Captura rápida (screenshot)» é um identificador da base numa frase — e
+ *  esta fica salva na linha do tempo, onde ela a volta a ler meses depois.
+ *  Vive aqui e não no serviço porque aqui pode ter teste. */
+export const CAPTURE_KIND_LABEL: Record<CaptureKind, string> = {
+  url: 'um link',
+  text: 'uma nota',
+  screenshot: 'uma imagem',
+  profile: 'um perfil',
+  product: 'uma página de produto',
+  conversation: 'uma conversa colada',
+  brief: 'um briefing',
+};

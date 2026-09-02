@@ -3,9 +3,17 @@ import 'server-only';
 import { supabaseServer } from '@/lib/supabase/server';
 import { recordEvent, touchActivity, type Db } from '@/modules/activity/service';
 import {
-  isClosed, isOpen, reduceStage, violations,
+  STAGE_LABEL, isClosed, isOpen, reduceStage, violations,
   type CommercialModel, type Stage, type StageSignal,
 } from './domain';
+
+/** A etapa como ela a lê na linha do tempo.
+ *
+ *  «Etapa: replied → proposal» é um identificador da base numa frase, e a
+ *  linha do tempo é texto que ela lê. O rótulo já existia e era usado nas
+ *  telas; faltava aqui, onde a frase é escrita e fica salva para sempre. */
+const nomeDaEtapa = (stage: string): string =>
+  (STAGE_LABEL[stage as Stage] ?? stage).toLowerCase();
 
 export type OpportunityRow = {
   id: string;
@@ -182,8 +190,8 @@ export async function applyStageSignal(
     opportunityId,
     actorType: shouldApply ? 'system' : 'ai',
     summary: shouldApply
-      ? `Etapa: ${from} → ${transition.to}. ${transition.reason}`
-      : `Sugestão de etapa: ${from} → ${transition.to}. ${transition.reason}`,
+      ? `Etapa: ${nomeDaEtapa(from)} → ${nomeDaEtapa(transition.to)}. ${transition.reason}`
+      : `Sugestão de etapa: ${nomeDaEtapa(from)} → ${nomeDaEtapa(transition.to)}. ${transition.reason}`,
     payload: {
       from,
       to: transition.to,
@@ -269,7 +277,7 @@ export async function setStageManually(
     opportunityId,
     actorType: 'carol',
     actorUserId,
-    summary: `Etapa alterada à mão: ${current.stage} → ${to}.${reason ? ` ${reason}` : ''}`,
+    summary: `Etapa alterada à mão: ${nomeDaEtapa(current.stage)} → ${nomeDaEtapa(to)}.${reason ? ` ${reason}` : ''}`,
     payload: { from: current.stage, to, reason, manual: true },
   });
 

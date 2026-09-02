@@ -5,7 +5,10 @@ import { asJson } from '@/lib/supabase/json';
 import { priorityScore } from '@/modules/actions/planner';
 import { recordEvent, type Db } from '@/modules/activity/service';
 import { refreshRelationship } from '@/modules/revenue/service';
-import { gateBlockers, type CollaborationRow, type CollaborationStatus } from './domain';
+import {
+  REVISION_LABEL, gateBlockers,
+  type CollaborationRow, type CollaborationStatus, type RevisionClassification,
+} from './domain';
 
 /** Ciclo de vida da produção.
  *
@@ -345,7 +348,7 @@ export async function recordDelivery(input: {
 export async function recordFeedback(input: {
   deliverableId: string;
   feedback: string;
-  classification: 'in_scope' | 'subjective' | 'brief_change' | 'new_deliverable';
+  classification: RevisionClassification;
   actorUserId: string;
 }) {
   const db = await supabaseServer();
@@ -380,7 +383,7 @@ export async function recordFeedback(input: {
     actorType: 'brand',
     actorUserId: input.actorUserId,
     summary: outOfScope
-      ? `Revisão fora do escopo (${input.classification}): é uma nova negociação, não uma correção.`
+      ? `Revisão fora do escopo (${REVISION_LABEL[input.classification]}): é uma nova negociação, não uma correção.`
       : `Revisão dentro do escopo na versão ${data.version}.`,
     payload: { deliverableId: input.deliverableId, classification: input.classification, outOfScope },
   });

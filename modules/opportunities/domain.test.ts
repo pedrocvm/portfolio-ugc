@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { isOpen, reduceStage, violations, type Stage } from './domain.ts';
+import { STAGES, STAGE_LABEL, isOpen, reduceStage, violations, type Stage } from './domain.ts';
 
 const signal = (over: Partial<Parameters<typeof reduceStage>[1]> = {}) => ({
   eventType: 'reply.received',
@@ -130,4 +130,13 @@ test('nurture e as etapas fechadas não contam como abertas', () => {
   assert.equal(isOpen('won'), false);
   assert.equal(isOpen('lost'), false);
   assert.equal(isOpen('replied'), true);
+});
+
+test('toda a etapa tem nome, e nenhum nome parece uma variável', () => {
+  // «Etapa: replied → proposal» ficava salva na linha do tempo. O rótulo já
+  // existia e era usado nas telas; faltava no sítio onde a frase é escrita.
+  for (const s of STAGES) {
+    assert.ok(STAGE_LABEL[s], `a etapa «${s}» ia sair em bruto`);
+    assert.equal(/_/.test(STAGE_LABEL[s]), false, `o nome de «${s}» ainda parece uma variável`);
+  }
 });

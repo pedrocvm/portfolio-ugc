@@ -75,3 +75,24 @@ export function gateBlockers(c: {
 
   return blockers;
 }
+
+/** O que a marca pediu numa revisão, dito como ela lê.
+ *
+ *  «Revisão fora do escopo (brief_change)» é um identificador da base numa
+ *  frase que fica salva na linha do tempo para sempre. O código continua a ser
+ *  a chave — é por ele que se decide se é nova negociação — e passa a ter nome. */
+export const REVISION_CLASSIFICATIONS = [
+  'in_scope',
+  'subjective',
+  'brief_change',
+  'new_deliverable',
+] as const;
+
+export type RevisionClassification = (typeof REVISION_CLASSIFICATIONS)[number];
+
+export const REVISION_LABEL: Record<RevisionClassification, string> = {
+  in_scope: 'estava no briefing',
+  subjective: 'é questão de gosto',
+  brief_change: 'mudaram o briefing',
+  new_deliverable: 'é uma entrega nova',
+};

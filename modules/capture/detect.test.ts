@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { detectKind } from './detect';
+import { CAPTURE_KINDS, CAPTURE_KIND_LABEL, detectKind } from './detect';
 
 /** Eram sete botões — Link, Conversa, Perfil, Produto, Briefing, Print, Outro —
  *  e escolher entre eles é uma decisão técnica que não é dela. Estes testes
@@ -96,4 +96,12 @@ test('vazio não rebenta nem finge saber', () => {
 test('um endereço partido não deita o detector abaixo', () => {
   assert.doesNotThrow(() => detectKind('http://'));
   assert.doesNotThrow(() => detectKind('https://[[['));
+});
+
+test('todo o tipo de captura tem nome em português', () => {
+  // «Captura rápida (screenshot)» ficava salva na linha do tempo.
+  for (const k of CAPTURE_KINDS) {
+    assert.ok(CAPTURE_KIND_LABEL[k], `«${k}» ia sair em bruto`);
+    assert.equal(/^[a-z_]+$/.test(CAPTURE_KIND_LABEL[k]), false, `o nome de «${k}» ainda parece uma variável`);
+  }
 });
