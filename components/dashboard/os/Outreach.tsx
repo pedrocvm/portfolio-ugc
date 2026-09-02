@@ -5,12 +5,14 @@ import { useState, useTransition } from 'react';
 import {
   approveOutreach, clearManualSearch, discardMany, draftOutreach, saveCandidates,
   sendApprovedOutreach, sendOutreach, skipOutreach, startDiscovery, startManualSearch,
+  updateOutreachEmail,
   suppressBrand, updateOutreachDraft, type BrandReferenceRow,
 } from '@/app/dashboard/outreach-actions';
 import Spinner from '@/components/dashboard/Spinner';
 import { watchDiscovery } from '@/components/dashboard/DiscoveryWatch';
 import { pushToast } from '@/components/dashboard/Toasts';
 import { formatDate } from '@/lib/time';
+import { MAILBOX_FIT_NOTE, mailboxFit } from '@/modules/outreach/mailcheck';
 import {
   CONF_LABEL, UGC_LABEL, countryLabel, placeLabel, signalsFor,
 } from '@/modules/outreach/history';
@@ -38,6 +40,7 @@ export type Candidate = {
   creative_opportunity: string; content_ideas: { title: string; angle: string }[];
   red_flags: string[]; sources: { label: string; url: string | null }[];
   contact_name: string | null; contact_role: string | null; contact_email: string | null;
+  contact_email_options?: { address: string; team: string | null; where: string | null }[] | null;
   email_confidence: string | null; contact_source: string | null; subject: string; body: string;
   socials: Record<string, string | null> | null;
   city: string | null;
@@ -152,6 +155,8 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
   const [body, setBody] = useState(c.body);
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState(c.status);
+  const [para, setPara] = useState(c.contact_email ?? '');
+  const [aTrocarPara, setATrocarPara] = useState(false);
   // Abaixo do corte de encaixe: pesquisada, salva, sem email escrito. O
   // email custa uma chamada ao modelo e só se escreve se ela quiser esta marca.
   const semEmail = !subject && !body;
@@ -172,6 +177,15 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
   };
 
   const dirty = subject !== c.subject || body !== c.body;
+
+  // As outras caixas que a pesquisa viu e não escolheu. Trocar tem de ser um
+  // toque: quando o palpite sai ao lado, ela já sabe qual é o certo.
+  const opcoes = c.contact_email_options ?? [];
+
+  // Só se avisa quando a caixa não é a de quem decide. `marketing@` não precisa
+  // de etiqueta nenhuma — o silêncio é que diz que está bem.
+  const caixa = para ? mailboxFit(para) : null;
+  const avisoCaixa = caixa && caixa !== 'target' ? MAILBOX_FIT_NOTE[caixa] : null;
 
   return (
     <details className="revRow" data-status={status}>
@@ -346,7 +360,63 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
           />
           <label className="visually-hidden" htmlFor={`b-${c.id}`}>Mensagem</label>
           <textarea id={`b-${c.id}`} rows={12} value={body} onChange={(e) => setBody(e.target.value)} />
-          <p className="osRowSub">Para: {c.contact_email ?? '—'}</p>
+
+          {aTrocarPara ? (
+            <div className="outTo">
+              <label htmlFor={`to-${c.id}`}>Enviar para</label>
+              <input
+                id={`to-${c.id}`}
+                type="email"
+                inputMode="email"
+                autoComplete="off"
+                value={para}
+                onChange={(e) => setPara(e.target.value)}
+                placeholder="marketing@marca.com"
+              />
+              {opcoes.length ? (
+                <div className="outToOpts">
+                  <span className="osRowSub">Também encontrei:</span>
+                  {opcoes.map((o) => (
+                    <button key={o.address} type="button" onClick={() => setPara(o.address)}>
+                      {o.address}
+                      {o.team ? ` · ${o.team}` : ''}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <div className="outToActs">
+                <button
+                  className="osPageBtn"
+                  type="button"
+                  disabled={pending || !para.includes('@')}
+                  onClick={() =>
+                    run('to', () => updateOutreachEmail(c.id, para), () => setATrocarPara(false))
+                  }
+                >
+                  {running === 'to' ? <Spinner label="Verificando" /> : null}
+                  Usar este
+                </button>
+                <button
+                  className="osPageBtn"
+                  type="button"
+                  onClick={() => {
+                    setPara(c.contact_email ?? '');
+                    setATrocarPara(false);
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="osRowSub">
+              Para: {para || '—'}
+              {avisoCaixa ? <span className="osTag" data-tone="watch">{avisoCaixa}</span> : null}{' '}
+              <button className="outLink" type="button" onClick={() => setATrocarPara(true)}>
+                trocar
+              </button>
+            </p>
+          )}
         </div>
       </details>
 
@@ -375,7 +445,7 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
           </button>
         ) : confirming ? (
           <>
-            <span className="osRowSub">Enviar para {c.contact_email}?</span>
+            <span className="osRowSub">Enviar para {para}?</span>
             <button
               className="osGo"
               type="button"
@@ -399,7 +469,7 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
             <button
               className="osGo"
               type="button"
-              disabled={pending || !c.contact_email}
+              disabled={pending || !para}
               onClick={() => setConfirming(true)}
             >
               Enviar

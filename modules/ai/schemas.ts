@@ -324,7 +324,22 @@ export const OutreachResearchSchema = z.object({
     .object({
       name: z.string().nullable(),
       role: z.string().nullable(),
-      email: z.string().nullable(),
+      /** TODOS os endereços vistos, não o melhor.
+       *
+       *  Pedia-se um só e o modelo escolhia — e escolheu `suporte@` numa marca
+       *  que tem o email de marketing na primeira página do Google. Quem
+       *  escolhe passa a ser `pickOutreachEmail`, em código e com teste; aqui
+       *  só se recolhe. */
+      emails: z
+        .array(
+          z.object({
+            address: z.string(),
+            /** O que a página diz que aquela caixa é: «parcerias», «suporte». */
+            team: z.string().nullable(),
+            where: z.string().nullable().describe('a página onde o endereço foi visto'),
+          }),
+        )
+        .describe('todos os endereços encontrados, sem escolher nem inventar'),
       /** Só se for mesmo WhatsApp: um fixo aqui é pior do que campo vazio. */
       whatsapp: z.string().nullable().describe('número de WhatsApp com indicativo, ou null'),
       instagram: z.string().nullable().describe('@usuário do perfil da marca'),

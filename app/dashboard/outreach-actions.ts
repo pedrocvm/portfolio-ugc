@@ -127,6 +127,46 @@ export async function updateOutreachDraft(id: string, subject: string, body: str
   return { ok: true };
 }
 
+/** Trocar o destinatário antes de enviar.
+ *
+ *  A pesquisa acerta na maior parte das vezes e às vezes não: a Shopkit tem o
+ *  email de marketing na primeira página do Google e a abordagem saiu para
+ *  «suporte@». Quando ela o encontra em dez segundos, corrigir tem de demorar
+ *  os mesmos dez — não uma nova pesquisa do sistema.
+ *
+ *  Um endereço escrito por ela é a fonte mais forte que existe, e fica marcado
+ *  como tal: `contact_email_set_by_carol` separa o que ela sabe do que o
+ *  sistema achou. */
+export async function updateOutreachEmail(id: string, email: string): Promise<Result & { note?: string }> {
+  await requireUser();
+  if (!Uuid.safeParse(id).success) return { error: 'Candidata inválida.' };
+
+  const endereco = email.trim().toLowerCase();
+  const { mailboxFit, MAILBOX_FIT_NOTE } = await import('@/modules/outreach/mailcheck');
+  const { checkEmail } = await import('@/modules/outreach/mailcheck-dns');
+
+  // O DNS é a única verificação real que existe sem serviço pago, e é rápida.
+  // Um endereço que o domínio não recebe é uma devolução garantida.
+  const verificado = await checkEmail(endereco, 'website').catch(() => null);
+  if (verificado && !verificado.valid) return { error: verificado.reason };
+
+  const db = await supabaseServer();
+  const { error } = await db
+    .from('outreach_candidate')
+    .update({
+      contact_email: endereco,
+      contact_email_set_by_carol: true,
+      email_confidence: 'verified',
+      contact_source: 'escrito por ela',
+    })
+    .eq('id', id);
+  if (error) return { error: 'Não consegui salvar o endereço.' };
+
+  revalidatePath('/dashboard/outreach');
+  const fit = mailboxFit(endereco);
+  return { ok: true, note: fit === 'target' ? undefined : `Atenção: ${MAILBOX_FIT_NOTE[fit]}.` };
+}
+
 export async function approveOutreach(id: string): Promise<Result> {
   await requireUser();
   if (!Uuid.safeParse(id).success) return { error: 'Candidata inválida.' };

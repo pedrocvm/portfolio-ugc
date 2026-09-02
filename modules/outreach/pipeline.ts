@@ -8,6 +8,8 @@ import { focusMatch } from './intent';
 import { discoverBrands, type Discovered } from './discovery';
 import { buildKnownSet, gmailHasHistory } from './suppression';
 import { styleProfileFresh } from './style';
+import { chooseFromResearch } from './mailcheck';
+import { asJson } from '@/lib/supabase/json';
 
 /** A corrida diária.
  *
@@ -196,12 +198,13 @@ export async function runDailyOutreach(
     }
     // O nível de confiança que o modelo declarou é um palpite. Isto pergunta
     // ao DNS se o domínio recebe email, que é a causa mais comum de devolução.
-    const contactEmail = s.research.contact?.email ?? null;
+    // Quem escolhe a caixa é o código, não o modelo: `suporte@` e `marketing@`
+    // passam os dois na verificação de forma e de MX, e o que os separa é o
+    // departamento.
+    const escolha = chooseFromResearch(s.research.contact);
+    const contactEmail = escolha.chosen?.address ?? null;
     const check = contactEmail
-      ? await checkEmail(
-          contactEmail,
-          /site|website|página|homepage/i.test(s.research.contact?.source ?? '') ? 'website' : 'research',
-        )
+      ? await checkEmail(contactEmail, escolha.chosen?.source ?? 'research')
       : null;
 
     const written = await writeOutreachEmail(s, style);
@@ -227,6 +230,8 @@ export async function runDailyOutreach(
   // Só estes três campos: `quality` chama-se igual nas duas listas e quer dizer
   // coisas diferentes — a nota de ordenação numa, a nota do email na outra.
   type Base = Pick<(typeof shortlist)[number], 'candidate' | 'research' | 'fit'>;
+  const escolhaDe = (r: Base) => chooseFromResearch(r.research.contact);
+
   const toRow = (
     r: Base,
     rank: number,
@@ -260,7 +265,8 @@ export async function runDailyOutreach(
     researched_at: new Date().toISOString(),
     contact_name: r.research.contact?.name ?? null,
     contact_role: r.research.contact?.role ?? null,
-    contact_email: r.research.contact?.email ?? null,
+    contact_email: escolhaDe(r).chosen?.address ?? null,
+    contact_email_options: asJson(escolhaDe(r).alternatives),
     // A verificação real ganha ao que o modelo achou.
     email_confidence: check?.confidence ?? r.research.contact?.confidence ?? 'unknown',
     contact_source: check

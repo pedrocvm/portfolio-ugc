@@ -2909,6 +2909,8 @@ export type Database = {
           brand_id: string | null
           city: string | null
           contact_email: string | null
+          contact_email_options: Json
+          contact_email_set_by_carol: boolean
           contact_name: string | null
           contact_role: string | null
           contact_source: string | null
@@ -2972,6 +2974,8 @@ export type Database = {
           brand_id?: string | null
           city?: string | null
           contact_email?: string | null
+          contact_email_options?: Json
+          contact_email_set_by_carol?: boolean
           contact_name?: string | null
           contact_role?: string | null
           contact_source?: string | null
@@ -3035,6 +3039,8 @@ export type Database = {
           brand_id?: string | null
           city?: string | null
           contact_email?: string | null
+          contact_email_options?: Json
+          contact_email_set_by_carol?: boolean
           contact_name?: string | null
           contact_role?: string | null
           contact_source?: string | null

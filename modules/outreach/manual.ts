@@ -9,6 +9,8 @@ import {
   parseManualIntent, relevanceFor, opportunityFor, sameCountry, type ManualIntent,
 } from './intent';
 import { researchCandidate } from './research';
+import { chooseFromResearch } from './mailcheck';
+import { asJson } from '@/lib/supabase/json';
 
 /** A busca que ela pediu.
  *
@@ -143,7 +145,9 @@ export async function runManualSearch(
       creativeGap: r.research.fit_signals?.authentic_context ?? null,
       digitalPresence: r.research.fit_signals?.paid_maturity ?? null,
       reachable: Boolean(
-        r.research.contact?.email || r.research.contact?.whatsapp || r.research.contact?.instagram,
+        chooseFromResearch(r.research.contact).chosen ||
+          r.research.contact?.whatsapp ||
+          r.research.contact?.instagram,
       ),
       sameLanguage: true,
     });
@@ -181,7 +185,8 @@ export async function runManualSearch(
       researched_at: new Date().toISOString(),
       contact_name: r.research.contact?.name ?? null,
       contact_role: r.research.contact?.role ?? null,
-      contact_email: r.research.contact?.email ?? null,
+      contact_email: chooseFromResearch(r.research.contact).chosen?.address ?? null,
+      contact_email_options: asJson(chooseFromResearch(r.research.contact).alternatives),
       email_confidence: r.research.contact?.confidence ?? 'unknown',
       contact_source: r.research.contact?.source ?? null,
       language: 'pt',

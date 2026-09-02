@@ -5968,6 +5968,66 @@ a.aiSource:hover {
   resize: vertical;
   min-height: 180px;
 }
+
+/* Trocar o destinatário. A pesquisa acerta na maior parte das vezes; quando
+   erra, ela já sabe o endereço certo e corrigir tem de custar um toque. */
+.outTo {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--areia2);
+  border-radius: 10px;
+  background: var(--areia);
+}
+.outTo label {
+  font-size: 13px;
+  color: var(--tinta2);
+}
+.outToOpts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.outToOpts button {
+  padding: 6px 10px;
+  min-height: 32px;
+  border: 1px solid var(--areia2);
+  border-radius: 999px;
+  background: var(--papel);
+  font: inherit;
+  font-size: 13px;
+  color: var(--tinta);
+  cursor: pointer;
+}
+.outToOpts button:hover {
+  border-color: var(--tinta2);
+}
+.outToActs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* O «trocar» vive dentro de uma frase, por isso é um link e não um botão — mas
+   continua a ter os 44px de alvo no telefone. */
+.outLink {
+  border: 0;
+  background: none;
+  padding: 4px 2px;
+  font: inherit;
+  font-size: inherit;
+  color: var(--tinta2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .outLink {
+    display: inline-block;
+    min-height: 44px;
+    line-height: 44px;
+  }
+}
 .outMail input:focus-visible,
 .outMail textarea:focus-visible {
   outline: 2px solid var(--umbra);
