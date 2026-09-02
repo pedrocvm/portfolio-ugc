@@ -46,6 +46,7 @@ export function observeEdit(ai: string, final: string): string[] {
     [/\bcontact(o|ar)\b/i, '«contacto» → «contato»'],
     [/\bestá a [a-zà-ú]+[aei]r\b/i, '«está a fazer» → «está fazendo»'],
     [/\bdiga-me\b/i, '«diga-me» → «me diga»'],
+    [/\brepar(ei|ou|aste|ámos)\b/i, '«reparei» → «percebi» ou «notei»'],
   ];
   for (const [re, nota] of lusitanismos) {
     if (re.test(ai) && !re.test(final)) notas.push(`tira ${nota}`);

@@ -679,9 +679,12 @@ const LINGUA = `
 IDIOMA — regra dura:
 - Português do Brasil, SEMPRE. Também para marcas portuguesas.
   Nunca «telemóvel», «ecrã», «ficheiro», «portefólio», «equipa», «de si»,
-  «contacto», «diga-me», nem «está a fazer».
+  «contacto», «diga-me», nem «reparei».
   Usa «celular», «tela», «arquivo», «portfólio», «equipe», «de você»,
-  «contato», «me diga», «está fazendo».
+  «contato», «me diga», «percebi» ou «notei».
+- Gerúndio, sempre que couber. «Está fazendo», nunca «está a fazer».
+  «Passei anos anotando», nunca «passei anos a anotar». «Continuo acompanhando»,
+  nunca «continuo a acompanhar».
 - Contato internacional que escreve em inglês: inglês natural, do nível dos
   exemplos reais dela.
 - Formal não é europeu: com uma marca portuguesa o tom é mais formal, o
@@ -711,7 +714,9 @@ export const readThread: Prompt<
   ThreadIntel
 > = {
   task: 'thread_intel',
-  version: 'v2',
+  // v3: a voz ganha vocabulário — «percebi» e não «reparei», e o gerúndio em
+  // vez de «a» mais infinitivo.
+  version: 'v3',
   tier: 'reasoning',
   schema: ThreadIntelSchema,
   maxTokens: 2600,
@@ -963,7 +968,8 @@ export const planDailyContent: Prompt<
   // v3: o que ela recusou passa a entrar no prompt. Sem isto, recusar era um
   // estado morto — a ideia saía da tela e voltava no dia seguinte com outras
   // palavras.
-  version: 'v3',
+  // v4: o gerúndio deixa de ser subentendido e o vocabulário fica nomeado.
+  version: 'v4',
   tier: 'reasoning',
   schema: DailyContentPlanSchema,
   maxTokens: 6000,
@@ -976,9 +982,13 @@ uma ideia para Instagram e uma para TikTok.
 
 Português do Brasil, sempre. Ela é brasileira e o público dela também.
 Nunca «ementa», «ecrã», «telemóvel», «ficheiro», «casa de banho», «equipa»,
-«miúdos», «giro», «fixe», nem «está a fazer».
+«miúdos», «giro», «fixe», «reparei», nem «está a fazer».
 Diz «cardápio», «tela», «celular», «arquivo», «banheiro», «equipe»,
-«crianças», «legal», «está fazendo».
+«crianças», «legal», «percebi», «está fazendo».
+
+O gerúndio é a forma natural dela. «Passei anos anotando», não «passei anos a
+anotar». «A casa virando casa», não «a casa a ficar casa». Sempre que a frase
+puder ser gerúndio, é gerúndio.
 
 Ela mora no Porto e o cenário é português — isso aparece no que se vê, nunca
 na forma de falar.

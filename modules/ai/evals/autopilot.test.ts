@@ -374,7 +374,7 @@ test('recusa · sem recusas o prompt não inventa um padrão', () => {
 });
 
 test('recusa · mudar o que se pede obriga a subir a versão do prompt', () => {
-  assert.equal(registry.planDailyContent.version, 'v3');
+  assert.equal(registry.planDailyContent.version, 'v4');
 });
 
 test('recusa · o plano é escrito em português do Brasil, sem exceção', () => {
@@ -382,7 +382,8 @@ test('recusa · o plano é escrito em português do Brasil, sem exceção', () =
   // A regra da língua estava só no bloco partilhado e não chegava aqui.
   const sistema = registry.planDailyContent.system;
   assert.match(sistema, /Português do Brasil, sempre/);
-  for (const palavra of ['ementa', 'ecrã', 'telemóvel', 'ficheiro', 'equipa']) {
+  assert.match(sistema, /O gerúndio é a forma natural dela/);
+  for (const palavra of ['ementa', 'ecrã', 'telemóvel', 'ficheiro', 'equipa', 'reparei']) {
     assert.ok(sistema.includes(`«${palavra}»`), `o prompt não proíbe «${palavra}»`);
   }
 });

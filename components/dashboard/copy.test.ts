@@ -77,7 +77,7 @@ test('há telas para verificar', () => {
  *  `\becrã\b` nunca casa. É por isso que o corte é feito com `[^\p{L}]`. */
 test('nenhuma tela fala português europeu', () => {
   const achados = procurar(
-    /(^|[^\p{L}])(ecrãs?|ficheiros?|telemóve(l|is)|utilizador(es)?|portefólios?|equipa|ementa|rapariga|morada|apelido|connosco|percebeste|sítios?|palavras?-passe)($|[^\p{L}])/iu,
+    /(^|[^\p{L}])(ecrãs?|ficheiros?|telemóve(l|is)|utilizador(es)?|portefólios?|equipa|ementa|rapariga|morada|apelido|connosco|percebeste|sítios?|palavras?-passe|repara|reparei|reparaste)($|[^\p{L}])/iu,
   );
   assert.deepEqual(achados, [], `português europeu: ${achados.join(', ')}`);
 });

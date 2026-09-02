@@ -58,6 +58,14 @@ test('as correções de português europeu viram padrão', () => {
   assert.ok(notas.some((n) => n.includes('«diga-me»')));
 });
 
+test('«reparei» é uma correção de voz, não de variante', () => {
+  const notas = observeEdit(
+    'Reparei que vocês lançaram a coleção nova esta semana.',
+    'Percebi que vocês lançaram a coleção nova essa semana.',
+  );
+  assert.ok(notas.some((n) => n.includes('«reparei»')), notas.join(' | '));
+});
+
 test('o gerúndio também é uma correção que se aprende', () => {
   const notas = observeEdit('O produto está a caminho e a equipa está a preparar o briefing.', 'O produto está a caminho e a equipe está preparando o briefing.');
   assert.ok(notas.some((n) => n.includes('«equipa»')));

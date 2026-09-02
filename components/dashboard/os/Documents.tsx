@@ -100,7 +100,7 @@ export default function Documents({
 
       {warnings.length ? (
         <div className="osWarn" data-tone="info">
-          Proposta criada, mas repara:
+          Proposta criada, mas veja:
           <ul className="osList">
             {warnings.map((w) => <li key={w}>{w}</li>)}
           </ul>
