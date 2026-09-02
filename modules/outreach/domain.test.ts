@@ -132,14 +132,19 @@ const goodEmail = {
   brandName: 'Cecotec',
   product: 'Conga Windroid',
   body:
-    'Olá Camila, vi que a Cecotec lançou o Conga Windroid e que os anúncios mostram o robô a limpar, ' +
-    'mas nenhum mostra a parte chata que ele elimina — subir a um escadote para limpar vidros. ' +
-    'Sou a Carol, crio conteúdo UGC para marcas de tecnologia doméstica, e gravo em casa com uma ' +
-    'rotina real. A ideia seria mostrar o antes e o depois do vidro numa manhã normal, sem estúdio. ' +
-    'Deixo aqui exemplos do que costumo fazer. Faz sentido falarmos esta semana?',
+    'Olá Camila! 😊\n\n' +
+    'Meu nome é Carolina Queiroz, sou criadora de conteúdo UGC e trabalho criando vídeos para ' +
+    'marcas de um jeito mais natural, com cara de conteúdo que a gente realmente pararia para ' +
+    'assistir.\n\n' +
+    'Vi que a Cecotec lançou o Conga Windroid e que os anúncios mostram o robô limpando, mas ' +
+    'nenhum mostra a parte chata que ele elimina — subir num escadote para limpar vidros.\n\n' +
+    'A ideia seria mostrar o antes e o depois do vidro numa manhã normal, gravado em casa, ' +
+    'sem estúdio.\n\n' +
+    'Portfólio:\nhttps://carolqueiroz.pt/\n\n' +
+    'Faz sentido falarmos esta semana?\n\nObrigada!\nCarolina',
   claims: [
     { text: 'lançou o Conga Windroid', sourceId: 'src1' },
-    { text: 'anúncios mostram o robô a limpar', sourceId: 'src2' },
+    { text: 'anúncios mostram o robô limpando', sourceId: 'src2' },
   ],
 };
 
@@ -162,6 +167,30 @@ test('um email que serve para qualquer empresa é rejeitado', () => {
   assert.equal(r.pass, false);
   assert.ok(r.failures.some((f) => f.includes('genéricas')));
   assert.ok(r.failures.some((f) => f.includes('produto')));
+});
+
+test('sem a apresentação dela na abertura, não passa', () => {
+  const r = scoreEmail({
+    ...goodEmail,
+    body: goodEmail.body.replace(
+      /Meu nome é Carolina Queiroz, sou criadora de conteúdo UGC e trabalho criando/,
+      'Trabalho com UGC e crio',
+    ),
+  });
+  assert.equal(r.pass, false);
+  assert.ok(r.failures.includes('não se apresenta na abertura'));
+});
+
+test('a apresentação em corporativês é apanhada como genérica', () => {
+  const r = scoreEmail({
+    ...goodEmail,
+    body: goodEmail.body.replace(
+      'sou criadora de conteúdo UGC',
+      'sou apaixonada por criação de conteúdo',
+    ),
+  });
+  assert.equal(r.pass, false);
+  assert.ok(r.failures.some((f) => f.includes('genéricas')));
 });
 
 test('uma afirmação sem fonte reprova o email', () => {

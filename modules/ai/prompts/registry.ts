@@ -633,7 +633,9 @@ export const outreachEmail: Prompt<
   OutreachEmail
 > = {
   task: 'outreach_email',
-  version: 'v1',
+  // v2: a apresentação da Carol passou a ser estrutural. Um email de primeiro
+  // contato que não diz quem está escrevendo obriga quem lê a adivinhar.
+  version: 'v2',
   tier: 'reasoning',
   schema: OutreachEmailSchema,
   maxTokens: 1600,
@@ -641,9 +643,57 @@ export const outreachEmail: Prompt<
 
 Escreves o primeiro email de abordagem, na voz da Carol.
 
-A VOZ vem do perfil e dos exemplos reais que recebes. Segue a estrutura, o
-comprimento e o tom dela. NÃO copies texto dos exemplos: servem para saber como
-ela escreve, não para reciclar frases.
+A VOZ vem do perfil e dos exemplos reais que recebes. Segue o comprimento e o
+tom dela. NÃO copies texto dos exemplos: servem para saber como ela escreve,
+não para reciclar frases. A ESTRUTURA é a de baixo e ganha aos exemplos — eles
+são anteriores a esta regra e quase nenhum traz a apresentação dela.
+
+## Estrutura — a apresentação dela abre sempre
+
+1. Saudação: «Olá, equipe! 😊», ou «Olá, [Nome]! 😊» quando há pessoa.
+2. A APRESENTAÇÃO DELA, uma ou duas frases, logo depois da saudação.
+3. O que ela viu nesta empresa, concreto.
+4. A ideia que nasceu daí, e a explicação curta.
+5. O portfólio, em linha própria:
+   Portfólio:
+   https://carolqueiroz.pt/
+6. Um pedido simples.
+7. «Obrigada!» e «Carolina».
+
+A apresentação responde a três coisas e mais nada: quem ela é, o que faz, e por
+que está escrevendo. Não é pitch nem currículo, e não engorda a abertura.
+
+O registro é este — referência de tom, nunca frase fixa a repetir:
+«Meu nome é Carolina Queiroz, sou criadora de conteúdo UGC e trabalho criando
+vídeos para marcas de um jeito mais natural, com cara de conteúdo que a gente
+realmente pararia para assistir.»
+
+Adapta o enquadramento ao setor desta marca:
+- hotelaria e turismo: conteúdo que mostra experiências, lugares e produtos como
+  quem esteve lá;
+- SaaS e tecnologia: UGC que pega um produto que parece complicado e deixa ele
+  simples de entender;
+- fitness, lifestyle e o resto: ajusta a frase ao contexto da marca.
+Adaptar é mudar o enquadramento. Nunca acrescenta clientes, campanhas,
+resultados ou experiência que ela não tem.
+
+Em inglês, o mesmo registro:
+«I'm Carolina Queiroz, a UGC creator based in Portugal. I create natural,
+social-first videos for brands — content that feels like something people would
+actually stop to watch.»
+Em espanhol, a mesma adaptação natural. Nunca traduzas à letra.
+
+Na apresentação, nunca:
+- «apaixonada por», «conectar marcas e pessoas», «conteúdos autênticos e
+  envolventes», «presença digital», «elevar a marca», «se destacar no mercado»,
+  «criar conexões genuínas», «contar histórias impactantes»;
+- dizer que acompanha a marca há tempos ou que é fã dela, se isso não estiver
+  nas fontes;
+- «especializada em ajudar marcas a» e o resto do cold email de template.
+
+E não repete o que ela já disse: se a apresentação diz que ela faz UGC para
+marcas, o corpo do email não volta com «trabalho com UGC», «crio conteúdo para
+marcas» ou «gostaria de apresentar o meu trabalho».
 
 O email tem de ser impossível de reutilizar noutra empresa trocando o nome.
 Nomeia a marca e nomeia o produto concreto. Se não tens nada de concreto para

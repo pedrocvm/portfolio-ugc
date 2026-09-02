@@ -186,6 +186,18 @@ const GENERIC = [
   'i love your brand',
   'i am a big fan',
   'i would love to collaborate',
+  // Apresentação de IA. A abertura passou a ser obrigatória, e uma abertura
+  // obrigatória escrita em corporativês é pior do que não haver nenhuma.
+  'apaixonada por',
+  'conectar marcas e pessoas',
+  'conteúdos autênticos e envolventes',
+  'presença digital',
+  'elevar a marca',
+  'destacar-se no mercado',
+  'se destacar no mercado',
+  'criar conexões genuínas',
+  'contar histórias impactantes',
+  'especializada em ajudar marcas',
 ];
 
 const lower = (s: string) => s.toLowerCase();
@@ -204,6 +216,11 @@ export function scoreEmail(input: EmailInput): QualityResult {
   scores.personalization = (namesBrand ? 50 : 0) + (namesProduct ? 50 : 0);
   if (!namesBrand) failures.push('não nomeia a marca');
   if (!namesProduct) failures.push('não nomeia um produto ou funcionalidade concreta');
+
+  // Apresentação: ela diz quem é logo na abertura. Metade do corpo e não o
+  // corpo todo, senão a assinatura no fim dava a pergunta por respondida.
+  const introduces = /carolina/i.test(input.body.slice(0, Math.ceil(input.body.length / 2)));
+  if (!introduces) failures.push('não se apresenta na abertura');
 
   // Genericidade: cada frase de catálogo tira pontos.
   const hits = GENERIC.filter((g) => body.includes(g));
@@ -242,9 +259,10 @@ export function scoreEmail(input: EmailInput): QualityResult {
       scores.cta * 0.075,
   );
 
-  // Personalização e factualidade não se compensam com o resto: um email
-  // impecável sobre fatos inventados continua sendo um email a rejeitar.
-  const hardFail = scores.personalization < 50 || scores.factuality < 70 || scores.genericness < 60;
+  // Apresentação, personalização e factualidade não se compensam com o resto: um
+  // email impecável sobre fatos inventados continua sendo um email a rejeitar.
+  const hardFail =
+    !introduces || scores.personalization < 50 || scores.factuality < 70 || scores.genericness < 60;
 
   return { pass: !hardFail && score >= 70, score, failures, scores };
 }
