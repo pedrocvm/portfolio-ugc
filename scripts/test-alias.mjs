@@ -12,8 +12,15 @@ import { pathToFileURL } from 'node:url';
 const ROOT = pathToFileURL(`${process.cwd()}/`).href;
 const HAS_EXTENSION = /\.[cm]?[jt]sx?$|\.json$/;
 
+/** `server-only` é um marcador que rebenta ao ser importado fora do React
+ *  Server. Nos testes vale o mesmo que no servidor: nada. Sem isto, nenhum
+ *  módulo marcado server-only se consegue testar. */
+const SERVER_ONLY = new URL('node_modules/server-only/empty.js', ROOT).href;
+
 registerHooks({
   resolve(specifier, context, next) {
+    if (specifier === 'server-only') return next(SERVER_ONLY, context);
+
     const isAlias = specifier.startsWith('@/');
     const isRelative = specifier.startsWith('./') || specifier.startsWith('../');
     if (!isAlias && !isRelative) return next(specifier, context);

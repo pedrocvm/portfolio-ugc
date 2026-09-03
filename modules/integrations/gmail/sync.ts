@@ -4,7 +4,9 @@ import type { Flags } from '@/lib/flags';
 import { asJson } from '@/lib/supabase/json';
 import { supabaseService } from '@/lib/supabase/service';
 import { ingestMessage, type NormalizedMessage } from '@/modules/inbox/ingest';
-import { GmailError, getMessage, getProfile, listHistory, listMessages, parseMessage } from './client';
+import {
+  GmailError, getProfile, listHistory, listMessages, messageOrNull, notFound, parseMessage,
+} from './client';
 import { accessTokenFor, listMailboxes, markError, updateCursor, type Mailbox } from './oauth';
 
 /** Sincronização incremental do Gmail.
@@ -184,7 +186,7 @@ async function syncMailbox(flags: Flags, mailbox: Mailbox, options: { limit?: nu
         // 404 no histórico significa que o cursor é velho demais para o Google.
         // Recomeçar por janela é a recuperação certa; a idempotência garante
         // que reprocessar o que já existe não duplica nada.
-        if (error instanceof GmailError && error.status === 404) {
+        if (notFound(error)) {
           const fallback = await listMessages(
             auth.token,
             `${BASE_QUERY} newer_than:14d`,
@@ -201,9 +203,15 @@ async function syncMailbox(flags: Flags, mailbox: Mailbox, options: { limit?: nu
     let duplicates = 0;
     let needsReview = 0;
     let irrelevant = 0;
+    let missing = 0;
 
     for (const ref of refs) {
-      const parsed = parseMessage(await getMessage(auth.token, ref.id));
+      const raw = await messageOrNull(auth.token, ref.id);
+      if (!raw) {
+        missing++;
+        continue;
+      }
+      const parsed = parseMessage(raw);
 
       const normalized: NormalizedMessage = {
         provider: 'gmail',
@@ -242,7 +250,9 @@ async function syncMailbox(flags: Flags, mailbox: Mailbox, options: { limit?: nu
       irrelevant,
       cursorBefore,
       cursorAfter: nextCursor,
-      detail: cursorBefore ? 'Sincronização incremental.' : 'Primeira sincronização, por janela.',
+      detail:
+        (cursorBefore ? 'Sincronização incremental.' : 'Primeira sincronização, por janela.') +
+        (missing ? ` ${missing} mensagem(ns) já não existem.` : ''),
     });
   } catch (error) {
     const code = error instanceof GmailError ? error.code : 'sync_failed';

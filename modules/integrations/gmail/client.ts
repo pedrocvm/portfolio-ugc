@@ -10,10 +10,22 @@ import { decodeEntities } from '@/lib/html';
 
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 
+/** O caminho vai na mensagem de propósito. «gmail_404:NOT_FOUND» sozinho não
+ *  diz se foi o perfil, o histórico ou uma mensagem — e sem isso um erro que
+ *  se repete de quinze em quinze minutos continua sem se conseguir diagnosticar. */
 export class GmailError extends Error {
-  constructor(readonly status: number, readonly code: string) {
-    super(`gmail_${status}:${code}`);
+  // Campos declarados um a um: o executor de testes do Node tira os tipos sem
+  // os transformar, e não sabe o que é uma propriedade de parâmetro.
+  readonly status: number;
+  readonly code: string;
+  readonly path: string;
+
+  constructor(status: number, code: string, path: string) {
+    super(`gmail_${status}:${code} (${path})`);
     this.name = 'GmailError';
+    this.status = status;
+    this.code = code;
+    this.path = path;
   }
 }
 
@@ -25,7 +37,7 @@ async function call<T>(token: string, path: string, init?: RequestInit): Promise
 
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: { message?: string; status?: string } } | null;
-    throw new GmailError(res.status, body?.error?.status ?? String(res.status));
+    throw new GmailError(res.status, body?.error?.status ?? String(res.status), path.split('?')[0]);
   }
   return (await res.json()) as T;
 }
@@ -48,6 +60,26 @@ export type RawMessage = {
 
 export const getMessage = (token: string, id: string) =>
   call<RawMessage>(token, `/messages/${id}?format=full`);
+
+/** Um 404 do Gmail quer sempre dizer «isto já não existe», e aparece em dois
+ *  lugares: um cursor velho demais para o histórico, e uma mensagem apagada. */
+export const notFound = (error: unknown) => error instanceof GmailError && error.status === 404;
+
+/** A mensagem, ou null se já não existir.
+ *
+ *  Apagar uma mensagem não apaga o registro dela no histórico do Google: o
+ *  `messagesAdded` continua nomeando-a durante dias. Com o `messages.get`
+ *  rebentando, uma única mensagem morta derrubava a sincronização inteira da
+ *  caixa e o cursor nunca avançava — a corrida seguinte batia na mesma
+ *  mensagem morta, de quinze em quinze minutos, para sempre. */
+export async function messageOrNull(token: string, id: string): Promise<RawMessage | null> {
+  try {
+    return await getMessage(token, id);
+  } catch (error) {
+    if (notFound(error)) return null;
+    throw error;
+  }
+}
 
 export type MessageRef = { id: string; threadId: string };
 
