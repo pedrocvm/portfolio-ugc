@@ -151,6 +151,12 @@ export const JOB_LABEL: Record<string, string> = {
   upsell: 'Upsell',
   insights: 'Procurar avisos',
   outreach: 'Procurar marcas',
+  triage: 'Ler os emails',
+  references: 'Referências',
+  trends: 'Tendências',
+  milestones: 'Marcos',
+  'content-plan': 'Plano de conteúdo',
+  morning: 'Preparar a manhã',
   all: 'Todos',
 };
 
@@ -165,6 +171,18 @@ export const AI_TASK_LABEL: Record<string, string> = {
   creative_hypothesis: 'Hipóteses criativas',
   parse_capture: 'Ler captura',
   upsell_scan: 'Procurar upsell',
+  thread_intel: 'Ler conversa',
+  creative_references: 'Referências criativas',
+  brand_ready_idea: 'Ideia para a marca',
+  creator_trends: 'Tendências',
+  creator_profile: 'Retrato de criadora',
+  daily_content_plan: 'Plano de conteúdo',
+  content_multiplier: 'Conteúdo da mesma gravação',
+  three_hooks: 'Três ganchos',
+  reference_deconstruction: 'Destrinchar referência',
+  insights_screenshot: 'Ler print dos Insights',
+  broll_tags: 'Etiquetar B-roll',
+  braga_places: 'Lugares de Braga',
 };
 
 export const jobLabel = (id: string) => JOB_LABEL[id] ?? id;

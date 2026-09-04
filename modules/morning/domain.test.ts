@@ -166,6 +166,14 @@ test('doze tendências não viram doze cartões', () => {
   });
   assert.equal(bom.ok, true);
 
+  // Três cabem: Instagram, TikTok e o Reels Test feito com o que já existe.
+  const tres = researchDidNotBecomeTasks({
+    trendsFound: 12,
+    referencesFound: 21,
+    decisions: Array.from({ length: 3 }, (_, i) => d({ id: String(i), kind: 'content' })),
+  });
+  assert.equal(tres.ok, true);
+
   const mau = researchDidNotBecomeTasks({
     trendsFound: 12,
     referencesFound: 21,

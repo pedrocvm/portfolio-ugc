@@ -29,7 +29,7 @@ export async function refreshMilestones(homeCountry = 'PT'): Promise<MilestoneRu
     db
       .from('activity_event')
       .select('id, event_type, brand_id, occurred_at, summary, payload, brand:brand_id ( name )')
-      .in('event_type', ['reply.received', 'product.received', 'opportunity.lost', 'content.approved', 'revision.requested'])
+      .in('event_type', ['reply.received', 'product.received', 'opportunity.lost', 'opportunity.won', 'content.delivered', 'content.approved', 'revision.requested'])
       .order('occurred_at', { ascending: true })
       .limit(400),
   ]);

@@ -1,18 +1,18 @@
 import type { Prompt } from '../gateway';
 import {
-  BrandCreativeIdeaSchema, BriefSchema, CaptureSchema, CommercialExtractionSchema, ContentMultiplierSchema,
+  BragaPlacesSchema, BrandCreativeIdeaSchema, BriefSchema, BrollTagsSchema, CaptureSchema, CommercialExtractionSchema, ContentMultiplierSchema,
   CreativeReferencesSchema, CreativeSchema, CreatorProfileSchema, CreatorTrendsSchema,
   DailyContentPlanSchema, DailyReadSchema,
-  DossierSchema,
+  DossierSchema, InsightsScreenshotSchema,
   NegotiationSchema, NextActionSchema, OutreachEmailSchema, OutreachResearchSchema,
-  OutreachStyleSchema, ReplyDraftSchema, ThreadClassificationSchema, ThreadIntelSchema, UpsellSchema,
-  type BrandCreativeIdea, type BrandDossier, type CaptureExtraction, type CommercialExtraction,
+  OutreachStyleSchema, ReferenceDeconstructionSchema, ReplyDraftSchema, ThreadClassificationSchema, ThreadIntelSchema, ThreeHooksSchema, UpsellSchema,
+  type BragaPlaces, type BrandCreativeIdea, type BrandDossier, type BrollTags, type CaptureExtraction, type CommercialExtraction,
   type ContentMultiplier, type CreativeHypotheses, type CreativeReferences, type CreatorProfileRead,
   type CreatorTrends, type DailyContentPlan,
-  type DailyRead,
+  type DailyRead, type InsightsScreenshot,
   type NegotiationAnalysis, type NextActionRecommendation, type OutreachEmail,
-  type OutreachResearch, type OutreachStyle, type ParsedBrief, type ReplyDraft,
-  type ThreadClassification, type ThreadIntel, type UpsellScan,
+  type OutreachResearch, type OutreachStyle, type ParsedBrief, type ReferenceDeconstruction, type ReplyDraft,
+  type ThreadClassification, type ThreadIntel, type ThreeHooks, type UpsellScan,
 } from '../schemas';
 
 /** O registro de prompts. Cada um tem versão imutável: mudar o texto obriga a
@@ -1032,6 +1032,14 @@ export const planDailyContent: Prompt<
     exemplars: string;
     instagramBrief: string;
     tiktokBrief: string;
+    /** A mentoria, aplicada: os dois eixos, os três ganchos, a história. */
+    playbook: string;
+    /** O que está em falta hoje — função e modo. */
+    balance: string;
+    /** Os takes que já existem no banco de B-roll. */
+    broll: string;
+    /** Quantos Reels Test cabem hoje, e porquê. Zero quer dizer nenhum. */
+    testPlan: string;
   },
   DailyContentPlan
 > = {
@@ -1043,10 +1051,13 @@ export const planDailyContent: Prompt<
   // estado morto — a ideia saía da tela e voltava no dia seguinte com outras
   // palavras.
   // v4: o gerúndio deixa de ser subentendido e o vocabulário fica nomeado.
-  version: 'v4',
+  // v5: a mentoria de 01/09/2026 entra como playbook — função e modo, três
+  // ganchos, herói/vilão/guia, Reels Test com B-roll que já existe. A terceira
+  // peça do dia é o teste, e pode não existir.
+  version: 'v5',
   tier: 'reasoning',
   schema: DailyContentPlanSchema,
-  maxTokens: 6000,
+  maxTokens: 9000,
   system: `${CAROL}
 
 És o director criativo do perfil @carolxqueiroz. Escolhes o que ela grava hoje:
@@ -1142,11 +1153,64 @@ for visual, mete VOICE-OVER dela — sem voz, ela desaparece do próprio vídeo.
 NÃO INVENTES CONQUISTAS. Conteúdo de jornada só a partir dos marcos reais que
 recebes. Lista vazia: escolhe outro pilar.
 
+## A mentoria, aplicada
+
+Cada ideia declara uma FUNÇÃO (\`content_function\`) e um ou dois MODOS
+(\`editorial_modes\`). São eixos diferentes: uma peça pode ser educar/reter em
+modo autoridade + informação; outra, atrair/conectar em modo entretenimento +
+pessoal. Respeita o que está em falta hoje.
+
+Cada ideia traz os TRÊS GANCHOS em \`hooks\`: o visual (o que aparece e se mexe
+no primeiro segundo), o escrito (o texto na tela) com o tipo, e o falado (a
+primeira frase). Dizem coisas diferentes e trabalham juntos. Um B-roll mudo
+tem \`spoken: null\` — é uma escolha, não um esquecimento.
+
+Cada ideia traz a HISTÓRIA em \`story\`: herói (quem vê, com o problema), vilão
+(o problema — NUNCA a concorrência nem outra creator), guia (ela ou o produto).
+O \`outline\` é o que ela lê: gancho, problema, desenvolvimento, prova, payoff,
+remate.
+
+\`proof_of_craft\` responde à pergunta da mentora — «estou mostrando o que está
+por trás do meu trabalho?» — em uma frase: o processo, a decisão, o bastidor.
+Vazio quando a peça não mostra nada disso. Uma ideia de conversão sem bastidor
+vale menos.
+
+Conteúdo técnico é PROVA DE OFÍCIO, nunca aula: «quase descartei esse take
+pela luz — foi isto que mudei», bruto → ajuste → final. Nunca «5 dicas de
+iluminação», nunca «3 transições que você precisa aprender».
+
+REELS TEST (\`reels_test\`): a terceira peça do dia, quando cabe. É atração de
+público frio: universal, sem contexto prévio, curta. Formato: B-roll de 5 a 7
+segundos com gancho escrito e legenda que entrega a solução — e B-roll que JÁ
+EXISTE no banco, antes de pedir gravação nova. Remate simples: seguir, salvar,
+comentar. Nunca conversão, portfólio, «me contrata» ou link na bio. Se o plano
+do dia diz zero testes, devolve \`reels_test: null\`. \`reels_test_candidate\`
+em cada ideia diz se ELA serviria para teste; a de conversão nunca serve.
+
+Inglês só na faixa de experiência: \`language: 'en'\` apenas quando o plano o
+pedir. O feed não muda de língua.
+
+Feedback de marca só vira conteúdo com permissão registada. Sem ela, a ideia
+mostra o processo, não cita a marca.
+
 ${HONESTY}`,
   render: (i) => `Hoje: ${i.today}
 
 ## Estratégia de conteúdo dela
 ${i.strategy}
+
+## A mentoria
+${i.playbook}
+
+## O que está em falta hoje
+${i.balance}
+
+## B-roll que já existe
+Usa antes de pedir gravação nova. Cada linha é um take com as etiquetas.
+${i.broll || '(nenhum no banco — o teste, se houver, pede gravação curta)'}
+
+## Reels Test hoje
+${i.testPlan}
 
 ## Retrato de criadora
 ${i.profile}
@@ -1241,4 +1305,130 @@ ${i.shots}
 
 Perfil dela:
 ${i.profile}`,
+};
+
+
+/* ── Content OS ─────────────────────────────────────────────────────────── */
+
+export const threeHooks: Prompt<{ topic: string; context: string; playbook: string }, ThreeHooks> = {
+  task: 'three_hooks',
+  version: 'v1',
+  tier: 'fast',
+  schema: ThreeHooksSchema,
+  maxTokens: 800,
+  system: `${CAROL}
+
+Escreves os três ganchos de um vídeo curto dela, em português do Brasil:
+
+- VISUAL: o que aparece e se mexe no primeiro segundo. Um plano, não uma frase.
+- ESCRITO: o texto na tela. Curto, com tensão. Diz de que tipo é.
+- FALADO: a primeira frase dita. Nulo se a peça não fala.
+
+Os três dizem coisas DIFERENTES e trabalham juntos: o olho prende, a leitura
+segura, a voz explica. Escrito igual ao falado é um gancho só.
+
+Nunca «5 dicas», nunca «como conseguir», nunca aula. Ela mostra; não ensina.
+
+${HONESTY}`,
+  render: (i) => `Tema ou ideia: ${i.topic}
+
+Contexto:
+${i.context || '(nenhum)'}
+
+Regras da mentoria:
+${i.playbook}`,
+};
+
+export const deconstructReference: Prompt<{ reference: string; strategy: string; playbook: string }, ReferenceDeconstruction> = {
+  task: 'reference_deconstruction',
+  version: 'v1',
+  tier: 'reasoning',
+  schema: ReferenceDeconstructionSchema,
+  maxTokens: 2500,
+  system: `${CAROL}
+
+Destrinchas um conteúdo validado — de outro creator, de uma marca, de onde for —
+pelo método da mentora: gancho, gancho visual, gancho escrito, gancho falado,
+estrutura, ritmo, ângulo, transições, motor emocional, porque funciona, o que
+adaptar.
+
+Extrais a LÓGICA, nunca a fala. O que se copia é o mecanismo; as palavras, o
+tema e a cara são dela. A última pergunta é sempre a mesma: «como isto vira
+Carol?» — com o território dela lá dentro (dez anos de sala, testar sem
+facilitar, a casa, a pele, Braga) e nunca como aula para creators.
+
+Se o texto não descrever o vídeo com detalhe suficiente, diz o que falta em
+\`do_not_copy\` em vez de inventar o que não viste.
+
+${HONESTY}`,
+  render: (i) => `O conteúdo a destrinchar:
+"""
+${i.reference}
+"""
+
+A estratégia dela:
+${i.strategy}
+
+A mentoria:
+${i.playbook}`,
+};
+
+export const readInsightsScreenshot: Prompt<{ hint: string }, InsightsScreenshot> = {
+  task: 'insights_screenshot',
+  version: 'v1',
+  tier: 'fast',
+  schema: InsightsScreenshotSchema,
+  maxTokens: 1200,
+  system: `Lês um print dos Insights do Instagram ou do TikTok e devolves os números
+que estão MESMO no print.
+
+REGRAS:
+- O que não está visível é null. Nunca estimes, nunca arredondes por ti.
+- «Contas alcançadas» é reach; «não seguidores» pode vir em percentagem ou em
+  número — devolve o que está lá, no campo certo.
+- «Visualizações», «Reproduções» e «Plays» são views.
+- A data só quando está no print, em AAAA-MM-DD.
+- \`post_hint\` é o que identifica o post: o texto da capa, o título, a data.
+- Tudo o que não deu para ler com certeza vai para \`ambiguities\`, em português
+  do Brasil — é só isso que se pergunta a ela.`,
+  render: (i) => `Contexto: ${i.hint || '(sem contexto — lê o print)'}`,
+};
+
+export const tagBroll: Prompt<{ fileName: string; note: string }, BrollTags> = {
+  task: 'broll_tags',
+  version: 'v1',
+  tier: 'fast',
+  schema: BrollTagsSchema,
+  maxTokens: 400,
+  system: `Vês um fotograma de um take do cotidiano de uma criadora e devolves
+etiquetas curtas em português do Brasil, minúsculas, do tipo: trabalhando,
+digitando, editando, maquiando, café, casa, rua, academia, telefone, produto,
+setup, namorado, braga, restaurante, pele, cabelo, gatos.
+
+\`usable\` é falso quando a imagem está tremida, escura ou não mostra nada que
+sirva de B-roll. \`note\` diz em uma frase o que se vê.`,
+  render: (i) => `Arquivo: ${i.fileName}\nNota dela: ${i.note || '(nenhuma)'}`,
+};
+
+export const readBragaPlaces: Prompt<{ prose: string; known: string }, BragaPlaces> = {
+  task: 'braga_places',
+  version: 'v1',
+  tier: 'fast',
+  schema: BragaPlacesSchema,
+  maxTokens: 2000,
+  system: `Tiras de um texto de pesquisa lugares de Braga que sirvam à série «Braga Real»:
+restaurantes, cafés, tascas, experiências e lugares vistos por quem passou dez
+anos numa sala de restaurante — serviço, ritmo, gente, a conta, o pedido.
+
+O que NÃO entra: «top 5 instagramáveis», roteiro turístico, decoração. Um
+lugar entra pelo que tem de real.
+
+Nunca inventes um lugar. Sem nome no texto, não entra. O endereço só quando
+está no texto. Não repitas os que já estão na lista.`,
+  render: (i) => `Já na lista: ${i.known || '(nenhum)'}
+
+Texto da pesquisa:
+"""
+${i.prose.slice(0, 16000)}
+"""`,
 };

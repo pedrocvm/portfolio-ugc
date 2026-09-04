@@ -355,6 +355,10 @@ test('recusa · o motivo entra no prompt do plano, com o que fazer em vez disso'
     exemplars: '',
     instagramBrief: '',
     tiktokBrief: '',
+    playbook: '',
+    balance: '',
+    broll: '',
+    testPlan: '',
   });
 
   assert.match(texto, /JÁ RECUSOU/);
@@ -369,12 +373,13 @@ test('recusa · sem recusas o prompt não inventa um padrão', () => {
     trends: '', milestones: '', jobs: '', energy: '', recentIdeas: '',
     rejected: describeRejections([]),
     series: '', seeds: '', exemplars: '', instagramBrief: '', tiktokBrief: '',
+    playbook: '', balance: '', broll: '', testPlan: '',
   });
   assert.match(texto, /não inventes um padrão/);
 });
 
 test('recusa · mudar o que se pede obriga a subir a versão do prompt', () => {
-  assert.equal(registry.planDailyContent.version, 'v4');
+  assert.equal(registry.planDailyContent.version, 'v5');
 });
 
 test('recusa · o plano é escrito em português do Brasil, sem exceção', () => {

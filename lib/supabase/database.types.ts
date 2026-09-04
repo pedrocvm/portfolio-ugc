@@ -1040,6 +1040,56 @@ export type Database = {
           },
         ]
       }
+      broll_asset: {
+        Row: {
+          collaboration_id: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          last_used_at: string | null
+          notes: string
+          source: string
+          storage_path: string | null
+          tags: Json
+          title: string
+          used_count: number
+        }
+        Insert: {
+          collaboration_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          last_used_at?: string | null
+          notes?: string
+          source?: string
+          storage_path?: string | null
+          tags?: Json
+          title?: string
+          used_count?: number
+        }
+        Update: {
+          collaboration_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          last_used_at?: string | null
+          notes?: string
+          source?: string
+          storage_path?: string | null
+          tags?: Json
+          title?: string
+          used_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broll_asset_collaboration_id_fkey"
+            columns: ["collaboration_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_memory: {
         Row: {
           app_user_id: string
@@ -1610,8 +1660,105 @@ export type Database = {
           },
         ]
       }
+      content_experiment: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          hypothesis: string
+          id: string
+          idea_ids: string[]
+          kind: string
+          label: string
+          learning: string | null
+          repeat: string | null
+          result: string | null
+          sample_size: number
+          source: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          what_we_test: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          hypothesis?: string
+          id?: string
+          idea_ids?: string[]
+          kind: string
+          label: string
+          learning?: string | null
+          repeat?: string | null
+          result?: string | null
+          sample_size?: number
+          source?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          what_we_test?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          hypothesis?: string
+          id?: string
+          idea_ids?: string[]
+          kind?: string
+          label?: string
+          learning?: string | null
+          repeat?: string | null
+          result?: string | null
+          sample_size?: number
+          source?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          what_we_test?: string
+        }
+        Relationships: []
+      }
+      content_learning: {
+        Row: {
+          active: boolean
+          confidence: string
+          created_at: string
+          dedupe_key: string
+          derived_at: string
+          evidence: Json
+          id: string
+          kind: string
+          sample_size: number
+          statement: string
+        }
+        Insert: {
+          active?: boolean
+          confidence?: string
+          created_at?: string
+          dedupe_key: string
+          derived_at?: string
+          evidence?: Json
+          id?: string
+          kind?: string
+          sample_size?: number
+          statement: string
+        }
+        Update: {
+          active?: boolean
+          confidence?: string
+          created_at?: string
+          dedupe_key?: string
+          derived_at?: string
+          evidence?: Json
+          id?: string
+          kind?: string
+          sample_size?: number
+          statement?: string
+        }
+        Relationships: []
+      }
       content_performance: {
         Row: {
+          avg_watch_pct: number | null
           comments: number | null
           created_at: string
           follows: number | null
@@ -1620,16 +1767,23 @@ export type Database = {
           inbound_leads: number | null
           likes: number | null
           measured_at: string
+          non_follower_reach: number | null
+          notes: string
+          plateau_at: number | null
           platform: string
           post_url: string | null
           profile_visits: number | null
+          promoted_to_feed: boolean
+          reach: number | null
           saves: number | null
+          screenshot_path: string | null
           shares: number | null
           source: string
           views: number | null
           watch_time_seconds: number | null
         }
         Insert: {
+          avg_watch_pct?: number | null
           comments?: number | null
           created_at?: string
           follows?: number | null
@@ -1638,16 +1792,23 @@ export type Database = {
           inbound_leads?: number | null
           likes?: number | null
           measured_at?: string
+          non_follower_reach?: number | null
+          notes?: string
+          plateau_at?: number | null
           platform: string
           post_url?: string | null
           profile_visits?: number | null
+          promoted_to_feed?: boolean
+          reach?: number | null
           saves?: number | null
+          screenshot_path?: string | null
           shares?: number | null
           source?: string
           views?: number | null
           watch_time_seconds?: number | null
         }
         Update: {
+          avg_watch_pct?: number | null
           comments?: number | null
           created_at?: string
           follows?: number | null
@@ -1656,10 +1817,16 @@ export type Database = {
           inbound_leads?: number | null
           likes?: number | null
           measured_at?: string
+          non_follower_reach?: number | null
+          notes?: string
+          plateau_at?: number | null
           platform?: string
           post_url?: string | null
           profile_visits?: number | null
+          promoted_to_feed?: boolean
+          reach?: number | null
           saves?: number | null
+          screenshot_path?: string | null
           shares?: number | null
           source?: string
           views?: number | null
@@ -1680,9 +1847,12 @@ export type Database = {
           created_at: string
           episodes: number
           id: string
+          kind: string
           last_episode_at: string | null
           name: string
           next_topics: Json
+          pillar: string | null
+          places: Json
           premise: string
           status: string
           structure: string
@@ -1691,9 +1861,12 @@ export type Database = {
           created_at?: string
           episodes?: number
           id?: string
+          kind?: string
           last_episode_at?: string | null
           name: string
           next_topics?: Json
+          pillar?: string | null
+          places?: Json
           premise?: string
           status?: string
           structure?: string
@@ -1702,9 +1875,12 @@ export type Database = {
           created_at?: string
           episodes?: number
           id?: string
+          kind?: string
           last_episode_at?: string | null
           name?: string
           next_topics?: Json
+          pillar?: string | null
+          places?: Json
           premise?: string
           status?: string
           structure?: string
@@ -1891,14 +2067,18 @@ export type Database = {
           authority_signal: string
           b_roll: Json
           brand_audience_effect: string
+          broll_asset_ids: string[]
           caption: string
           collaboration_id: string | null
+          content_function: string | null
           cover_note: string
           created_at: string
           cta: string
           decided_at: string | null
+          decision_trace: Json
           duration_seconds: number | null
           editing_plan: Json
+          editorial_modes: Json
           energy: string | null
           engagement_mechanism: string
           episode: number | null
@@ -1909,17 +2089,22 @@ export type Database = {
           fresh_until: string | null
           generated_at: string
           hook: string
+          hooks: Json
           id: string
+          language: string
           mentorship_signal: boolean
           milestone_id: string | null
           objective: string
           on_screen_text: Json
+          parent_idea_id: string | null
           pillar: string
           plan_date: string
           platform: string
+          playbook_version: string | null
           posting_notes: string
           provenance: string | null
           quality: Json
+          reels_test: Json
           reference_ids: string[]
           rejected_reason: string | null
           script: string
@@ -1927,8 +2112,10 @@ export type Database = {
           shot_list: Json
           source_reason: string
           status: string
+          story: Json
           strategy_version: string | null
           title: string
+          track: string
           trend_ids: string[]
           why_it_can_work: string
         }
@@ -1939,14 +2126,18 @@ export type Database = {
           authority_signal?: string
           b_roll?: Json
           brand_audience_effect?: string
+          broll_asset_ids?: string[]
           caption?: string
           collaboration_id?: string | null
+          content_function?: string | null
           cover_note?: string
           created_at?: string
           cta?: string
           decided_at?: string | null
+          decision_trace?: Json
           duration_seconds?: number | null
           editing_plan?: Json
+          editorial_modes?: Json
           energy?: string | null
           engagement_mechanism?: string
           episode?: number | null
@@ -1957,17 +2148,22 @@ export type Database = {
           fresh_until?: string | null
           generated_at?: string
           hook?: string
+          hooks?: Json
           id?: string
+          language?: string
           mentorship_signal?: boolean
           milestone_id?: string | null
           objective?: string
           on_screen_text?: Json
+          parent_idea_id?: string | null
           pillar?: string
           plan_date: string
           platform: string
+          playbook_version?: string | null
           posting_notes?: string
           provenance?: string | null
           quality?: Json
+          reels_test?: Json
           reference_ids?: string[]
           rejected_reason?: string | null
           script?: string
@@ -1975,8 +2171,10 @@ export type Database = {
           shot_list?: Json
           source_reason?: string
           status?: string
+          story?: Json
           strategy_version?: string | null
           title?: string
+          track?: string
           trend_ids?: string[]
           why_it_can_work?: string
         }
@@ -1987,14 +2185,18 @@ export type Database = {
           authority_signal?: string
           b_roll?: Json
           brand_audience_effect?: string
+          broll_asset_ids?: string[]
           caption?: string
           collaboration_id?: string | null
+          content_function?: string | null
           cover_note?: string
           created_at?: string
           cta?: string
           decided_at?: string | null
+          decision_trace?: Json
           duration_seconds?: number | null
           editing_plan?: Json
+          editorial_modes?: Json
           energy?: string | null
           engagement_mechanism?: string
           episode?: number | null
@@ -2005,17 +2207,22 @@ export type Database = {
           fresh_until?: string | null
           generated_at?: string
           hook?: string
+          hooks?: Json
           id?: string
+          language?: string
           mentorship_signal?: boolean
           milestone_id?: string | null
           objective?: string
           on_screen_text?: Json
+          parent_idea_id?: string | null
           pillar?: string
           plan_date?: string
           platform?: string
+          playbook_version?: string | null
           posting_notes?: string
           provenance?: string | null
           quality?: Json
+          reels_test?: Json
           reference_ids?: string[]
           rejected_reason?: string | null
           script?: string
@@ -2023,8 +2230,10 @@ export type Database = {
           shot_list?: Json
           source_reason?: string
           status?: string
+          story?: Json
           strategy_version?: string | null
           title?: string
+          track?: string
           trend_ids?: string[]
           why_it_can_work?: string
         }
@@ -2055,6 +2264,13 @@ export type Database = {
             columns: ["milestone_id"]
             isOneToOne: false
             referencedRelation: "business_milestone"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_content_idea_parent_idea_id_fkey"
+            columns: ["parent_idea_id"]
+            isOneToOne: false
+            referencedRelation: "creator_content_idea"
             referencedColumns: ["id"]
           },
           {
@@ -2474,6 +2690,56 @@ export type Database = {
             columns: ["trigger_event_id"]
             isOneToOne: false
             referencedRelation: "activity_event"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hook_library: {
+        Row: {
+          channel: string
+          created_at: string
+          format: string
+          hook: string
+          id: string
+          idea_id: string | null
+          performance: Json
+          platform: string
+          reuse_pattern: string
+          topic: string
+          written_type: string | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          format?: string
+          hook: string
+          id?: string
+          idea_id?: string | null
+          performance?: Json
+          platform?: string
+          reuse_pattern?: string
+          topic?: string
+          written_type?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          format?: string
+          hook?: string
+          id?: string
+          idea_id?: string | null
+          performance?: Json
+          platform?: string
+          reuse_pattern?: string
+          topic?: string
+          written_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hook_library_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "creator_content_idea"
             referencedColumns: ["id"]
           },
         ]
@@ -3947,6 +4213,72 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      social_proof: {
+        Row: {
+          brand_id: string | null
+          brand_name: string
+          content_idea_id: string | null
+          context: string
+          created_at: string
+          dedupe_key: string | null
+          feedback: string
+          id: string
+          occurred_at: string | null
+          permission: string
+          screenshot_path: string | null
+          source: string
+          usable_for_portfolio: boolean
+          usable_for_social: boolean
+        }
+        Insert: {
+          brand_id?: string | null
+          brand_name?: string
+          content_idea_id?: string | null
+          context?: string
+          created_at?: string
+          dedupe_key?: string | null
+          feedback?: string
+          id?: string
+          occurred_at?: string | null
+          permission?: string
+          screenshot_path?: string | null
+          source?: string
+          usable_for_portfolio?: boolean
+          usable_for_social?: boolean
+        }
+        Update: {
+          brand_id?: string | null
+          brand_name?: string
+          content_idea_id?: string | null
+          context?: string
+          created_at?: string
+          dedupe_key?: string | null
+          feedback?: string
+          id?: string
+          occurred_at?: string | null
+          permission?: string
+          screenshot_path?: string | null
+          source?: string
+          usable_for_portfolio?: boolean
+          usable_for_social?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_proof_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_proof_content_idea_id_fkey"
+            columns: ["content_idea_id"]
+            isOneToOne: false
+            referencedRelation: "creator_content_idea"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       source_message: {
         Row: {

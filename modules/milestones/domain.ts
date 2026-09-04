@@ -21,6 +21,12 @@ export const MILESTONE_KINDS = [
   'first_rejection',
   'first_price_rejection',
   'revenue_threshold',
+  // A mentoria pediu para documentar a jornada. Estes três saem de fatos que
+  // já se gravam: o primeiro negócio fechado, a primeira entrega, o primeiro
+  // vídeo em inglês.
+  'first_deal_won',
+  'first_delivery',
+  'first_english_video',
 ] as const;
 
 export type MilestoneKind = (typeof MILESTONE_KINDS)[number];
@@ -37,6 +43,9 @@ export const MILESTONE_LABEL: Record<MilestoneKind, string> = {
   first_rejection: 'O primeiro não',
   first_price_rejection: 'A primeira proposta recusada por preço',
   revenue_threshold: 'Um patamar de faturação',
+  first_deal_won: 'O primeiro negócio fechado',
+  first_delivery: 'A primeira entrega a uma marca',
+  first_english_video: 'O primeiro vídeo em inglês',
 };
 
 export type MilestoneEvidence = { kind: string; id: string; at: string; note?: string };
@@ -233,6 +242,45 @@ export function deriveMilestones(input: MilestoneInput): Milestone[] {
         evidence: [{ kind: 'event', id: recusa.id, at: recusa.occurredAt, note: razao }],
       });
     }
+  }
+
+  const fechado = firstOf(['opportunity.won']);
+  if (fechado) {
+    out.push({
+      kind: 'first_deal_won',
+      dedupeKey: 'first_deal_won',
+      occurredAt: fechado.occurredAt,
+      brandId: fechado.brandId,
+      brandName: fechado.brandName,
+      summary: `${fechado.brandName ?? 'Uma marca'} foi o primeiro negócio fechado.`,
+      evidence: [{ kind: 'event', id: fechado.id, at: fechado.occurredAt }],
+    });
+  }
+
+  const entrega = firstOf(['content.delivered']);
+  if (entrega) {
+    out.push({
+      kind: 'first_delivery',
+      dedupeKey: 'first_delivery',
+      occurredAt: entrega.occurredAt,
+      brandId: entrega.brandId,
+      brandName: entrega.brandName,
+      summary: `A primeira entrega foi para a ${entrega.brandName ?? 'marca'}.`,
+      evidence: [{ kind: 'event', id: entrega.id, at: entrega.occurredAt }],
+    });
+  }
+
+  const ingles = eventos.find((e) => e.type === 'content.delivered' && /\b(en|english|ingl[eê]s)\b/i.test(String((e.payload as { language?: unknown } | null)?.language ?? '')));
+  if (ingles) {
+    out.push({
+      kind: 'first_english_video',
+      dedupeKey: 'first_english_video',
+      occurredAt: ingles.occurredAt,
+      brandId: ingles.brandId,
+      brandName: ingles.brandName,
+      summary: `O primeiro vídeo em inglês foi entregue à ${ingles.brandName ?? 'marca'}.`,
+      evidence: [{ kind: 'event', id: ingles.id, at: ingles.occurredAt }],
+    });
   }
 
   // Aprovado sem alterações: a aprovação existe e não houve pedido de revisão

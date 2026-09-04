@@ -170,3 +170,20 @@ test('um marco velho já não é notícia', () => {
   assert.equal(isFreshMilestone({ occurredAt: '2026-08-20T00:00:00Z' }, NOW), true);
   assert.equal(isFreshMilestone({ occurredAt: '2026-01-20T00:00:00Z' }, NOW), false);
 });
+
+
+/* ── A jornada, ampliada pela mentoria ────────────────────────────────────── */
+
+test('o primeiro negócio fechado e a primeira entrega nascem de eventos, com prova', () => {
+  const marcos = deriveMilestones({
+    homeCountry: 'PT',
+    payments: [],
+    events: [
+      { id: 'e1', type: 'opportunity.won', brandId: 'b1', brandName: 'Cecotec', occurredAt: '2026-08-20T10:00:00Z', summary: 'Fechou.' },
+      { id: 'e2', type: 'content.delivered', brandId: 'b1', brandName: 'Cecotec', occurredAt: '2026-08-28T10:00:00Z', summary: 'Entregue.', payload: { language: 'en' } },
+    ],
+  });
+  assert.equal(marcos.find((m) => m.kind === 'first_deal_won')?.evidence[0].id, 'e1');
+  assert.equal(marcos.find((m) => m.kind === 'first_delivery')?.evidence[0].id, 'e2');
+  assert.equal(marcos.find((m) => m.kind === 'first_english_video')?.brandName, 'Cecotec');
+});

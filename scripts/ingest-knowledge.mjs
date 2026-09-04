@@ -21,7 +21,14 @@ const args = process.argv.slice(2);
 // `--dry` mostra o que seria indexado e não escreve nada. Ver antes de gravar
 // é a diferença entre indexar um documento e indexar rodapés.
 const dry = args.includes('--dry');
-const [file, title, authority = '80'] = args.filter((a) => a !== '--dry');
+// `--json` escreve os pedaços em JSON e não toca na base: serve para indexar a
+// partir de uma máquina que não tem a chave de service role.
+const json = args.includes('--json');
+// `--type=mentor_session` diz que tipo de fonte é. Uma sessão de mentoria não
+// é uma fonte de verdade: é conselho com autoridade sobre estratégia e nenhuma
+// sobre o algoritmo, e o tipo é o que permite distingui-los depois.
+const sourceType = args.find((a) => a.startsWith('--type='))?.slice('--type='.length) || 'source_of_truth';
+const [file, title, authority = '80'] = args.filter((a) => !a.startsWith('--'));
 
 if (!file || !title) {
   console.error('uso: node scripts/ingest-knowledge.mjs <ficheiro.md|.pdf> "<título>" [autoridade] [--dry]');
@@ -30,7 +37,7 @@ if (!file || !title) {
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!dry) {
+if (!dry && !json) {
   const missing = [
     !url && 'NEXT_PUBLIC_SUPABASE_URL',
     !key && 'SUPABASE_SERVICE_ROLE_KEY',
@@ -115,6 +122,11 @@ const text = stripRepeatedLines(raw);
 const checksum = createHash('sha256').update(raw).digest('hex');
 const chunks = chunk(text);
 
+if (json) {
+  console.log(JSON.stringify({ title, sourceType, authority: Number(authority), checksum, chunks }, null, 1));
+  process.exit(0);
+}
+
 if (chunks.length === 0) {
   console.error('não consegui tirar texto deste ficheiro — é um PDF de imagens?');
   process.exit(1);
@@ -138,7 +150,7 @@ const { data: source, error: sourceError } = await db
   .from('knowledge_source')
   .upsert(
     {
-      source_type: 'source_of_truth',
+      source_type: sourceType,
       title,
       version: 'v1',
       authority: Number(authority),

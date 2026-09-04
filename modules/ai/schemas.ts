@@ -572,6 +572,36 @@ export const ContentIdeaSchema = z.object({
   series: z
     .object({ name: z.string(), premise: z.string(), structure: z.string(), next_topics: z.array(z.string()) })
     .nullable(),
+  /** Os dois eixos da mentoria. Uma função; um ou dois modos. */
+  content_function: z.enum(['attract_connect', 'educate_retain', 'convert']),
+  editorial_modes: z.array(z.enum(['authority', 'entertainment', 'information', 'personal'])).min(1).max(2),
+  /** Os três ganchos. `spoken` é nulo quando a peça não fala — uma escolha,
+   *  não um esquecimento. */
+  hooks: z.object({
+    visual: z.string().describe('o que prende o olho no primeiro segundo: movimento, enquadramento, o que aparece'),
+    written: z.string().describe('o texto na tela'),
+    written_type: z.enum(['identification', 'experience', 'emotion', 'teaching', 'update']),
+    spoken: z.string().nullable().describe('a primeira frase dita; null se a peça não fala'),
+  }),
+  /** Herói, vilão e guia ficam no motor. O que ela vê é o esqueleto. */
+  story: z.object({
+    hero: z.string().describe('quem vê: a pessoa com o problema'),
+    villain: z.string().describe('o problema — nunca a concorrência'),
+    guide: z.string().describe('a Carol ou o produto, mostrando o caminho'),
+    outline: z.object({
+      hook: z.string(),
+      problem: z.string(),
+      development: z.string(),
+      proof: z.string(),
+      payoff: z.string(),
+      cta: z.string(),
+    }),
+  }),
+  /** «Estou mostrando o que está por trás?» Vazio quando não mostra. */
+  proof_of_craft: z.string(),
+  /** Eu testaria isto primeiro em Reels Test? */
+  reels_test_candidate: z.boolean(),
+  language: z.enum(['pt-BR', 'en']),
 });
 export type ContentIdea = z.infer<typeof ContentIdeaSchema>;
 
@@ -581,6 +611,10 @@ export type ContentIdea = z.infer<typeof ContentIdeaSchema>;
 export const DailyContentPlanSchema = z.object({
   instagram: ContentIdeaSchema,
   tiktok: ContentIdeaSchema,
+  /** O Reels Test do dia: B-roll de 5 a 7 s com gancho escrito e legenda que
+   *  entrega a solução, feito com o que já existe. Nulo quando o dia não
+   *  comporta um teste ou não há material. */
+  reels_test: ContentIdeaSchema.nullable(),
   /** O que diferencia os dois tratamentos, dito pelo próprio modelo. Serve de
    *  auto-verificação: se não consegue explicar, é porque são o mesmo vídeo. */
   why_they_differ: z.string(),
@@ -602,3 +636,82 @@ export const ContentMultiplierSchema = z.object({
   ),
 });
 export type ContentMultiplier = z.infer<typeof ContentMultiplierSchema>;
+
+
+/* ── Content OS ─────────────────────────────────────────────────────────── */
+
+/** «Me dá três ganchos.» Os três canais, a dizer coisas diferentes. */
+export const ThreeHooksSchema = z.object({
+  visual: z.string(),
+  written: z.string(),
+  written_type: z.enum(['identification', 'experience', 'emotion', 'teaching', 'update']),
+  spoken: z.string().nullable(),
+  why_together: z.string().describe('como os três trabalham juntos sem se repetir'),
+});
+export type ThreeHooks = z.infer<typeof ThreeHooksSchema>;
+
+/** Destrinchar uma referência validada: a lógica, nunca a fala. */
+export const ReferenceDeconstructionSchema = z.object({
+  hook: z.string(),
+  visual_hook: z.string(),
+  written_hook: z.string().nullable(),
+  spoken_hook: z.string().nullable(),
+  structure: z.string(),
+  pacing: z.string(),
+  angle: z.string(),
+  transitions: z.string(),
+  emotional_driver: z.string(),
+  why_it_works: z.string(),
+  what_to_adapt: z.string(),
+  /** «Como isto vira Carol?» Com o território dela lá dentro. */
+  how_it_becomes_carol: z.string(),
+  do_not_copy: z.string(),
+});
+export type ReferenceDeconstruction = z.infer<typeof ReferenceDeconstructionSchema>;
+
+/** Um print dos Insights do Instagram, lido. O que não está no print é nulo. */
+export const InsightsScreenshotSchema = z.object({
+  platform: z.enum(['instagram', 'tiktok', 'unknown']),
+  post_hint: z.string().nullable().describe('o que identifica o post: texto na capa, título, data'),
+  measured_at: z.string().nullable().describe('data visível no print, em AAAA-MM-DD, ou null'),
+  views: z.number().nullable(),
+  reach: z.number().nullable(),
+  non_follower_reach: z.number().nullable(),
+  non_follower_pct: z.number().nullable(),
+  likes: z.number().nullable(),
+  comments: z.number().nullable(),
+  saves: z.number().nullable(),
+  shares: z.number().nullable(),
+  watch_time_seconds: z.number().nullable(),
+  avg_watch_pct: z.number().nullable(),
+  profile_visits: z.number().nullable(),
+  follows: z.number().nullable(),
+  /** O que não deu para ler com certeza. Só isto se pergunta a ela. */
+  ambiguities: z.array(z.string()),
+  confidence,
+});
+export type InsightsScreenshot = z.infer<typeof InsightsScreenshotSchema>;
+
+/** Etiquetas de um take, vistas pelo modelo. */
+export const BrollTagsSchema = z.object({
+  tags: z.array(z.string()).max(6),
+  setting: z.string(),
+  activity: z.string(),
+  usable: z.boolean(),
+  note: z.string(),
+});
+export type BrollTags = z.infer<typeof BrollTagsSchema>;
+
+/** Lugares de Braga para a série, tirados de uma pesquisa. */
+export const BragaPlacesSchema = z.object({
+  places: z.array(
+    z.object({
+      name: z.string(),
+      kind: z.string().describe('restaurante, café, tasca, experiência, lugar'),
+      why: z.string().describe('o que se viu na pesquisa que o torna real, não instagramável'),
+      angle: z.string().describe('o que ela repararia com dez anos de sala'),
+      source_url: z.string().nullable(),
+    }),
+  ),
+});
+export type BragaPlaces = z.infer<typeof BragaPlacesSchema>;

@@ -255,14 +255,17 @@ export function closingLine(input: {
 /** A regra que impede a manhã de virar uma lista de investigação.
  *
  *  Doze tendências pesquisadas não são doze cartões. São uma recomendação para
- *  o Instagram e outra para o TikTok. Isto verifica-o em vez de o prometer. */
+ *  o Instagram, outra para o TikTok e, quando o dia comporta, um Reels Test
+ *  feito com o que já existe. Isto verifica-o em vez de o prometer. */
+export const MAX_CONTENT_DECISIONS = 3;
+
 export function researchDidNotBecomeTasks(input: {
   trendsFound: number;
   referencesFound: number;
   decisions: readonly Decision[];
 }): { ok: boolean; because: string } {
   const conteudo = input.decisions.filter((d) => d.kind === 'content').length;
-  if (conteudo > 2) {
+  if (conteudo > MAX_CONTENT_DECISIONS) {
     return { ok: false, because: `${conteudo} cartões de conteúdo: a pesquisa virou lista.` };
   }
   const referencias = input.decisions.filter((d) => d.kind === 'recording').length;

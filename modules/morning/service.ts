@@ -333,33 +333,46 @@ async function recordingDecisions(): Promise<Decision[]> {
   });
 }
 
-/** Nível 5: conteúdo dela. No máximo dois — um por plataforma.
+/** Nível 5: conteúdo dela. No máximo três — um por plataforma e, quando o
+ *  dia comporta, um Reels Test feito com B-roll que já existe.
  *
- *  Doze tendências pesquisadas não são doze cartões. São isto. */
+ *  Doze tendências pesquisadas não são doze cartões. São isto. O «porquê» é
+ *  a frase que o motor guardou ao escolher, não a regra da mentoria. */
 async function contentDecisions(now: Date): Promise<Decision[]> {
   const ideas = await todayContent(now);
-  return ideas.map((i) => ({
-    id: `content:${i.id}`,
-    kind: 'content' as const,
-    subject: i.platform === 'instagram' ? 'Instagram' : 'TikTok',
-    headline: i.title || i.hook,
-    because: i.whyNow,
-    covers: 1,
-    weightCents: null,
-    urgent: false,
-    waitingDays: null,
-    minutes: 2,
-    href: `/dashboard/content?idea=${i.id}`,
-    payload: {
-      ideaId: i.id,
-      platform: i.platform,
-      hook: i.hook,
-      recordMinutes: i.recordMinutes,
-      editMinutes: i.editMinutes,
-      verdict: i.verdict,
-      pillarLabel: i.pillarLabel,
-    },
-  }));
+  return ideas.map((i) => {
+    const teste = i.track === 'reels_test';
+    const temBroll = i.brollAssetIds.length > 0;
+    return {
+      id: `content:${i.id}`,
+      kind: 'content' as const,
+      subject: teste ? 'Reels Test' : i.platform === 'instagram' ? 'Instagram' : 'TikTok',
+      headline: i.title || i.hook,
+      because: [i.whyChosen || i.whyNow, teste && temBroll ? 'Usa um B-roll que já existe: não precisa gravar nada novo.' : '']
+        .filter(Boolean)
+        .join(' '),
+      covers: 1,
+      weightCents: null,
+      urgent: false,
+      waitingDays: null,
+      minutes: teste && temBroll ? 1 : 2,
+      href: `/dashboard/content?idea=${i.id}`,
+      payload: {
+        ideaId: i.id,
+        platform: i.platform,
+        track: i.track,
+        trackLabel: i.trackLabel,
+        hook: i.hook,
+        recordMinutes: i.recordMinutes,
+        editMinutes: i.editMinutes,
+        verdict: i.verdict,
+        pillarLabel: i.pillarLabel,
+        functionLabel: i.functionLabel,
+        whyChosen: i.whyChosen,
+        hasBroll: temBroll,
+      },
+    };
+  });
 }
 
 /* ── Prova de vida e falhas ───────────────────────────────────────────────── */
