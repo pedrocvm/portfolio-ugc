@@ -134,6 +134,44 @@ test('a Carol AI alcança a manhã, o conteúdo e as referências', () => {
   assert.match(lista, /getContentStrategy/);
 });
 
+/** Os três modos de prospecção são três coisas diferentes, e o assistente é
+ *  onde a diferença se perde primeiro: basta ela nomear dez hotéis e o modelo
+ *  escolher `start_prospecting` para ele devolver OUTROS dez hotéis. */
+test('a Carol AI recebe listas de marcas sem ir procurar substitutas', () => {
+  const todas = ferramentas();
+  const importar = todas.find((f) => f.nome === 'import_brand_list');
+  assert.ok(importar, '«import_brand_list» não existe');
+  // Escreve na base — abre o lote —, mas não sai para fora.
+  assert.equal(importar.risco, 'write');
+
+  const estado = todas.find((f) => f.nome === 'get_brand_import_status');
+  assert.ok(estado, '«get_brand_import_status» não existe');
+  assert.equal(estado.risco, 'read');
+
+  assert.match(registadas(), /importBrandList/);
+  assert.match(registadas(), /getBrandImport/);
+
+  // A descrição é o que o modelo lê para escolher. Sem estas duas frases, a
+  // escolha entre procurar e receber fica ao acaso.
+  const corpo = TOOLS.slice(
+    TOOLS.indexOf("'import_brand_list'"),
+    TOOLS.indexOf('\n);', TOOLS.indexOf("'import_brand_list'")),
+  );
+  assert.match(corpo, /nunca procura substitutas/, 'a descrição não diz que não procura substitutas');
+  assert.match(corpo, /NÃO uses start_prospecting/, 'a descrição não afasta a busca');
+});
+
+test('o prompt manda receber a lista quando ela nomeia as marcas', () => {
+  const PROMPT = readFileSync(path.join(ROOT, 'modules/assistant/prompt.ts'), 'utf8');
+  assert.match(PROMPT, /import_brand_list/, 'o prompt não conhece a ingestão de listas');
+  assert.match(
+    PROMPT,
+    // As crases vão escapadas no arquivo (`\\\``), por isso não entram na busca.
+    /ELA NOMEIA AS MARCAS[\s\S]{0,120}nunca[^\n]*start_prospecting/,
+    'o prompt não separa nomear de procurar',
+  );
+});
+
 /** A auditoria diz que pôr a Carol a ensinar creators é o erro estratégico
  *  maior. O assistente é onde isso escaparia primeiro — basta ela pedir «uma
  *  ideia sobre UGC» e ele devolver dicas. */

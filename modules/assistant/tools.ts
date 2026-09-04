@@ -918,6 +918,92 @@ const setProspectingFocus = define(
   'write',
 );
 
+/** «Já tenho marcas»: ela colou uma lista e quer que eu pesquise AQUELAS.
+ *
+ *  A diferença para `start_prospecting` não é de grau, é de natureza: uma
+ *  procura, a outra recebe. Se a Carol nomeia as marcas, o modelo não pode cair
+ *  na busca — devolveria outras empresas, que é exatamente o que este fluxo
+ *  existe para não fazer. */
+const importBrandList = define(
+  'import_brand_list',
+  'Pesquisa marcas que ELA já escolheu e nomeou. Usa isto sempre que ela der os nomes, sites ou perfis — «pesquisa estes hotéis», «separei estas marcas», ou uma lista colada. Aceita nome, domínio, URL, @, link de Instagram, TikTok, LinkedIn ou Maps, misturados. Pesquisa exatamente essas e nunca procura substitutas nem acrescenta outras. Corre em segundo plano, demora minutos, e não envia nada a ninguém. NÃO uses start_prospecting quando ela nomeia as marcas.',
+  z.object({
+    list: z
+      .string()
+      .min(2)
+      .describe('as marcas tal como ela as deu, uma por linha ou separadas por vírgula'),
+  }),
+  async ({ list }) => {
+    const { startBrandImport } = await import('@/app/dashboard/outreach-actions');
+    const r = await startBrandImport(list);
+    return {
+      data: r.error
+        ? { started: false, reason: r.error }
+        : {
+            started: true,
+            runId: r.runId,
+            received: r.total,
+            resumed: r.resumed ?? false,
+            note: r.resumed
+              ? 'Essa lista já estava a caminho; continuo de onde ficou em vez de pagar a pesquisa duas vezes.'
+              : 'Estou pesquisando cada uma: quem é, se já houve conversa, o contato, uma ideia e o email. Aparece na Prospeção quando acabar. Nada sai sem ela aprovar.',
+          },
+      sources: [],
+    };
+  },
+  'write',
+);
+
+const getBrandImport = define(
+  'get_brand_import_status',
+  'Como está o último lote de marcas que ela colou: quantas já foram tratadas, e no fim quantas ficaram prontas, quantas já tinham conversa e quantas ficaram sem contato. Usa isto para «já acabou?» e «como ficaram as marcas que te mandei».',
+  z.object({ limit: z.number().optional() }),
+  async ({ limit }) => {
+    const db = await supabaseServer();
+    const { data: run } = await db
+      .from('outreach_run')
+      .select('id, status, total, processed, started_at, finished_at')
+      .eq('kind', 'imported')
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!run) {
+      return { data: { found: false, note: 'Ela ainda não colou nenhuma lista de marcas.' }, sources: [] };
+    }
+
+    const { data } = await db
+      .from('outreach_candidate')
+      .select('id, name, status, resolution, resolution_note, contact_email, email_confidence, dedup_complete, fit_score, ugc_opportunity, subject, product')
+      .eq('run_id', run.id)
+      .not('status', 'in', '(rejected,skipped)')
+      .order('rank')
+      .limit(cap(limit, 25));
+
+    const rows = data ?? [];
+    const { summarize, summaryText } = await import('@/modules/outreach/import');
+    const resumo = summarize(
+      rows.map((c) => ({ status: c.status, resolution: c.resolution, contactEmail: c.contact_email })),
+    );
+
+    return {
+      data: {
+        found: true,
+        running: run.status === 'running',
+        // A contagem é real. Não inventar percentagem é regra deste fluxo, e
+        // vale também quando quem conta é o assistente.
+        progress: `${run.processed} de ${run.total}`,
+        summary: run.status === 'running' ? null : summaryText(resumo),
+        counts: resumo,
+        brands: rows,
+      },
+      sources: rows.map((c) => ({
+        id: c.id, type: 'brand' as const, label: c.name, at: null, href: '/dashboard/outreach',
+      })),
+    };
+  },
+);
+
 const resolveTodayAction = define(
   'resolve_today_action',
   'Fecha ou adia um cartão da fila do Hoje. «done» quando ela já tratou do assunto; «snooze» com dias para voltar mais tarde. Desfaz-se.',
@@ -1686,6 +1772,7 @@ export const TOOLS: Tool[] = [
   getDailyOutreach, getOutreachCandidate, updateOutreachDraftTool,
   approveOutreachTool, prepareOutreachSend,
   startProspecting, readProspectingFocus, setProspectingFocus,
+  importBrandList, getBrandImport,
   resolveTodayAction, captureSomething, findAnything,
   getMorningBrief, getEmailTriage, prepareReply,
   getDailyContentPlan, getContentIdea, regenerateContentIdea, saveContentIdea,
