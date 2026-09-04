@@ -2,19 +2,7 @@
 
 import { useState } from 'react';
 import Segmented from '@/components/dashboard/Segmented';
-
-export const STUDIO_TABS = ['record', 'tests', 'published', 'bank', 'strategy'] as const;
-export type StudioTab = (typeof STUDIO_TABS)[number];
-
-const LABEL: Record<StudioTab, string> = {
-  record: 'Para gravar',
-  tests: 'Testes',
-  published: 'Publicado',
-  bank: 'Banco',
-  strategy: 'Estratégia',
-};
-
-export const isStudioTab = (v: string | undefined): v is StudioTab => (STUDIO_TABS as readonly string[]).includes(v ?? '');
+import { STUDIO_TABS, STUDIO_TAB_LABEL, type StudioTab } from './studioTabs';
 
 /** O Conteúdo em cinco contextos, não um cockpit.
  *
@@ -33,7 +21,7 @@ export default function ContentStudio({
   return (
     <>
       <div className="csTabs">
-        <Segmented options={STUDIO_TABS.map((id) => ({ id, label: LABEL[id] }))} value={tab} onChange={setTab} label="Área do conteúdo" />
+        <Segmented options={STUDIO_TABS.map((id) => ({ id, label: STUDIO_TAB_LABEL[id] }))} value={tab} onChange={setTab} label="Área do conteúdo" />
       </div>
       {panes[tab]}
     </>

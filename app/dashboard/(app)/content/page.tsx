@@ -16,7 +16,8 @@ import {
 import { usableTrends } from '@/modules/trends/service';
 import ContentBank from '@/components/dashboard/os/ContentBank';
 import ContentStrategy from '@/components/dashboard/os/ContentStrategy';
-import ContentStudio, { isStudioTab, type StudioTab } from '@/components/dashboard/os/ContentStudio';
+import ContentStudio from '@/components/dashboard/os/ContentStudio';
+import { isStudioTab, type StudioTab } from '@/components/dashboard/os/studioTabs';
 import ContentVault from '@/components/dashboard/os/ContentVault';
 import Published from '@/components/dashboard/os/Published';
 import ReelsTestLab from '@/components/dashboard/os/ReelsTestLab';
