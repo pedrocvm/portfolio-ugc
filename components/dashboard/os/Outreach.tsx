@@ -20,10 +20,12 @@ import {
 import {
   LIMITS, SECTION_HINT, SECTION_TITLE, groupForReview, sectionFor,
 } from '@/modules/outreach/domain';
+import { RESOLUTION_LABEL, isResolution } from '@/modules/outreach/import';
 import { nicheShort } from '@/modules/brands/niches';
 import { FRESHNESS_LABEL, type Freshness } from '@/modules/references/domain';
 import type { Focus } from '@/modules/outreach/focus';
 import CountryPicker from './CountryPicker';
+import ImportBrands from './ImportBrands';
 import FocusEditor from './FocusEditor';
 import ReviewMode from './ReviewMode';
 import ResultsBar, { type ManualRun } from './ResultsBar';
@@ -59,6 +61,24 @@ export type Candidate = {
   ready_idea: ReadyIdea | null;
   references_state: string | null;
   references_note: string | null;
+  /** Marcas que ela colou. O encaixe comercial descreve-as, nunca as exclui. */
+  user_selected?: boolean;
+  raw_input?: string | null;
+  resolution?: string | null;
+  resolution_note?: string | null;
+  resolution_evidence?: string[] | null;
+  dedup_complete?: boolean;
+  identity_confidence?: string | null;
+  category_profile?: HospitalityProfile | null;
+};
+
+/** O que uma casa de hotelaria tem para gravar. Só a parte que ela lê no
+ *  cartão — o resto do perfil vive na base e serve para escrever o email. */
+export type HospitalityProfile = {
+  property_type: string | null;
+  positioning: string | null;
+  differentiators: string[];
+  content_experiences: { experience: string; why_it_films_well: string; season: string | null }[];
 };
 
 export type ReadyIdea = {
@@ -141,7 +161,11 @@ function ReadyIdeaBlock({ idea }: { idea: ReadyIdea }) {
 function scoreFor(c: Candidate): { n: number | null; label: string } {
   // O número e a banda têm de vir do mesmo valor. Mostrar o dígito de um e a
   // palavra de outro dava «61 · Excelente», que é pior do que não dizer nada.
-  const manual = c.search_relevance !== null;
+  //
+  // Numa marca que ela escolheu, a pergunta «encaixa no que faço?» já foi
+  // respondida por ela. O que falta saber é quanto vale a pena — e isso é
+  // potencial, não encaixe.
+  const manual = c.search_relevance !== null || c.user_selected === true;
   const n = manual ? (c.ugc_opportunity ?? c.fit_score) : c.fit_score;
   const banda = n === null ? '' : n >= 80 ? 'Excelente' : n >= 65 ? 'Bom' : n >= 45 ? 'Razoável' : 'Fraco';
   return { n, label: `${manual ? 'Potencial' : 'Encaixe'} · ${banda}` };
@@ -252,6 +276,13 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
         {placeLabel(c) ? <span className="revWhere">{placeLabel(c)}</span> : null}
 
         <span className="revBadges">
+          {/* Escolhida por ela ganha ao que a régua acha: a etiqueta existe
+              para que um encaixe «Razoável» nunca se leia como reprovação. */}
+          {c.user_selected ? (
+            <span className="revBadge" data-tone="ok">
+              Escolhida por você
+            </span>
+          ) : null}
           {signalsFor(c).map((sig) => (
             <span className="revBadge" data-tone={sig.tone} key={sig.text}>
               {sig.text}
@@ -302,6 +333,30 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
 
 
       <div className="revBody">
+
+      {/* O que já houve com esta marca, antes de tudo o resto. Uma abordagem a
+          quem já respondeu estraga a conversa que existe, e isso lê-se aqui —
+          não depois de ela carregar em enviar. */}
+      {c.resolution && isResolution(c.resolution) && c.resolution !== 'NEW_COLD' ? (
+        <div className="outRel" data-kind={c.resolution}>
+          <b>{RESOLUTION_LABEL[c.resolution]}</b>
+          {c.resolution_note ? <p>{c.resolution_note}</p> : null}
+          {c.resolution_evidence?.length ? (
+            <ul>
+              {c.resolution_evidence.map((linha) => (
+                <li key={linha}>{linha}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      {c.dedup_complete === false ? (
+        <p className="osWarn">
+          Não consegui confirmar no Gmail se já houve conversa com esta marca. Confira antes de
+          enviar.
+        </p>
+      ) : null}
 
       <p className="osWhy">{c.why_fit}</p>
 
@@ -370,6 +425,32 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
         <p className="osRowSub">{c.references_note || 'Não encontrei referências utilizáveis para esta marca.'}</p>
       ) : null}
 
+      {c.category_profile?.content_experiences?.length ? (
+        <details className="outDetail">
+          <summary>
+            O que há para gravar aqui
+            {c.category_profile.property_type ? ` · ${c.category_profile.property_type}` : ''}
+          </summary>
+          <div>
+            {/* A pergunta numa casa de hotelaria não é «é bonita?» — é que
+                experiência se atravessa ali que dá vídeo. */}
+            <ul>
+              {c.category_profile.content_experiences.map((e) => (
+                <li key={e.experience}>
+                  <b>{e.experience}</b> — {e.why_it_films_well}
+                  {e.season ? <span className="osRowSub"> · {e.season}</span> : null}
+                </li>
+              ))}
+            </ul>
+            {c.category_profile.differentiators?.length ? (
+              <p className="osRowSub">
+                Distingue-se por: {c.category_profile.differentiators.join(' · ')}
+              </p>
+            ) : null}
+          </div>
+        </details>
+      ) : null}
+
       <details className="outDetail">
         <summary>Porquê esta marca</summary>
         <div>
@@ -395,8 +476,11 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
 
       {semEmail ? (
         <p className="osRowSub">
-          Ficou abaixo do corte de encaixe, por isso não escrevi o email. Se
-          gostar da marca, peça e eu escrevo.
+          {c.user_selected
+            ? c.contact_email
+              ? 'Não escrevi o email desta. Se quiser, peço agora.'
+              : 'Não encontrei um endereço em que confie, por isso não escrevi o email. O @ e o site estão aí em cima.'
+            : 'Ficou abaixo do corte de encaixe, por isso não escrevi o email. Se gostar da marca, peça e eu escrevo.'}
         </p>
       ) : null}
 
@@ -521,7 +605,14 @@ function Card({ c, refs }: { c: Candidate; refs: BrandReferenceRow[] }) {
           </button>
         ) : confirming ? (
           <>
-            <span className="osRowSub">Enviar para {para}?</span>
+            <span className="osRowSub">
+              Enviar para {para}?
+              {/* O aviso pertence ao momento do irreversível, não só ao topo do
+                  cartão: é aqui que ela está a olhar quando decide. */}
+              {c.dedup_complete === false
+                ? ' Não confirmei no Gmail se já houve conversa com esta marca.'
+                : ''}
+            </span>
             <button
               className="osGo"
               type="button"
@@ -647,9 +738,14 @@ export default function Outreach({
   const [msg, setMsg] = useState('');
   const [ask, setAsk] = useState(manualRun?.raw_query ?? '');
   const [pais, setPais] = useState(manualRun?.countries?.[0] ?? 'Portugal');
-  // Um modo de cada vez, e não dois conjuntos de controlos na mesma tela: a
-  // busca dirigida obedece ao que ela escreve, a automática ao foco salvo.
-  const [modo, setModo] = useState<'manual' | 'auto'>('manual');
+  // Um modo de cada vez, e não três conjuntos de controlos na mesma tela. São
+  // três perguntas diferentes: «procura-me marcas assim», «pesquisa estas que
+  // eu já escolhi», e «traz-me marcas todas as manhãs».
+  const [modo, setModo] = useState<'manual' | 'lista' | 'auto'>('manual');
+
+  // Um lote colado por ela não tem corte de encaixe: nada foi cortado, porque
+  // a escolha foi dela. O rótulo da seção acompanha.
+  const importado = candidates.some((c) => c.user_selected);
 
   const approved = candidates.filter((c) => c.status === 'approved').length;
   // As que já têm email escrito e passaram a revisão: são as únicas que a
@@ -696,7 +792,8 @@ export default function Outreach({
       </div>
 
       <p className="osBrief">
-        Procure uma coisa concreta, ou deixe o CarolOS trazer marcas todas as manhãs.
+        Procure uma coisa concreta, cole as marcas que já separou, ou deixe o CarolOS trazer
+        marcas todas as manhãs.
       </p>
 
       <div className="modos" role="tablist" aria-label="Modo de procura">
@@ -706,7 +803,15 @@ export default function Outreach({
           aria-selected={modo === 'manual'}
           onClick={() => setModo('manual')}
         >
-          Procurar agora
+          Buscar marcas
+        </button>
+        <button
+          role="tab"
+          type="button"
+          aria-selected={modo === 'lista'}
+          onClick={() => setModo('lista')}
+        >
+          Já tenho marcas
         </button>
         <button
           role="tab"
@@ -714,9 +819,11 @@ export default function Outreach({
           aria-selected={modo === 'auto'}
           onClick={() => setModo('auto')}
         >
-          Busca automática
+          Automático
         </button>
       </div>
+
+      {modo === 'lista' ? <ImportBrands /> : null}
 
       {modo === 'auto' && !enabled ? (
         <p className="osWarn" data-tone="info">
@@ -868,7 +975,9 @@ export default function Outreach({
           <section className="revSection" key={section}>
             <header>
               <h2>
-                {SECTION_TITLE[section]}
+                {/* «Abaixo do corte» não se diz de uma marca que ela escolheu:
+                    não houve corte nenhum. */}
+                {importado && section === 'below' ? 'Pesquisadas, sem email' : SECTION_TITLE[section]}
                 <span className="revCount">{rows.length}</span>
               </h2>
               <p>{SECTION_HINT[section]}</p>
@@ -878,7 +987,7 @@ export default function Outreach({
                 <Card key={c.id} c={c} refs={refsPorMarca.get(c.id) ?? []} />
               ))}
             </div>
-            {section === 'below' && rows.length > 1 ? (
+            {section === 'below' && rows.length > 1 && !importado ? (
               <button
                 className="osPageBtn revClear"
                 type="button"

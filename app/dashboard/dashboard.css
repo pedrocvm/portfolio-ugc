@@ -7826,3 +7826,142 @@ a.aiSource:hover {
 .dash .csDropCompact .csDropLabel {
   font-size: 13px;
 }
+
+/* ── «Já tenho marcas» ─────────────────────────────────────────────────────
+   Uma área grande e mais nada. O trabalho dela já foi feito lá fora: aqui só
+   se cola. O reconhecimento aparece por baixo, imediato, para que um engano de
+   leitura se veja antes de custar dez pesquisas. */
+
+.dash .impBox {
+  padding: 22px 24px 24px;
+  border: 1px solid var(--areia2);
+  border-radius: 14px;
+  background: var(--papel);
+}
+.dash .impBox h2 {
+  margin: 0 0 6px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 21px;
+  color: var(--tinta);
+}
+.dash .impNota {
+  margin: 0 0 18px;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--tinta2);
+}
+.dash .impArea {
+  display: block;
+  width: 100%;
+  min-height: 190px;
+  padding: 14px 16px;
+  border: 1px solid var(--areia2);
+  border-radius: 10px;
+  background: var(--papel);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--tinta);
+  resize: vertical;
+}
+.dash .impArea:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 1px;
+}
+
+.dash .impPrev {
+  margin: 16px 0 4px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--areia2) 22%, transparent);
+}
+.dash .impCount {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--tinta2);
+}
+.dash .impCount b {
+  color: var(--tinta);
+}
+.dash .impChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dash .impChips li {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--papel);
+  border: 1px solid var(--areia2);
+  font-size: 13px;
+  color: var(--tinta);
+}
+/* Uma linha que eu li com pouca confiança — um @ sozinho, um nome de uma
+   palavra — fica assinalada em vez de passar por certa. */
+.dash .impChips li[data-weak] {
+  border-style: dashed;
+  color: var(--tinta2);
+}
+.dash .impChips small {
+  color: var(--tinta2);
+}
+.dash .impIgnored {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--tinta2);
+}
+.dash .impBox .osGo {
+  margin-top: 18px;
+}
+
+/* ── O que já houve com esta marca ─────────────────────────────────────────
+   Abre o cartão porque é o que muda a decisão: uma abordagem a quem já
+   respondeu estraga a conversa que existe. */
+
+.dash .outRel {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--realce);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--realce) 8%, transparent);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--tinta);
+}
+.dash .outRel[data-kind='SUPPRESSED'],
+.dash .outRel[data-kind='IDENTITY_UNCERTAIN'] {
+  border-left-color: var(--alerta);
+  background: var(--alertaLeve);
+  color: var(--alerta);
+}
+.dash .outRel[data-kind='CLIENT'] {
+  border-left-color: var(--jade);
+  background: var(--jadeLeve);
+  color: var(--jade);
+}
+.dash .outRel b {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.dash .outRel p {
+  margin: 4px 0 0;
+}
+.dash .outRel ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--tinta2);
+}
+
+@media (max-width: 860px) {
+  .dash .impBox {
+    padding: 18px 16px 20px;
+  }
+}

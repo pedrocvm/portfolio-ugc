@@ -3173,6 +3173,7 @@ export type Database = {
           ai_subject: string
           body: string
           brand_id: string | null
+          category_profile: Json | null
           city: string | null
           contact_email: string | null
           contact_email_options: Json
@@ -3185,6 +3186,7 @@ export type Database = {
           created_at: string
           creative_angle: string | null
           creative_opportunity: string
+          dedup_complete: boolean
           domain: string | null
           email_confidence: string | null
           field_sources: Json
@@ -3194,6 +3196,10 @@ export type Database = {
           gmail_message_id: string | null
           gmail_thread_id: string | null
           id: string
+          identity_confidence: string | null
+          identity_evidence: Json
+          import_input: Json | null
+          import_key: string | null
           instagram: string | null
           language: string
           linkedin: string | null
@@ -3207,6 +3213,7 @@ export type Database = {
           product: string | null
           quality: Json | null
           rank: number
+          raw_input: string | null
           ready_idea: Json | null
           red_flags: Json
           references_at: string | null
@@ -3214,6 +3221,9 @@ export type Database = {
           references_state: string
           reject_reason: string | null
           researched_at: string | null
+          resolution: string | null
+          resolution_evidence: Json
+          resolution_note: string | null
           risk: string
           run_id: string
           saved: boolean
@@ -3227,6 +3237,7 @@ export type Database = {
           ugc_opportunity: number | null
           ugc_signal: string | null
           updated_at: string
+          user_selected: boolean
           website: string | null
           whatsapp: string | null
           why_fit: string
@@ -3238,6 +3249,7 @@ export type Database = {
           ai_subject?: string
           body?: string
           brand_id?: string | null
+          category_profile?: Json | null
           city?: string | null
           contact_email?: string | null
           contact_email_options?: Json
@@ -3250,6 +3262,7 @@ export type Database = {
           created_at?: string
           creative_angle?: string | null
           creative_opportunity?: string
+          dedup_complete?: boolean
           domain?: string | null
           email_confidence?: string | null
           field_sources?: Json
@@ -3259,6 +3272,10 @@ export type Database = {
           gmail_message_id?: string | null
           gmail_thread_id?: string | null
           id?: string
+          identity_confidence?: string | null
+          identity_evidence?: Json
+          import_input?: Json | null
+          import_key?: string | null
           instagram?: string | null
           language?: string
           linkedin?: string | null
@@ -3272,6 +3289,7 @@ export type Database = {
           product?: string | null
           quality?: Json | null
           rank?: number
+          raw_input?: string | null
           ready_idea?: Json | null
           red_flags?: Json
           references_at?: string | null
@@ -3279,6 +3297,9 @@ export type Database = {
           references_state?: string
           reject_reason?: string | null
           researched_at?: string | null
+          resolution?: string | null
+          resolution_evidence?: Json
+          resolution_note?: string | null
           risk?: string
           run_id: string
           saved?: boolean
@@ -3292,6 +3313,7 @@ export type Database = {
           ugc_opportunity?: number | null
           ugc_signal?: string | null
           updated_at?: string
+          user_selected?: boolean
           website?: string | null
           whatsapp?: string | null
           why_fit?: string
@@ -3303,6 +3325,7 @@ export type Database = {
           ai_subject?: string
           body?: string
           brand_id?: string | null
+          category_profile?: Json | null
           city?: string | null
           contact_email?: string | null
           contact_email_options?: Json
@@ -3315,6 +3338,7 @@ export type Database = {
           created_at?: string
           creative_angle?: string | null
           creative_opportunity?: string
+          dedup_complete?: boolean
           domain?: string | null
           email_confidence?: string | null
           field_sources?: Json
@@ -3324,6 +3348,10 @@ export type Database = {
           gmail_message_id?: string | null
           gmail_thread_id?: string | null
           id?: string
+          identity_confidence?: string | null
+          identity_evidence?: Json
+          import_input?: Json | null
+          import_key?: string | null
           instagram?: string | null
           language?: string
           linkedin?: string | null
@@ -3337,6 +3365,7 @@ export type Database = {
           product?: string | null
           quality?: Json | null
           rank?: number
+          raw_input?: string | null
           ready_idea?: Json | null
           red_flags?: Json
           references_at?: string | null
@@ -3344,6 +3373,9 @@ export type Database = {
           references_state?: string
           reject_reason?: string | null
           researched_at?: string | null
+          resolution?: string | null
+          resolution_evidence?: Json
+          resolution_note?: string | null
           risk?: string
           run_id?: string
           saved?: boolean
@@ -3357,6 +3389,7 @@ export type Database = {
           ugc_opportunity?: number | null
           ugc_signal?: string | null
           updated_at?: string
+          user_selected?: boolean
           website?: string | null
           whatsapp?: string | null
           why_fit?: string
@@ -3430,11 +3463,14 @@ export type Database = {
           error: string | null
           finished_at: string | null
           id: string
+          input_hash: string | null
           input_tokens: number
           intent: Json
           kind: string
           output_tokens: number
           partial_failures: Json
+          processed: number
+          raw_input: string | null
           raw_query: string | null
           rejected_country: number
           rejected_irrelevant: number
@@ -3444,9 +3480,11 @@ export type Database = {
           screened: number
           search_terms: Json
           selected: number
+          source: string | null
           started_at: string
           status: string
           strategy: Json
+          total: number
         }
         Insert: {
           app_user_id: string
@@ -3455,11 +3493,14 @@ export type Database = {
           error?: string | null
           finished_at?: string | null
           id?: string
+          input_hash?: string | null
           input_tokens?: number
           intent?: Json
           kind?: string
           output_tokens?: number
           partial_failures?: Json
+          processed?: number
+          raw_input?: string | null
           raw_query?: string | null
           rejected_country?: number
           rejected_irrelevant?: number
@@ -3469,9 +3510,11 @@ export type Database = {
           screened?: number
           search_terms?: Json
           selected?: number
+          source?: string | null
           started_at?: string
           status?: string
           strategy?: Json
+          total?: number
         }
         Update: {
           app_user_id?: string
@@ -3480,11 +3523,14 @@ export type Database = {
           error?: string | null
           finished_at?: string | null
           id?: string
+          input_hash?: string | null
           input_tokens?: number
           intent?: Json
           kind?: string
           output_tokens?: number
           partial_failures?: Json
+          processed?: number
+          raw_input?: string | null
           raw_query?: string | null
           rejected_country?: number
           rejected_irrelevant?: number
@@ -3494,9 +3540,11 @@ export type Database = {
           screened?: number
           search_terms?: Json
           selected?: number
+          source?: string | null
           started_at?: string
           status?: string
           strategy?: Json
+          total?: number
         }
         Relationships: [
           {

@@ -20,7 +20,7 @@ import { requestPendingMetrics } from '@/modules/cases/service';
 
 export const JOBS = [
   'gmail-sync', 'process-pending', 'followups', 'rights', 'metrics', 'plan', 'upsell',
-  'insights', 'outreach',
+  'insights', 'outreach', 'imports',
   // Morning Autopilot. A ordem aqui não é o horário — é `runAllJobs`, abaixo.
   'triage', 'references', 'trends', 'milestones', 'content-plan', 'morning',
 ] as const;
@@ -42,7 +42,7 @@ export function processedCount(result: JobResult): number {
   const d = result.detail as Record<string, number | undefined>;
   return (
     d.processed ?? d.created ?? d.actions ?? d.markedDue ?? d.expired ?? d.requested ??
-    d.references ?? d.saved ?? d.generated ?? d.decisions ?? d.derived ?? 0
+    d.references ?? d.saved ?? d.generated ?? d.decisions ?? d.derived ?? d.batches ?? 0
   );
 }
 
@@ -163,6 +163,15 @@ async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobRes
         };
       }
 
+      case 'imports': {
+        // Os lotes que ela colou e ficaram a meio. Vinte e cinco marcas não
+        // cabem num pedido HTTP, e a tela só continua o lote enquanto ela a
+        // tiver aberta — se fechar o browser, é aqui que o lote acaba.
+        const { continuePendingImports } = await import('@/modules/outreach/import-run');
+        const r = await continuePendingImports();
+        return { job, status: r.batches === 0 ? 'skipped' : 'success', detail: { ...r } };
+      }
+
       /* ── Morning Autopilot ────────────────────────────────────────────── */
 
       case 'triage': {
@@ -261,7 +270,7 @@ export async function runAllJobs(opts: { manual?: boolean } = {}): Promise<JobRe
   // consolidação precisa de tudo o resto.
   const order: JobName[] = [
     'gmail-sync', 'process-pending', 'triage', 'followups', 'rights', 'metrics', 'upsell', 'plan',
-    'insights', 'outreach', 'references', 'trends', 'milestones', 'content-plan', 'morning',
+    'insights', 'outreach', 'imports', 'references', 'trends', 'milestones', 'content-plan', 'morning',
   ];
   const results: JobResult[] = [];
   for (const job of order) results.push(await runJob(job, opts));

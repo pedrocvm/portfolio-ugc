@@ -46,6 +46,10 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
     label: 'Atualizar follow-ups',
     why: 'De hora a hora. Marca os vencidos e semeia os que faltam.',
   },
+  'carolos-imports': {
+    label: 'Acabar os lotes de marcas coladas',
+    why: 'De 10 em 10 minutos, das 6h às 22h. A tela continua o lote enquanto estiver aberta; isto acaba os que ficaram a meio com o browser fechado.',
+  },
   'carolos-plan': {
     label: 'Recalcular a fila do Hoje',
     why: 'De hora a hora. Acorda adiados e refaz as ações, sem depender de alguém abrir a aplicação.',

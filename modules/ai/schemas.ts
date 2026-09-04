@@ -370,6 +370,73 @@ export const OutreachEmailSchema = z.object({
 });
 export type OutreachEmail = z.infer<typeof OutreachEmailSchema>;
 
+/* ── «Já tenho marcas»: identidade e perfil por categoria ───────────────── */
+
+/** Quem é, ao certo, a entidade que ela colou.
+ *
+ *  Nome parecido não identifica ninguém: «Vila Galé» e «Vila Foz» são hotéis
+ *  portugueses e não são a mesma empresa. O que identifica é um domínio, um
+ *  handle, um registro ou uma morada — e é isso que `evidence` tem de trazer.
+ *  Sem prova, `confidence` é `low` e a marca fica para ela confirmar. */
+export const BrandIdentitySchema = z.object({
+  /** O nome oficial, como a própria empresa se escreve. */
+  official_name: z.string().nullable(),
+  website: z.string().nullable(),
+  domain: z.string().nullable(),
+  instagram: z.string().nullable().describe('@usuário do perfil oficial'),
+  tiktok: z.string().nullable(),
+  city: z.string().nullable().describe('cidade, com prova'),
+  country: z.string().nullable().describe('país, com prova'),
+  /** Grupo ou casa-mãe, quando a marca pertence a um. Muda quem decide. */
+  parent_group: z.string().nullable(),
+  /** O que a empresa é, em linguagem natural: «hotel de vinhos», «pizzaria». */
+  category: z.string().nullable(),
+  description: z.string(),
+  confidence: z.enum(['high', 'medium', 'low']),
+  /** Cada prova, com o lugar onde foi vista. Uma lista vazia obriga a `low`. */
+  evidence: z.array(z.object({ claim: z.string(), url: z.string().nullable() })),
+  /** Mais do que uma empresa responde a este nome? Diz quais. */
+  ambiguity: z.array(z.object({ name: z.string(), why: z.string(), url: z.string().nullable() })),
+});
+export type BrandIdentity = z.infer<typeof BrandIdentitySchema>;
+
+/** Hotelaria vista como matéria-prima de conteúdo.
+ *
+ *  A pergunta não é «o hotel é bonito?» — é que EXPERIÊNCIA existe ali que a
+ *  Carol podia transformar em vídeo. «Mostrar as instalações» não é ideia; «uma
+ *  escapada de 24 horas para sair do ritmo da cidade» é. */
+export const HospitalityProfileSchema = z.object({
+  property_type: z.string().nullable().describe('hotel boutique, resort, quinta, alojamento local…'),
+  location_character: z.string().nullable().describe('o que o lugar tem: vinha, serra, mar, centro histórico'),
+  rooms: z.string().nullable(),
+  villas: z.string().nullable(),
+  spa: z.string().nullable(),
+  wellness: z.string().nullable(),
+  dining: z.string().nullable(),
+  wine: z.string().nullable(),
+  pool: z.string().nullable(),
+  nature: z.string().nullable(),
+  architecture: z.string().nullable(),
+  local_experiences: z.array(z.string()),
+  amenities: z.array(z.string()),
+  positioning: z.string().nullable().describe('luxo, boutique, familiar, retiro, negócios'),
+  audiences: z.array(z.enum(['couples', 'family', 'luxury', 'boutique', 'business', 'retreat', 'solo', 'friends'])),
+  seasonal_opportunities: z.array(z.object({ season: z.string(), why: z.string() })),
+  /** O que distingue esta casa de outra igual na estrada ao lado. */
+  differentiators: z.array(z.string()),
+  /** A resposta à pergunta que importa. Uma experiência, não uma lista de
+   *  instalações. */
+  content_experiences: z.array(
+    z.object({
+      experience: z.string(),
+      why_it_films_well: z.string(),
+      season: z.string().nullable(),
+    }),
+  ),
+  sources: z.array(z.object({ label: z.string(), url: z.string().nullable() })),
+});
+export type HospitalityProfile = z.infer<typeof HospitalityProfileSchema>;
+
 /* ── Morning Autopilot ──────────────────────────────────────────────────── */
 
 /** A leitura de uma conversa, feita de madrugada.

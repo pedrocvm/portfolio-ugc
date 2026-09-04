@@ -81,33 +81,71 @@ export async function buildKnownSet(): Promise<KnownSet> {
   };
 }
 
+export type GmailHistory = {
+  found: boolean;
+  /** Falso = não foi possível perguntar. Não é o mesmo que «não há». */
+  checked: boolean;
+  subjects: string[];
+  /** A mensagem mais recente com este domínio. */
+  lastAt: string | null;
+  lastSubject: string | null;
+  /** A marca chegou a escrever — logo houve conversa, não só uma abordagem. */
+  theyReplied: boolean;
+  /** A última mensagem saiu da caixa dela: estamos à espera deles. */
+  waitingReply: boolean;
+  messages: number;
+};
+
+const SEM_HISTORICO: GmailHistory = {
+  found: false, checked: false, subjects: [], lastAt: null, lastSubject: null,
+  theyReplied: false, waitingReply: false, messages: 0,
+};
+
 /** Pergunta direta ao Gmail, para uma marca concreta.
  *
  *  A ingestão só salva o que já sincronizou. Isto vai à caixa perguntar se
  *  existe qualquer mensagem — enviada ou recebida — com aquele domínio, que é
- *  a única forma de apanhar uma conversa anterior ao CarolOS. */
-export async function gmailHasHistory(
-  domain: string,
-): Promise<{ found: boolean; checked: boolean; subjects: string[] }> {
+ *  a única forma de apanhar uma conversa anterior ao CarolOS.
+ *
+ *  Devolve mais do que «sim ou não» porque quem importa uma lista precisa de
+ *  saber o QUE houve: uma marca que respondeu não se aborda outra vez, e uma
+ *  que ficou calada leva uma reabordagem — não um primeiro contato. */
+export async function gmailHasHistory(domain: string): Promise<GmailHistory> {
   try {
     const { accessTokenFor } = await import('@/modules/integrations/gmail/oauth');
     const { listMessages, getMessage, parseMessage } = await import('@/modules/integrations/gmail/client');
 
     const auth = await accessTokenFor();
-    if (!auth) return { found: false, checked: false, subjects: [] };
+    if (!auth) return SEM_HISTORICO;
 
-    const { messages } = await listMessages(auth.token, `from:${domain} OR to:${domain}`, 5);
-    if (messages.length === 0) return { found: false, checked: true, subjects: [] };
+    const { messages } = await listMessages(auth.token, `from:${domain} OR to:${domain}`, 8);
+    if (messages.length === 0) return { ...SEM_HISTORICO, checked: true };
 
-    const subjects: string[] = [];
-    for (const ref of messages.slice(0, 3)) {
-      const parsed = parseMessage(await getMessage(auth.token, ref.id));
-      subjects.push(parsed.subject || '(sem assunto)');
+    const lidas: ReturnType<typeof parseMessage>[] = [];
+    for (const ref of messages.slice(0, 5)) {
+      lidas.push(parseMessage(await getMessage(auth.token, ref.id)));
     }
-    return { found: true, checked: true, subjects };
+    // O Gmail devolve por ordem decrescente, mas ordenar aqui não custa nada e
+    // deixa de depender disso.
+    lidas.sort((a, b) => (a.sentAt < b.sentAt ? 1 : -1));
+
+    // Quem escreveu: uma mensagem cujo remetente é do domínio da marca é DELES.
+    const deles = (m: (typeof lidas)[number]) => m.from.address.endsWith(`@${domain}`);
+    const ultima = lidas[0];
+
+    return {
+      found: true,
+      checked: true,
+      subjects: lidas.map((m) => m.subject || '(sem assunto)'),
+      lastAt: ultima.sentAt,
+      lastSubject: ultima.subject || null,
+      theyReplied: lidas.some(deles),
+      waitingReply: !deles(ultima),
+      messages: messages.length,
+    };
   } catch {
     // Falhar a verificação não é o mesmo que não haver histórico. Quem chama
     // trata `checked: false` como «não sei», e não como «é nova».
-    return { found: false, checked: false, subjects: [] };
+    return SEM_HISTORICO;
   }
 }

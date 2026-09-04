@@ -91,3 +91,58 @@ export async function writeOutreachEmail(
     language,
   };
 }
+
+/** A reabordagem.
+ *
+ *  Já houve email com esta marca — às vezes antes de o CarolOS existir, e por
+ *  isso o histórico vem do Gmail e não do CRM. Escrever aqui um primeiro
+ *  contato é a forma mais rápida de parecer que ela não sabe com quem já falou.
+ *
+ *  Partilha tudo com a abordagem fria menos o prompt: o idioma, o exemplar do
+ *  portfólio e os emails reais dela são os mesmos, e duplicá-los seria garantir
+ *  que um dia divergiam. */
+export async function writeReengagementEmail(
+  input: { candidate: Discovered; research: OutreachResearch },
+  style: StyleProfile | null,
+  history: string,
+): Promise<Written | null> {
+  const { runPrompt } = await import('@/modules/ai/gateway');
+  const { reengagementEmail } = await import('@/modules/ai/prompts/registry');
+
+  const language = languageFor(input.research.country ?? input.candidate.country);
+  const portfolio = await pickPortfolio(input.candidate.nicheId, language);
+
+  const { mails } = await fetchOutreachHistory(8);
+  const exemplars = mails
+    .slice(0, 4)
+    .map((m) => `Assunto: ${m.subject}\n\n${m.body}`)
+    .join('\n\n---\n\n');
+
+  const run = await runPrompt(
+    reengagementEmail,
+    {
+      brand: input.candidate.name,
+      product: input.research.product,
+      language: language === 'pt' ? 'português (a voz dela)' : 'inglês',
+      contactName: input.research.contact?.name ?? null,
+      history,
+      creativeOpportunity: input.research.creative_opportunity,
+      ideas: input.research.content_ideas.map((i) => `- ${i.title}: ${i.angle}`).join('\n'),
+      sources: input.research.sources.map((s) => `- ${s.label}${s.url ? ` (${s.url})` : ''}`).join('\n'),
+      portfolio: portfolio ? `${portfolio.title}` : 'carolqueiroz.pt',
+      style: style ? JSON.stringify(style, null, 1).slice(0, 4000) : '(sem perfil aprendido — usa a voz natural dela)',
+      exemplars: exemplars || '(sem exemplos disponíveis)',
+    },
+    { entityType: 'outreach_candidate' },
+  );
+
+  if (!run.ok) return null;
+
+  return {
+    subject: run.output.subject,
+    body: run.output.body,
+    claims: run.output.claims,
+    portfolio,
+    language,
+  };
+}

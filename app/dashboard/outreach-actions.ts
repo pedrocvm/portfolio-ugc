@@ -680,3 +680,89 @@ export async function saveFocus(input: {
     return { error: 'Não consegui salvar o foco.' };
   }
 }
+
+/* ── «Já tenho marcas» ──────────────────────────────────────────────────── */
+
+/** Recebe a lista colada e devolve já.
+ *
+ *  A Carol não fica presa na tela: o lote abre, ela vê «recebi 10 marcas» e sai.
+ *  O trabalho segue depois da resposta, e a tela pergunta de vez em quando se já
+ *  acabou — com a contagem verdadeira, nunca com uma percentagem inventada. */
+export async function startBrandImport(raw: string): Promise<
+  Result & { runId?: string; total?: number; resumed?: boolean }
+> {
+  await requireUser();
+  if (raw.trim().length < 2) return { error: 'Cole a lista de marcas primeiro.' };
+
+  const { openImportBatch, processImportBatch } = await import('@/modules/outreach/import-run');
+  const aberto = await openImportBatch(raw);
+  if (!aberto.ok) return { error: aberto.error };
+
+  after(async () => {
+    await processImportBatch(aberto.runId);
+  });
+
+  revalidatePath('/dashboard/outreach');
+  return { ok: true, runId: aberto.runId, total: aberto.total, resumed: aberto.resumed };
+}
+
+/** Retoma um lote que ficou a meio.
+ *
+ *  Vinte e cinco marcas não cabem num pedido de 300 s. Cada marca é reclamada
+ *  antes de ser trabalhada, por isso continuar é seguro: quem entra a seguir
+ *  apanha a fila onde ela ficou e nunca repete uma pesquisa já paga. */
+export async function continueBrandImport(runId: string): Promise<Result> {
+  await requireUser();
+  if (!Uuid.safeParse(runId).success) return { error: 'Lote inválido.' };
+
+  const { processImportBatch } = await import('@/modules/outreach/import-run');
+  after(async () => {
+    await processImportBatch(runId);
+  });
+  return { ok: true };
+}
+
+/** Já acabou? A tela pergunta a cada poucos segundos enquanto espera. */
+export async function brandImportStatus(runId: string) {
+  await requireUser();
+  if (!Uuid.safeParse(runId).success) return null;
+  const { importProgress } = await import('@/modules/outreach/import-run');
+  return importProgress(runId);
+}
+
+/** Quanto tempo um lote importado continua a ser «o lote de agora». Passado
+ *  isto, a tela volta ao que a busca automática trouxe. */
+const IMPORT_FRESH_MS = 12 * 3600_000;
+
+/** O lote importado mais recente, com as marcas que dele saíram. */
+export async function latestImportRun() {
+  await requireUser();
+  const db = await supabaseServer();
+
+  const { data: run } = await db
+    .from('outreach_run')
+    .select('*')
+    .eq('kind', 'imported')
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!run) return { run: null, candidates: [] };
+  if (
+    run.status !== 'running' &&
+    Date.now() - new Date(run.started_at).getTime() >= IMPORT_FRESH_MS
+  ) {
+    return { run: null, candidates: [] };
+  }
+
+  const { data: candidates } = await db
+    .from('outreach_candidate')
+    .select('*')
+    .eq('run_id', run.id)
+    // As repetidas do próprio lote não são marcas: eram a mesma linha escrita
+    // de duas maneiras, e mostrá-las era mostrar trabalho que não existe.
+    .not('status', 'in', '(rejected,skipped)')
+    .order('rank');
+
+  return { run, candidates: candidates ?? [] };
+}
