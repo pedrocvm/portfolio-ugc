@@ -105,6 +105,24 @@ test('a Carol AI alcança a manhã, o conteúdo e as referências', () => {
     'get_business_milestones',
     'get_content_multiplier',
     'get_content_strategy',
+    // O Content OS: a mentoria aplicada pela Carol AI.
+    'get_mentor_playbook',
+    'get_content_balance',
+    'classify_content_intent',
+    'get_three_hooks',
+    'deconstruct_reference',
+    'evaluate_reels_test',
+    'get_reels_test_lab',
+    'record_content_performance',
+    'get_content_learnings',
+    'get_broll_bank',
+    'save_broll_take',
+    'get_social_proof',
+    'save_social_proof',
+    'check_duplicate_content',
+    'create_content_variant',
+    'create_directed_content',
+    'discover_braga_places',
   ]) {
     const f = todas.find((x) => x.nome === nome);
     assert.ok(f, `«${nome}» não existe`);
@@ -200,4 +218,24 @@ test('começar uma busca e mudar o foco contam como escrita', () => {
   }
   assert.equal(todas.find((f) => f.nome === 'get_prospecting_focus')?.risco, 'read');
   assert.equal(todas.find((f) => f.nome === 'find_anything')?.risco, 'read');
+});
+
+
+/** A prova social só sai com permissão dela. A ferramenta que a guarda não
+ *  pode ser o sítio onde a permissão se dá. */
+test('a Carol AI guarda prova social mas nunca dá a permissão', () => {
+  const i = TOOLS.indexOf("'save_social_proof'");
+  assert.ok(i > 0, 'a ferramenta de prova social desapareceu');
+  const corpo = TOOLS.slice(i, TOOLS.indexOf('\n);', i));
+  assert.doesNotMatch(corpo, /setSocialProofPermission|permission:\s*'granted'|usable_for/);
+  assert.match(corpo, /Nunca marques um feedback como usável/);
+});
+
+/** O Instagram não tem API para mover um teste para o feed. Nenhuma
+ *  ferramenta pode fingir que o faz. */
+test('nenhuma ferramenta publica nem move um teste para o feed', () => {
+  assert.doesNotMatch(TOOLS, /\bmarkPromotedToFeed\b|\bpromoteToFeed\b/);
+  const i = TOOLS.indexOf("'get_reels_test_lab'");
+  const corpo = TOOLS.slice(i, TOOLS.indexOf('\n);', i));
+  assert.match(corpo, /não publica/);
 });

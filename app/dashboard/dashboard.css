@@ -7738,3 +7738,91 @@ a.aiSource:hover {
     min-height: 44px;
   }
 }
+
+/* ── Content OS ────────────────────────────────────────────────────────── */
+
+.dash .csTabs {
+  margin: 8px 0 20px;
+  overflow-x: auto;
+}
+.dash .csWhy > summary {
+  color: var(--umbra);
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+}
+.dash .csOutline {
+  margin-top: 10px;
+}
+.dash .csOutline b {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.dash .csSource {
+  margin: 8px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: var(--pedra);
+}
+.dash .csRules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dash .csRules > li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--tinta);
+}
+.dash .csRules .cbSub {
+  margin: 0;
+}
+.dash .csAdd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+.dash .csAdd .osSearch {
+  flex: 1 1 240px;
+  min-height: 44px;
+}
+.dash .csAdd .csSeconds {
+  flex: 0 0 72px;
+}
+.dash .csAdd label.osPageBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.dash .csDrop {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px dashed var(--areia2);
+  background: var(--areia);
+  outline: none;
+}
+.dash .csDrop:focus-visible {
+  border-color: var(--umbra);
+}
+.dash .csDropCompact {
+  padding: 8px 12px;
+}
+.dash .csDropLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  font-size: 14px;
+  color: var(--tinta2);
+  cursor: pointer;
+}
+.dash .csDropCompact .csDropLabel {
+  font-size: 13px;
+}

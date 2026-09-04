@@ -45,7 +45,7 @@ export const SECTIONS: readonly Section[] = [
       { href: '/dashboard/opportunities', label: 'Negócios' },
       { href: '/dashboard/followups', label: 'Follow-ups' },
       { href: '/dashboard/production', label: 'Produção' },
-      { href: '/dashboard/content', label: 'Conteúdo', quiet: true },
+      { href: '/dashboard/content', label: 'Conteúdo' },
       { href: '/dashboard/brands', label: 'Marcas', quiet: true },
       { href: '/dashboard/clients', label: 'Clientes', quiet: true },
       { href: '/dashboard/cases', label: 'Cases', quiet: true },

@@ -54,6 +54,23 @@ const STATUS: Record<string, string> = {
   capture_something: 'Salvando…',
   find_anything: 'Procurando em tudo…',
   prepare_outreach_send: 'Verificando o envio…',
+  get_mentor_playbook: 'Lendo a mentoria…',
+  get_content_balance: 'Vendo o que falta esta semana…',
+  classify_content_intent: 'Vendo o que isso é…',
+  get_three_hooks: 'Escrevendo os três ganchos…',
+  deconstruct_reference: 'Destrinchando…',
+  evaluate_reels_test: 'Vendo se serve para teste…',
+  get_reels_test_lab: 'Abrindo os testes…',
+  record_content_performance: 'Registando os números…',
+  get_content_learnings: 'Vendo o que já aprendemos…',
+  get_broll_bank: 'Procurando B-roll…',
+  save_broll_take: 'Guardando o take…',
+  get_social_proof: 'Vendo os feedbacks…',
+  save_social_proof: 'Guardando o feedback…',
+  check_duplicate_content: 'Comparando com o que já saiu…',
+  create_content_variant: 'Escrevendo a variante…',
+  create_directed_content: 'Escrevendo a peça…',
+  discover_braga_places: 'Procurando lugares em Braga…',
 };
 
 const toolSpecs = () =>

@@ -5,6 +5,8 @@ import Spinner from '@/components/dashboard/Spinner';
 import { pushToast, pushUndo } from '@/components/dashboard/Toasts';
 import { anotherIdea, decideOnIdea } from '@/app/dashboard/morning-actions';
 import { REJECTION_REASONS, type RejectionReason } from '@/modules/creator/domain';
+import { MENTOR_SOURCE, ruleById } from '@/modules/creator/mentor-playbook';
+import { STRATEGY_SOURCE } from '@/modules/creator/strategy';
 import type { ContentIdeaRow } from '@/modules/creator/plan-service';
 import type { TrendRow } from '@/modules/trends/service';
 import RecordingMode from './RecordingMode';
@@ -54,8 +56,8 @@ export default function ContentBank({
         <section className="osSection">
           <h2>Para gravar hoje</h2>
           <p className="osNote">
-            Uma para cada plataforma, tratadas de forma diferente de propósito: o Reel republicado no
-            TikTok é o erro que faz o TikTok não crescer.
+            Uma para cada plataforma, tratadas de forma diferente de propósito — e, quando o dia
+            comporta, um Reels Test feito com B-roll que já existe. Cada uma diz por que foi escolhida.
           </p>
           <div className="cbList">
             {today.map((i) => (
@@ -184,8 +186,9 @@ function Idea({
   return (
     <details className="cbIdea" open={open} data-platform={idea.platform} data-status={status}>
       <summary>
-        <span className="cbPlat">{idea.platform === 'instagram' ? 'Instagram' : 'TikTok'}</span>
+        <span className="cbPlat">{idea.track === 'reels_test' ? 'Reels Test' : idea.platform === 'instagram' ? 'Instagram' : 'TikTok'}</span>
         <span className="cbTitle">{idea.title || idea.hook}</span>
+        {idea.track !== 'main' && idea.track !== 'reels_test' ? <span className="osTag" data-tone="mute">{idea.trackLabel}</span> : null}
         <span className="cbTime">
           {idea.recordMinutes ? `${idea.recordMinutes} min para gravar` : ''}
           {idea.editMinutes ? ` · ${idea.editMinutes} min para editar` : ''}
@@ -207,6 +210,8 @@ function Idea({
           {idea.seriesName ? ` · série «${idea.seriesName}»${idea.episode ? ` #${idea.episode}` : ''}` : ''}
         </p>
         {idea.verdict ? <p className="cbVerdict">{idea.verdict}</p> : null}
+
+        <WhyChosen idea={idea} />
 
         {idea.altHooks.length ? (
           <details className="cbSub">
@@ -446,6 +451,103 @@ function Idea({
           </button>
         </footer>
       </div>
+    </details>
+  );
+}
+
+
+/** «Por que escolhi isso?»
+ *
+ *  A estratégia fica no motor; o que ela vê é a razão. Função, ganchos, o
+ *  esqueleto da história e o B-roll que já existe — e a fonte, ao toque. */
+function WhyChosen({ idea }: { idea: ContentIdeaRow }) {
+  const temAlgo = idea.whyChosen || idea.functionLabel || idea.hooks.written || idea.story.outline;
+  if (!temAlgo) return null;
+  const OUTLINE: [keyof NonNullable<ContentIdeaRow['story']['outline']>, string][] = [
+    ['hook', 'Gancho'],
+    ['problem', 'Problema'],
+    ['development', 'Desenvolvimento'],
+    ['proof', 'Prova'],
+    ['payoff', 'Payoff'],
+    ['cta', 'Remate'],
+  ];
+  const regras = idea.rulesUsed.map((id) => ruleById(id)?.rule).filter((r): r is string => Boolean(r));
+
+  return (
+    <details className="cbSub csWhy">
+      <summary>Por que escolhi isso?</summary>
+      {idea.whyChosen ? <p className="cbScript">{idea.whyChosen}</p> : null}
+      <dl className="cbPlan">
+        {idea.functionLabel ? (
+          <>
+            <dt>Função</dt>
+            <dd>
+              {idea.functionLabel}
+              {idea.modeLabels.length ? ` · ${idea.modeLabels.join(' + ')}` : ''}
+            </dd>
+          </>
+        ) : null}
+        {idea.story.proofOfCraft ? (
+          <>
+            <dt>O que está por trás</dt>
+            <dd>{idea.story.proofOfCraft}</dd>
+          </>
+        ) : null}
+        {idea.hooks.visual ? (
+          <>
+            <dt>Olho</dt>
+            <dd>{idea.hooks.visual}</dd>
+          </>
+        ) : null}
+        {idea.hooks.written ? (
+          <>
+            <dt>Leitura</dt>
+            <dd>«{idea.hooks.written}»</dd>
+          </>
+        ) : null}
+        {idea.hooks.spoken ? (
+          <>
+            <dt>Voz</dt>
+            <dd>«{idea.hooks.spoken}»</dd>
+          </>
+        ) : idea.hooks.written ? (
+          <>
+            <dt>Voz</dt>
+            <dd>Sem fala, de propósito.</dd>
+          </>
+        ) : null}
+        {idea.reelsTest?.because ? (
+          <>
+            <dt>Reels Test</dt>
+            <dd>{idea.reelsTest.because}</dd>
+          </>
+        ) : null}
+        {idea.assetsAvailable.length ? (
+          <>
+            <dt>Já tenho</dt>
+            <dd>B-roll no banco: {idea.assetsAvailable.map((a) => a.split(': ')[1] ?? a).join('; ')}.</dd>
+          </>
+        ) : null}
+      </dl>
+      {idea.story.outline ? (
+        <ol className="cbShots csOutline">
+          {OUTLINE.map(([k, l]) =>
+            idea.story.outline?.[k] ? (
+              <li key={k}>
+                <b>{l}.</b> {idea.story.outline[k]}
+              </li>
+            ) : null,
+          )}
+        </ol>
+      ) : null}
+      {regras.length ? (
+        <p className="cbMeta">
+          Regras aplicadas: {regras.join(' · ')}
+        </p>
+      ) : null}
+      <p className="csSource">
+        Fonte: {MENTOR_SOURCE.provenanceLabel} · {STRATEGY_SOURCE.name.replace('Auditoria estratégica — ', 'Auditoria Instagram · ')} {STRATEGY_SOURCE.observedAt}
+      </p>
     </details>
   );
 }

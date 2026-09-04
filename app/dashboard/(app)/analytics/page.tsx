@@ -4,6 +4,8 @@ import { aiTaskLabel, jobLabel } from '@/lib/labels';
 import { formatDate } from '@/lib/time';
 import { automationHealth, commercialAnalytics } from '@/modules/analytics/service';
 import { nicheById } from '@/modules/brands/niches';
+import { contentLearnings } from '@/modules/creator/content-os-service';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +17,7 @@ export const dynamic = 'force-dynamic';
  *  pior do que não ter números nenhuns. */
 export default async function AnalyticsPage() {
   await requireUser();
-  const [a, health] = await Promise.all([commercialAnalytics(90), automationHealth(30)]);
+  const [a, health, learnings] = await Promise.all([commercialAnalytics(90), automationHealth(30), contentLearnings(3)]);
 
   return (
     <>
@@ -79,6 +81,27 @@ export default async function AnalyticsPage() {
           <span>trabalhos por produto</span>
         </div>
       </div>
+
+      <section className="osSection">
+        <h2>O que o conteúdo está ensinando</h2>
+        {learnings.length ? (
+          <div className="osRows">
+            {learnings.map((l) => (
+              <div className="osRow" key={l.id}>
+                <div>
+                  <span className="osRowName" style={{ fontSize: 17 }}>{l.statement}</span>
+                  <p className="osRowSub">{l.sampleSize} peças medidas · números reais dela, não conselho.</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="osRowSub">
+            Ainda nada: precisa de três peças medidas de cada lado. Os prints dos Insights entram em{' '}
+            <Link href="/dashboard/content?tab=published">Conteúdo → Publicado</Link>.
+          </p>
+        )}
+      </section>
 
       {a.unavailable.length ? (
         <section className="osSection">

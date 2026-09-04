@@ -1369,6 +1369,310 @@ const getContentStrategy = define(
   },
 );
 
+
+
+/* ── Content OS: a mentoria aplicada ─────────────────────────────────────── */
+
+const getMentorPlaybook = define(
+  'get_mentor_playbook',
+  'O que a mentoria ensinou, como estrutura: o que estamos seguindo, o que estamos testando, as heurísticas com número, e os conflitos já resolvidos com a auditoria do perfil. Usa isto quando ela perguntar «o que a mentora falou sobre X» — e SÓ então explica o framework. No resto do tempo, aplica.',
+  z.object({}),
+  async () => {
+    const { strategyScreen } = await import('@/modules/creator/content-os-service');
+    const s = await strategyScreen();
+    return {
+      data: {
+        version: s.playbookVersion,
+        source: { name: s.mentorSource.name, effectiveAt: s.mentorSource.effectiveAt, recordedBy: s.mentorSource.recordedBy, authority: s.mentorSource.authority },
+        following: s.following.map((r) => ({ rule: r.rule, why: r.why, kind: r.kind })),
+        testing: s.testing,
+        heuristics: s.heuristics.map((r) => ({ rule: r.rule, why: r.why, kind: r.kind })),
+        conflicts: s.conflicts,
+        learned: s.learned.map((l) => ({ statement: l.statement, sampleSize: l.sampleSize, confidence: l.confidence })),
+        note: 'Aplica as regras; não as recites. Uma heurística compara-se com os números dela, nunca se cita como fato.',
+      },
+      sources: [{ id: s.mentorSource.id, type: 'knowledge' as const, label: s.mentorSource.provenanceLabel, at: s.mentorSource.effectiveAt, href: '/dashboard/content?tab=strategy' }],
+    };
+  },
+);
+
+const getContentBalance = define(
+  'get_content_balance',
+  'O que está em falta esta semana: a função (atrair/conectar, educar/reter, converter) e o modo (autoridade, entretenimento, informação, pessoal) que menos saíram. Usa isto para «qual pilar está faltando?».',
+  z.object({}),
+  async () => {
+    const { contentBalanceNow } = await import('@/modules/creator/content-os-service');
+    const b = await contentBalanceNow();
+    return { data: { function: b.fn, mode: b.mode }, sources: [] };
+  },
+);
+
+const classifyContentIntent = define(
+  'classify_content_intent',
+  'Diz o que uma ideia é: a função (atração, educação ou conversão), os modos, se mostra o que está por trás, se educa como prova de ofício ou como aula, se o território é dela, e se serviria para Reels Test. Usa isto para «isto é atração ou conversão?», «vale jogar no Reels Test?» e «quero conteúdo de skincare».',
+  z.object({
+    text: z.string().min(5).describe('a ideia, o gancho ou o pedido dela'),
+    duration_seconds: z.number().optional(),
+    cta: z.string().optional(),
+  }),
+  async ({ text, duration_seconds, cta }) => {
+    const { inferFunction, inferModes, proofOfCraft, educationVerdict, nicheTerritory, ctaVerdict } = await import('@/modules/creator/content-engine');
+    const { reelsTestEligibility } = await import('@/modules/creator/reels-test');
+    const { FUNCTION_SPEC, MODE_SPEC } = await import('@/modules/creator/mentor-playbook');
+    const fn = inferFunction({ hook: text });
+    const modes = inferModes({ hook: text });
+    const test = reelsTestEligibility({ contentFunction: fn, durationSeconds: duration_seconds ?? null, hook: text, cta: cta ?? null, modes });
+    return {
+      data: {
+        function: { id: fn, label: FUNCTION_SPEC[fn].label, objective: FUNCTION_SPEC[fn].objective },
+        modes: modes.map((m) => MODE_SPEC[m].label),
+        proofOfCraft: proofOfCraft({ hook: text }),
+        education: educationVerdict({ hook: text }),
+        territory: nicheTerritory(text),
+        reelsTest: { eligible: test.eligible, recommendation: test.recommendation, because: test.because },
+        cta: cta ? ctaVerdict(cta, test.eligible ? 'cold' : 'warm') : null,
+      },
+      sources: [],
+    };
+  },
+);
+
+const getThreeHooks = define(
+  'get_three_hooks',
+  'Escreve os três ganchos de uma peça — visual, escrito (com o tipo) e falado — a dizer coisas diferentes. Usa isto para «me dá três ganchos». Gasta uma chamada ao modelo.',
+  z.object({ topic: z.string().min(3), idea_id: z.string().uuid().optional(), context: z.string().optional() }),
+  async ({ topic, idea_id, context }) => {
+    const { hooksFor } = await import('@/modules/creator/content-os-service');
+    const r = await hooksFor({ topic, context, ideaId: idea_id });
+    return { data: r.ok ? r.hooks : { ok: false, reason: r.error }, sources: [] };
+  },
+  'write',
+);
+
+const deconstructReferenceTool = define(
+  'deconstruct_reference',
+  'Destrincha um conteúdo validado pelo método da mentora — ganchos, estrutura, ritmo, ângulo, motor emocional, porque funciona — e diz como vira Carol. Precisa da descrição ou transcrição do vídeo; não vai à web. Usa isto para «destrincha esse Reel» e «como adapto isso ao meu estilo?».',
+  z.object({ reference: z.string().min(20).describe('o que aparece, o que diz, como corta'), url: z.string().optional() }),
+  async ({ reference, url }) => {
+    const { deconstruct } = await import('@/modules/creator/content-os-service');
+    const r = await deconstruct({ reference, url: url ?? null });
+    return {
+      data: r.ok ? { ...r.deconstruction, note: 'A lógica adapta-se; a fala não se copia.' } : { ok: false, reason: r.error },
+      sources: url ? [{ id: url, type: 'knowledge' as const, label: 'Referência', at: null, href: url }] : [],
+    };
+  },
+  'write',
+);
+
+const evaluateReelsTest = define(
+  'evaluate_reels_test',
+  'Se uma ideia salva serviria para Reels Test — universal, curta, sem contexto, remate simples — ou se vai para o feed. Usa isto para «vale jogar isso no Reels Test?» e «esse vídeo deveria ir pro feed?».',
+  z.object({ idea_id: z.string().uuid() }),
+  async ({ idea_id }) => {
+    const { contentIdea } = await import('@/modules/creator/plan-service');
+    const idea = await contentIdea(idea_id);
+    if (!idea) return { data: { found: false }, sources: [] };
+    const { reelsTestEligibility } = await import('@/modules/creator/reels-test');
+    const v = reelsTestEligibility({
+      contentFunction: idea.contentFunction,
+      durationSeconds: idea.durationSeconds,
+      hook: idea.hooks.written ?? idea.hook,
+      script: idea.script,
+      caption: idea.caption,
+      cta: idea.cta,
+      format: idea.format,
+      modes: idea.modes,
+      usesExistingAsset: idea.brollAssetIds.length > 0,
+    });
+    return {
+      data: { found: true, title: idea.title, track: idea.track, eligible: v.eligible, recommendation: v.recommendation, because: v.because, hasBroll: idea.brollAssetIds.length > 0 },
+      sources: [{ id: idea.id, type: 'portfolio' as const, label: idea.title || idea.hook, at: idea.planDate, href: `/dashboard/content?idea=${idea.id}` }],
+    };
+  },
+);
+
+const getReelsTestLab = define(
+  'get_reels_test_lab',
+  'Os testes em andamento, os preparados por publicar, os que pararam de crescer acima do normal dela (candidatos a feed), quantos testes cabem hoje e a linha de base real. Usa isto para «não tô afim de gravar hoje» — há testes com B-roll que já existe.',
+  z.object({}),
+  async () => {
+    const { reelsTestLab } = await import('@/modules/creator/content-os-service');
+    const lab = await reelsTestLab();
+    return {
+      data: {
+        load: lab.load,
+        baseline: lab.baseline,
+        intensiveMode: lab.settings.intensiveTestMode,
+        ready: lab.ready,
+        running: lab.running.map((t) => ({ ideaId: t.ideaId, title: t.title, stage: t.stage, latest: t.latest?.because ?? null, promotion: t.promotion?.because ?? null })),
+        promotionCandidates: lab.promotionCandidates.map((t) => ({ ideaId: t.ideaId, title: t.title, headline: t.promotion?.headline })),
+        note: 'Levar ao feed é no Instagram, na mão dela. O CarolOS prepara e regista; não publica.',
+      },
+      sources: lab.ready.map((r) => ({ id: r.ideaId, type: 'portfolio' as const, label: r.title || r.hook, at: null, href: `/dashboard/content?idea=${r.ideaId}` })),
+    };
+  },
+);
+
+const recordContentPerformance = define(
+  'record_content_performance',
+  'Regista os números de uma peça publicada — o que ela colou de um print dos Insights ou disse por escrito. Só o que está no print: o que não está fica null. Devolve como correu face à linha de base dela.',
+  z.object({
+    idea_id: z.string().uuid().optional(),
+    platform: z.enum(['instagram', 'tiktok']),
+    views: z.number().nullable(),
+    reach: z.number().nullable().optional(),
+    non_follower_reach: z.number().nullable().optional(),
+    likes: z.number().nullable().optional(),
+    comments: z.number().nullable().optional(),
+    saves: z.number().nullable().optional(),
+    shares: z.number().nullable().optional(),
+    profile_visits: z.number().nullable().optional(),
+    follows: z.number().nullable().optional(),
+    notes: z.string().optional(),
+  }),
+  async (a) => {
+    const { recordPerformance } = await import('@/modules/creator/content-os-service');
+    const r = await recordPerformance({
+      ideaId: a.idea_id ?? null,
+      platform: a.platform,
+      views: a.views,
+      reach: a.reach ?? null,
+      nonFollowerReach: a.non_follower_reach ?? null,
+      likes: a.likes ?? null,
+      comments: a.comments ?? null,
+      saves: a.saves ?? null,
+      shares: a.shares ?? null,
+      profileVisits: a.profile_visits ?? null,
+      follows: a.follows ?? null,
+      source: 'manual',
+      notes: a.notes ?? '',
+    });
+    return { data: r.ok ? { ok: true, verdict: r.verdict } : { ok: false, reason: r.error }, sources: [] };
+  },
+  'write',
+);
+
+const getContentLearnings = define(
+  'get_content_learnings',
+  'O que os números dela já ensinaram, com tamanho de amostra e confiança — no máximo três frases. Vazio quer dizer que ainda não há dados, não que não há nada a aprender.',
+  z.object({}),
+  async () => {
+    const { contentLearnings, experiments } = await import('@/modules/creator/content-os-service');
+    const [learned, exps] = await Promise.all([contentLearnings(3), experiments()]);
+    return { data: { learned, experiments: exps }, sources: [] };
+  },
+);
+
+const getBrollBank = define(
+  'get_broll_bank',
+  'Os takes do cotidiano que já existem — editando, café, casa, academia — com etiquetas. Antes de propor gravação nova, olha aqui.',
+  z.object({ tag: z.string().optional() }),
+  async ({ tag }) => {
+    const { brollBank } = await import('@/modules/creator/content-os-service');
+    const bank = await brollBank(40);
+    const rows = tag ? bank.filter((b) => b.tags.some((t) => t.includes(tag.toLowerCase()))) : bank;
+    return { data: rows.length ? rows : { note: 'O banco de B-roll está vazio. Cada teste vai pedir uma gravação curta.' }, sources: [] };
+  },
+);
+
+const saveBrollTake = define(
+  'save_broll_take',
+  'Regista um take que ela tem na galeria, pela descrição: «tenho um vídeo meu editando no CapCut, uns 8 segundos». As etiquetas saem da frase; ela não cataloga nada.',
+  z.object({ note: z.string().min(4), duration_seconds: z.number().optional() }),
+  async ({ note, duration_seconds }) => {
+    const { registerBroll } = await import('@/modules/creator/content-os-service');
+    const r = await registerBroll({ note, durationSeconds: duration_seconds ?? null });
+    return { data: r.ok ? { ok: true, id: r.id, tags: r.tags } : { ok: false, reason: r.error }, sources: [] };
+  },
+  'write',
+);
+
+const getSocialProof = define(
+  'get_social_proof',
+  'Os feedbacks de marcas guardados como prova social, com o estado da permissão. Sem permissão registada, nada com o nome da marca sai — nem para o feed nem para o portfólio.',
+  z.object({}),
+  async () => {
+    const { socialProofVault } = await import('@/modules/creator/content-os-service');
+    const rows = await socialProofVault();
+    return {
+      data: rows.length ? rows : { note: 'Ainda não há feedbacks guardados.' },
+      sources: rows.filter((r) => r.brandId).map((r) => ({ id: r.brandId as string, type: 'brand' as const, label: r.brandName, at: r.occurredAt, href: `/dashboard/brands/${r.brandId}` })),
+    };
+  },
+);
+
+const saveSocialProofTool = define(
+  'save_social_proof',
+  'Guarda um feedback de marca como prova social: o que ela colou ou contou. Entra SEM permissão — só ela a regista, na tela. Nunca marques um feedback como usável.',
+  z.object({ brand_name: z.string().min(2), feedback: z.string().min(5), context: z.string().optional() }),
+  async ({ brand_name, feedback, context }) => {
+    const { saveSocialProof } = await import('@/modules/creator/content-os-service');
+    const r = await saveSocialProof({ brandName: brand_name, feedback, context });
+    return {
+      data: r.ok ? { ok: true, id: r.id, permission: 'unknown', note: 'Guardado sem permissão. Ela regista a permissão em Conteúdo → Banco.' } : { ok: false, reason: r.error },
+      sources: [],
+    };
+  },
+  'write',
+);
+
+const checkDuplicateContent = define(
+  'check_duplicate_content',
+  'Se uma peça é repost do que já saiu — mesmo B-roll, mesmo gancho, mesma legenda. Usa isto para «quero repostar o mesmo vídeo»: se for duplicado, propõe uma variante com create_content_variant.',
+  z.object({ idea_id: z.string().uuid() }),
+  async ({ idea_id }) => {
+    const { checkDuplicate } = await import('@/modules/creator/content-os-service');
+    const r = await checkDuplicate(idea_id);
+    return { data: r.ok ? r : { ok: false, reason: r.error }, sources: [] };
+  },
+);
+
+const createContentVariant = define(
+  'create_content_variant',
+  'Escreve uma variante legítima de uma peça — mesmo B-roll e tema, gancho e legenda novos. É o que se faz em vez de repostar igual. Gasta uma chamada ao modelo.',
+  z.object({ idea_id: z.string().uuid() }),
+  async ({ idea_id }) => {
+    const { makeVariant } = await import('@/app/dashboard/content-actions');
+    const r = await makeVariant(idea_id);
+    return {
+      data: r.error ? { ok: false, reason: r.error } : { ok: true, ideaId: r.newId },
+      sources: r.newId ? [{ id: r.newId, type: 'portfolio' as const, label: 'Variante', at: null, href: `/dashboard/content?idea=${r.newId}` }] : [],
+    };
+  },
+  'write',
+);
+
+const createDirectedContent = define(
+  'create_directed_content',
+  'Escreve uma peça com direção, pelos mesmos portões do plano do dia: em inglês (track english — é experiência, não muda o feed), um episódio de Braga Real, uma prova de ofício de edição (capcut), um Reels Test, ou uma peça do feed sobre o que ela pediu. Usa isto para «quero gravar em inglês», «quero algo do Braga Real», «quero algo de autoridade». Gasta uma chamada ao modelo.',
+  z.object({
+    track: z.enum(['main', 'reels_test', 'english', 'braga_real', 'capcut', 'journey']),
+    platform: z.enum(['instagram', 'tiktok']).optional(),
+    directive: z.string().min(5).describe('o que ela pediu, com as palavras dela'),
+  }),
+  async ({ track, platform, directive }) => {
+    const { directedIdea } = await import('@/modules/creator/plan-service');
+    const r = await directedIdea({ directive, platform: platform ?? 'instagram', track, language: track === 'english' ? 'en' : 'pt-BR' });
+    return {
+      data: r.ok ? { ok: true, ideaId: r.id } : { ok: false, reason: r.because },
+      sources: r.ok ? [{ id: r.id, type: 'portfolio' as const, label: 'Ideia nova', at: null, href: `/dashboard/content?idea=${r.id}` }] : [],
+    };
+  },
+  'write',
+);
+
+const discoverBragaPlacesTool = define(
+  'discover_braga_places',
+  'Procura lugares reais em Braga para a série Braga Real e guarda-os no banco. Não vira tarefa: fica à espera de ela querer gravar. Demora — é uma pesquisa na web.',
+  z.object({}),
+  async () => {
+    const { discoverBragaPlaces } = await import('@/modules/creator/content-os-service');
+    const r = await discoverBragaPlaces();
+    return { data: r.ok ? { ok: true, added: r.added, places: r.places.slice(0, 10) } : { ok: false, reason: r.error }, sources: [] };
+  },
+  'write',
+);
+
 export const TOOLS: Tool[] = [
   searchBrands, getBrand, getBrandActivity,
   searchOpportunities, getOpportunity,
@@ -1388,6 +1692,10 @@ export const TOOLS: Tool[] = [
   getBrandReferences, searchCreativeReferences, adaptReferenceToBrand,
   getCreatorTrends, getCreatorProfile, getBusinessMilestones, getContentMultiplier,
   getContentStrategy,
+  getMentorPlaybook, getContentBalance, classifyContentIntent, getThreeHooks, deconstructReferenceTool,
+  evaluateReelsTest, getReelsTestLab, recordContentPerformance, getContentLearnings,
+  getBrollBank, saveBrollTake, getSocialProof, saveSocialProofTool, checkDuplicateContent,
+  createContentVariant, createDirectedContent, discoverBragaPlacesTool,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));

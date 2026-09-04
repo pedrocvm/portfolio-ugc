@@ -381,10 +381,14 @@ function ContentStep({
       <p className="mornHook">«{str(p, 'hook')}»</p>
       <p className="mornMeta">
         {str(p, 'pillarLabel')}
+        {str(p, 'functionLabel') ? ` · ${str(p, 'functionLabel')}` : ''}
         {typeof gravar === 'number' ? ` · ${gravar} min para gravar` : ''}
         {typeof editar === 'number' ? ` · ${editar} min para editar` : ''}
       </p>
       {str(p, 'verdict') ? <p className="mornVerdict">{str(p, 'verdict')}</p> : null}
+      {p?.hasBroll === true ? (
+        <p className="mornMeta">Usa um B-roll que já existe: não precisa gravar nada novo.</p>
+      ) : null}
 
       {erro ? (
         <p className="osWarn" role="alert">
