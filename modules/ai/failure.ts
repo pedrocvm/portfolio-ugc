@@ -6,7 +6,11 @@
  *  uma frase em português. A tradução é aqui, uma vez, à saída do fornecedor —
  *  nos chamadores era o mesmo erro dez vezes. */
 
-export type FailureKind = 'billing' | 'quota' | 'key' | 'overloaded' | 'blocked' | 'offline' | 'timeout' | 'unknown';
+export type FailureKind =
+  | 'billing' | 'quota' | 'key' | 'overloaded' | 'blocked' | 'offline' | 'timeout'
+  /** O pedido saiu mal formado. Não é para esperar: é para corrigir. */
+  | 'request'
+  | 'unknown';
 
 const raw = (error: unknown): string =>
   (error instanceof Error ? error.message : String(error ?? '')).toLowerCase();
@@ -15,7 +19,12 @@ export function failureKind(error: unknown): FailureKind {
   const t = raw(error);
   // Antes da cota: saldo esgotado também chega como 429, e as duas pedem coisas
   // opostas. Uma passa por esperar; a outra só passa por alguém pagar.
-  if (/prepayment|credits are depleted|billing account|payment required|\b402\b/.test(t)) return 'billing';
+  // «Credit balance is too low» e «purchase credits» são a mesma coisa que
+  // «prepayment», ditas por outro fornecedor. Sem elas, ficar sem saldo caía em
+  // «não disse porquê» — quando tinha dito, e em português claro.
+  if (/prepayment|credits? (are depleted|balance)|purchase credits|billing account|plans ?& ?billing|payment required|insufficient (funds|balance|credit)|\b402\b/.test(t)) {
+    return 'billing';
+  }
   if (/429|resource_exhausted|quota|rate.?limit/.test(t)) return 'quota';
   if (/401|403|api_key|api key|permission_denied|unauthenticated|invalid.*credential/.test(t)) return 'key';
   // «This operation was aborted» é o nosso próprio cronómetro, não a Google.
@@ -23,6 +32,11 @@ export function failureKind(error: unknown): FailureKind {
   if (/503|500|unavailable|overloaded|internal error|deadline/.test(t)) return 'overloaded';
   if (/safety|blocked|prohibited_content|recitation/.test(t)) return 'blocked';
   if (/enotfound|econnrefused|etimedout|network|fetch failed|socket/.test(t)) return 'offline';
+  // Depois de tudo o que é transitório: um 400 que sobrevive até aqui é o
+  // pedido a estar mal, e isso não passa com o tempo. Ficava em «não disse
+  // porquê» e aparecia na manhã dela como um mistério — quando o que a API
+  // disse foi «INVALID_ARGUMENT», que é um defeito nosso à espera de conserto.
+  if (/\b400\b|invalid_argument|invalid argument|invalid_request|bad request/.test(t)) return 'request';
   return 'unknown';
 }
 
@@ -58,7 +72,11 @@ export function aiFailure(error: unknown): string {
     case 'quota':
       return quotaSentence(t);
     case 'billing':
-      return 'A conta da IA ficou sem saldo. É preciso carregar créditos no projeto do Google; esperar não resolve.';
+      return 'A conta da IA ficou sem saldo. É preciso carregar créditos; esperar não resolve.';
+    case 'request':
+      // Dito como defeito e não como acidente: esperar não adianta, e ela tem
+      // de saber que o problema é nosso para não voltar a tentar em vão.
+      return 'O pedido à IA saiu mal formado. É um defeito meu, não passa com o tempo — está registado para conserto.';
     case 'key':
       return 'A chave da IA não foi aceite. Isto é configuração, não é nada que possas resolver daí.';
     case 'timeout':

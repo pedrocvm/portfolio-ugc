@@ -54,17 +54,9 @@ export default function Scheduler({ state }: { state: SchedulerState }) {
   return (
     <section className="osSection">
       <h2>Agendador</h2>
-      <p className="osNote">
-        Os trabalhos correm no Supabase, não na Vercel — o plano Hobby só deixa um cron por dia, e o
-        Gmail precisa ser visto muito mais vezes do que isso. Nada aqui depende de abrir a
-        aplicação.
-      </p>
-      {state.configured ? (
-        <p className="osNote">
-          Já está rodando sozinho. Só precisa voltar aqui quando o CarolOS tiver trabalhos
-          novos — «atualizar a lista» põe-nos no relógio.
-        </p>
-      ) : null}
+      {/* Onde os trabalhos correm e porquê é decisão de infraestrutura: está no
+          cabeçalho deste arquivo, para quem lhe mexer. Ela não tem de saber
+          disso — o que lhe interessa é se está a correr e o que falhou. */}
 
       {!state.configured ? (
         <p className="osWarn" data-tone="info">

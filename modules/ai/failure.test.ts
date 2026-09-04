@@ -138,3 +138,33 @@ test('um abort não se confunde com o serviço estar em baixo', () => {
   assert.notEqual(failureKind(new Error('This operation was aborted')), 'overloaded');
   assert.equal(failureKind(new Error('503 UNAVAILABLE')), 'overloaded');
 });
+
+/* ── O que a Carol lê quando falha ──────────────────────────────────────── */
+
+test('ficar sem saldo diz-se, venha de que fornecedor vier', () => {
+  // O texto exato que a Anthropic devolveu num 400. Antes caía em
+  // «não disse porquê» — quando tinha dito, e claramente.
+  const anthropic =
+    '400 {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."}}';
+  assert.equal(failureKind(new Error(anthropic)), 'billing');
+  assert.match(aiFailure(new Error(anthropic)), /sem saldo/);
+  // Continua a apanhar o do Google, que já apanhava.
+  assert.equal(failureKind(new Error('prepayment required')), 'billing');
+});
+
+test('um pedido mal formado não se confunde com uma falha passageira', () => {
+  // O que derrubou o plano de conteúdo de 04/09 e chegou à manhã dela como
+  // «A IA falhou e não disse porquê».
+  const gemini = '{"error":{"code":400,"message":"Request contains an invalid argument.","status":"INVALID_ARGUMENT"}}';
+  assert.equal(failureKind(new Error(gemini)), 'request');
+  assert.match(aiFailure(new Error(gemini)), /defeito meu/);
+  assert.doesNotMatch(aiFailure(new Error(gemini)), /não disse porquê/);
+});
+
+test('o que é mesmo passageiro continua a sê-lo', () => {
+  // Um 503 tem de continuar a mandar esperar: se caísse em «request», a
+  // repetição do lote deixava de fazer sentido.
+  const overload = '{"error":{"code":503,"message":"This model is currently experiencing high demand.","status":"UNAVAILABLE"}}';
+  assert.equal(failureKind(new Error(overload)), 'overloaded');
+  assert.equal(failureKind(new Error('429 RESOURCE_EXHAUSTED quota')), 'quota');
+});
