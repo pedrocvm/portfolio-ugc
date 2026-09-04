@@ -918,6 +918,43 @@ const setProspectingFocus = define(
   'write',
 );
 
+/** Estudar UMA marca, porque ela perguntou.
+ *
+ *  Não é prospecção: não abre lote, não cria candidata, não escreve email e não
+ *  toca no CRM. É a resposta a «o que sabes da Quinta da Pacheca?» — quem é,
+ *  se já falámos, o que fazem, o que ela podia gravar e por onde se fala com
+ *  eles. Usa as mesmas peças do lote, para não haver duas noções de «quem é
+ *  esta marca» a discordarem um dia. */
+const studyBrandTool = define(
+  'study_brand',
+  'Estuda UMA marca a fundo: quem é ao certo (com prova), se ela já teve conversa com eles, o que fazem, se compram criativos, o que ela podia gravar para eles, e por onde se fala com eles. Usa isto para «o que sabes da marca X», «vale a pena a marca X», «estuda este hotel», «quem é esta empresa». Aceita nome, site, @ ou link. Demora minutos: é uma pesquisa na web mais duas ou três chamadas. NÃO abre lote nem escreve email — se ela quiser mandar marcas para a fila, é import_brand_list.',
+  z.object({
+    brand: z.string().min(2).describe('o nome, site, @ ou link da marca, como ela o deu'),
+  }),
+  async ({ brand }) => {
+    const { studyBrand } = await import('@/modules/outreach/study');
+    const r = await studyBrand(brand);
+    if (!r.ok) return { data: { studied: false, reason: r.error }, sources: [] };
+
+    const s = r.study;
+    return {
+      data: { studied: true, ...s },
+      // As fontes são as provas que a pesquisa deu: é por elas que ela confere
+      // o que aqui está, em vez de acreditar.
+      sources: [
+        ...s.identity.evidence.filter((e) => e.url).slice(0, 4),
+        ...(s.business?.sources ?? []).filter((x) => x.url).slice(0, 4),
+      ].map((e, i) => ({
+        id: `${s.identity.name}-${i}`,
+        type: 'brand' as const,
+        label: 'claim' in e ? e.claim : e.label,
+        at: null,
+        href: e.url,
+      })),
+    };
+  },
+);
+
 /** «Já tenho marcas»: ela colou uma lista e quer que eu pesquise AQUELAS.
  *
  *  A diferença para `start_prospecting` não é de grau, é de natureza: uma
@@ -1772,7 +1809,7 @@ export const TOOLS: Tool[] = [
   getDailyOutreach, getOutreachCandidate, updateOutreachDraftTool,
   approveOutreachTool, prepareOutreachSend,
   startProspecting, readProspectingFocus, setProspectingFocus,
-  importBrandList, getBrandImport,
+  studyBrandTool, importBrandList, getBrandImport,
   resolveTodayAction, captureSomething, findAnything,
   getMorningBrief, getEmailTriage, prepareReply,
   getDailyContentPlan, getContentIdea, regenerateContentIdea, saveContentIdea,

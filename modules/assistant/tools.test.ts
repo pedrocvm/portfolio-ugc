@@ -161,6 +161,34 @@ test('a Carol AI recebe listas de marcas sem ir procurar substitutas', () => {
   assert.match(corpo, /NÃO uses start_prospecting/, 'a descrição não afasta a busca');
 });
 
+/** O que a conversa faz pela prospecção: apontar e estudar. Correr a busca é
+ *  trabalho da tela e do horário — pelo chat ela configura o foco e estuda uma
+ *  marca de cada vez. */
+test('a Carol AI aponta a prospecção e estuda uma marca, sem a correr às cegas', () => {
+  const todas = ferramentas();
+  for (const [nome, risco] of [
+    ['study_brand', 'read'],
+    ['get_prospecting_focus', 'read'],
+    ['set_prospecting_focus', 'write'],
+    ['get_daily_outreach_batch', 'read'],
+    ['get_brand_import_status', 'read'],
+  ] as const) {
+    const f = todas.find((x) => x.nome === nome);
+    assert.ok(f, `«${nome}» não existe`);
+    assert.equal(f.risco, risco, `«${nome}» declara «${f.risco}»`);
+  }
+  assert.match(registadas(), /studyBrandTool/);
+
+  // Estudar não é prospectar: se um dia isto abrir um lote ou escrever um
+  // email, deixa de ser a pergunta que ela fez.
+  const corpo = TOOLS.slice(
+    TOOLS.indexOf("'study_brand'"),
+    TOOLS.indexOf('\n);', TOOLS.indexOf("'study_brand'")),
+  );
+  assert.match(corpo, /NÃO abre lote nem escreve email/, 'a descrição não separa estudar de prospectar');
+  assert.doesNotMatch(corpo, /openImportBatch|writeOutreachEmail/, 'o estudo alcança o lote ou o email');
+});
+
 test('o prompt manda receber a lista quando ela nomeia as marcas', () => {
   const PROMPT = readFileSync(path.join(ROOT, 'modules/assistant/prompt.ts'), 'utf8');
   assert.match(PROMPT, /import_brand_list/, 'o prompt não conhece a ingestão de listas');

@@ -317,6 +317,13 @@ async function processOne(item: Item): Promise<void> {
   let facts = await gatherFacts(partida, { identity: true, hospitality: pistaHotelaria });
   const identidade = await resolverIdentidade(item, parsed, facts);
 
+  // «Não consegui perguntar» não é «não sei quem é». Sem isto, um 503 do
+  // fornecedor punha a marca em IDENTITY_UNCERTAIN — uma conclusão sobre a
+  // empresa, tirada de uma falha de rede, e que ela ia ter de rever à mão.
+  // Quando o modelo responde e diz que não tem a certeza, isso vem em
+  // `confidence: 'low'` e é uma resposta legítima, que segue o seu caminho.
+  if (!identidade) throw new Retomavel('A identificação não respondeu desta vez.');
+
   const nome = identidade?.official_name?.trim() || item.name;
   // Normalizar antes de comparar: a pesquisa devolve «https://www.x.pt/» e
   // «@quintadapacheca», o parse devolveu «x.pt» e «quintadapacheca». Se as duas
