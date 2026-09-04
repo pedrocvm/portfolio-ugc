@@ -198,20 +198,44 @@ const temNomeDePessoa = (email: string) => /^[a-z]+[._-][a-z]+$/.test(semAcento(
 const PESO_FIT: Record<MailboxFit, number> = { target: 100, front_door: 40, wrong_team: 5, never: 0 };
 const PESO_FONTE = { website: 12, research: 8, guess: 0 } as const;
 
+/** O endereço é da própria marca?
+ *
+ *  Uma pesquisa por «Torel Avantgarde» devolveu `armandoribeiro@oapartamento.com`
+ *  com confiança alta: um nome de pessoa, num domínio que recebe email, visto
+ *  numa página qualquer. Nada aqui distinguia isso do endereço do hotel — e um
+ *  contato errado custa-lhe mais do que um contato em falta, que é a regra que
+ *  o próprio prompt já dizia e o código não impunha.
+ *
+ *  Um subdomínio conta: `marketing@mail.torel.com` é da Torel. */
+export function sameBrandDomain(email: string, brandDomain: string | null | undefined): boolean {
+  const marca = (brandDomain ?? '').trim().toLowerCase().replace(/^www\./, '');
+  if (!marca) return true;
+  const dele = domainOf(email);
+  if (!dele) return false;
+  return dele === marca || dele.endsWith(`.${marca}`) || marca.endsWith(`.${dele}`);
+}
+
 /** Qual destes endereços se usa para abordar a marca.
  *
  *  Devolve o escolhido e os outros por ordem, porque a tela mostra-lhe as
  *  alternativas: quando o palpite sai ao lado, trocar tem de ser um toque e não
  *  uma pesquisa no Google outra vez. */
-export function pickOutreachEmail(candidates: readonly EmailCandidate[]): {
+export function pickOutreachEmail(
+  candidates: readonly EmailCandidate[],
+  /** O domínio da marca, quando se sabe. Sem ele o desempate por domínio não
+   *  corre — não se penaliza o que não se consegue comparar. */
+  brandDomain?: string | null,
+): {
   chosen: EmailCandidate | null;
   fit: MailboxFit;
   alternatives: EmailCandidate[];
   because: string;
+  /** O escolhido é de outro domínio que não o da marca. */
+  offDomain: boolean;
 } {
   const validos = candidates.filter((c) => SHAPE.test((c.address ?? '').trim()));
   if (validos.length === 0) {
-    return { chosen: null, fit: 'never', alternatives: [], because: 'Nenhum endereço utilizável.' };
+    return { chosen: null, fit: 'never', alternatives: [], because: 'Nenhum endereço utilizável.', offDomain: false };
   }
 
   const nota = (c: EmailCandidate) => {
@@ -224,19 +248,26 @@ export function pickOutreachEmail(candidates: readonly EmailCandidate[]): {
     }
     n += PESO_FONTE[c.source ?? 'guess'] ?? 0;
     if (fit !== 'target' && temNomeDePessoa(c.address)) n += 15;
+    // Fora do domínio da marca desce abaixo de qualquer caixa da própria casa,
+    // por pior que ela seja: `reservas@` da marca certa vale mais do que
+    // `marketing@` de outra empresa.
+    if (!sameBrandDomain(c.address, brandDomain)) n -= 200;
     return n;
   };
 
   const ordenados = [...validos].sort((a, b) => nota(b) - nota(a));
   const chosen = ordenados[0];
   const fit = mailboxFit(chosen.address);
+  const offDomain = !sameBrandDomain(chosen.address, brandDomain);
 
   return {
     chosen,
     fit,
     alternatives: ordenados.slice(1),
-    because:
-      fit === 'target'
+    offDomain,
+    because: offDomain
+      ? `${chosen.address} não é do domínio da marca. Confirme antes de enviar.`
+      : fit === 'target'
         ? `${chosen.address} ${MAILBOX_FIT_NOTE.target}.`
         : `Só encontrei ${chosen.address}, que ${MAILBOX_FIT_NOTE[fit]}.`,
   };
@@ -250,6 +281,7 @@ export function pickOutreachEmail(candidates: readonly EmailCandidate[]): {
  *  do que vista noutro lado qualquer. */
 export function chooseFromResearch(
   contact: { emails?: readonly { address: string; team?: string | null; where?: string | null }[] } | null,
+  brandDomain?: string | null,
 ): ReturnType<typeof pickOutreachEmail> {
   const vistos = contact?.emails ?? [];
   return pickOutreachEmail(
@@ -260,5 +292,6 @@ export function chooseFromResearch(
         ? ('website' as const)
         : ('research' as const),
     })),
+    brandDomain,
   );
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { chooseFromResearch, classify, domainOf, localPart, mailboxFit, pickOutreachEmail } from './mailcheck.ts';
+import { chooseFromResearch, classify, domainOf, localPart, mailboxFit, pickOutreachEmail, sameBrandDomain } from './mailcheck.ts';
 
 const c = (over: Partial<Parameters<typeof classify>[0]> = {}) =>
   classify({ email: 'marketing@cecotec.es', source: 'website', domainHasMx: true, ...over });
@@ -161,4 +161,53 @@ test('os endereços que já estavam salvos são classificados como o que são', 
   assert.equal(mailboxFit('marketing.manager@torelboutiques.com'), 'target');
   assert.equal(mailboxFit('geral@casasdomorgadio.pt'), 'front_door');
   assert.equal(mailboxFit('info@jumpseller.com'), 'front_door');
+});
+
+/* ── O endereço tem de ser da própria marca ──────────────────────────────── */
+
+test('um email de outro domínio perde para qualquer caixa da própria casa', () => {
+  // Aconteceu a sério: a pesquisa por «Torel Avantgarde» devolveu
+  // `armandoribeiro@oapartamento.com` e ele ganhou, por parecer nome de pessoa.
+  const r = pickOutreachEmail(
+    [
+      { address: 'armandoribeiro@oapartamento.com', source: 'website' },
+      { address: 'reservas@torelavantgarde.com', source: 'website' },
+    ],
+    'torelavantgarde.com',
+  );
+  assert.equal(r.chosen?.address, 'reservas@torelavantgarde.com');
+  assert.equal(r.offDomain, false);
+});
+
+test('sem domínio da marca não se penaliza o que não se consegue comparar', () => {
+  const r = pickOutreachEmail([{ address: 'armandoribeiro@oapartamento.com', source: 'website' }]);
+  assert.equal(r.chosen?.address, 'armandoribeiro@oapartamento.com');
+  assert.equal(r.offDomain, false);
+});
+
+test('quando só há um endereço e ele é de fora, escolhe-se e diz-se', () => {
+  const r = pickOutreachEmail(
+    [{ address: 'geral@outracoisa.pt', source: 'website' }],
+    'torelavantgarde.com',
+  );
+  assert.equal(r.chosen?.address, 'geral@outracoisa.pt');
+  assert.equal(r.offDomain, true);
+  assert.match(r.because, /não é do domínio da marca/);
+});
+
+test('um subdomínio da marca continua a ser da marca', () => {
+  assert.equal(sameBrandDomain('marketing@mail.torelavantgarde.com', 'torelavantgarde.com'), true);
+  assert.equal(sameBrandDomain('marketing@torelavantgarde.com', 'www.torelavantgarde.com'), true);
+  assert.equal(sameBrandDomain('marketing@outra.pt', 'torelavantgarde.com'), false);
+});
+
+test('a marca certa em caixa errada ganha à marca errada em caixa certa', () => {
+  const r = pickOutreachEmail(
+    [
+      { address: 'marketing@outraempresa.pt', team: 'marketing', source: 'website' },
+      { address: 'suporte@marca.pt', source: 'website' },
+    ],
+    'marca.pt',
+  );
+  assert.equal(r.chosen?.address, 'suporte@marca.pt');
 });

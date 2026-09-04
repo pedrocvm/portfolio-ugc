@@ -142,6 +142,18 @@ export async function openImportBatch(raw: string): Promise<OpenResult> {
 /** Uma marca reclamada há mais de isto é uma marca cujo trabalhador morreu. */
 const RECLAMACAO_PERDIDA_MS = 8 * 60_000;
 
+/** Quantas vezes se tenta a mesma marca antes de desistir dela.
+ *
+ *  O Gemini devolve 503 «high demand» com regularidade, e uma marca que ela
+ *  escolheu à mão não pode morrer por causa de um minuto mau do fornecedor. Três
+ *  tentativas, em passagens diferentes — repetir já a seguir apanhava o mesmo
+ *  minuto mau. */
+const MAX_TENTATIVAS = 3;
+
+/** Uma falha que provavelmente passa se se tentar outra vez. Não é um erro
+ *  diferente: é a mesma coisa dita de forma a que o lote saiba o que fazer. */
+class Retomavel extends Error {}
+
 export type ProcessResult = {
   runId: string;
   done: boolean;
@@ -176,23 +188,42 @@ export async function processImportBatch(
     .eq('status', 'screened')
     .lt('updated_at', new Date(Date.now() - RECLAMACAO_PERDIDA_MS).toISOString());
 
+  // O que já se tentou nesta passagem. Uma marca devolvida à fila não pode ser
+  // reclamada outra vez aqui mesmo: seria repetir o minuto mau do fornecedor
+  // três vezes seguidas e chamar-lhe três tentativas.
+  const tentadas = new Set<string>();
+
   for (;;) {
     if (Date.now() > deadline) {
       failures.push('Faltou tempo; continuo no próximo passo.');
       break;
     }
 
-    const item = await claimNext(runId);
+    const item = await claimNext(runId, tentadas);
     if (!item) break;
+    tentadas.add(item.id);
 
     try {
       await processOne(item);
     } catch (error) {
       const motivo = error instanceof Error ? error.message : 'Falha desconhecida.';
-      failures.push(`${item.name}: ${motivo}`);
+      const tentativa = (item.import_input?.attempts ?? 0) + 1;
+      const volta = error instanceof Retomavel && tentativa < MAX_TENTATIVAS;
+
+      failures.push(
+        volta
+          ? `${item.name}: ${motivo} Tento outra vez (${tentativa} de ${MAX_TENTATIVAS}).`
+          : `${item.name}: ${motivo}`,
+      );
       await db
         .from('outreach_candidate')
-        .update({ status: 'failed', resolution_note: motivo.slice(0, 300) })
+        .update({
+          status: volta ? 'discovered' : 'failed',
+          resolution_note: motivo.slice(0, 300),
+          // A contagem vive no próprio parse: é jsonb desta funcionalidade e
+          // não precisa de coluna nova para guardar um número.
+          import_input: asJson({ ...(item.import_input ?? {}), attempts: tentativa }),
+        })
         .eq('id', item.id);
     }
 
@@ -230,14 +261,14 @@ type Item = {
   city: string | null;
   country: string | null;
   raw_input: string | null;
-  import_input: ImportedBrandCandidate | null;
+  import_input: (ImportedBrandCandidate & { attempts?: number }) | null;
   niche_id: string | null;
 };
 
 /** Reclama a próxima marca por escrever no estado, e não em memória: dois
  *  trabalhadores a correr ao mesmo tempo não podem pesquisar a mesma marca
  *  duas vezes — é dinheiro pago duas vezes pela mesma resposta. */
-async function claimNext(runId: string): Promise<Item | null> {
+async function claimNext(runId: string, saltar: ReadonlySet<string>): Promise<Item | null> {
   const db = supabaseService();
   const { data: fila } = await db
     .from('outreach_candidate')
@@ -245,9 +276,12 @@ async function claimNext(runId: string): Promise<Item | null> {
     .eq('run_id', runId)
     .eq('status', 'discovered')
     .order('rank', { ascending: true })
-    .limit(5);
+    // Mais do que as cinco primeiras: as que voltaram à fila continuam
+    // `discovered` e ocupariam o topo da lista sem nunca serem reclamadas.
+    .limit(30);
 
   for (const linha of fila ?? []) {
+    if (saltar.has(linha.id)) continue;
     const { data: claimed } = await db
       .from('outreach_candidate')
       .update({ status: 'screened' })
@@ -378,12 +412,14 @@ async function processOne(item: Item): Promise<void> {
     { ...partida, name: nome, normalizedName: normalizeName(nome), website, domain, description: identidade?.description ?? '' },
     { facts, hospitality: hotelaria },
   );
-  if (!pesquisado) throw new Error('Não consegui pesquisar esta marca.');
+  // Quase sempre é o fornecedor a devolver 503, e isso passa. Uma marca que ela
+  // escolheu não se perde por causa disso: volta à fila.
+  if (!pesquisado) throw new Retomavel('A pesquisa não respondeu desta vez.');
 
   const r = pesquisado.research;
 
   // ── 4. Contato ──────────────────────────────────────────────────────────
-  const escolha = chooseFromResearch(r.contact);
+  const escolha = chooseFromResearch(r.contact, domain);
   const { checkEmail } = await import('./mailcheck-dns');
   const verificado = escolha.chosen
     ? await checkEmail(escolha.chosen.address, escolha.chosen.source ?? 'research').catch(() => null)
@@ -410,7 +446,10 @@ async function processOne(item: Item): Promise<void> {
       city: r.city?.trim() || identidade?.city || item.city,
       country: r.country ?? identidade?.country ?? item.country,
       socials: asJson(r.socials ?? {}),
-      instagram: r.contact?.instagram ?? r.socials?.instagram ?? instagram,
+      // Normalizado, como na fase da identidade: a pesquisa devolve «@marca» e
+      // a identidade devolvia «marca». Guardar as duas formas fazia a chave do
+      // lote e o que aparece na tela discordarem sobre a mesma casa.
+      instagram: normalizeHandle(r.contact?.instagram ?? r.socials?.instagram) ?? instagram,
       whatsapp: r.contact?.whatsapp ?? null,
       linkedin: r.socials?.linkedin ?? null,
       why_fit: r.why_fit,
@@ -433,10 +472,17 @@ async function processOne(item: Item): Promise<void> {
       contact_role: r.contact?.role ?? null,
       contact_email: escolha.chosen?.address ?? null,
       contact_email_options: asJson(escolha.alternatives),
-      email_confidence: verificado?.confidence ?? r.contact?.confidence ?? 'unknown',
-      contact_source: verificado
-        ? `${r.contact?.source ?? 'pesquisa'} · ${verificado.reason}`
-        : (r.contact?.source ?? null),
+      email_confidence: escolha.offDomain
+        ? 'low'
+        : (verificado?.confidence ?? r.contact?.confidence ?? 'unknown'),
+      contact_source: [
+        r.contact?.source ?? 'pesquisa',
+        verificado?.reason,
+        // Um endereço de outro domínio nunca sai daqui sem o dizer.
+        escolha.offDomain ? escolha.because : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
       status: 'researched',
     })
     .eq('id', item.id);
@@ -459,7 +505,26 @@ async function processOne(item: Item): Promise<void> {
     ]
       .filter(Boolean)
       .join(' — '),
-  }).catch(() => ({ saved: 0, idea: false, error: 'falhou' }));
+  }).catch((e: unknown) => ({
+    saved: 0,
+    idea: false,
+    error: e instanceof Error ? e.message : 'A busca de referências falhou.',
+  }));
+
+  // Quem grava o estado das referências é o módulo que as procura: ele sabe
+  // dizer «não devolveu vídeos com endereço» e «analisei três e rejeitei as
+  // três», que é informação a sério. O único caso que lhe escapa é o erro, que
+  // ele devolve em vez de escrever — igual ao que a corrida da manhã faz.
+  if (refs.error) {
+    await db
+      .from('outreach_candidate')
+      .update({
+        references_state: 'failed',
+        references_at: hoje,
+        references_note: refs.error.slice(0, 300),
+      })
+      .eq('id', item.id);
+  }
 
   // ── 7. O email ──────────────────────────────────────────────────────────
   const { latestStyleProfile } = await import('./style');
@@ -503,8 +568,6 @@ async function processOne(item: Item): Promise<void> {
       portfolio_match: asJson(escrito.portfolio),
       quality: asJson(quality),
       status: quality.pass ? 'ready' : 'needs_review',
-      references_state: refs.saved > 0 ? 'done' : 'empty',
-      references_at: hoje,
     })
     .eq('id', item.id);
 }

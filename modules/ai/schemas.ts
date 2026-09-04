@@ -404,28 +404,32 @@ export type BrandIdentity = z.infer<typeof BrandIdentitySchema>;
  *
  *  A pergunta não é «o hotel é bonito?» — é que EXPERIÊNCIA existe ali que a
  *  Carol podia transformar em vídeo. «Mostrar as instalações» não é ideia; «uma
- *  escapada de 24 horas para sair do ritmo da cidade» é. */
+ *  escapada de 24 horas para sair do ritmo da cidade» é.
+ *
+ *  Sete campos e não dezanove. A primeira versão tinha uma coluna por cada
+ *  coisa que se pesquisa — quartos, villas, spa, wellness, mesa, vinho,
+ *  piscina, natureza, arquitetura, amenities — e o modelo devolvia metade como
+ *  texto onde se pedia lista, ou não devolvia de todo: dois lotes reais
+ *  reprovaram no schema e o perfil ficou a null depois de a chamada estar paga.
+ *
+ *  O que se pesquisa continua igual, e está escrito no prompt. O que muda é a
+ *  forma de o devolver: um par «aspeto → o que se apurou» cobre a lista toda e
+ *  aceita o que a casa tiver, sem obrigar o modelo a preencher dezoito gavetas
+ *  que ninguém lê depois. */
 export const HospitalityProfileSchema = z.object({
   property_type: z.string().nullable().describe('hotel boutique, resort, quinta, alojamento local…'),
-  location_character: z.string().nullable().describe('o que o lugar tem: vinha, serra, mar, centro histórico'),
-  rooms: z.string().nullable(),
-  villas: z.string().nullable(),
-  spa: z.string().nullable(),
-  wellness: z.string().nullable(),
-  dining: z.string().nullable(),
-  wine: z.string().nullable(),
-  pool: z.string().nullable(),
-  nature: z.string().nullable(),
-  architecture: z.string().nullable(),
-  local_experiences: z.array(z.string()),
-  amenities: z.array(z.string()),
   positioning: z.string().nullable().describe('luxo, boutique, familiar, retiro, negócios'),
-  audiences: z.array(z.enum(['couples', 'family', 'luxury', 'boutique', 'business', 'retreat', 'solo', 'friends'])),
-  seasonal_opportunities: z.array(z.object({ season: z.string(), why: z.string() })),
+  /** Para quem é a casa: casais, família, retiro, negócios. Texto livre — um
+   *  enum fechado só servia para o modelo escolher mal a palavra. */
+  audiences: z.array(z.string()),
+  /** Tudo o que se apurou, um par por aspeto: lugar, quartos, villas, spa,
+   *  wellness, mesa, vinho, piscina, natureza, arquitetura, experiências
+   *  locais, amenities, sazonalidade. Só o que estiver nas fontes. */
+  highlights: z.array(z.object({ aspect: z.string(), detail: z.string() })),
   /** O que distingue esta casa de outra igual na estrada ao lado. */
   differentiators: z.array(z.string()),
-  /** A resposta à pergunta que importa. Uma experiência, não uma lista de
-   *  instalações. */
+  /** A resposta à pergunta que importa. Uma experiência atravessável, não uma
+   *  lista de instalações. */
   content_experiences: z.array(
     z.object({
       experience: z.string(),

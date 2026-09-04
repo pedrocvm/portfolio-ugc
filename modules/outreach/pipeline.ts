@@ -201,7 +201,7 @@ export async function runDailyOutreach(
     // Quem escolhe a caixa é o código, não o modelo: `suporte@` e `marketing@`
     // passam os dois na verificação de forma e de MX, e o que os separa é o
     // departamento.
-    const escolha = chooseFromResearch(s.research.contact);
+    const escolha = chooseFromResearch(s.research.contact, s.candidate.domain);
     const contactEmail = escolha.chosen?.address ?? null;
     const check = contactEmail
       ? await checkEmail(contactEmail, escolha.chosen?.source ?? 'research')
@@ -230,7 +230,7 @@ export async function runDailyOutreach(
   // Só estes três campos: `quality` chama-se igual nas duas listas e quer dizer
   // coisas diferentes — a nota de ordenação numa, a nota do email na outra.
   type Base = Pick<(typeof shortlist)[number], 'candidate' | 'research' | 'fit'>;
-  const escolhaDe = (r: Base) => chooseFromResearch(r.research.contact);
+  const escolhaDe = (r: Base) => chooseFromResearch(r.research.contact, r.candidate.domain);
 
   const toRow = (
     r: Base,
