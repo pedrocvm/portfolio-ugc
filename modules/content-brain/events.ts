@@ -54,8 +54,8 @@ const QUESTION: Record<CandidateSource, string> = {
   brand_reply: 'Isso teve algum significado para você ou foi só mais um contato?',
   opportunity_stage: 'Isso mudou alguma coisa para você ou foi só o processo andando?',
   production_milestone: 'Aconteceu alguma coisa nesse processo que valha registrar?',
-  payment: 'Você considera isso um marco que quer guardar na sua jornada?',
-  social_proof: 'Você quer guardar isso como prova do seu trabalho?',
+  payment: 'Você considera isso um marco que quer salvar na sua jornada?',
+  social_proof: 'Você quer salvar isso como prova do seu trabalho?',
   performance_milestone: 'Isso te surpreendeu ou já era o esperado?',
 };
 

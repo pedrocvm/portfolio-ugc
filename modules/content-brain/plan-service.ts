@@ -524,7 +524,7 @@ export async function decideCandidate(
     .select('id')
     .maybeSingle();
 
-  if (error || !story) return { ok: false, error: error?.message ?? 'Não consegui guardar.' };
+  if (error || !story) return { ok: false, error: error?.message ?? 'Não consegui salvar.' };
 
   await db
     .from('content_story_candidate')

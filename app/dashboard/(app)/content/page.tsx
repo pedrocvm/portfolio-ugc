@@ -13,6 +13,7 @@ import {
   socialProofVault,
   strategyScreen,
 } from '@/modules/creator/content-os-service';
+import { contentScreen, performanceScreen, toBankRows } from '@/modules/content-brain/screen-service';
 import { usableTrends } from '@/modules/trends/service';
 import ContentBank from '@/components/dashboard/os/ContentBank';
 import ContentStrategy from '@/components/dashboard/os/ContentStrategy';
@@ -21,6 +22,9 @@ import { isStudioTab, type StudioTab } from '@/components/dashboard/os/studioTab
 import ContentVault from '@/components/dashboard/os/ContentVault';
 import Published from '@/components/dashboard/os/Published';
 import ReelsTestLab from '@/components/dashboard/os/ReelsTestLab';
+import Performance from '@/components/dashboard/os/content-brain/Performance';
+import RecordPane from '@/components/dashboard/os/content-brain/RecordPane';
+import StoryBank from '@/components/dashboard/os/content-brain/StoryBank';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +45,7 @@ export default async function ContentPage({
   // Charabanc existem antes de a primeira manhã correr.
   await seedFromMentor().catch(() => null);
 
-  const [content, inventory, hoje, banco, trends, lab, broll, braga, proof, screen, learnings, performance] = await Promise.all([
+  const [content, inventory, hoje, banco, trends, lab, broll, braga, proof, screen, learnings, performance, brain, desempenho] = await Promise.all([
     listContent(),
     capabilityInventory(),
     todayContent().catch(() => []),
@@ -54,6 +58,8 @@ export default async function ContentPage({
     strategyScreen(),
     contentLearnings(3),
     latestPerformanceByIdea(),
+    contentScreen(),
+    performanceScreen(),
   ]);
 
   const byRole = (role: FunnelRole) => content.filter((c) => c.funnelRole === role);
@@ -75,22 +81,82 @@ export default async function ContentPage({
       <div className="dashBar">
         <h1>Conteúdo</h1>
         <span className="dashState">
-          {hoje.length ? `${hoje.length} para gravar hoje` : `${content.length} peças`}
+          {brain.ready.length
+            ? `${brain.ready.length} ${brain.ready.length === 1 ? 'pronta para gravar' : 'prontas para gravar'}`
+            : brain.stories.length
+              ? `${brain.stories.length} ${brain.stories.length === 1 ? 'história salva' : 'histórias salvas'}`
+              : 'nada salvo ainda'}
         </span>
       </div>
 
       <ContentStudio
         initial={initial}
         panes={{
-          record: <ContentBank today={hoje} bank={banco.filter((i) => i.status !== 'seed')} trends={trends} openId={idea} />,
+          record: (
+            <>
+              <RecordPane
+                weekly={brain.weekly}
+                focus={brain.focus}
+                ready={brain.ready.map((r) => {
+                  const e = (r.structure ?? {}) as { beats?: unknown[]; durationSeconds?: number; centralPoint?: string };
+                  return {
+                    id: r.id,
+                    title: r.title,
+                    point: e.centralPoint ?? r.frameLabel,
+                    beats: Array.isArray(e.beats) ? e.beats.length : 0,
+                    durationSeconds: e.durationSeconds ?? null,
+                  };
+                })}
+                developing={brain.developing.map((d) => ({
+                  id: d.id,
+                  title: d.title,
+                  summary: d.summary,
+                  needsConfirmation: d.factStatus !== 'confirmed',
+                  nextStep:
+                    d.factStatus !== 'confirmed'
+                      ? 'falta confirmar os fatos'
+                      : !d.pillar
+                        ? 'falta a função'
+                        : !d.frameLabel
+                          ? 'falta escolher o ponto'
+                          : 'falta a estrutura',
+                  facts: d.facts.map((f) => f.text),
+                  meaning: d.carolMeaning,
+                  frameLabel: d.frameLabel,
+                }))}
+                candidates={brain.candidates.map((c) => ({
+                  id: c.id, fact: c.fact, question: c.question, brandName: c.brandName, source: c.source,
+                }))}
+                trialToConfirm={brain.trialToConfirm}
+                unlinkedMedia={brain.unlinkedMedia}
+                matchOptions={brain.ready.concat(brain.developing).slice(0, 4).map((s2) => ({
+                  storyId: s2.id, title: s2.title, contentIdeaId: null,
+                }))}
+              />
+              <ContentBank today={hoje} bank={banco.filter((i) => i.status !== 'seed')} trends={trends} openId={idea} />
+            </>
+          ),
           tests: <ReelsTestLab lab={lab} />,
           published: (
             <>
+              <Performance
+                pieces={desempenho.pieces}
+                learnings={desempenho.learnings}
+                lastSyncAt={desempenho.lastSyncAt}
+              />
               <Published pieces={publicadas} performance={Object.fromEntries(performance)} learnings={learnings} />
               <BrandPieces content={content} inventory={inventory} byRole={byRole} />
             </>
           ),
-          bank: <ContentVault saved={salvas} seeds={sementes} broll={broll} braga={braga} proof={proof} />,
+          bank: (
+            <>
+              <StoryBank
+                stories={toBankRows(brain.stories, new Set(brain.stories.filter((s2) => s2.contentIdeaIds.length).map((s2) => s2.id)))}
+                focus={brain.focus}
+              />
+              <ContentVault saved={salvas} seeds={sementes} broll={broll} braga={braga} proof={proof} />
+            </>
+          ),
           strategy: <ContentStrategy screen={screen} />,
         }}
       />

@@ -201,12 +201,23 @@ async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobRes
       }
 
       case 'content-plan': {
-        const { runDailyContentPlan } = await import('@/modules/creator/plan-service');
-        const r = await runDailyContentPlan();
+        // Deixou de gerar ideias. Monta a semana a partir das histórias reais
+        // confirmadas — e quando não há material, o plano diz que falta
+        // matéria-prima em vez de inventar peças para encher slots.
+        const { buildWeekPlan } = await import('@/modules/content-brain/plan-service');
+        const r = await buildWeekPlan();
         return {
           job,
-          status: r.failures.length && r.generated === 0 ? 'error' : 'success',
-          detail: { ...r },
+          status: r.ok ? 'success' : 'error',
+          detail: r.ok
+            ? {
+                weekStart: r.plan.weekStart,
+                pillar: r.plan.primaryPillar,
+                slots: r.plan.slots.length,
+                mappingOnly: r.plan.mappingOnly,
+                processed: r.plan.slots.length,
+              }
+            : { error: r.error },
         };
       }
 

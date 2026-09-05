@@ -95,8 +95,8 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
     why: 'Uma vez por dia. Deriva os marcos reais — primeiro pagamento, primeiro cliente de fora — dos fatos já gravados. Nunca inventa nenhum.',
   },
   'carolos-content': {
-    label: 'Escolher o conteúdo do dia',
-    why: 'Uma vez por dia, depois das tendências e dos marcos. Uma ideia para Instagram e outra para TikTok, mastigadas até à gravação.',
+    label: 'Montar a semana de conteúdo',
+    why: 'Uma vez por dia, depois do sync e do aprendizado. Escolhe entre as histórias reais que ela já contou. Quando não há material, pede uma sessão de mapeamento em vez de inventar pauta.',
   },
   'carolos-instagram-sync': {
     label: 'Sincronizar o Instagram',

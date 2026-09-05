@@ -55,7 +55,7 @@ export function shouldRefresh(state: TokenState, now: Date = new Date()): Refres
   const status = tokenStatus(state, now);
 
   if (status === 'revoked') return { refresh: false, because: 'O acesso foi retirado. Renovar não resolve; é preciso ligar de novo.', status };
-  if (status === 'missing') return { refresh: false, because: 'Não há token guardado.', status };
+  if (status === 'missing') return { refresh: false, because: 'Não há token salvo.', status };
   if (status === 'expired') return { refresh: false, because: 'O token já expirou. É preciso ligar de novo.', status };
   if (status === 'active') return { refresh: false, because: 'Ainda falta muito para expirar.', status };
 

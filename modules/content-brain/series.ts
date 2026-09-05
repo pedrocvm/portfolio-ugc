@@ -146,8 +146,8 @@ export function acceptEpisodes(
 export function nextEpisodeLine(series: { unusedStories: number; mechanism: SeriesMechanism }): string {
   if (series.unusedStories > 0) {
     return series.unusedStories === 1
-      ? 'Tem uma história já guardada que ainda não virou capítulo.'
-      : `Tem ${series.unusedStories} histórias já guardadas que ainda não viraram capítulo.`;
+      ? 'Tem uma história já salva que ainda não virou capítulo.'
+      : `Tem ${series.unusedStories} histórias já salvas que ainda não viraram capítulo.`;
   }
   return 'O próximo capítulo existe quando acontecer alguma coisa. Não vou inventar episódio.';
 }

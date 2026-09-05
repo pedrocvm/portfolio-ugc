@@ -219,7 +219,7 @@ export async function captureStory(input: {
     .select('id')
     .maybeSingle();
 
-  if (error || !data) return fail(error?.message ?? 'Não consegui guardar.');
+  if (error || !data) return fail(error?.message ?? 'Não consegui salvar.');
   return { ok: true, data: { storyId: data.id, needsAi: Boolean(texto) } };
 }
 

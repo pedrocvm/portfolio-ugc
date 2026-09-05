@@ -264,7 +264,7 @@ export async function refreshInstagramToken(now = new Date()): Promise<TokenRefr
   if (!decisao.refresh) return { refreshed: false, because: decisao.because, failures: [] };
 
   const token = await readAccessToken();
-  if (!token) return { refreshed: false, because: 'Não há token guardado.', failures: [] };
+  if (!token) return { refreshed: false, because: 'Não há token salvo.', failures: [] };
 
   try {
     const { refreshLongLived } = await import('./oauth');

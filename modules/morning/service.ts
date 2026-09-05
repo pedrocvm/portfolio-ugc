@@ -5,7 +5,6 @@ import { localDay } from '@/lib/time';
 import { asJson } from '@/lib/supabase/json';
 import { hasServiceRole, supabaseService } from '@/lib/supabase/service';
 import { repliesWaiting } from '@/modules/email/triage-service';
-import { todayContent } from '@/modules/creator/plan-service';
 import {
   EMPTY_PREPARED,
   briefStatus,
@@ -333,46 +332,38 @@ async function recordingDecisions(): Promise<Decision[]> {
   });
 }
 
-/** Nível 5: conteúdo dela. No máximo três — um por plataforma e, quando o
- *  dia comporta, um Reels Test feito com B-roll que já existe.
+/** Nível 5: conteúdo. **Um cartão, no máximo.**
  *
- *  Doze tendências pesquisadas não são doze cartões. São isto. O «porquê» é
- *  a frase que o motor guardou ao escolher, não a regra da mentoria. */
+ *  Antes eram três — uma ideia por plataforma, geradas por um modelo de
+ *  madrugada. Isso é um gerador de ideias, e é a coisa que esta feature
+ *  existe para não ser: sete sugestões num dia são sete decisões que ela não
+ *  toma.
+ *
+ *  Agora o Content Brain consolida tudo — vinculação, Reel Test, candidatos,
+ *  gravação, desenvolvimento, mapeamento — e devolve a única coisa que
+ *  precisa da cabeça dela hoje. Quando não precisa de nada, devolve nada: o
+ *  Hoje não cria tarefa só para parecer ativo. */
 async function contentDecisions(now: Date): Promise<Decision[]> {
-  const ideas = await todayContent(now);
-  return ideas.map((i) => {
-    const teste = i.track === 'reels_test';
-    const temBroll = i.brollAssetIds.length > 0;
-    return {
-      id: `content:${i.id}`,
+  const { todayContentDecision } = await import('@/modules/content-brain/plan-service');
+  const decisao = await todayContentDecision(now).catch(() => null);
+  if (!decisao) return [];
+
+  return [
+    {
+      id: `content:${decisao.type}`,
       kind: 'content' as const,
-      subject: teste ? 'Reels Test' : i.platform === 'instagram' ? 'Instagram' : 'TikTok',
-      headline: i.title || i.hook,
-      because: [i.whyChosen || i.whyNow, teste && temBroll ? 'Usa um B-roll que já existe: não precisa gravar nada novo.' : '']
-        .filter(Boolean)
-        .join(' '),
-      covers: 1,
+      subject: 'Conteúdo',
+      headline: decisao.headline,
+      because: decisao.because,
+      covers: decisao.covers,
       weightCents: null,
       urgent: false,
       waitingDays: null,
-      minutes: teste && temBroll ? 1 : 2,
-      href: `/dashboard/content?idea=${i.id}`,
-      payload: {
-        ideaId: i.id,
-        platform: i.platform,
-        track: i.track,
-        trackLabel: i.trackLabel,
-        hook: i.hook,
-        recordMinutes: i.recordMinutes,
-        editMinutes: i.editMinutes,
-        verdict: i.verdict,
-        pillarLabel: i.pillarLabel,
-        functionLabel: i.functionLabel,
-        whyChosen: i.whyChosen,
-        hasBroll: temBroll,
-      },
-    };
-  });
+      minutes: decisao.type === 'content_confirm_trial' || decisao.type === 'content_link_media' ? 1 : 3,
+      href: decisao.href,
+      payload: { actionType: decisao.type, cta: decisao.cta, covers: decisao.covers },
+    },
+  ];
 }
 
 /* ── Prova de vida e falhas ───────────────────────────────────────────────── */

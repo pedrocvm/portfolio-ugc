@@ -124,8 +124,8 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
       type: 'content_save_event',
       headline:
         input.openCandidates === 1
-          ? 'Aconteceu uma coisa que talvez valha guardar.'
-          : `Aconteceram ${input.openCandidates} coisas que talvez valham guardar.`,
+          ? 'Aconteceu uma coisa que talvez valha salvar.'
+          : `Aconteceram ${input.openCandidates} coisas que talvez valham salvar.`,
       because: 'Só você sabe se teve significado. Guardo ou deixo passar.',
       cta: CONTENT_ACTION_CTA.content_save_event,
       covers: input.openCandidates,
@@ -180,7 +180,7 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
       because:
         foco.available === 0
           ? 'Preciso de uma situação real que tenha identificação, conflito, mudança, humor ou surpresa. Você viveu alguma coisa assim?'
-          : `Você tem ${foco.available} ${foco.available === 1 ? 'situação guardada' : 'situações guardadas'} nesse pilar. Uma sessão curta abastece a semana.`,
+          : `Você tem ${foco.available} ${foco.available === 1 ? 'situação salva' : 'situações salvas'} nesse pilar. Uma sessão curta abastece a semana.`,
       cta: CONTENT_ACTION_CTA.content_map_story,
       covers: 1,
       href: `/dashboard/content?tab=strategy&map=${input.primaryPillar}`,
@@ -212,8 +212,8 @@ export function answerIdeaRequest(input: {
       stories: input.availableStories.slice(0, 5),
       message:
         input.availableStories.length === 1
-          ? 'Você tem uma história real guardada que ainda não usou. Quer desenvolver essa?'
-          : `Você tem ${input.availableStories.length} histórias reais guardadas que ainda não usou. Quer continuar uma delas?`,
+          ? 'Você tem uma história real salva que ainda não usou. Quer desenvolver essa?'
+          : `Você tem ${input.availableStories.length} histórias reais salvas que ainda não usou. Quer continuar uma delas?`,
     };
   }
   return {

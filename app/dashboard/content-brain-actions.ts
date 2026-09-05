@@ -54,7 +54,7 @@ export async function tellStory(input: {
   });
   if (!criada.ok) return { error: criada.error };
 
-  // Áudio: transcreve primeiro. Se falhar, o áudio fica guardado dentro da
+  // Áudio: transcreve primeiro. Se falhar, o áudio fica salvo dentro da
   // retenção e ela pode tentar de novo ou escrever.
   if (input.audioPath) {
     const t = await transcribeStoryAudio(criada.data.storyId);

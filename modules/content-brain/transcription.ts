@@ -102,11 +102,11 @@ export async function transcribeStoryAudio(storyId: string): Promise<Transcripti
   if (!story?.audio_path) return { ok: false, error: 'Não encontrei o áudio.', retryable: false };
 
   const { data: file, error } = await db.storage.from('story-audio').download(story.audio_path);
-  if (error || !file) return { ok: false, error: 'Não consegui ler o áudio guardado.', retryable: true };
+  if (error || !file) return { ok: false, error: 'Não consegui ler o áudio salvo.', retryable: true };
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (bytes.byteLength > MAX_AUDIO_BYTES) {
-    return { ok: false, error: 'O áudio é grande demais. Tenta um mais curto.', retryable: false };
+    return { ok: false, error: 'O áudio é grande demais. Tente um mais curto.', retryable: false };
   }
 
   const r = await provider.transcribe({ bytes, mimeType: file.type || 'audio/webm' });
