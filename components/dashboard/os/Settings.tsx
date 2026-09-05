@@ -192,7 +192,7 @@ export default function Settings({
         <p className="osNote">
           É de onde vem o desempenho real. Sem isto, o CarolOS não consegue acompanhar o que você
           publica — e você teria de copiar métricas à mão, que é exatamente o que ele existe para
-          evitar. Publicar continua a ser você: não há publicação automática.
+          evitar. Quem publica continua sendo você: não há publicação automática.
         </p>
 
         {instagram?.account ? (
