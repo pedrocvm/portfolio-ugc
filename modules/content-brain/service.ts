@@ -205,7 +205,10 @@ export async function captureStory(input: {
       summary: '',
       source_type: input.source,
       occurred_at: input.occurredAt ?? null,
-      transcript: input.transcript ?? null,
+      // `transcript` é o relato bruto, tenha vindo de áudio ou de teclado.
+      // Sem isto, o texto que ela escreveu ficava só no título truncado a 80
+      // caracteres e a extração não tinha o que ler.
+      transcript: input.transcript ?? input.text ?? null,
       audio_path: input.audioPath ?? null,
       audio_expires_at: input.audioPath ? new Date(Date.now() + retentionHours() * 3600_000).toISOString() : null,
       factual_sequence: asJson([]),
@@ -233,7 +236,7 @@ export async function extractFacts(storyId: string): Promise<Result<{ facts: str
   const story = await getStory(storyId);
   if (!story) return fail('História não encontrada.');
 
-  const texto = story.transcript ?? story.summary ?? story.title;
+  const texto = [story.transcript, story.summary, story.title].find((t) => t && t.trim()) ?? '';
   if (!texto.trim()) return fail('Ainda não há nada escrito nem transcrito.');
 
   const r = await runPrompt(

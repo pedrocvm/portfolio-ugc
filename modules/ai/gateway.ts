@@ -43,9 +43,14 @@ export function aiConfig(): AiConfig {
 export const aiConfigured = () => Boolean(aiConfig().apiKey);
 
 export class AiUnavailableError extends Error {
-  constructor(readonly code: string, message: string) {
+  // Campo explícito, não parâmetro-propriedade: o `--strip-types` do Node não
+  // suporta a forma curta, e sem isto a camada de IA não corre em teste nenhum.
+  readonly code: string;
+
+  constructor(code: string, message: string) {
     super(message);
     this.name = 'AiUnavailableError';
+    this.code = code;
   }
 }
 

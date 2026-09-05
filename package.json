@@ -12,7 +12,8 @@
     "db:types": "npx --yes supabase@latest gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" > /tmp/carolos-types.ts && head -1 /tmp/carolos-types.ts | grep -q \"export type Json\" && mv /tmp/carolos-types.ts lib/supabase/database.types.ts && echo \"tipos actualizados\" || (echo \"falhou; database.types.ts nao foi tocado\"; cat /tmp/carolos-types.ts | head -2; exit 1)",
     "ingest": "node --env-file-if-exists=.env.local scripts/ingest-knowledge.mjs",
     "eval:ai": "node --import ./scripts/test-alias.mjs scripts/eval-ai.ts",
-    "ai:keys": "node --env-file-if-exists=.env.local scripts/ai-keys.mjs"
+    "ai:keys": "node --env-file-if-exists=.env.local scripts/ai-keys.mjs",
+    "eval:content": "node --env-file-if-exists=.env.local --import ./scripts/test-alias.mjs scripts/eval-content-brain.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

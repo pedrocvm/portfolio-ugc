@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { supabaseServer } from '@/lib/supabase/server';
 import { STAGE_LABEL, type Stage } from '@/modules/opportunities/domain';
 import { previewQuote, activePolicy } from '@/modules/pricing/service';
+import { CONTENT_BRAIN_TOOLS } from './content-brain-tools';
 import type { Source } from './domain';
 
 /** As ferramentas do Carol AI.
@@ -1455,44 +1456,46 @@ const getContentMultiplier = define(
 
 const getContentStrategy = define(
   'get_content_strategy',
-  'A estratégia de conteúdo dela: posicionamento, ADN, os cinco pilares com peso, o que parar, e as séries candidatas. Vem da auditoria do Instagram. Consulta isto ANTES de sugerir qualquer ideia — «me dá uma ideia» não se responde ao acaso.',
+  'A estratégia de conteúdo dela: os quatro pilares FUNCIONAIS, o que cada um precisa produzir no público, quanta matéria-prima real existe em cada um, e o gosto confirmado dela. Consulta isto ANTES de sugerir qualquer coisa — «me dá uma ideia» não se responde ao acaso, e não se responde inventando.',
   z.object({}),
   async () => {
-    const { STRATEGY, describeStrategy } = await import('@/modules/creator/strategy');
-    const { seedsForPillar } = await import('@/modules/creator/seed-service');
-    const db = await supabaseServer();
-
-    // O que já saiu, para saber que pilar está em falta.
-    const { data: recentes } = await db
-      .from('creator_content_idea')
-      .select('pillar, platform, hook, generated_at')
-      .neq('status', 'seed')
-      .order('generated_at', { ascending: false })
-      .limit(12);
-
-    const { pillarDebt, PILLAR_LABEL } = await import('@/modules/creator/domain');
-    const debt = pillarDebt((recentes ?? []).map((r) => ({ pillar: r.pillar })));
-    const emFalta = Object.entries(debt)
-      .filter(([, v]) => v > 0.05)
-      .sort((a, b) => b[1] - a[1])
-      .map(([p]) => p);
+    const { PILLAR_SPEC, FUNCTIONAL_PILLARS, EXCLUDED_TOPICS, describeTaste, TASTE_VERSION } =
+      await import('@/modules/content-brain/domain');
+    const { contentScreen } = await import('@/modules/content-brain/screen-service');
+    const tela = await contentScreen();
 
     return {
       data: {
-        version: STRATEGY.version,
-        source: STRATEGY.source,
-        summary: describeStrategy(),
-        pillarsBehind: emFalta.map((p) => PILLAR_LABEL[p as keyof typeof PILLAR_LABEL] ?? p),
-        seedsForTopPillar: emFalta[0] ? await seedsForPillar(emFalta[0], 4) : [],
-        recent: (recentes ?? []).map((r) => ({ pillar: r.pillar, platform: r.platform, hook: r.hook })),
-        note: 'Autoridade sim, professora não. Nunca proponhas dicas para creators nem tutorial.',
+        version: TASTE_VERSION,
+        focoDaSemana: tela.weekly.label,
+        porque: tela.weekly.rationale,
+        pilares: FUNCTIONAL_PILLARS.map((p) => {
+          const cobertura = tela.coverage.find((c) => c.pillar === p);
+          return {
+            id: p,
+            nome: PILLAR_SPEC[p].label,
+            paraQueExiste: PILLAR_SPEC[p].purpose,
+            materiaPrimaQueProcura: PILLAR_SPEC[p].rawMaterial,
+            naoFazer: PILLAR_SPEC[p].guardrails,
+            situacoesDisponiveis: cobertura?.available ?? 0,
+            precisaMapear: cobertura?.needsMapping ?? true,
+          };
+        }),
+        gosto: describeTaste(),
+        fora: EXCLUDED_TOPICS,
+        // A linha que decide o que fazer a seguir. Vai no dado porque é isso
+        // que o modelo lê quando escolhe a ferramenta seguinte.
+        note:
+          tela.weekly.mappingOnly
+            ? 'AUTORIDADE SIM, PROFESSORA NÃO. E não há matéria-prima real salva: NÃO inventes uma história. Pergunta à Carol o que aconteceu com ela.'
+            : 'AUTORIDADE SIM, PROFESSORA NÃO. Nunca proponhas dicas para creators nem tutorial. Usa list_story_bank para ver o que ela já contou; não inventes situações.',
+        pilaresAntigos:
+          'A sala, Testei, Casa a dois, Corpo e Larguei o turno eram TEMAS tratados como pilares. Continuam como etiqueta de histórico e não governam decisão nenhuma.',
       },
       sources: [],
     };
   },
 );
-
-
 
 /* ── Content OS: a mentoria aplicada ─────────────────────────────────────── */
 
@@ -1820,6 +1823,10 @@ export const TOOLS: Tool[] = [
   evaluateReelsTest, getReelsTestLab, recordContentPerformance, getContentLearnings,
   getBrollBank, saveBrollTake, getSocialProof, saveSocialProofTool, checkDuplicateContent,
   createContentVariant, createDirectedContent, discoverBragaPlacesTool,
+  // O Content Brain. Vêm de um ficheiro próprio porque isto já tem mil e
+  // oitocentas linhas, e porque são o único grupo que partilha um invariant:
+  // nenhuma delas consegue inventar uma história.
+  ...CONTENT_BRAIN_TOOLS,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));
