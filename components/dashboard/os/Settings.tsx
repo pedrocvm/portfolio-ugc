@@ -35,7 +35,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function Settings({
-  flags, mailboxes, jobs, googleConfigured, aiConfigured, serviceRole, encryptionKey,
+  flags, mailboxes, jobs, googleConfigured, aiConfigured, serviceRole, encryptionKey, instagram,
   policyVersion, policyStatus, notice, scheduler, aiKeyName,
 }: {
   flags: Flags;
@@ -43,6 +43,17 @@ export default function Settings({
   jobs: JobSummary[];
   scheduler: SchedulerState;
   googleConfigured: boolean;
+  /** A ligação ao Instagram. `null` quando ainda não há nenhuma. */
+  instagram: {
+    configured: boolean;
+    missing: string[];
+    account: string | null;
+    status: string;
+    message: string;
+    needsCarol: boolean;
+    lastSyncAt: string | null;
+    mediaCount: number;
+  } | null;
   aiConfigured: boolean;
   serviceRole: boolean;
   encryptionKey: boolean;
@@ -98,6 +109,10 @@ export default function Settings({
         <p className="osWarn" data-tone="ok">Gmail ligado.</p>
       ) : notice === 'error' ? (
         <p className="osWarn">A ligação ao Gmail não se completou. Tente de novo.</p>
+      ) : notice === 'instagram-ok' ? (
+        <p className="osWarn" data-tone="ok">Instagram ligado.</p>
+      ) : notice === 'instagram-error' ? (
+        <p className="osWarn">A ligação ao Instagram não se completou. Tente de novo.</p>
       ) : null}
 
       {missing.length ? (
@@ -167,6 +182,59 @@ export default function Settings({
           ) : (
             <span className="osRowSub">
               Sem GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET no ambiente, o botão de ligar não faz nada.
+            </span>
+          )}
+        </div>
+      </section>
+
+      <section className="osSection">
+        <h2>Instagram</h2>
+        <p className="osNote">
+          É de onde vem o desempenho real. Sem isto, o CarolOS não consegue acompanhar o que você
+          publica — e você teria de copiar métricas à mão, que é exatamente o que ele existe para
+          evitar. Publicar continua a ser você: não há publicação automática.
+        </p>
+
+        {instagram?.account ? (
+          <div className="osRows">
+            <div className="osRow">
+              <div>
+                <span className="osRowName" style={{ fontSize: 17 }}>@{instagram.account}</span>
+                <span className="osRowSub">
+                  {instagram.message}
+                  {instagram.lastSyncAt ? ` · lido a ${formatDate(instagram.lastSyncAt)}` : ' · ainda sem leitura'}
+                  {instagram.mediaCount ? ` · ${instagram.mediaCount} conteúdos` : ''}
+                </span>
+              </div>
+              <button
+                className="chip"
+                type="button"
+                disabled={pending}
+                onClick={() =>
+                  run('ig-disc', async () => {
+                    await fetch('/api/integrations/instagram/disconnect', { method: 'POST' });
+                    setMessage('Instagram desligado.');
+                  })
+                }
+              >
+                {running === 'ig-disc' ? <Spinner label="Desligando" /> : null}
+                Desligar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="osRowSub">Nenhuma conta ligada.</p>
+        )}
+
+        <div className="osActs">
+          {instagram?.configured ? (
+            <a className="btn" href="/api/integrations/instagram/oauth/start">
+              {instagram.account ? 'Ligar de novo' : 'Ligar o Instagram'}
+            </a>
+          ) : (
+            <span className="osRowSub">
+              Sem {instagram?.missing.join(' e ') || 'a configuração do Instagram'} no ambiente, o botão
+              de ligar não faz nada.
             </span>
           )}
         </div>

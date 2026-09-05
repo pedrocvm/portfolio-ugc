@@ -77,7 +77,7 @@ test('mudar um byte do corpo invalida a assinatura', async () => {
 
 const payloadComentario = {
   object: 'instagram',
-  entry: [{ id: '17841455063195928', time: 1757000000, changes: [{ field: 'comments', value: { id: 'comment-abc' } }] }],
+  entry: [{ id: '1784100000000000', time: 1757000000, changes: [{ field: 'comments', value: { id: 'comment-abc' } }] }],
 };
 
 test('o mesmo evento produz a mesma chave', async () => {
