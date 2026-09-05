@@ -35,7 +35,19 @@ import {
   type WeekPlan,
 } from './domain';
 import { detectSeries as detectSeriesPrompt } from './prompts';
-import { suggestableStories } from './service';
+import { suggestableStories, type Db } from './service';
+
+/** O cliente a usar.
+ *
+ *  Uma tela corre com a sessão dela e portanto sob RLS. Um trabalho de fundo
+ *  corre a partir do pg_cron, sem sessão nenhuma — e `supabaseServer()` ali
+ *  devolve um cliente anónimo que o RLS bloqueia. O plano da semana falhava com
+ *  «não encontrei o usuário» e a decisão do Hoje devolvia nada, em silêncio,
+ *  que é pior.
+ *
+ *  Por isso quem chama diz qual usa. É a mesma convenção de
+ *  `modules/actions/service.ts`. */
+const client = async (db?: Db): Promise<Db> => db ?? ((await supabaseServer()) as Db);
 
 /* ── Semana ───────────────────────────────────────────────────────────────── */
 
@@ -51,8 +63,8 @@ export function weekStart(now = new Date()): string {
 
 export type WeekPlanRow = WeekPlan & { id: string | null; status: string };
 
-export async function currentWeekPlan(now = new Date()): Promise<WeekPlanRow | null> {
-  const db = await supabaseServer();
+export async function currentWeekPlan(now = new Date(), client_?: Db): Promise<WeekPlanRow | null> {
+  const db = await client(client_);
   const semana = weekStart(now);
 
   const { data: plano } = await db
@@ -116,8 +128,8 @@ export async function currentWeekPlan(now = new Date()): Promise<WeekPlanRow | n
  *
  *  Sem plano anterior é Atração — é a fase declarada do perfil. Com plano
  *  anterior, roda para não ficar meses no mesmo. */
-async function pickFocus(coverage: ReturnType<typeof pillarCoverage>): Promise<FunctionalPillar> {
-  const db = await supabaseServer();
+async function pickFocus(coverage: ReturnType<typeof pillarCoverage>, client_?: Db): Promise<FunctionalPillar> {
+  const db = await client(client_);
   const { data: anterior } = await db
     .from('content_week_plan')
     .select('primary_pillar')
@@ -139,15 +151,17 @@ async function pickFocus(coverage: ReturnType<typeof pillarCoverage>): Promise<F
   return abastecidos[0];
 }
 
-export async function buildWeekPlan(opts: { now?: Date; capacity?: number } = {}): Promise<{ ok: true; plan: WeekPlan } | { ok: false; error: string }> {
+export async function buildWeekPlan(
+  opts: { now?: Date; capacity?: number; db?: Db } = {},
+): Promise<{ ok: true; plan: WeekPlan } | { ok: false; error: string }> {
   const now = opts.now ?? new Date();
-  const db = await supabaseServer();
+  const db = await client(opts.db);
   const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
   if (!me) return { ok: false, error: 'Não encontrei o usuário.' };
 
-  const disponiveis = await suggestableStories();
+  const disponiveis = await suggestableStories(undefined, db);
   const cobertura = pillarCoverage(disponiveis.map((s) => ({ pillar: s.pillar, status: s.status })));
-  const foco = await pickFocus(cobertura);
+  const foco = await pickFocus(cobertura, db);
 
   const stories: PlannerStory[] = disponiveis.map((s) => ({
     id: s.id,
@@ -224,19 +238,19 @@ export async function buildWeekPlan(opts: { now?: Date; capacity?: number } = {}
 
 /* ── Decisão do dia ───────────────────────────────────────────────────────── */
 
-export async function todayContentDecision(now = new Date()): Promise<ContentDecision | null> {
-  const db = await supabaseServer();
+export async function todayContentDecision(now = new Date(), client_?: Db): Promise<ContentDecision | null> {
+  const db = await client(client_);
 
   const [disponiveis, plano, contagens, candidatos, sinais] = await Promise.all([
-    suggestableStories(),
-    currentWeekPlan(now),
+    suggestableStories(undefined, db),
+    currentWeekPlan(now, db),
     instagramCountsSafe(),
     db.from('content_story_candidate').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     db.from('content_learning').select('id', { count: 'exact', head: true }).eq('ladder_state', 'hypothesis').eq('active', true),
   ]);
 
   const cobertura = pillarCoverage(disponiveis.map((s) => ({ pillar: s.pillar, status: s.status })));
-  const foco = plano?.primaryPillar ?? (await pickFocus(cobertura));
+  const foco = plano?.primaryPillar ?? (await pickFocus(cobertura, db));
 
   return contentDecision({
     primaryPillar: foco,
@@ -279,11 +293,12 @@ export type SeriesSuggestion = {
  *
  *  A IA propõe o agrupamento; a elegibilidade é decidida pelo domínio, e um
  *  cluster que não passe não é mostrado. */
-export async function detectSeriesCandidates(): Promise<SeriesSuggestion[]> {
-  const stories = await suggestableStories();
+export async function detectSeriesCandidates(client_?: Db): Promise<SeriesSuggestion[]> {
+  const db = await client(client_);
+  const stories = await suggestableStories(undefined, db);
   if (stories.length < SERIES_POLICY_V1.minStories) return [];
 
-  const { data: emSerie } = await (await supabaseServer()).from('creator_story').select('id').not('series_id', 'is', null);
+  const { data: emSerie } = await db.from('creator_story').select('id').not('series_id', 'is', null);
   const jaEmSerie = new Set((emSerie ?? []).map((s) => s.id));
   const livres = stories.filter((s) => !jaEmSerie.has(s.id));
   if (livres.length < SERIES_POLICY_V1.minStories) return [];
@@ -336,7 +351,7 @@ export async function detectSeriesCandidates(): Promise<SeriesSuggestion[]> {
 }
 
 export async function adoptSeries(input: { storyIds: string[]; name: string; premise: string; arc: string; mechanism: string }): Promise<{ ok: true; seriesId: string } | { ok: false; error: string }> {
-  const db = await supabaseServer();
+  const db = await client();
 
   const { data: existentes } = await db.from('creator_story').select('id').in('id', input.storyIds);
   const conhecidos = (existentes ?? []).map((s) => s.id);
@@ -462,8 +477,8 @@ export type CandidateRow = {
   occurredAt: string;
 };
 
-export async function openCandidates(): Promise<CandidateRow[]> {
-  const db = await supabaseServer();
+export async function openCandidates(client_?: Db): Promise<CandidateRow[]> {
+  const db = await client(client_);
   const { data } = await db
     .from('content_story_candidate')
     .select('id, source, fact, question, brand_name, occurred_at')
@@ -487,7 +502,7 @@ export async function decideCandidate(
   candidateId: string,
   decision: 'saved' | 'dismissed' | 'private',
 ): Promise<{ ok: true; storyId: string | null } | { ok: false; error: string }> {
-  const db = await supabaseServer();
+  const db = await client();
   const { data: c } = await db
     .from('content_story_candidate')
     .select('id, fact, source, brand_name, occurred_at, evidence_refs')

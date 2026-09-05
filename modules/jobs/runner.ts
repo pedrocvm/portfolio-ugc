@@ -205,7 +205,9 @@ async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobRes
         // confirmadas — e quando não há material, o plano diz que falta
         // matéria-prima em vez de inventar peças para encher slots.
         const { buildWeekPlan } = await import('@/modules/content-brain/plan-service');
-        const r = await buildWeekPlan();
+        // Service role: o pg_cron chama sem sessão, e sob RLS o plano não via
+        // nem o usuário.
+        const r = await buildWeekPlan({ db });
         return {
           job,
           status: r.ok ? 'success' : 'error',

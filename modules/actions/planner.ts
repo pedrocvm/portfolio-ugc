@@ -17,6 +17,11 @@ export const ACTION_TYPES = [
   'negotiate', 'create_proposal', 'start_production', 'request_brief',
   'deliver', 'request_metrics', 'upsell', 'renew_rights', 'nurture',
   'close', 'review', 'wait_expired', 'integration_fix', 'chase_payment',
+  // Content Brain. Vivem aqui porque o Hoje lê `action_item` e não sabe de
+  // onde a ação veio — o que sabe é o tipo, o CTA e para onde levar.
+  'content_map_story', 'content_develop_story', 'content_record_ready',
+  'content_confirm_trial', 'content_save_event', 'content_review_signal',
+  'content_link_media',
 ] as const;
 
 export type ActionType = (typeof ACTION_TYPES)[number];
@@ -43,6 +48,13 @@ export const ACTION_CTA: Record<ActionType, string> = {
   wait_expired: 'A espera terminou',
   integration_fix: 'Consertar ligação',
   chase_payment: 'Cobrar',
+  content_map_story: 'Contar uma situação',
+  content_develop_story: 'Continuar história',
+  content_record_ready: 'Gravar',
+  content_confirm_trial: 'Confirmar',
+  content_save_event: 'Ver o que aconteceu',
+  content_review_signal: 'Revisar sinal',
+  content_link_media: 'Confirmar',
 };
 
 /** Peso base por tipo. Não é a ordenação final — é o ponto de partida antes de
@@ -67,6 +79,16 @@ const BASE: Record<ActionType, number> = {
   close: 30,
   nurture: 20,
   integration_fix: 95,
+  // Abaixo de dinheiro e de uma marca à espera, acima de nutrir. Conteúdo é
+  // importante e quase nunca é urgente — e um cartão de conteúdo em primeiro
+  // lugar todos os dias é um cartão que ela aprende a saltar.
+  content_link_media: 50,
+  content_confirm_trial: 48,
+  content_record_ready: 44,
+  content_save_event: 42,
+  content_develop_story: 36,
+  content_review_signal: 28,
+  content_map_story: 25,
 };
 
 const RISK_BONUS: Record<Risk, number> = { none: 0, low: 5, medium: 15, high: 30 };

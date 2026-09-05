@@ -553,3 +553,49 @@
     opacity: 1;
   }
 }
+
+/* ── Recording Mode: o contexto da história ───────────────────────────────── */
+
+/* O ponto central acompanha cada momento. É a única coisa que ela precisa de
+   ver sempre — o resto é a tomada da vez. */
+.recPoint {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  background: var(--ferro2);
+  border-left: 2px solid var(--pedra);
+}
+
+.recPointLabel {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t2);
+}
+
+.recPoint p {
+  margin: 5px 0;
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--t1);
+}
+
+.recLimits {
+  margin-top: 16px;
+  color: var(--t2);
+}
+
+.recLimits summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.recLimits ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+}

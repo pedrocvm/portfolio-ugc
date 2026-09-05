@@ -345,7 +345,9 @@ async function recordingDecisions(): Promise<Decision[]> {
  *  Hoje não cria tarefa só para parecer ativo. */
 async function contentDecisions(now: Date): Promise<Decision[]> {
   const { todayContentDecision } = await import('@/modules/content-brain/plan-service');
-  const decisao = await todayContentDecision(now).catch(() => null);
+  // A consolidação corre de madrugada, sem sessão. Sem o cliente de service
+  // role a decisão voltava vazia em silêncio — que é a pior forma de falhar.
+  const decisao = await todayContentDecision(now, supabaseService()).catch(() => null);
   if (!decisao) return [];
 
   return [

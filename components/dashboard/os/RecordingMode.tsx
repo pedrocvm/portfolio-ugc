@@ -16,18 +16,32 @@ import type { Shot } from '@/modules/content/domain';
  *
  *  O lugar onde ela ia sobrevive a fechar a aplicação. Filmar é levantar,
  *  mudar de lugar, voltar — e recomeçar do princípio ao voltar seria motivo
- *  para nunca mais abrir isto. */
+ *  para nunca mais abrir isto.
+ *
+ *  Quando a peça vem de uma história real, o topo mostra o ponto central e o
+ *  que não pode ser inventado. Nada de estratégia, desempenho ou referências:
+ *  a gravar, reabrir uma decisão já tomada é o que faz a tomada não sair. */
 
 const chave = (id: string) => `carolos.rec.${id}`;
+
+export type StoryContext = {
+  /** O ponto que ela escolheu. É a única coisa que precisa de ver sempre. */
+  centralPoint: string;
+  /** O que tem de continuar factual e não pode ser reencenado. */
+  mustNotInvent: string[];
+  durationSeconds: number | null;
+};
 
 export default function RecordingMode({
   contentId,
   title,
   shots,
+  story,
 }: {
   contentId: string;
   title: string;
   shots: Shot[];
+  story?: StoryContext;
 }) {
   const [open, setOpen] = useState(false);
   const [feitas, setFeitas] = useState<number[]>([]);
@@ -140,6 +154,14 @@ export default function RecordingMode({
                   {feitas.length + 1}/{shots.length}
                 </span>
 
+                {story ? (
+                  <div className="recPoint">
+                    <span className="recPointLabel">O ponto</span>
+                    <p>{story.centralPoint}</p>
+                    {story.durationSeconds ? <span className="recPointLabel">~{story.durationSeconds}s</span> : null}
+                  </div>
+                ) : null}
+
                 {/* A licença para parar, e é aqui que ela ganha sentido: o que
                     falta já não é o trabalho, é o extra. */}
                 {soFaltamExtras ? (
@@ -170,6 +192,17 @@ export default function RecordingMode({
                     </button>
                   ) : null}
                 </div>
+
+                {story?.mustNotInvent.length ? (
+                  <details className="recLimits">
+                    <summary>O que tem de ser verdade</summary>
+                    <ul>
+                      {story.mustNotInvent.map((m, i) => (
+                        <li key={i}>{m}</li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
 
                 <div className="recBar" aria-hidden="true">
                   <span style={{ '--p': `${(feitas.length / shots.length) * 100}%` } as React.CSSProperties} />

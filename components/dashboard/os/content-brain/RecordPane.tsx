@@ -1,4 +1,5 @@
 import type { FunctionalPillar } from '@/modules/content-brain/domain';
+import RecordingMode from '../RecordingMode';
 import StoryWorkshop from './StoryWorkshop';
 import WeeklyFocus, { type WeeklyFocusData } from './WeeklyFocus';
 import { PublicationMatch, StoryCandidates, TrialReelConfirm } from './StoryDecisions';
@@ -12,7 +13,16 @@ import { PublicationMatch, StoryCandidates, TrialReelConfirm } from './StoryDeci
  *
  *  A ação primária nunca é «gerar ideia». É contar uma situação real. */
 
-export type ReadyItem = { id: string; title: string; point: string | null; beats: number; durationSeconds: number | null };
+export type ReadyItem = {
+  id: string;
+  title: string;
+  point: string | null;
+  beats: number;
+  durationSeconds: number | null;
+  /** Os momentos, já na forma que o modo de gravação lê. */
+  shots: { shot: string; note?: string; required?: boolean }[];
+  mustNotInvent: string[];
+};
 export type DevelopingItem = {
   id: string;
   title: string;
@@ -33,7 +43,6 @@ export default function RecordPane({
   trialToConfirm,
   unlinkedMedia,
   matchOptions,
-  recordingSlot,
 }: {
   weekly: WeeklyFocusData;
   focus: FunctionalPillar;
@@ -43,7 +52,6 @@ export default function RecordPane({
   trialToConfirm: { mediaId: string; caption: string; publishedAt: string; permalink: string | null }[];
   unlinkedMedia: { mediaId: string; caption: string; publishedAt: string }[];
   matchOptions: { storyId: string; title: string; contentIdeaId: string | null }[];
-  recordingSlot?: (item: ReadyItem) => React.ReactNode;
 }) {
   return (
     <>
@@ -78,7 +86,20 @@ export default function RecordPane({
                     ) : null}
                   </div>
                 </div>
-                <div className="osRowSide">{recordingSlot?.(r)}</div>
+                <div className="osRowSide">
+                  {r.shots.length ? (
+                    <RecordingMode
+                      contentId={r.id}
+                      title={r.title}
+                      shots={r.shots}
+                      story={{
+                        centralPoint: r.point ?? r.title,
+                        mustNotInvent: r.mustNotInvent,
+                        durationSeconds: r.durationSeconds,
+                      }}
+                    />
+                  ) : null}
+                </div>
               </div>
             ))}
           </div>

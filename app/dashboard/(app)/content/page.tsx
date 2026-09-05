@@ -98,13 +98,28 @@ export default async function ContentPage({
                 weekly={brain.weekly}
                 focus={brain.focus}
                 ready={brain.ready.map((r) => {
-                  const e = (r.structure ?? {}) as { beats?: unknown[]; durationSeconds?: number; centralPoint?: string };
+                  const e = (r.structure ?? {}) as {
+                    beats?: { order: number; purpose: string; intent: string }[];
+                    visualSupport?: { beat: number; kind: string; description: string }[];
+                    mustNotInvent?: string[];
+                    durationSeconds?: number;
+                    centralPoint?: string;
+                  };
+                  const beats = e.beats ?? [];
                   return {
                     id: r.id,
                     title: r.title,
                     point: e.centralPoint ?? r.frameLabel,
-                    beats: Array.isArray(e.beats) ? e.beats.length : 0,
+                    beats: beats.length,
                     durationSeconds: e.durationSeconds ?? null,
+                    // Cada momento vira uma tomada; a prova visual entra como
+                    // nota do momento a que pertence, não como lista à parte.
+                    shots: beats.map((b) => ({
+                      shot: b.intent,
+                      note: (e.visualSupport ?? []).find((v) => v.beat === b.order)?.description,
+                      required: true,
+                    })),
+                    mustNotInvent: e.mustNotInvent ?? [],
                   };
                 })}
                 developing={brain.developing.map((d) => ({

@@ -162,11 +162,16 @@ export default function Focus({ actions }: { actions: ActionRow[] }) {
                   <Link
                     className="osGo"
                     href={
-                      atual.opportunityId
-                        ? `/dashboard/opportunities/${atual.opportunityId}`
-                        : atual.brandId
-                          ? `/dashboard/brands/${atual.brandId}`
-                          : '/dashboard/settings'
+                      // Uma ação de conteúdo não tem marca nem oportunidade, e
+                      // sem isto caía em Definições — que é o sítio errado para
+                      // resolver seja o que for de conteúdo.
+                      atual.type.startsWith('content_')
+                        ? '/dashboard/content'
+                        : atual.opportunityId
+                          ? `/dashboard/opportunities/${atual.opportunityId}`
+                          : atual.brandId
+                            ? `/dashboard/brands/${atual.brandId}`
+                            : '/dashboard/settings'
                     }
                   >
                     {atual.cta}

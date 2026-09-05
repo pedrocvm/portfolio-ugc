@@ -48,6 +48,10 @@ import {
 } from './prompts';
 import { SOT_VERSION } from './taste';
 
+/** O cliente do Supabase. Uma tela passa o da sessão; um trabalho passa o de
+ *  service role. Quem chama decide, porque só quem chama sabe se há sessão. */
+export type Db = Awaited<ReturnType<typeof supabaseServer>>;
+
 export type Fact = { text: string; confirmed: boolean };
 
 export type StoryRow = {
@@ -635,8 +639,8 @@ export async function promoteToContent(storyId: string): Promise<Result<{ conten
 
 /** As histórias que podem ser sugeridas hoje. Privada, descartada e já usada
  *  ficam de fora — e é aqui que a regra é aplicada, não na tela. */
-export async function suggestableStories(pillar?: FunctionalPillar): Promise<StoryRow[]> {
-  const db = await supabaseServer();
+export async function suggestableStories(pillar?: FunctionalPillar, client?: Db): Promise<StoryRow[]> {
+  const db = client ?? (await supabaseServer());
   const { data } = await db
     .from('creator_story')
     .select(SELECT)
