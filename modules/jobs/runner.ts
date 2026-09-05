@@ -23,6 +23,8 @@ export const JOBS = [
   'insights', 'outreach', 'imports',
   // Morning Autopilot. A ordem aqui não é o horário — é `runAllJobs`, abaixo.
   'triage', 'references', 'trends', 'milestones', 'content-plan', 'morning',
+  // Content Brain + Instagram.
+  'instagram-sync', 'instagram-token', 'content-learning', 'story-candidates', 'audio-cleanup',
 ] as const;
 export type JobName = (typeof JOBS)[number];
 
@@ -208,6 +210,46 @@ async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobRes
         };
       }
 
+      /* ── Content Brain ────────────────────────────────────────────────── */
+
+      case 'instagram-sync': {
+        // Um trabalho só faz perfil, mídia, stories, snapshots devidos e o
+        // retrato da conta. Seis crons por Reel era o desenho errado.
+        const { syncInstagram } = await import('@/modules/integrations/instagram/sync');
+        const r = await syncInstagram();
+        return {
+          job,
+          status: r.status,
+          detail: { ...r, processed: r.mediaSeen + r.snapshotsWritten },
+        };
+      }
+
+      case 'instagram-token': {
+        const { refreshInstagramToken } = await import('@/modules/integrations/instagram/sync');
+        const r = await refreshInstagramToken();
+        return { job, status: r.failures.length ? 'error' : 'success', detail: { ...r, processed: r.refreshed ? 1 : 0 } };
+      }
+
+      case 'content-learning': {
+        const { deriveLearnings } = await import('@/modules/content-brain/performance-service');
+        const r = await deriveLearnings();
+        return { job, status: 'success', detail: { ...r, processed: r.written } };
+      }
+
+      case 'story-candidates': {
+        const { deriveStoryCandidates } = await import('@/modules/content-brain/plan-service');
+        const r = await deriveStoryCandidates();
+        return { job, status: 'success', detail: { ...r, processed: r.created } };
+      }
+
+      case 'audio-cleanup': {
+        // O áudio bruto é o dado mais sensível que isto guarda. Depois da
+        // transcrição confirmada não serve para nada.
+        const { cleanupExpiredAudio } = await import('@/modules/content-brain/service');
+        const r = await cleanupExpiredAudio();
+        return { job, status: 'success', detail: { ...r, processed: r.deleted } };
+      }
+
       case 'morning': {
         // A consolidação corre por último e refaz o plano antes de ler: assim
         // não depende de o `plan` de hora a hora ter calhado passar primeiro.
@@ -270,7 +312,11 @@ export async function runAllJobs(opts: { manual?: boolean } = {}): Promise<JobRe
   // consolidação precisa de tudo o resto.
   const order: JobName[] = [
     'gmail-sync', 'process-pending', 'triage', 'followups', 'rights', 'metrics', 'upsell', 'plan',
-    'insights', 'outreach', 'imports', 'references', 'trends', 'milestones', 'content-plan', 'morning',
+    'insights', 'outreach', 'imports', 'references', 'trends', 'milestones',
+    // Content Brain: saúde do token, depois sync, depois o que aprende com o
+    // que o sync trouxe. Trocar a ordem faz o aprendizado ler dados de ontem.
+    'instagram-token', 'instagram-sync', 'content-learning', 'story-candidates', 'audio-cleanup',
+    'content-plan', 'morning',
   ];
   const results: JobResult[] = [];
   for (const job of order) results.push(await runJob(job, opts));

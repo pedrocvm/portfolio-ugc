@@ -98,6 +98,26 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
     label: 'Escolher o conteúdo do dia',
     why: 'Uma vez por dia, depois das tendências e dos marcos. Uma ideia para Instagram e outra para TikTok, mastigadas até à gravação.',
   },
+  'carolos-instagram-sync': {
+    label: 'Sincronizar o Instagram',
+    why: 'De 30 em 30 minutos. Traz mídia nova, stories antes de expirarem e tira os snapshots que entraram na janela. Um trabalho só, não seis por Reel.',
+  },
+  'carolos-instagram-token': {
+    label: 'Renovar o acesso ao Instagram',
+    why: 'Uma vez por dia. Só renova dentro da janela de segurança — o token não pode depender de alguém se lembrar de o copiar.',
+  },
+  'carolos-content-learning': {
+    label: 'Ler o que os números ensinam',
+    why: 'Uma vez por dia, depois do sync. Calcula a mediana dela, procura sinais e só chama aprendizado ao que se repetiu.',
+  },
+  'carolos-story-candidates': {
+    label: 'Procurar o que talvez valha guardar',
+    why: 'Uma vez por dia. Um evento comercial vira uma pergunta de significado, nunca um conteúdo.',
+  },
+  'carolos-audio-cleanup': {
+    label: 'Apagar áudio expirado',
+    why: 'Uma vez por dia. Depois da transcrição confirmada, o áudio bruto não serve para nada e é o dado mais sensível que isto guarda.',
+  },
   'carolos-morning': {
     label: 'Preparar a manhã',
     why: 'Uma vez por dia, no fim de tudo. Junta o que os outros produziram, ordena as decisões e escreve o que falhou.',
