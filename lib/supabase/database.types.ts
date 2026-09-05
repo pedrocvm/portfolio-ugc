@@ -1662,14 +1662,19 @@ export type Database = {
       }
       content_experiment: {
         Row: {
+          cohort: Json
           created_at: string
           ended_at: string | null
+          evidence_ids: string[]
           hypothesis: string
           id: string
           idea_ids: string[]
           kind: string
           label: string
+          ladder_state: string
           learning: string | null
+          mechanism: string | null
+          policy_version: string | null
           repeat: string | null
           result: string | null
           sample_size: number
@@ -1680,14 +1685,19 @@ export type Database = {
           what_we_test: string
         }
         Insert: {
+          cohort?: Json
           created_at?: string
           ended_at?: string | null
+          evidence_ids?: string[]
           hypothesis?: string
           id?: string
           idea_ids?: string[]
           kind: string
           label: string
+          ladder_state?: string
           learning?: string | null
+          mechanism?: string | null
+          policy_version?: string | null
           repeat?: string | null
           result?: string | null
           sample_size?: number
@@ -1698,14 +1708,19 @@ export type Database = {
           what_we_test?: string
         }
         Update: {
+          cohort?: Json
           created_at?: string
           ended_at?: string | null
+          evidence_ids?: string[]
           hypothesis?: string
           id?: string
           idea_ids?: string[]
           kind?: string
           label?: string
+          ladder_state?: string
           learning?: string | null
+          mechanism?: string | null
+          policy_version?: string | null
           repeat?: string | null
           result?: string | null
           sample_size?: number
@@ -1720,39 +1735,63 @@ export type Database = {
       content_learning: {
         Row: {
           active: boolean
+          cohort: Json
           confidence: string
           created_at: string
           dedupe_key: string
           derived_at: string
           evidence: Json
+          evidence_ids: string[]
           id: string
           kind: string
+          ladder_state: string
+          mechanism: string | null
+          metric_definition_version: string | null
+          policy_version: string | null
+          rejected_at: string | null
           sample_size: number
           statement: string
+          validated_at: string | null
         }
         Insert: {
           active?: boolean
+          cohort?: Json
           confidence?: string
           created_at?: string
           dedupe_key: string
           derived_at?: string
           evidence?: Json
+          evidence_ids?: string[]
           id?: string
           kind?: string
+          ladder_state?: string
+          mechanism?: string | null
+          metric_definition_version?: string | null
+          policy_version?: string | null
+          rejected_at?: string | null
           sample_size?: number
           statement: string
+          validated_at?: string | null
         }
         Update: {
           active?: boolean
+          cohort?: Json
           confidence?: string
           created_at?: string
           dedupe_key?: string
           derived_at?: string
           evidence?: Json
+          evidence_ids?: string[]
           id?: string
           kind?: string
+          ladder_state?: string
+          mechanism?: string | null
+          metric_definition_version?: string | null
+          policy_version?: string | null
+          rejected_at?: string | null
           sample_size?: number
           statement?: string
+          validated_at?: string | null
         }
         Relationships: []
       }
@@ -1844,48 +1883,286 @@ export type Database = {
       }
       content_series: {
         Row: {
+          arc: string | null
           created_at: string
           episodes: number
           id: string
           kind: string
           last_episode_at: string | null
+          mechanism: string | null
           name: string
           next_topics: Json
+          no_invented_episodes: boolean
+          origin: string
           pillar: string | null
           places: Json
           premise: string
           status: string
+          story_count: number
           structure: string
         }
         Insert: {
+          arc?: string | null
           created_at?: string
           episodes?: number
           id?: string
           kind?: string
           last_episode_at?: string | null
+          mechanism?: string | null
           name: string
           next_topics?: Json
+          no_invented_episodes?: boolean
+          origin?: string
           pillar?: string | null
           places?: Json
           premise?: string
           status?: string
+          story_count?: number
           structure?: string
         }
         Update: {
+          arc?: string | null
           created_at?: string
           episodes?: number
           id?: string
           kind?: string
           last_episode_at?: string | null
+          mechanism?: string | null
           name?: string
           next_topics?: Json
+          no_invented_episodes?: boolean
+          origin?: string
           pillar?: string | null
           places?: Json
           premise?: string
           status?: string
+          story_count?: number
           structure?: string
         }
         Relationships: []
+      }
+      content_story_candidate: {
+        Row: {
+          app_user_id: string
+          brand_id: string | null
+          brand_name: string | null
+          created_at: string
+          decided_at: string | null
+          dedupe_key: string
+          evidence_refs: Json
+          fact: string
+          id: string
+          occurred_at: string
+          question: string
+          source: string
+          status: string
+          story_id: string | null
+        }
+        Insert: {
+          app_user_id: string
+          brand_id?: string | null
+          brand_name?: string | null
+          created_at?: string
+          decided_at?: string | null
+          dedupe_key: string
+          evidence_refs?: Json
+          fact: string
+          id?: string
+          occurred_at: string
+          question: string
+          source: string
+          status?: string
+          story_id?: string | null
+        }
+        Update: {
+          app_user_id?: string
+          brand_id?: string | null
+          brand_name?: string | null
+          created_at?: string
+          decided_at?: string | null
+          dedupe_key?: string
+          evidence_refs?: Json
+          fact?: string
+          id?: string
+          occurred_at?: string
+          question?: string
+          source?: string
+          status?: string
+          story_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_story_candidate_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_story_candidate_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_story_candidate_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "creator_story"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_story_link: {
+        Row: {
+          content_idea_id: string
+          created_at: string
+          id: string
+          relation: string
+          story_id: string
+        }
+        Insert: {
+          content_idea_id: string
+          created_at?: string
+          id?: string
+          relation?: string
+          story_id: string
+        }
+        Update: {
+          content_idea_id?: string
+          created_at?: string
+          id?: string
+          relation?: string
+          story_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_story_link_content_idea_id_fkey"
+            columns: ["content_idea_id"]
+            isOneToOne: false
+            referencedRelation: "creator_content_idea"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_story_link_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "creator_story"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_week_plan: {
+        Row: {
+          app_user_id: string
+          created_at: string
+          gaps: Json
+          id: string
+          primary_pillar: string
+          rationale: string
+          source_version: string | null
+          status: string
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          app_user_id: string
+          created_at?: string
+          gaps?: Json
+          id?: string
+          primary_pillar: string
+          rationale?: string
+          source_version?: string | null
+          status?: string
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          app_user_id?: string
+          created_at?: string
+          gaps?: Json
+          id?: string
+          primary_pillar?: string
+          rationale?: string
+          source_version?: string | null
+          status?: string
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_week_plan_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_week_slot: {
+        Row: {
+          content_idea_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          pillar: string | null
+          plan_id: string
+          purpose: string
+          reason: string
+          slot_order: number
+          status: string
+          story_id: string | null
+        }
+        Insert: {
+          content_idea_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          pillar?: string | null
+          plan_id: string
+          purpose?: string
+          reason?: string
+          slot_order?: number
+          status?: string
+          story_id?: string | null
+        }
+        Update: {
+          content_idea_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          pillar?: string | null
+          plan_id?: string
+          purpose?: string
+          reason?: string
+          slot_order?: number
+          status?: string
+          story_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_week_slot_content_idea_id_fkey"
+            columns: ["content_idea_id"]
+            isOneToOne: false
+            referencedRelation: "creator_content_idea"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_week_slot_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "content_week_plan"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_week_slot_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "creator_story"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       creative_hypothesis: {
         Row: {
@@ -2069,6 +2346,7 @@ export type Database = {
           brand_audience_effect: string
           broll_asset_ids: string[]
           caption: string
+          central_point: string | null
           collaboration_id: string | null
           content_function: string | null
           cover_note: string
@@ -2084,14 +2362,19 @@ export type Database = {
           episode: number | null
           estimated_edit_minutes: number | null
           estimated_record_minutes: number | null
+          external_media_id: string | null
+          fact_source_version: string | null
           fingerprint: string
           format: string
           fresh_until: string | null
+          functional_pillar: string | null
           generated_at: string
           hook: string
           hooks: Json
           id: string
           language: string
+          legacy_topic_tag: string | null
+          lifecycle: string
           mentorship_signal: boolean
           milestone_id: string | null
           objective: string
@@ -2113,7 +2396,10 @@ export type Database = {
           source_reason: string
           status: string
           story: Json
+          story_id: string | null
           strategy_version: string | null
+          structure_json: Json | null
+          territories: string[]
           title: string
           track: string
           trend_ids: string[]
@@ -2128,6 +2414,7 @@ export type Database = {
           brand_audience_effect?: string
           broll_asset_ids?: string[]
           caption?: string
+          central_point?: string | null
           collaboration_id?: string | null
           content_function?: string | null
           cover_note?: string
@@ -2143,14 +2430,19 @@ export type Database = {
           episode?: number | null
           estimated_edit_minutes?: number | null
           estimated_record_minutes?: number | null
+          external_media_id?: string | null
+          fact_source_version?: string | null
           fingerprint: string
           format?: string
           fresh_until?: string | null
+          functional_pillar?: string | null
           generated_at?: string
           hook?: string
           hooks?: Json
           id?: string
           language?: string
+          legacy_topic_tag?: string | null
+          lifecycle?: string
           mentorship_signal?: boolean
           milestone_id?: string | null
           objective?: string
@@ -2172,7 +2464,10 @@ export type Database = {
           source_reason?: string
           status?: string
           story?: Json
+          story_id?: string | null
           strategy_version?: string | null
+          structure_json?: Json | null
+          territories?: string[]
           title?: string
           track?: string
           trend_ids?: string[]
@@ -2187,6 +2482,7 @@ export type Database = {
           brand_audience_effect?: string
           broll_asset_ids?: string[]
           caption?: string
+          central_point?: string | null
           collaboration_id?: string | null
           content_function?: string | null
           cover_note?: string
@@ -2202,14 +2498,19 @@ export type Database = {
           episode?: number | null
           estimated_edit_minutes?: number | null
           estimated_record_minutes?: number | null
+          external_media_id?: string | null
+          fact_source_version?: string | null
           fingerprint?: string
           format?: string
           fresh_until?: string | null
+          functional_pillar?: string | null
           generated_at?: string
           hook?: string
           hooks?: Json
           id?: string
           language?: string
+          legacy_topic_tag?: string | null
+          lifecycle?: string
           mentorship_signal?: boolean
           milestone_id?: string | null
           objective?: string
@@ -2231,7 +2532,10 @@ export type Database = {
           source_reason?: string
           status?: string
           story?: Json
+          story_id?: string | null
           strategy_version?: string | null
+          structure_json?: Json | null
+          territories?: string[]
           title?: string
           track?: string
           trend_ids?: string[]
@@ -2280,57 +2584,79 @@ export type Database = {
             referencedRelation: "content_series"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "creator_content_idea_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "creator_story"
+            referencedColumns: ["id"]
+          },
         ]
       }
       creator_profile: {
         Row: {
           ai_run_id: string | null
+          allowed_personal_areas: string[]
           app_user_id: string
           avoided_formats: Json
           coverage: string
           created_at: string
+          creative_taste: Json
           dimensions: Json
           evidence: Json
+          excluded_topics: string[]
           handle: string
           id: string
+          preference_evidence: Json
           sample_size: number
           source: string | null
           strategy_version: string | null
           successful_formats: Json
+          taste_version: string | null
           topics: Json
           updated_at: string
         }
         Insert: {
           ai_run_id?: string | null
+          allowed_personal_areas?: string[]
           app_user_id: string
           avoided_formats?: Json
           coverage?: string
           created_at?: string
+          creative_taste?: Json
           dimensions?: Json
           evidence?: Json
+          excluded_topics?: string[]
           handle?: string
           id?: string
+          preference_evidence?: Json
           sample_size?: number
           source?: string | null
           strategy_version?: string | null
           successful_formats?: Json
+          taste_version?: string | null
           topics?: Json
           updated_at?: string
         }
         Update: {
           ai_run_id?: string | null
+          allowed_personal_areas?: string[]
           app_user_id?: string
           avoided_formats?: Json
           coverage?: string
           created_at?: string
+          creative_taste?: Json
           dimensions?: Json
           evidence?: Json
+          excluded_topics?: string[]
           handle?: string
           id?: string
+          preference_evidence?: Json
           sample_size?: number
           source?: string | null
           strategy_version?: string | null
           successful_formats?: Json
+          taste_version?: string | null
           topics?: Json
           updated_at?: string
         }
@@ -2347,6 +2673,133 @@ export type Database = {
             columns: ["app_user_id"]
             isOneToOne: true
             referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_story: {
+        Row: {
+          ai_run_id: string | null
+          allowed_for_content: boolean
+          app_user_id: string
+          audio_expires_at: string | null
+          audio_path: string | null
+          captured_at: string
+          carol_meaning: string | null
+          carol_quotes: Json
+          created_at: string
+          fact_confirmed_at: string | null
+          fact_status: string
+          factual_sequence: Json
+          frame_id: string | null
+          frame_label: string | null
+          frame_options: Json
+          functional_pillar: string | null
+          id: string
+          occurred_at: string | null
+          privacy_level: string
+          provenance: Json
+          series_id: string | null
+          sot_version: string | null
+          source_refs: Json
+          source_type: string
+          status: string
+          structure: Json | null
+          summary: string
+          territories: string[]
+          title: string
+          transcript: string | null
+          uncertain_points: Json
+          updated_at: string
+        }
+        Insert: {
+          ai_run_id?: string | null
+          allowed_for_content?: boolean
+          app_user_id: string
+          audio_expires_at?: string | null
+          audio_path?: string | null
+          captured_at?: string
+          carol_meaning?: string | null
+          carol_quotes?: Json
+          created_at?: string
+          fact_confirmed_at?: string | null
+          fact_status?: string
+          factual_sequence?: Json
+          frame_id?: string | null
+          frame_label?: string | null
+          frame_options?: Json
+          functional_pillar?: string | null
+          id?: string
+          occurred_at?: string | null
+          privacy_level?: string
+          provenance?: Json
+          series_id?: string | null
+          sot_version?: string | null
+          source_refs?: Json
+          source_type?: string
+          status?: string
+          structure?: Json | null
+          summary?: string
+          territories?: string[]
+          title: string
+          transcript?: string | null
+          uncertain_points?: Json
+          updated_at?: string
+        }
+        Update: {
+          ai_run_id?: string | null
+          allowed_for_content?: boolean
+          app_user_id?: string
+          audio_expires_at?: string | null
+          audio_path?: string | null
+          captured_at?: string
+          carol_meaning?: string | null
+          carol_quotes?: Json
+          created_at?: string
+          fact_confirmed_at?: string | null
+          fact_status?: string
+          factual_sequence?: Json
+          frame_id?: string | null
+          frame_label?: string | null
+          frame_options?: Json
+          functional_pillar?: string | null
+          id?: string
+          occurred_at?: string | null
+          privacy_level?: string
+          provenance?: Json
+          series_id?: string | null
+          sot_version?: string | null
+          source_refs?: Json
+          source_type?: string
+          status?: string
+          structure?: Json | null
+          summary?: string
+          territories?: string[]
+          title?: string
+          transcript?: string | null
+          uncertain_points?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_story_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_story_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_story_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "content_series"
             referencedColumns: ["id"]
           },
         ]
@@ -2743,6 +3196,489 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      instagram_account: {
+        Row: {
+          account_type: string | null
+          api_version: string
+          app_user_id: string
+          connected_at: string
+          created_at: string
+          followers_count: number | null
+          follows_count: number | null
+          id: string
+          ig_account_id: string
+          ig_account_id_source: string
+          ig_me_id: string | null
+          ig_me_id_source: string
+          last_error_at: string | null
+          last_error_code: string | null
+          last_success_at: string | null
+          last_sync_at: string | null
+          media_count: number | null
+          media_cursor: string | null
+          scopes: string[]
+          status: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          account_type?: string | null
+          api_version?: string
+          app_user_id: string
+          connected_at?: string
+          created_at?: string
+          followers_count?: number | null
+          follows_count?: number | null
+          id?: string
+          ig_account_id: string
+          ig_account_id_source?: string
+          ig_me_id?: string | null
+          ig_me_id_source?: string
+          last_error_at?: string | null
+          last_error_code?: string | null
+          last_success_at?: string | null
+          last_sync_at?: string | null
+          media_count?: number | null
+          media_cursor?: string | null
+          scopes?: string[]
+          status?: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          account_type?: string | null
+          api_version?: string
+          app_user_id?: string
+          connected_at?: string
+          created_at?: string
+          followers_count?: number | null
+          follows_count?: number | null
+          id?: string
+          ig_account_id?: string
+          ig_account_id_source?: string
+          ig_me_id?: string | null
+          ig_me_id_source?: string
+          last_error_at?: string | null
+          last_error_code?: string | null
+          last_success_at?: string | null
+          last_sync_at?: string | null
+          media_count?: number | null
+          media_cursor?: string | null
+          scopes?: string[]
+          status?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instagram_account_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instagram_account_snapshot: {
+        Row: {
+          account_id: string
+          accounts_engaged: number | null
+          api_version: string
+          created_at: string
+          followers_count: number | null
+          id: string
+          observed_on: string
+          period: string
+          profile_link_taps: number | null
+          raw_metrics: Json
+          reach: number | null
+          source: string
+          total_interactions: number | null
+          views: number | null
+        }
+        Insert: {
+          account_id: string
+          accounts_engaged?: number | null
+          api_version?: string
+          created_at?: string
+          followers_count?: number | null
+          id?: string
+          observed_on: string
+          period?: string
+          profile_link_taps?: number | null
+          raw_metrics?: Json
+          reach?: number | null
+          source?: string
+          total_interactions?: number | null
+          views?: number | null
+        }
+        Update: {
+          account_id?: string
+          accounts_engaged?: number | null
+          api_version?: string
+          created_at?: string
+          followers_count?: number | null
+          id?: string
+          observed_on?: string
+          period?: string
+          profile_link_taps?: number | null
+          raw_metrics?: Json
+          reach?: number | null
+          source?: string
+          total_interactions?: number | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instagram_account_snapshot_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "instagram_account"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instagram_baseline_import: {
+        Row: {
+          app_user_id: string
+          created_at: string
+          id: string
+          media_matched: number
+          media_unmatched: number
+          observed_at: string
+          package_fingerprint: string
+          source: string
+          summary: Json
+        }
+        Insert: {
+          app_user_id: string
+          created_at?: string
+          id?: string
+          media_matched?: number
+          media_unmatched?: number
+          observed_at: string
+          package_fingerprint: string
+          source?: string
+          summary?: Json
+        }
+        Update: {
+          app_user_id?: string
+          created_at?: string
+          id?: string
+          media_matched?: number
+          media_unmatched?: number
+          observed_at?: string
+          package_fingerprint?: string
+          source?: string
+          summary?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instagram_baseline_import_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instagram_comment: {
+        Row: {
+          ai_run_id: string | null
+          classified_at: string | null
+          commented_at: string | null
+          external_comment_id: string
+          id: string
+          ingested_at: string
+          like_count: number | null
+          media_id: string
+          parent_external_id: string | null
+          quality: string | null
+          text: string
+          username: string | null
+        }
+        Insert: {
+          ai_run_id?: string | null
+          classified_at?: string | null
+          commented_at?: string | null
+          external_comment_id: string
+          id?: string
+          ingested_at?: string
+          like_count?: number | null
+          media_id: string
+          parent_external_id?: string | null
+          quality?: string | null
+          text?: string
+          username?: string | null
+        }
+        Update: {
+          ai_run_id?: string | null
+          classified_at?: string | null
+          commented_at?: string | null
+          external_comment_id?: string
+          id?: string
+          ingested_at?: string
+          like_count?: number | null
+          media_id?: string
+          parent_external_id?: string | null
+          quality?: string | null
+          text?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instagram_comment_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instagram_comment_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "instagram_media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instagram_media: {
+        Row: {
+          account_id: string
+          caption: string
+          comments_count: number | null
+          content_idea_id: string | null
+          created_at: string
+          external_media_id: string
+          first_seen_at: string
+          id: string
+          is_shared_to_feed: boolean | null
+          like_count: number | null
+          link_confidence: number | null
+          link_prompted_at: string | null
+          link_source: string | null
+          media_product_type: string
+          media_type: string
+          observed_at: string
+          permalink: string | null
+          promoted_to_feed: string
+          published_at: string
+          source: string
+          story_id: string | null
+          thumbnail_url: string | null
+          trial_confirmed_at: string | null
+          trial_prompted_at: string | null
+          trial_status: string
+          trial_status_source: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          caption?: string
+          comments_count?: number | null
+          content_idea_id?: string | null
+          created_at?: string
+          external_media_id: string
+          first_seen_at?: string
+          id?: string
+          is_shared_to_feed?: boolean | null
+          like_count?: number | null
+          link_confidence?: number | null
+          link_prompted_at?: string | null
+          link_source?: string | null
+          media_product_type?: string
+          media_type?: string
+          observed_at?: string
+          permalink?: string | null
+          promoted_to_feed?: string
+          published_at: string
+          source?: string
+          story_id?: string | null
+          thumbnail_url?: string | null
+          trial_confirmed_at?: string | null
+          trial_prompted_at?: string | null
+          trial_status?: string
+          trial_status_source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          caption?: string
+          comments_count?: number | null
+          content_idea_id?: string | null
+          created_at?: string
+          external_media_id?: string
+          first_seen_at?: string
+          id?: string
+          is_shared_to_feed?: boolean | null
+          like_count?: number | null
+          link_confidence?: number | null
+          link_prompted_at?: string | null
+          link_source?: string | null
+          media_product_type?: string
+          media_type?: string
+          observed_at?: string
+          permalink?: string | null
+          promoted_to_feed?: string
+          published_at?: string
+          source?: string
+          story_id?: string | null
+          thumbnail_url?: string | null
+          trial_confirmed_at?: string | null
+          trial_prompted_at?: string | null
+          trial_status?: string
+          trial_status_source?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instagram_media_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "instagram_account"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instagram_media_content_idea_id_fkey"
+            columns: ["content_idea_id"]
+            isOneToOne: false
+            referencedRelation: "creator_content_idea"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instagram_media_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "creator_story"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instagram_media_snapshot: {
+        Row: {
+          age_seconds: number
+          api_version: string
+          avg_watch_time_raw: number | null
+          avg_watch_time_seconds: number | null
+          captured_at: string
+          comments: number | null
+          created_at: string
+          follows: number | null
+          id: string
+          likes: number | null
+          media_id: string
+          navigation: number | null
+          profile_activity: number | null
+          raw_metrics: Json
+          reach: number | null
+          replies: number | null
+          saves: number | null
+          shares: number | null
+          snapshot_kind: string
+          source: string
+          total_interactions: number | null
+          total_watch_time_raw: number | null
+          total_watch_time_seconds: number | null
+          views: number | null
+        }
+        Insert: {
+          age_seconds: number
+          api_version?: string
+          avg_watch_time_raw?: number | null
+          avg_watch_time_seconds?: number | null
+          captured_at?: string
+          comments?: number | null
+          created_at?: string
+          follows?: number | null
+          id?: string
+          likes?: number | null
+          media_id: string
+          navigation?: number | null
+          profile_activity?: number | null
+          raw_metrics?: Json
+          reach?: number | null
+          replies?: number | null
+          saves?: number | null
+          shares?: number | null
+          snapshot_kind: string
+          source?: string
+          total_interactions?: number | null
+          total_watch_time_raw?: number | null
+          total_watch_time_seconds?: number | null
+          views?: number | null
+        }
+        Update: {
+          age_seconds?: number
+          api_version?: string
+          avg_watch_time_raw?: number | null
+          avg_watch_time_seconds?: number | null
+          captured_at?: string
+          comments?: number | null
+          created_at?: string
+          follows?: number | null
+          id?: string
+          likes?: number | null
+          media_id?: string
+          navigation?: number | null
+          profile_activity?: number | null
+          raw_metrics?: Json
+          reach?: number | null
+          replies?: number | null
+          saves?: number | null
+          shares?: number | null
+          snapshot_kind?: string
+          source?: string
+          total_interactions?: number | null
+          total_watch_time_raw?: number | null
+          total_watch_time_seconds?: number | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instagram_media_snapshot_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "instagram_media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instagram_webhook_event: {
+        Row: {
+          dedupe_key: string
+          error_summary: string | null
+          field: string | null
+          id: string
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          status: string
+          topic: string
+        }
+        Insert: {
+          dedupe_key: string
+          error_summary?: string | null
+          field?: string | null
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          topic?: string
+        }
+        Update: {
+          dedupe_key?: string
+          error_summary?: string | null
+          field?: string | null
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          topic?: string
+        }
+        Relationships: []
       }
       integration_connection: {
         Row: {
