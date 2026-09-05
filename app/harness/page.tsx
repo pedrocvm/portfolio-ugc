@@ -5,6 +5,7 @@ import SectionNav from '@/components/dashboard/SectionNav';
 import { AssistantProvider } from '@/components/assistant/AssistantProvider';
 import Harness from './Harness';
 import '@/app/dashboard/dashboard.css';
+import '@/app/dashboard/content-brain.css';
 
 // Lê o ambiente a cada pedido: pré-renderizada, a salva ficava decidida no build.
 export const dynamic = 'force-dynamic';

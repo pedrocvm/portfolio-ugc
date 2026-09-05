@@ -336,20 +336,46 @@ export async function deriveLearnings(): Promise<{ evaluated: number; written: n
   return { evaluated: porMecanismo.size, written: escritos, validated: validados, failures: falhas };
 }
 
+const FORMAT_LABEL: Record<string, string> = {
+  talking_head: 'falando',
+  talking_broll: 'falando com B-roll',
+  vlog: 'vlog',
+  aesthetic: 'estético',
+  humor_pov: 'humor',
+  bts: 'bastidores',
+  demo: 'demonstração',
+  carousel: 'carrossel',
+};
+
+/** O mecanismo em português.
+ *
+ *  A chave interna é `formato:ponto` — `talking_head:eu complico tentando
+ *  melhorar`. Isso é um identificador, e um identificador na tela é o sistema
+ *  a falar consigo próprio à frente dela. */
+function describeMechanism(mechanism: string): string {
+  const [formato, ...resto] = mechanism.split(':');
+  const ponto = resto.join(':').trim();
+  const nome = FORMAT_LABEL[formato] ?? formato.replace(/_/g, ' ');
+  return ponto ? `«${ponto}», ${nome}` : nome;
+}
+
 /** A frase que aparece na tela. O degrau da escada dita o verbo. */
 function statementFor(mechanism: string, v: LadderVerdict): string {
-  const metricas = v.agreeingMetrics.map((m) => METRIC_LABEL[m] ?? m).join(' e ');
+  const m = describeMechanism(mechanism);
+  const metricas = v.agreeingMetrics.map((x) => METRIC_LABEL[x] ?? x).join(' e ');
   if (v.state === 'validated') {
-    return `Conteúdos com ${mechanism} ficaram acima da sua mediana em ${metricas}, em ${v.sampleSize} peças. Dá para contar com isso.`;
+    return `Conteúdos como ${m} ficaram acima da sua mediana em ${metricas}, em ${v.sampleSize} peças. Dá para contar com isso.`;
   }
   if (v.state === 'hypothesis') {
-    return `Conteúdos com ${mechanism} parecem render mais em ${metricas}. Vale repetir o mecanismo em outra história real.`;
+    return `Conteúdos como ${m} parecem render mais em ${metricas}. Vale repetir esse caminho em outra história real.`;
   }
   if (v.state === 'rejected') {
-    return `${mechanism} não se sustentou. Parei de tratar como padrão.`;
+    return `Conteúdos como ${m} não se sustentaram. Parei de tratar como padrão.`;
   }
-  return `Há um sinal em ${mechanism}${metricas ? ` (${metricas})` : ''}. Ainda não é um padrão.`;
+  return `Há um sinal em conteúdos como ${m}${metricas ? ` (${metricas})` : ''}. Ainda não é um padrão.`;
 }
+
+export { describeMechanism };
 
 export async function learningLadder(limit = 12): Promise<LearningRow[]> {
   const db = await supabaseServer();

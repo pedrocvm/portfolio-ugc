@@ -449,17 +449,27 @@
 
 /* ── Banco ────────────────────────────────────────────────────────────────── */
 
+/* O `.chip` da casa é um botão de texto sublinhado, não uma pílula: 3px de
+   padding e sem largura própria. Em fila ficam colados e ficam a 30px, abaixo
+   do alvo mínimo de toque. Aqui ganham respiro e altura sem deixar de ser o
+   mesmo objeto — o selecionado marca-se com o filete, que é o vocabulário
+   existente, não com um fundo cheio que seria outra linguagem. */
 .cbFilters {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px 18px;
   margin: 0 0 18px;
 }
 
+.cbFilters .chip {
+  min-height: 44px;
+  padding: 0;
+}
+
 .cbFilters .chip[data-on] {
-  border-color: var(--umbra);
-  background: var(--umbra);
-  color: var(--papel);
+  color: var(--ink);
+  border-bottom-color: var(--umbra);
+  border-bottom-width: 2px;
 }
 
 .cbStoryRow .osMeta {
@@ -598,4 +608,12 @@
   padding-left: 18px;
   font-size: 14px;
   line-height: 1.5;
+}
+
+/* `.focusSkip` traz `margin-left: auto`, que no Focus empurra a saída para a
+   ponta — ali é uma escapatória. Aqui as três respostas são iguais («sim»,
+   «não», «não lembro») e uma delas atirada para o outro lado da tela lê-se
+   como outra coisa. */
+.cbActs .focusSkip {
+  margin-left: 0;
 }

@@ -52,7 +52,14 @@ export default function WeeklyFocus({ data, mapCta }: { data: WeeklyFocusData; m
 
       {data.gaps.length ? (
         <p className="osNote">
-          {data.gaps.map((g) => `${g.label} tem ${g.available === 0 ? 'nada salvo' : `${g.available} ${g.available === 1 ? 'situação' : 'situações'}`}`).join('; ')}.
+          {data.gaps
+            .map((g) =>
+              g.available === 0
+                ? `${g.label} não tem nada salvo`
+                : `${g.label} tem ${g.available} ${g.available === 1 ? 'situação salva' : 'situações salvas'}`,
+            )
+            .join('; ')}
+          .
         </p>
       ) : null}
 
