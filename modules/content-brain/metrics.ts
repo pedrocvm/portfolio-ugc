@@ -107,8 +107,24 @@ export function formatMetric(m: MetricValue | null | undefined): string {
 
 /* ── Janelas de snapshot ──────────────────────────────────────────────────── */
 
-export const SNAPSHOT_KINDS = ['t1h', 't6h', 't24h', 't72h', 't7d', 't30d'] as const;
+/** As janelas do Feed, as dos Stories, e a leitura atual.
+ *
+ *  `latest` não é uma janela: é a leitura mais recente, seja qual for a idade
+ *  da peça. Existe porque uma publicação de 2024 nunca vai cair numa janela e,
+ *  sem isto, nunca teria métrica nenhuma da API. Compara-se com `latest` só
+ *  entre peças com idade parecida — e a tela diz a idade. */
+export const SNAPSHOT_KINDS = ['t1h', 't6h', 't12h', 't23h', 't24h', 't72h', 't7d', 't30d', 'latest'] as const;
 export type SnapshotKind = (typeof SNAPSHOT_KINDS)[number];
+
+export const FEED_WINDOWS: readonly SnapshotKind[] = ['t1h', 't6h', 't24h', 't72h', 't7d', 't30d'];
+/** Um Story expira às 24 h: a última leitura possível é antes disso. */
+export const STORY_WINDOWS: readonly SnapshotKind[] = ['t1h', 't6h', 't12h', 't23h'];
+/** Janelas mesmo (com alvo e tolerância). `latest` fica de fora. */
+export const WINDOWED_KINDS: readonly SnapshotKind[] = ['t1h', 't6h', 't12h', 't23h', 't24h', 't72h', 't7d', 't30d'];
+
+/** A partir daqui uma peça é «antiga»: a leitura atual vale como fecho, e
+ *  compara-se com as outras antigas. */
+export const LEGACY_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 export const isSnapshotKind = (v: unknown): v is SnapshotKind =>
   typeof v === 'string' && (SNAPSHOT_KINDS as readonly string[]).includes(v);
@@ -123,10 +139,14 @@ const HOUR = 60 * MIN;
 export const SNAPSHOT_WINDOW: Record<SnapshotKind, { targetMs: number; toleranceMs: number; label: string }> = {
   t1h: { targetMs: 1 * HOUR, toleranceMs: 20 * MIN, label: '1 hora' },
   t6h: { targetMs: 6 * HOUR, toleranceMs: 60 * MIN, label: '6 horas' },
+  t12h: { targetMs: 12 * HOUR, toleranceMs: 60 * MIN, label: '12 horas' },
+  t23h: { targetMs: 23 * HOUR, toleranceMs: 40 * MIN, label: '23 horas' },
   t24h: { targetMs: 24 * HOUR, toleranceMs: 2 * HOUR, label: '24 horas' },
   t72h: { targetMs: 72 * HOUR, toleranceMs: 4 * HOUR, label: '72 horas' },
   t7d: { targetMs: 7 * 24 * HOUR, toleranceMs: 12 * HOUR, label: '7 dias' },
   t30d: { targetMs: 30 * 24 * HOUR, toleranceMs: 24 * HOUR, label: '30 dias' },
+  // Sem alvo: é «agora». A tolerância infinita diz que nunca «passa».
+  latest: { targetMs: 0, toleranceMs: Number.POSITIVE_INFINITY, label: 'leitura atual' },
 };
 
 /** Que snapshots estão em janela agora e ainda não foram tirados.
@@ -138,24 +158,48 @@ export function dueSnapshots(input: {
   publishedAt: string | Date;
   existing: readonly SnapshotKind[];
   now?: Date;
+  /** Stories têm janelas próprias, porque expiram. Sem isto, Feed. */
+  productType?: string;
 }): SnapshotKind[] {
   const publicado = new Date(input.publishedAt).getTime();
   const agora = (input.now ?? new Date()).getTime();
   if (!Number.isFinite(publicado)) return [];
   const idade = agora - publicado;
   const feitos = new Set(input.existing);
+  const janelas = input.productType === 'STORY' ? STORY_WINDOWS : FEED_WINDOWS;
 
-  return SNAPSHOT_KINDS.filter((kind) => {
+  return janelas.filter((kind) => {
     if (feitos.has(kind)) return false;
     const { targetMs, toleranceMs } = SNAPSHOT_WINDOW[kind];
     return idade >= targetMs - toleranceMs && idade <= targetMs + toleranceMs;
   });
 }
 
+/** A leitura atual está por tirar?
+ *
+ *  Uma vez por dia para o Feed, e só depois de a peça ter idade para a leitura
+ *  valer alguma coisa — antes das 24 h a janela certa é a do relógio. Stories
+ *  não entram: expiram, e as janelas deles já são as leituras. */
+export function latestDue(input: {
+  publishedAt: string | Date;
+  productType: string;
+  lastLatestAt: string | Date | null;
+  now?: Date;
+  everyMs?: number;
+}): boolean {
+  if (input.productType === 'STORY') return false;
+  const publicado = new Date(input.publishedAt).getTime();
+  const agora = (input.now ?? new Date()).getTime();
+  if (!Number.isFinite(publicado) || agora - publicado < 24 * HOUR) return false;
+  if (!input.lastLatestAt) return true;
+  const ultima = new Date(input.lastLatestAt).getTime();
+  return agora - ultima >= (input.everyMs ?? 24 * HOUR);
+}
+
 /** A janela mais próxima da idade de um conteúdo. Serve para comparar
  *  like-for-like: só se compara T+24h com T+24h. */
 export function snapshotAgeBucket(ageMs: number): SnapshotKind | null {
-  for (const kind of SNAPSHOT_KINDS) {
+  for (const kind of WINDOWED_KINDS) {
     const { targetMs, toleranceMs } = SNAPSHOT_WINDOW[kind];
     if (ageMs >= targetMs - toleranceMs && ageMs <= targetMs + toleranceMs) return kind;
   }

@@ -157,6 +157,12 @@ export const JOB_LABEL: Record<string, string> = {
   milestones: 'Marcos',
   'content-plan': 'Plano de conteúdo',
   morning: 'Preparar a manhã',
+  'instagram-sync': 'Sincronizar o Instagram',
+  'instagram-token': 'Renovar o Instagram',
+  'content-learning': 'Ler o que os números ensinam',
+  'story-candidates': 'Procurar o que vale salvar',
+  'audio-cleanup': 'Apagar áudio expirado',
+  imports: 'Acabar lotes de marcas',
   all: 'Todos',
 };
 

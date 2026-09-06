@@ -207,30 +207,50 @@ export function composeReferralTemplate(input: {
   originalBody: string | null;
   signature?: string;
 }): PreparedArtifact {
-  const equipe = input.team ? `equipe de ${input.team}` : 'equipe';
-  const quem = looksLikePersonName(input.senderName, input.brandName)
-    ? `A ${input.senderName!.trim().split(' ')[0]}`
-    : `A equipe de atendimento`;
+  const original = (input.originalBody ?? '').trim();
+  // A língua é a da abordagem original: uma marca a quem ela escreveu em
+  // inglês recebe o email novo em inglês, não meio a meio.
+  const ingles = looksEnglish(original);
+  const pessoa = looksLikePersonName(input.senderName, input.brandName) ? input.senderName!.trim().split(' ')[0] : null;
   const assunto = input.originalSubject && semRe(input.originalSubject)
     ? semRe(input.originalSubject)
-    : `UGC | Conteúdo para a ${input.brandName}`;
+    : ingles ? `UGC content for ${input.brandName}` : `UGC | Conteúdo para a ${input.brandName}`;
 
-  const original = (input.originalBody ?? '').trim();
-  const corpo = [
-    `Olá, ${equipe}!`,
-    '',
-    `${quem} da ${input.brandName} me indicou este contato para falar sobre uma colaboração de conteúdo UGC. Deixo abaixo o que já tinha compartilhado com vocês.`,
-    original ? `\n${original}` : '',
-    '',
-    'Fico à disposição para conversar.',
-    '',
-    input.signature ?? 'Carolina',
-  ]
+  const corpo = (ingles
+    ? [
+        `Hi ${input.team ? `${input.team} team` : 'team'}!`,
+        '',
+        `${pessoa ?? `The ${input.brandName} support team`} pointed me to this address to talk about a UGC content collaboration. Here is what I had already shared with you.`,
+        original ? `\n${original}` : '',
+        '',
+        'Happy to talk whenever works for you.',
+        '',
+        input.signature ?? 'Carolina',
+      ]
+    : [
+        `Olá, ${input.team ? `equipe de ${input.team}` : 'equipe'}!`,
+        '',
+        `${pessoa ? `A ${pessoa}` : 'A equipe de atendimento'} da ${input.brandName} me indicou este contato para falar sobre uma colaboração de conteúdo UGC. Deixo abaixo o que já tinha compartilhado com vocês.`,
+        original ? `\n${original}` : '',
+        '',
+        'Fico à disposição para conversar.',
+        '',
+        input.signature ?? 'Carolina',
+      ])
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
-  return { subject: assunto, body: corpo, language: 'pt-BR', source: 'rule' };
+  return { subject: assunto, body: corpo, language: ingles ? 'en' : 'pt-BR', source: 'rule' };
+}
+
+/** Inglês ou português, pelo que está escrito — sem modelo. */
+export function looksEnglish(text: string): boolean {
+  const t = ` ${text.toLowerCase()} `;
+  if (!t.trim()) return false;
+  const en = (t.match(/ (the|and|with|for|you|your|i'm|about|would|content|team|hi|hello|thanks) /g) ?? []).length;
+  const pt = (t.match(/ (o|a|os|as|de|do|da|para|com|você|vocês|olá|equipe|obrigad[ao]|conteúdo|uma|um|que|não) /g) ?? []).length;
+  return en > pt;
 }
 
 /* ── A próxima ação de uma conversa ───────────────────────────────────────── */

@@ -14,6 +14,8 @@ import {
   strategyScreen,
 } from '@/modules/creator/content-os-service';
 import { contentScreen, performanceScreen, toBankRows } from '@/modules/content-brain/screen-service';
+import { feedAudit, storyAudit } from '@/modules/content-brain/performance-service';
+import { schedulerState } from '@/modules/jobs/scheduler';
 import { guideEntry } from '@/modules/content-brain/guide-service';
 import { usableTrends } from '@/modules/trends/service';
 import ContentBank from '@/components/dashboard/os/ContentBank';
@@ -24,7 +26,7 @@ import ContentVault from '@/components/dashboard/os/ContentVault';
 import Published from '@/components/dashboard/os/Published';
 import ReelsTestLab from '@/components/dashboard/os/ReelsTestLab';
 import ContentGuide from '@/components/dashboard/os/content-brain/ContentGuide';
-import Performance from '@/components/dashboard/os/content-brain/Performance';
+import ContentIntelligence from '@/components/dashboard/os/content-brain/ContentIntelligence';
 import RecordPane from '@/components/dashboard/os/content-brain/RecordPane';
 import StoryBank from '@/components/dashboard/os/content-brain/StoryBank';
 
@@ -47,7 +49,7 @@ export default async function ContentPage({
   // Charabanc existem antes de a primeira manhã correr.
   await seedFromMentor().catch(() => null);
 
-  const [content, inventory, hoje, banco, trends, lab, broll, braga, proof, screen, learnings, performance, brain, desempenho, guia] = await Promise.all([
+  const [content, inventory, hoje, banco, trends, lab, broll, braga, proof, screen, learnings, performance, brain, desempenho, guia, feed, agendador] = await Promise.all([
     listContent(),
     capabilityInventory(),
     todayContent().catch(() => []),
@@ -63,7 +65,13 @@ export default async function ContentPage({
     contentScreen(),
     performanceScreen(),
     guideEntry(),
+    feedAudit(60).catch(() => null),
+    schedulerState().catch(() => null),
   ]);
+  // Só depois de saber se a captura está ligada: a cobertura de Stories diz
+  // «não está ligada» ou «desde tal dia», nunca «0 Stories».
+  const syncScheduled = Boolean(agendador?.rows.some((r) => r.jobName === 'carolos-instagram-sync' && r.active));
+  const historias = await storyAudit({ syncScheduled }).catch(() => null);
 
   const byRole = (role: FunnelRole) => content.filter((c) => c.funnelRole === role);
   const publicadas = banco.filter((i) => i.status === 'recorded' || i.status === 'published');
@@ -162,11 +170,17 @@ export default async function ContentPage({
           tests: <ReelsTestLab lab={lab} />,
           published: (
             <>
-              <Performance
-                pieces={desempenho.pieces}
-                learnings={desempenho.learnings}
-                lastSyncAt={desempenho.lastSyncAt}
-              />
+              {feed && historias ? (
+                <ContentIntelligence
+                  pieces={desempenho.pieces}
+                  learnings={desempenho.learnings}
+                  lastSyncAt={desempenho.lastSyncAt}
+                  feed={feed}
+                  stories={historias}
+                />
+              ) : (
+                <p className="osWarn">Não consegui ler o Instagram agora. As peças do plano continuam abaixo.</p>
+              )}
               <Published pieces={publicadas} performance={Object.fromEntries(performance)} learnings={learnings} />
               <BrandPieces content={content} inventory={inventory} byRole={byRole} />
             </>

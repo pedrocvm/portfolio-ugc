@@ -214,7 +214,7 @@ export async function triageThread(
   // A versão da regra entra na impressão digital: quando a próxima ação
   // passa a calcular-se de outra forma, cada conversa é relida uma vez.
   const fingerprint = await hashContent(
-    `${state.last?.id ?? 'vazio'}:${messages.length}:${flags.ai_drafting ? 'ai' : 'det'}:nba1`,
+    `${state.last?.id ?? 'vazio'}:${messages.length}:${flags.ai_drafting ? 'ai' : 'det'}:nba2`,
   );
 
   const { data: existing } = await db
@@ -335,7 +335,14 @@ export async function triageThread(
     });
 
     await db.from('thread_intel').upsert(
-      { ...base, ...patch, next_action: asJson(next), next_action_type: next.type },
+      {
+        ...base,
+        ...patch,
+        // Um email novo pronto é um rascunho pronto, venha de onde vier.
+        ...(next.preparedArtifact && isActionable(next) ? { draft_state: 'ready' } : {}),
+        next_action: asJson(next),
+        next_action_type: next.type,
+      },
       { onConflict: 'thread_id' },
     );
 
@@ -407,7 +414,7 @@ export async function triageThread(
   };
   const risks = rightsRisks(scope);
 
-  const policy = await activePolicy();
+  const policy = await activePolicy(db as unknown as Parameters<typeof activePolicy>[0]);
   const calculo = calculateQuote(
     policy.rules,
     {
@@ -695,10 +702,13 @@ function toRow(r: RawIntel, replyTo: string | null): ThreadIntelRow {
  *  É isto que enche o «3 respostas precisam do teu sim» do Morning Brief. */
 export async function repliesWaiting(limit = 8): Promise<ThreadIntelRow[]> {
   const db = supabaseService();
+  // Não só quando a vez é dela: um encaminhamento fica por escrever mesmo
+  // que ela tenha agradecido entretanto — a última mensagem é dela, e a ação
+  // continua a ser dela.
   const { data } = await db
     .from('thread_intel')
     .select(SELECT_INTEL)
-    .eq('waiting_on', 'carol')
+    .or('waiting_on.eq.carol,next_action_type.in.(compose_to_new_contact,confirm_referral)')
     .order('waiting_since', { ascending: true })
     .limit(limit * 3);
 

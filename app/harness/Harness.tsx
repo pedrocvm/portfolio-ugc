@@ -10,6 +10,14 @@ import { EMPTY_PREPARED, describePrepared, orderDecisions } from '@/modules/morn
 import { describeBackground } from '@/modules/actions/day';
 import RecordingMode from '@/components/dashboard/os/RecordingMode';
 import ContentGuide from '@/components/dashboard/os/content-brain/ContentGuide';
+import Conversation from '@/components/dashboard/os/Conversation';
+import Inbox from '@/components/dashboard/os/Inbox';
+import NextActionCard from '@/components/dashboard/os/NextActionCard';
+import { nextActionForThread, extractReferredContacts } from '@/modules/actions/next-action';
+import ContentIntelligence from '@/components/dashboard/os/content-brain/ContentIntelligence';
+import type { FeedAuditView, StoryAuditView } from '@/modules/content-brain/performance-service';
+import { auditPiece, feedSummary, type FeedPieceInput } from '@/modules/content-brain/feed-audit';
+import { sequenceMetrics } from '@/modules/content-brain/stories';
 
 /** Dados de exemplo com a forma do esquema real. Nomes de marca inventados de
  *  propósito: uma bancada não devia conter conversa verdadeira de ninguém. */
@@ -150,6 +158,37 @@ const MANHA = {
   }),
   gaps: [{ area: 'trends', message: 'Não consegui ver o TikTok Creative Center esta manhã.' }],
   decisions: orderDecisions([
+    {
+      id: 'reply:cora',
+      kind: 'reply',
+      subject: 'Cora',
+      headline: 'Estrella te encaminhou para a equipe de marketing.',
+      because: 'Encontrei o contato que ela passou e deixei o próximo email pronto.',
+      covers: 1,
+      weightCents: null,
+      urgent: false,
+      waitingDays: 2,
+      minutes: 1,
+      href: '/dashboard/inbox?thread=00000000-0000-4000-8000-000000000002',
+      payload: {
+        threadId: '00000000-0000-4000-8000-000000000002',
+        draftSubject: 'UGC | Ideia de criativo para a Cora',
+        draftBody:
+          'Olá, equipe de marketing!\n\nA Estrella, do atendimento da Cora, me indicou este contato para falar sobre uma colaboração de conteúdo UGC. Deixo abaixo o que já tinha compartilhado com vocês.\n\nPensei num ângulo que pode funcionar muito bem para os anúncios pagos de vocês: a frustração de perder tempo com bancos tradicionais e resolver isso em segundos pelo app da Cora.\n\nFico à disposição para conversar.\n\nCarolina',
+        replyTo: 'marketing@cora.com.br',
+        targetKind: 'compose',
+        actionType: 'compose_to_new_contact',
+        actionTitle: 'Escrever para marketing@cora.com.br',
+        evidenceBecause: 'Esse endereço foi informado pela própria marca nesta mensagem.',
+        evidenceQuote: 'Time de Marketing - marketing@cora.com.br',
+        artifactSource: 'model',
+        whatChanged: 'A marca disse que quem decide é o marketing e deixou o email.',
+        whatIsMissing: '',
+        risk: '',
+        riskLevel: 'none',
+        intentLabel: 'indicou outra pessoa',
+      },
+    },
     {
       id: 'reply:1',
       kind: 'reply',
@@ -390,6 +429,172 @@ export default function Harness({ modo }: { modo?: string }) {
           }]}
           unlinkedMedia={[]}
           matchOptions={[]}
+        />
+      </>
+    );
+  }
+
+  // A conversa da Cora, tal como está na base: o email da Estrella a indicar
+  // marketing@cora.com.br, e a ação que sai dele. Os endereços são os reais;
+  // o ID da thread é de bancada.
+  if (modo === 'conversa' || modo === 'marca' || modo === 'conversas') {
+    const corpo = `Olá Carol, como vai?\n\nAqui é a Estrella da equipe de atendimento da Cora.\n\nPor aqui, na equipe de Atendimento, nosso foco é o suporte diário e a ajuda direta aos nossos clientes em suas contas. Por isso, não somos nós quem gerenciamos as decisões de campanhas de anúncios ou contratações de novos criativos.\n\nNo entanto, para que a sua proposta de abordagem em vídeo e o seu portfólio sejam avaliados diretamente pelos nossos especialistas de marca, por favor, envie a sua apresentação para o e-mail abaixo:\n\nTime de Marketing - marketing@cora.com.br\n\nUm abraço,\nTime Cora`;
+    const mensagens = [
+      { id: 'm1', direction: 'outbound' as const, sentAt: dia(-4), fromAddress: 'carolxqueiroz05@gmail.com', fromName: 'Carolina', subject: 'UGC | Ideia de criativo para a Cora', body: 'Olá equipe! 😊 Estive dando uma olhada na comunicação de vocês nas mídias sociais e pensei num ângulo que pode funcionar muito bem para os anúncios pagos de vocês: a frustração de perder tempo com bancos tradicionais e resolver isso em segundos usando o app da Cora.' },
+      { id: 'm2', direction: 'inbound' as const, sentAt: dia(-2), fromAddress: 'parcerias@cora.com.br', fromName: 'Estrella', subject: 'Re: UGC | Ideia de criativo para a Cora', body: corpo },
+    ];
+    const acao = nextActionForThread({
+      threadId: '00000000-0000-4000-8000-000000000002', opportunityId: 'o-cora', brandId: 'b-cora', brandName: 'Cora',
+      intent: 'REFERRAL', confidence: 0.92, waitingOn: 'carol', waitingSince: dia(-2),
+      lastExternal: { id: 'm2', fromAddress: 'parcerias@cora.com.br', fromName: 'Estrella', bodyText: corpo, sentAt: dia(-2) },
+      draft: null, recommendation: 'Enviar a proposta para o marketing.', whatTheyWant: 'Redirecionar para o time de marketing.',
+      referred: extractReferredContacts(corpo, { exclude: ['parcerias@cora.com.br', 'carolxqueiroz05@gmail.com'] }),
+      originalOutbound: { subject: mensagens[0].subject, body: mensagens[0].body },
+    });
+
+    if (modo === 'conversas') {
+      const linha = (id: string, brand: string, subject: string, snippet: string, next: string | null, dir: 'inbound' | 'outbound', days: number) => ({
+        id, provider: 'gmail', subject, participants: [], lastMessageAt: dia(-days), messageCount: 2, classification: 'commercial' as const,
+        confidence: 1, reason: '', brandId: null, brandName: brand, opportunityId: null, stage: 'replied', lastDirection: dir, snippet, replyTypes: [], nextTitle: next, nextType: null,
+      });
+      return (
+        <Inbox
+          gmailConnected
+          waiting={[
+            linha('t-cora', 'Cora', 'Re: UGC | Ideia de criativo para a Cora', 'Por favor, envie a sua apresentação para o e-mail abaixo: Time de Marketing - marketing@cora.com.br', 'Escrever para marketing@cora.com.br', 'inbound', 2),
+            linha('t-cecotec', 'Cecotec Portugal', 'Re: Colaboração UGC — briefing aprovado', 'Segue o código de rastreio da Conga Windroid. Sugerimos um close-up no vídeo.', 'Confirmar quando o produto chegar', 'inbound', 3),
+          ]}
+          review={[]}
+          quiet={[
+            linha('t-eleven', 'ElevenLabs', 'Re: Creators program', 'Our creator team is full at the moment — we added you to the waitlist.', 'Nada a fazer agora', 'inbound', 1),
+            linha('t-lima', 'Lima Escape', 'Re: Proposta de colaboração UGC — Lima Escape', 'As parcerias deste ano já estão fechadas.', 'Nada a fazer agora', 'inbound', 1),
+          ]}
+        />
+      );
+    }
+
+    if (modo === 'marca') {
+      return (
+        <>
+          <div className="dashBar">
+            <h1>Cora</h1>
+            <span className="dashState">fit 74</span>
+          </div>
+          <section className="rel">
+            <div className="relNow">
+              <p className="relEyebrow">Situação agora</p>
+              <p className="relLine">
+                Estrella escreveu há 2 dias e está à espera. <span className="osTag" data-tone="mute">Respondeu</span>
+              </p>
+            </div>
+            <div className="relNext">
+              <p className="relEyebrow">Próxima ação</p>
+              <h2>{acao.title}</h2>
+              <p className="osWhy">{acao.reason}</p>
+            </div>
+            <div className="relWork">
+              <p className="relEyebrow">Trabalho já preparado</p>
+              <NextActionCard threadId="00000000-0000-4000-8000-000000000002" action={acao} whoWrote="Estrella" compact />
+            </div>
+          </section>
+          <section className="osSection relConvo">
+            <h2>Conversa</h2>
+            <p className="osNote">UGC | Ideia de criativo para a Cora · <a href="#">Abrir a conversa completa</a></p>
+            <Conversation messages={mensagens} brandName="Cora" compact />
+          </section>
+        </>
+      );
+    }
+
+    return (
+      <div className="pick" style={{ position: 'static' }}>
+        <div className="pickBox mailBox" style={{ margin: '24px auto' }}>
+          <header className="mailHead">
+            <div>
+              <h2>Re: UGC | Ideia de criativo para a Cora</h2>
+              <p className="osRowSub">Cora · 2 mensagens</p>
+            </div>
+          </header>
+          <div className="mailScroll">
+            <div className="mailGist">
+              <div className="mailGistTop">
+                <p className="mailGistAsk">Estrella: Redirecionar para o time de marketing.</p>
+                <span className="aiMark"><i aria-hidden="true" />Powered by CarolAI</span>
+              </div>
+            </div>
+            <NextActionCard threadId="00000000-0000-4000-8000-000000000002" action={acao} whoWrote="Estrella" />
+            <h3 className="mailConvoTitle">A conversa</h3>
+            <Conversation messages={mensagens} brandName="Cora" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (modo === 'inteligencia' || modo === 'inteligencia-feed' || modo === 'inteligencia-stories') {
+    const leitura = (metric: string, ratio: number | null) =>
+      ratio === null
+        ? { metric, value: null, median: null, ratio: null, reading: `${metric}: indisponível`, comparable: false }
+        : { metric, value: Math.round(ratio * 1800), median: 1800, ratio, reading: `${metric}: ${ratio}× a sua mediana`, comparable: true };
+    const peca = (id: string, title: string, at: string, tags: { format: string | null; theme: string | null; hook: string | null }, readings: ReturnType<typeof leitura>[], mechanism: string | null = null): FeedPieceInput => ({
+      mediaId: id, title, publishedAt: at, mediaProductType: 'REELS', pillarLabel: mechanism ? 'Atração' : null, mechanism,
+      tags: { ...tags, source: tags.format ? 'ai_caption' : null, confidence: tags.format ? 0.7 : null },
+      readings, latestKind: 'latest', readingAgeDays: 60,
+    });
+    const entradas: FeedPieceInput[] = [
+      peca('f1', 'O cenário que eu compliquei', dia(-9), { format: 'humor', theme: 'cenário de gravação', hook: 'contraste' }, [leitura('views', 1.4), leitura('reach', 1.6), leitura('comments', 2.2)], 'talking_head:eu complico tentando melhorar demais'),
+      peca('f2', 'Uma coisa não tem nada a ver com a outra', dia(-30), { format: 'humor', theme: 'vida em Braga', hook: 'humor' }, [leitura('views', 1.1), leitura('reach', 1.0), leitura('comments', 1.7)]),
+      peca('f3', 'Charabanc · montagem', dia(-120), { format: 'estético', theme: 'hotel', hook: 'sem gancho' }, [leitura('views', 6.9), leitura('reach', 4.1), leitura('comments', 0.6)]),
+      peca('f4', 'Café e edição', dia(-200), { format: 'estético', theme: 'rotina', hook: 'sem gancho' }, [leitura('views', 0.8), leitura('reach', 0.7), leitura('comments', 0.5)]),
+      peca('f5', 'Setup de luz natural', dia(-260), { format: 'estético', theme: 'gravação', hook: 'resultado primeiro' }, [leitura('views', 1.0), leitura('reach', 0.9), leitura('comments', 0.4)]),
+      peca('f6', 'Primeiro vídeo em inglês', dia(-40), { format: 'falando', theme: 'inglês', hook: 'abertura de história' }, [leitura('views', 0.9), leitura('reach', 0.8), leitura('comments', 1.2)]),
+      peca('f7', 'Reel de 2023', '2023-02-26T19:57:08Z', { format: null, theme: null, hook: null }, [leitura('views', null)]),
+    ];
+    const pecas = entradas.map((p) => ({ input: p, audit: auditPiece(p) }));
+    const feed: FeedAuditView = {
+      pieces: pecas.map(({ input, audit }) => ({ ...input, audit, permalink: null, storyTitle: null })),
+      summary: feedSummary(pecas),
+      sample: { total: 7, comparable: 6, legacy: 6, recent: 1, withTags: 6 },
+      lastSyncAt: dia(0),
+    };
+    const frames = (n: number, base: number, day: number, replies: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `s${day}-${i}`, publishedAt: new Date(Date.now() + day * 86400000 + i * 600000).toISOString(),
+        reach: Math.round(base * (1 - i * 0.06)), views: null, replies: i === 0 ? replies : 0, shares: null, navigation: null, profileActivity: null, follows: null,
+      }));
+    const seq = (id: string, label: string, day: number, n: number, base: number, replies: number, tags: string[]) => {
+      const fr = frames(n, base, day, replies);
+      return {
+        id, label, startedAt: fr[0].publishedAt, endedAt: fr[fr.length - 1].publishedAt, storyCount: n, tags, locked: false,
+        metrics: sequenceMetrics(fr), comparison: null as string | null,
+        frames: fr.map((f) => ({ id: f.id, publishedAt: f.publishedAt, permalink: null, reach: f.reach, replies: f.replies, expiredAt: day < 0 ? f.publishedAt : null, measuredAt: f.publishedAt })),
+      };
+    };
+    const stories: StoryAuditView = {
+      coverage: { since: dia(-3), line: 'Histórico automático de Stories desde 06/09/2026. O que veio antes não está disponível na API.' },
+      active: 5, expired: 9,
+      sequences: [
+        { ...seq('q1', 'Bastidores de gravação · terça-feira', 0, 5, 312, 8, ['bts', 'talking']), comparison: 'Melhor que 4 das últimas 5 sequências de tamanho comparável.' },
+        seq('q2', 'Treino e café · segunda-feira', -1, 4, 260, 2, ['gym', 'routine']),
+        seq('q3', 'Pergunta para vocês · domingo', -2, 3, 280, 11, ['poll']),
+        seq('q4', 'Só B-roll · sábado', -3, 2, 190, 0, ['aesthetic']),
+      ],
+      guidance: { lines: [], because: 'Ainda não sei: 4 sequências medidas nas últimas 4 semanas. Preciso de pelo menos 6 para comparar.' },
+      policyVersion: 'CAROL_STORY_SEQUENCE_V1',
+    };
+    return (
+      <>
+        <div className="dashBar">
+          <h1>Conteúdo</h1>
+          <span className="dashState">7 peças medidas</span>
+        </div>
+        <ContentIntelligence
+          pieces={PECAS_PUBLICADAS}
+          learnings={APRENDIZADOS}
+          lastSyncAt={dia(0)}
+          feed={feed}
+          stories={stories}
+          initial={modo === 'inteligencia-feed' ? 'feed' : modo === 'inteligencia-stories' ? 'stories' : 'learn'}
         />
       </>
     );

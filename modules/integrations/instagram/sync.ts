@@ -35,7 +35,10 @@ import {
   instagramCounts,
   markAccountError,
   markAccountSynced,
+  markExpiredStories,
+  pendingLatest,
   pendingSnapshots,
+  rebuildStorySequences,
   upsertAccount,
   upsertMedia,
   writeAccountSnapshot,
@@ -49,6 +52,10 @@ export type SyncReport = {
   mediaSeen: number;
   mediaInserted: number;
   storiesSeen: number;
+  storiesExpired: number;
+  storySequences: number;
+  /** Leituras atuais do Feed — as peças fora de qualquer janela. */
+  latestWritten: number;
   snapshotsWritten: number;
   accountSnapshots: number;
   apiCalls: number;
@@ -62,8 +69,8 @@ export type SyncReport = {
 
 const empty = (reason: string): SyncReport => ({
   status: 'skipped',
-  accountsSynced: 0, mediaSeen: 0, mediaInserted: 0, storiesSeen: 0,
-  snapshotsWritten: 0, accountSnapshots: 0, apiCalls: 0, errors: 0,
+  accountsSynced: 0, mediaSeen: 0, mediaInserted: 0, storiesSeen: 0, storiesExpired: 0, storySequences: 0,
+  latestWritten: 0, snapshotsWritten: 0, accountSnapshots: 0, apiCalls: 0, errors: 0,
   failures: [], unsupportedMetrics: [], durationMs: 0, reason,
 });
 
@@ -71,7 +78,7 @@ const MEDIA_FIELDS = 'id,caption,media_type,media_product_type,permalink,timesta
 
 /** A corrida completa: perfil, mídia nova, stories ativos, snapshots devidos e
  *  o retrato diário da conta. */
-export async function syncInstagram(opts: { now?: Date; maxSnapshots?: number } = {}): Promise<SyncReport> {
+export async function syncInstagram(opts: { now?: Date; maxSnapshots?: number; maxLatest?: number; allMedia?: boolean } = {}): Promise<SyncReport> {
   const started = Date.now();
   const now = opts.now ?? new Date();
 
@@ -99,26 +106,31 @@ export async function syncInstagram(opts: { now?: Date; maxSnapshots?: number } 
     if (!conta) return { ...report, status: 'error', failures: ['Não consegui gravar a conta do Instagram.'], errors: 1, durationMs: Date.now() - started };
     report.accountsSynced = 1;
 
-    /* Mídia */
-    const brutas = await client.paginate<RawMedia>('me/media', { params: { fields: MEDIA_FIELDS, limit: 50 }, maxPages: 4 });
+    /* Mídia. `allMedia` percorre a conta inteira — é o arranque da auditoria
+       do Feed, e correr uma vez por semana chega para apanhar o que faltar. */
+    const brutas = await client.paginate<RawMedia>('me/media', { params: { fields: MEDIA_FIELDS, limit: 50 }, maxPages: opts.allMedia ? 20 : 4 });
     const medias = brutas.map((m) => MediaSchema.parse(m)).map(normalizeMedia);
     const gravadas = await upsertMedia(conta.id, medias);
     report.mediaSeen = gravadas.seen;
     report.mediaInserted = gravadas.inserted;
 
-    /* Stories: expiram em 24 h, por isso apanham-se e medem-se já. */
+    /* Stories: expiram em 24 h, por isso apanham-se e medem-se já. Os que
+       deixaram de vir ficam marcados como expirados, e as sequências
+       reagrupam-se — é o que faz a memória de Stories existir. */
     try {
       const stories = await client.paginate<RawMedia>('me/stories', {
         params: { fields: 'id,media_type,media_product_type,permalink,timestamp,thumbnail_url' },
         maxPages: 2,
       });
-      if (stories.length) {
-        const normalizados = stories
-          .map((s) => MediaSchema.parse({ ...s, media_product_type: s.media_product_type ?? 'STORY' }))
-          .map(normalizeMedia);
-        await upsertMedia(conta.id, normalizados);
+      const normalizados = stories
+        .map((s) => MediaSchema.parse({ ...s, media_product_type: s.media_product_type ?? 'STORY' }))
+        .map(normalizeMedia);
+      if (normalizados.length) {
+        await upsertMedia(conta.id, normalizados, { activeStories: true, now });
         report.storiesSeen = normalizados.length;
       }
+      report.storiesExpired = await markExpiredStories(conta.id, normalizados.map((s) => s.externalMediaId), now);
+      report.storySequences = (await rebuildStorySequences(conta.id)).sequences;
     } catch (error) {
       report.failures.push(describe(error, 'stories'));
       report.errors += 1;
@@ -141,6 +153,23 @@ export async function syncInstagram(opts: { now?: Date; maxSnapshots?: number } 
       }
     }
     report.snapshotsWritten = feitos;
+
+    /* A leitura atual do Feed: o que dá métrica às peças fora de janela. */
+    const semLeitura = await pendingLatest(conta.id, now, opts.maxLatest ?? 30);
+    let atuais = 0;
+    for (const media of semLeitura) {
+      const ok = await captureSnapshot(
+        client,
+        { mediaId: media.id, externalId: media.externalMediaId, mediaType: media.mediaType, productType: media.mediaProductType, publishedAt: media.publishedAt, kind: 'latest', now },
+        naoSuportadas,
+      );
+      if (ok) atuais += 1;
+      else {
+        report.errors += 1;
+        report.failures.push(`Não consegui a leitura atual de ${media.externalMediaId}.`);
+      }
+    }
+    report.latestWritten = atuais;
 
     /* Retrato diário da conta */
     try {

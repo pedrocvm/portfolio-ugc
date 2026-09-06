@@ -1,9 +1,13 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import type { Database } from './database.types';
 import { SUPABASE_KEY, SUPABASE_URL } from './config';
 
+/** `next/headers` só se resolve quando alguém pede o cliente com sessão.
+ *  Um script de auditoria que importa um serviço com este ficheiro por baixo
+ *  — e passa o service role por parâmetro — não pode rebentar por causa de
+ *  um import que nunca chega a usar. */
 export async function supabaseServer() {
+  const { cookies } = await import('next/headers');
   const store = await cookies();
   return createServerClient<Database>(SUPABASE_URL, SUPABASE_KEY, {
     cookies: {

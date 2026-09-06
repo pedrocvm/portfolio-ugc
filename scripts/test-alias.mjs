@@ -20,6 +20,13 @@ const SERVER_ONLY = new URL('node_modules/server-only/empty.js', ROOT).href;
 registerHooks({
   resolve(specifier, context, next) {
     if (specifier === 'server-only') return next(SERVER_ONLY, context);
+    // O Next expõe `next/headers` só pelo mapa de exports do bundler; o Node
+    // quer o ficheiro. Um script que importe um serviço com isto por baixo
+    // resolve aqui — e só rebenta se alguém chamar `cookies()` fora de um
+    // pedido, que é o erro certo.
+    if (specifier === 'next/headers' || specifier === 'next/cache' || specifier === 'next/navigation') {
+      return next(`${specifier}.js`, context);
+    }
 
     const isAlias = specifier.startsWith('@/');
     const isRelative = specifier.startsWith('./') || specifier.startsWith('../');

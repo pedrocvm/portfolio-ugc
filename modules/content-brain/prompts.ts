@@ -24,6 +24,7 @@ import {
   type StoryExtraction, type StoryFraming, type StoryStructure, type VoiceScript,
 } from './schemas';
 import { LensInferenceSchema, type LensInference } from './schemas';
+import { MediaAuditSchema, type MediaAudit } from './schemas';
 
 /** A regra que governa cada uma destas tarefas. Curta de propósito: um bloco
  *  longo de proibições é um bloco que o modelo lê em diagonal. */
@@ -432,4 +433,40 @@ Como fazer:
 `.trim(),
   render: (i) => [`Situação que ela contou:`, i.situation, '', 'Direções possíveis:', i.options].join('\n'),
   maxTokens: 500,
+};
+
+/* ── Auditoria do Feed: etiquetas pela legenda ────────────────────────────── */
+
+/** O formato, o tema e o gancho de uma peça, só pela legenda.
+ *
+ *  É pouco de propósito. Sem o vídeo, dizer «estrutura em três atos» seria
+ *  inventar; a legenda chega para agrupar peças parecidas e dizer, com
+ *  amostra, se um grupo rende mais do que os outros. */
+export const classifyMediaCaption: Prompt<
+  { caption: string; productType: string; publishedAt: string },
+  MediaAudit
+> = {
+  task: 'content_media_audit',
+  version: 'v1',
+  tier: 'fast',
+  schema: MediaAuditSchema,
+  system: `
+Recebes a legenda de uma peça publicada no Instagram de uma UGC creator e
+devolves etiquetas curtas para agrupar peças parecidas.
+
+- format: talking (ela falando para a câmera), talking_broll, vlog, aesthetic
+  (montagem visual sem fala), humor, bts (bastidores), demo (produto em uso),
+  carousel, other. Quando a legenda não deixa ver, other.
+- theme: duas ou três palavras em português do Brasil («cenário de gravação»,
+  «vida em Braga», «edição no CapCut»).
+- hook: o tipo da primeira frase — identification («quem nunca…»), contrast
+  («achei X, era Y»), question, story_open («ontem eu…»), result_first,
+  humor, none (sem gancho), unknown (legenda vazia ou só hashtags).
+- language: a língua da legenda.
+- confidence: quanto a legenda permite afirmar isto. Legenda curta ou só
+  hashtags → baixa.
+
+Não inventes o que a legenda não mostra. Não julgues qualidade.
+`.trim(),
+  render: (i) => `Tipo: ${i.productType}\nPublicada: ${i.publishedAt.slice(0, 10)}\nLegenda:\n"""\n${i.caption || '(sem legenda)'}\n"""`,
 };

@@ -210,3 +210,18 @@ export const LensInferenceSchema = z.object({
   because: z.string().max(200).describe('o que na situação aponta para essa direção'),
 });
 export type LensInference = z.infer<typeof LensInferenceSchema>;
+
+/** As etiquetas de uma peça publicada, lidas da legenda.
+ *
+ *  Só o que a legenda permite: formato e tema com confiança, gancho quando a
+ *  primeira frase o mostra. Sem vídeo não se lê estrutura nem duração — e a
+ *  etiqueta guarda a origem («legenda») para ninguém a confundir com o que a
+ *  Carol registou numa história. */
+export const MediaAuditSchema = z.object({
+  format: z.enum(['talking', 'talking_broll', 'vlog', 'aesthetic', 'humor', 'bts', 'demo', 'carousel', 'other']),
+  theme: z.string(),
+  hook: z.enum(['identification', 'contrast', 'question', 'story_open', 'result_first', 'humor', 'none', 'unknown']),
+  language: z.enum(['pt-BR', 'pt-PT', 'en', 'other']),
+  confidence: z.number().min(0).max(1),
+});
+export type MediaAudit = z.infer<typeof MediaAuditSchema>;

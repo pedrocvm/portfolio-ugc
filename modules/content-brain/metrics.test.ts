@@ -4,6 +4,8 @@ import test from 'node:test';
 import {
   MIN_BASELINE_SAMPLE,
   SNAPSHOT_KINDS,
+  WINDOWED_KINDS,
+  type SnapshotKind,
   buildBaseline,
   cohortKey,
   dueSnapshots,
@@ -124,10 +126,13 @@ test('uma janela que já passou não é inventada mais tarde', () => {
 });
 
 test('cada janela tem uma idade correspondente e as tolerâncias não se sobrepõem', () => {
-  for (const k of SNAPSHOT_KINDS) {
-    const alvo = { t1h: 1, t6h: 6, t24h: 24, t72h: 72, t7d: 168, t30d: 720 }[k] * H;
-    assert.equal(snapshotAgeBucket(alvo), k);
+  // `latest` fica de fora: não é uma janela, é «agora». As de Story e as de
+  // Feed nunca competem pela mesma peça, mas no alvo cada uma é a sua.
+  const alvos: Partial<Record<SnapshotKind, number>> = { t1h: 1, t6h: 6, t12h: 12, t23h: 23, t24h: 24, t72h: 72, t7d: 168, t30d: 720 };
+  for (const k of WINDOWED_KINDS) {
+    assert.equal(snapshotAgeBucket(alvos[k]! * H), k);
   }
+  assert.equal(SNAPSHOT_KINDS.includes('latest'), true);
 });
 
 test('uma data inválida não rebenta o varrimento', () => {

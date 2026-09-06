@@ -1363,3 +1363,132 @@
     transition: none;
   }
 }
+
+/* ── Content Intelligence ─────────────────────────────────────────────────── */
+
+.ciTabs {
+  margin: 0 0 22px;
+}
+
+/* Os pontos do topo. Filete à esquerda, confiança dita pela cor — só jade
+   quando é alta, que por agora não acontece. */
+.ciPoints {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.ciPoints li {
+  padding: 12px 0 12px 14px;
+  border-left: 2px solid var(--areia2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.ciPoints li:last-child {
+  border-bottom: 0;
+}
+
+.ciPoints li[data-confidence='medium'] { border-left-color: var(--umbra); }
+.ciPoints li[data-confidence='high'] { border-left-color: var(--jade); }
+
+.ciPoints li p {
+  margin: 0 0 4px;
+  font-size: 17px;
+  line-height: 1.4;
+  max-width: 64ch;
+}
+
+.ciPiece {
+  display: block;
+}
+
+.ciPiece > summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ciPiece > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ciPiece > summary > div:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.ciRelative {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--ink2);
+  font-variant-numeric: tabular-nums;
+}
+
+.ciRelative[data-weak] {
+  color: var(--tinta3);
+}
+
+.ciAudit {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 14px 0 12px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--rule);
+}
+
+.ciAudit dt {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  padding-top: 3px;
+}
+
+.ciAudit dd {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--tinta2);
+}
+
+.ciSource {
+  color: var(--tinta3);
+  font-size: 13px;
+}
+
+.ciFrames {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.ciFrames li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 7px 0;
+  border-top: 1px solid var(--rule);
+  font-size: 13.5px;
+  color: var(--tinta2);
+  font-variant-numeric: tabular-nums;
+}
+
+.ciFrames li span:first-child {
+  color: var(--pedra);
+  min-width: 1.5ch;
+}
+
+@media (max-width: 600px) {
+  .ciAudit {
+    grid-template-columns: 1fr;
+    gap: 2px 0;
+  }
+  .ciAudit dd {
+    margin-bottom: 8px;
+  }
+}

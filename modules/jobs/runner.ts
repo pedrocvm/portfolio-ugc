@@ -244,9 +244,17 @@ async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobRes
       }
 
       case 'content-learning': {
-        const { deriveLearnings } = await import('@/modules/content-brain/performance-service');
+        // Três coisas, pela ordem: etiquetar o que ainda não tem etiqueta,
+        // reagrupar Stories, e só depois ler o que os números ensinam.
+        const { auditFeedCaptions, deriveLearnings, rebuildStorySequences } = await import('@/modules/content-brain/performance-service');
+        const etiquetas = await auditFeedCaptions().catch((e: unknown) => ({ audited: 0, skipped: 0, failures: [e instanceof Error ? e.message : 'etiquetas falharam'] }));
+        const sequencias = await rebuildStorySequences().catch(() => ({ sequences: 0, frames: 0 }));
         const r = await deriveLearnings();
-        return { job, status: 'success', detail: { ...r, processed: r.written } };
+        return {
+          job,
+          status: 'success',
+          detail: { ...r, audited: etiquetas.audited, storySequences: sequencias.sequences, failures: [...r.failures, ...etiquetas.failures], processed: r.written },
+        };
       }
 
       case 'story-candidates': {

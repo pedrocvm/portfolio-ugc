@@ -9,7 +9,8 @@ import 'server-only';
 
 import { asJson } from '@/lib/supabase/json';
 import { supabaseService } from '@/lib/supabase/service';
-import { dueSnapshots, type SnapshotKind, type TrialStatus } from '@/modules/content-brain/metrics';
+import { dueSnapshots, latestDue, type SnapshotKind, type TrialStatus } from '@/modules/content-brain/metrics';
+import { groupStorySequences, type StorySequence } from '@/modules/content-brain/stories';
 import { apiVersion } from './config';
 import type { MeProfile, NormalizedMedia } from './normalize';
 import { snapshotColumns } from './normalize';
@@ -144,10 +145,14 @@ export type MediaRow = {
   storyId: string | null;
   linkPromptedAt: string | null;
   source: string;
+  /** Stories: quando deixou de aparecer em `me/stories`. Nulo enquanto ativo. */
+  expiredAt: string | null;
+  lastSeenActiveAt: string | null;
+  sequenceId: string | null;
 };
 
 export const MEDIA_SELECT =
-  'id, external_media_id, media_type, media_product_type, permalink, caption, published_at, thumbnail_url, is_shared_to_feed, comments_count, like_count, trial_status, trial_prompted_at, content_idea_id, story_id, link_prompted_at, source';
+  'id, external_media_id, media_type, media_product_type, permalink, caption, published_at, thumbnail_url, is_shared_to_feed, comments_count, like_count, trial_status, trial_prompted_at, content_idea_id, story_id, link_prompted_at, source, expired_at, last_seen_active_at, sequence_id';
 
 export type RawMediaRow = {
   id: string; external_media_id: string; media_type: string; media_product_type: string;
@@ -155,6 +160,7 @@ export type RawMediaRow = {
   is_shared_to_feed: boolean | null; comments_count: number | null; like_count: number | null;
   trial_status: string; trial_prompted_at: string | null; content_idea_id: string | null;
   story_id: string | null; link_prompted_at: string | null; source: string;
+  expired_at: string | null; last_seen_active_at: string | null; sequence_id: string | null;
 };
 
 export const toMedia = (r: RawMediaRow): MediaRow => ({
@@ -175,15 +181,23 @@ export const toMedia = (r: RawMediaRow): MediaRow => ({
   storyId: r.story_id,
   linkPromptedAt: r.link_prompted_at,
   source: r.source,
+  expiredAt: r.expired_at,
+  lastSeenActiveAt: r.last_seen_active_at,
+  sequenceId: r.sequence_id,
 });
 
 /** Grava mídia de forma idempotente.
  *
  *  O `upsert` não toca em `trial_status`, `content_idea_id` nem `story_id`:
  *  são estado humano, e um sync não pode apagar uma confirmação dela. */
-export async function upsertMedia(accountId: string, medias: readonly NormalizedMedia[]): Promise<{ seen: number; inserted: number }> {
+export async function upsertMedia(
+  accountId: string,
+  medias: readonly NormalizedMedia[],
+  opts: { activeStories?: boolean; now?: Date } = {},
+): Promise<{ seen: number; inserted: number }> {
   if (medias.length === 0) return { seen: 0, inserted: 0 };
   const db = supabaseService();
+  const agora = (opts.now ?? new Date()).toISOString();
 
   const { data: existentes } = await db
     .from('instagram_media')
@@ -206,7 +220,10 @@ export async function upsertMedia(accountId: string, medias: readonly Normalized
       is_shared_to_feed: m.isSharedToFeed,
       comments_count: m.commentsCount,
       like_count: m.likeCount,
-      observed_at: new Date().toISOString(),
+      observed_at: agora,
+      // Um Story que veio de `me/stories` está ativo: a expiração marca-se
+      // quando deixar de vir, nunca por adivinhação da hora.
+      ...(opts.activeStories ? { last_seen_active_at: agora, expired_at: null } : {}),
     })),
     { onConflict: 'account_id,external_media_id' },
   );
@@ -263,9 +280,36 @@ export async function pendingSnapshots(accountId: string, now = new Date()): Pro
   return rows
     .map((media) => ({
       media,
-      kinds: dueSnapshots({ publishedAt: media.publishedAt, existing: porMidia.get(media.id) ?? [], now }),
+      kinds: dueSnapshots({ publishedAt: media.publishedAt, existing: porMidia.get(media.id) ?? [], now, productType: media.mediaProductType }),
     }))
     .filter((p) => p.kinds.length > 0);
+}
+
+/** Que peças do Feed estão sem leitura atual, ou com uma leitura de há mais
+ *  de um dia. É o que dá métrica às publicações de 2023: fora de qualquer
+ *  janela, mas não fora da API. */
+export async function pendingLatest(accountId: string, now = new Date(), limit = 30): Promise<MediaRow[]> {
+  const db = supabaseService();
+  const { data: medias } = await db
+    .from('instagram_media')
+    .select(MEDIA_SELECT)
+    .eq('account_id', accountId)
+    .neq('media_product_type', 'STORY')
+    .order('published_at', { ascending: false });
+
+  const rows = ((medias ?? []) as RawMediaRow[]).map(toMedia);
+  if (rows.length === 0) return [];
+
+  const { data: feitos } = await db
+    .from('instagram_media_snapshot')
+    .select('media_id, captured_at')
+    .eq('snapshot_kind', 'latest')
+    .in('media_id', rows.map((r) => r.id));
+  const ultima = new Map((feitos ?? []).map((f) => [f.media_id, f.captured_at]));
+
+  return rows
+    .filter((m) => latestDue({ publishedAt: m.publishedAt, productType: m.mediaProductType, lastLatestAt: ultima.get(m.id) ?? null, now }))
+    .slice(0, limit);
 }
 
 export async function writeSnapshot(input: {
@@ -292,12 +336,90 @@ export async function writeSnapshot(input: {
         api_version: apiVersion(),
         source: input.source ?? 'api',
       },
-      // Ignora se já existe: um trabalho repetido não reescreve um snapshot
-      // com números mais velhos por cima dos que já lá estavam.
-      { onConflict: 'media_id,snapshot_kind', ignoreDuplicates: true },
+      // Uma janela não se reescreve: um trabalho repetido não põe números mais
+      // velhos por cima dos que já lá estavam. A leitura atual é o contrário —
+      // é sempre a mais recente, e por isso substitui.
+      { onConflict: 'media_id,snapshot_kind', ignoreDuplicates: input.kind !== 'latest' },
     );
 
   return !error;
+}
+
+/* ── Stories: expiração e sequências ──────────────────────────────────────── */
+
+/** Um Story que já não vem em `me/stories` e tem mais de 24 h expirou. Fica
+ *  com a hora; não desaparece — é história, e é o que as sequências leem. */
+export async function markExpiredStories(accountId: string, activeExternalIds: readonly string[], now = new Date()): Promise<number> {
+  const db = supabaseService();
+  const limite = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const { data } = await db
+    .from('instagram_media')
+    .select('id, external_media_id')
+    .eq('account_id', accountId)
+    .eq('media_product_type', 'STORY')
+    .is('expired_at', null)
+    .lte('published_at', limite);
+  const ativos = new Set(activeExternalIds);
+  const expirados = (data ?? []).filter((m) => !ativos.has(m.external_media_id)).map((m) => m.id);
+  if (expirados.length === 0) return 0;
+  await db.from('instagram_media').update({ expired_at: now.toISOString() }).in('id', expirados);
+  return expirados.length;
+}
+
+export async function listStories(accountId: string, limit = 400): Promise<MediaRow[]> {
+  const { data } = await supabaseService()
+    .from('instagram_media')
+    .select(MEDIA_SELECT)
+    .eq('account_id', accountId)
+    .eq('media_product_type', 'STORY')
+    .order('published_at', { ascending: false })
+    .limit(limit);
+  return ((data ?? []) as RawMediaRow[]).map(toMedia);
+}
+
+/** Reagrupa os Stories em sequências pela regra determinística.
+ *
+ *  Uma sequência que ela corrigiu (`locked`) fica como está, com os frames
+ *  dela; os outros frames reagrupam-se. Idempotente pela chave
+ *  `(account_id, started_at)`. */
+export async function rebuildStorySequences(accountId: string): Promise<{ sequences: number; frames: number }> {
+  const db = supabaseService();
+  const stories = await listStories(accountId);
+  if (stories.length === 0) return { sequences: 0, frames: 0 };
+
+  const { data: presas } = await db
+    .from('instagram_story_sequence')
+    .select('id')
+    .eq('account_id', accountId)
+    .eq('locked', true);
+  const presasIds = new Set((presas ?? []).map((p) => p.id));
+  const livres = stories.filter((s) => !s.sequenceId || !presasIds.has(s.sequenceId));
+
+  const grupos: StorySequence[] = groupStorySequences(livres.map((s) => ({ id: s.id, publishedAt: s.publishedAt, expiredAt: s.expiredAt })));
+  let frames = 0;
+
+  for (const g of grupos) {
+    const { data: seq } = await db
+      .from('instagram_story_sequence')
+      .upsert(
+        { account_id: accountId, started_at: g.startedAt, ended_at: g.endedAt, story_count: g.storyCount, method: 'deterministic' },
+        { onConflict: 'account_id,started_at' },
+      )
+      .select('id')
+      .single();
+    if (!seq) continue;
+    await db.from('instagram_media').update({ sequence_id: seq.id }).in('id', g.storyIds);
+    frames += g.storyIds.length;
+  }
+
+  // Sequências deterministas que ficaram sem frames deixam de existir.
+  const { data: todas } = await db.from('instagram_story_sequence').select('id').eq('account_id', accountId).eq('locked', false);
+  const vivas = new Set(grupos.map((g) => g.startedAt));
+  const { data: comInicio } = await db.from('instagram_story_sequence').select('id, started_at').eq('account_id', accountId).eq('locked', false);
+  const mortas = (comInicio ?? []).filter((s) => !vivas.has(s.started_at)).map((s) => s.id);
+  if (mortas.length && (todas ?? []).length) await db.from('instagram_story_sequence').delete().in('id', mortas);
+
+  return { sequences: grupos.length, frames };
 }
 
 export async function writeAccountSnapshot(input: {

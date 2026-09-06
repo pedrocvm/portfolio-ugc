@@ -6,6 +6,7 @@ import {
   decideReferral,
   extractReferredContacts,
   isActionable,
+  looksEnglish,
   looksLikePersonName,
   nextActionForThread,
   readNextAction,
@@ -251,4 +252,16 @@ test('o que se grava lê-se de volta, e lixo lê-se como nada', () => {
   assert.equal(readNextAction({}), null);
   assert.equal(readNextAction(null), null);
   assert.equal(readNextAction({ type: 'x' }), null);
+});
+
+test('uma abordagem feita em inglês gera o email novo em inglês', () => {
+  const t = composeReferralTemplate({
+    brandName: 'Orbitkey', team: null, senderName: 'Orbitkey Support', originalSubject: 'UGC Content Collaboration | Orbitkey Europe',
+    originalBody: "Hi Orbitkey team, my name is Carolina. I'm a UGC Creator based in Portugal and I wanted to reach out with a few content ideas.",
+  });
+  assert.equal(t.language, 'en');
+  assert.match(t.body, /^Hi team!/);
+  assert.doesNotMatch(t.body, /Olá/);
+  assert.match(t.body, /The Orbitkey support team pointed me/);
+  assert.equal(looksEnglish('Olá equipe! Pensei num ângulo para vocês.'), false);
 });

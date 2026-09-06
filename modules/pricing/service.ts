@@ -13,8 +13,10 @@ import { PricingRulesSchema, ScopeSchema, calculateQuote, checkFloor, type Prici
 
 export type Policy = { id: string; version: string; status: string; rules: PricingRules; notes: string };
 
-export async function activePolicy(): Promise<Policy> {
-  const db = await supabaseServer();
+/** Com sessão nas telas; com o cliente que o trabalho já tem quando corre
+ *  de madrugada ou num script — aí não há pedido nem cookies. */
+export async function activePolicy(client?: Awaited<ReturnType<typeof supabaseServer>>): Promise<Policy> {
+  const db = client ?? (await supabaseServer());
   const { data } = await db
     .from('pricing_policy')
     .select('id, version, status, rules, notes')
