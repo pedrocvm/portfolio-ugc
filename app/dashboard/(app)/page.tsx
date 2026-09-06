@@ -8,6 +8,7 @@ import { getFlags, integrationHealth } from '@/modules/settings/service';
 import { openInsights } from '@/modules/assistant/service';
 import { dailyBrief } from '@/modules/actions/brief';
 import { readMorningBrief } from '@/modules/morning/service';
+import { guideEntry } from '@/modules/content-brain/guide-service';
 import DailyRead from '@/components/dashboard/os/DailyRead';
 import Today from '@/components/dashboard/os/Today';
 
@@ -24,7 +25,7 @@ export default async function TodayPage() {
 
   await Promise.all([wakeSnoozed(db), markDue(db)]);
 
-  const [actions, flags, integration, counts, insights, board, morning] = await Promise.all([
+  const [actions, flags, integration, counts, insights, board, morning, guia] = await Promise.all([
     todayQueue(),
     getFlags(),
     integrationHealth(),
@@ -34,6 +35,7 @@ export default async function TodayPage() {
     // Ler, nunca calcular: o trabalho pesado da manhã já correu de madrugada.
     // Se não correu, isto devolve `null` e o Hoje mostra a fila de sempre.
     readMorningBrief().catch(() => null),
+    guideEntry(),
   ]);
 
   const now = new Date();
@@ -66,6 +68,9 @@ export default async function TodayPage() {
         background: board.background,
         doneToday: board.doneToday,
         insights,
+        // O guia nunca bloqueia o Hoje: isto só decide se a decisão de
+        // conteúdo leva junto um «como funciona» em voz baixa.
+        guideSeen: !guia.offerFirstRun,
         flags,
         integration: {
           status: integration.status,

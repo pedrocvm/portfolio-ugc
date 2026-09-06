@@ -19,6 +19,7 @@ import {
 import type { BragaSeries, BrollRow, SocialProofRow } from '@/modules/creator/content-os-service';
 import type { ContentIdeaRow } from '@/modules/creator/plan-service';
 import { useCaptureUpload } from './useCaptureUpload';
+import HelpNote from './content-brain/HelpNote';
 
 /** O Banco: ideias salvas, os takes de B-roll, as séries e a prova social.
  *
@@ -251,6 +252,17 @@ function Series({ braga }: { braga: BragaSeries | null }) {
   return (
     <section className="osSection">
       <h2>Séries e experiências</h2>
+      <HelpNote question="Quando uma série vale a pena?">
+        <p>
+          Uma série não é uma grade de episódios decidida de antemão. Ela aparece quando várias
+          situações reais que você já contou partilham o mesmo arco — uma mudança acompanhada, um
+          processo que se repete, uma competência mudando à vista.
+        </p>
+        <p>
+          Por isso não existe «episódio 4 por viver»: cada episódio precisa de uma história que
+          aconteceu. O que a série faz é dar continuidade a quem acompanha.
+        </p>
+      </HelpNote>
       {braga ? (
         <div className="osPanel">
           <h3>{braga.name}</h3>

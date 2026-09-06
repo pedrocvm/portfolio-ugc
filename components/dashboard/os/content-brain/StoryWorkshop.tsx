@@ -16,6 +16,7 @@ import {
 } from '@/app/dashboard/content-brain-actions';
 import { classifyStoryDirection } from '@/app/dashboard/content-brain-actions';
 import type { FunctionalPillar } from '@/modules/content-brain/domain';
+import HelpNote from './HelpNote';
 import LensPicker from './LensPicker';
 import StoryCapture from './StoryCapture';
 
@@ -69,7 +70,9 @@ export default function StoryWorkshop({
   focus: FunctionalPillar;
   question?: string;
   help?: string;
-  trigger: string;
+  /** Ausente quando quem abre é outra tela — o guia abre o Workshop já aberto,
+   *  e um botão solto por baixo do modal não pertence a lado nenhum. */
+  trigger?: string;
   /** O Hoje manda-a para aqui já a procurar. Abrir sozinho evita o clique a
    *  mais entre «encontrar uma história» e as direções. */
   autoOpen?: boolean;
@@ -198,9 +201,11 @@ export default function StoryWorkshop({
 
   return (
     <>
-      <button className="osStart" type="button" onClick={() => setOpen(true)}>
-        {trigger}
-      </button>
+      {trigger ? (
+        <button className="osStart" type="button" onClick={() => setOpen(true)}>
+          {trigger}
+        </button>
+      ) : null}
 
       {open ? (
         <div className="cbShop" data-closing={closing || undefined}>
@@ -287,6 +292,18 @@ export default function StoryWorkshop({
                   <p className="cbAsk">{perguntas[0]}</p>
                 ) : null}
 
+                <HelpNote question="Por que preciso confirmar?">
+                  <p>
+                    Porque o CarolOS só pode estruturar conteúdo pessoal a partir de algo que
+                    realmente aconteceu.
+                  </p>
+                  <p>
+                    Enquanto você não disser que foi isso, eu não escolho ponto, não monto
+                    estrutura e não escrevo nada. Corrigir aqui é mais barato do que descobrir na
+                    gravação.
+                  </p>
+                </HelpNote>
+
                 <div className="cbActs">
                   <button className="osStart" type="button" onClick={confirmar} disabled={pending || fatos.filter((f) => f.trim()).length === 0}>
                     Sim, foi isso
@@ -341,6 +358,18 @@ export default function StoryWorkshop({
                     ))}
                   </ul>
                 )}
+
+                <HelpNote question="O que acontece depois?">
+                  <p>
+                    Escolhido o ponto, eu monto os momentos da peça a partir dos fatos que você
+                    confirmou, marco o que precisa de apoio visual e digo o que não pode ser
+                    reencenado.
+                  </p>
+                  <p>
+                    Roteiro não é a primeira etapa: só aparece no fim, e só se você pedir ajuda para
+                    organizar as palavras.
+                  </p>
+                </HelpNote>
 
                 <label className="osField cbOther">
                   <span>Quero dizer outra coisa</span>

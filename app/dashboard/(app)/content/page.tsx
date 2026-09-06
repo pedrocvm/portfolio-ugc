@@ -14,6 +14,7 @@ import {
   strategyScreen,
 } from '@/modules/creator/content-os-service';
 import { contentScreen, performanceScreen, toBankRows } from '@/modules/content-brain/screen-service';
+import { guideEntry } from '@/modules/content-brain/guide-service';
 import { usableTrends } from '@/modules/trends/service';
 import ContentBank from '@/components/dashboard/os/ContentBank';
 import ContentStrategy from '@/components/dashboard/os/ContentStrategy';
@@ -22,6 +23,7 @@ import { isStudioTab, type StudioTab } from '@/components/dashboard/os/studioTab
 import ContentVault from '@/components/dashboard/os/ContentVault';
 import Published from '@/components/dashboard/os/Published';
 import ReelsTestLab from '@/components/dashboard/os/ReelsTestLab';
+import ContentGuide from '@/components/dashboard/os/content-brain/ContentGuide';
 import Performance from '@/components/dashboard/os/content-brain/Performance';
 import RecordPane from '@/components/dashboard/os/content-brain/RecordPane';
 import StoryBank from '@/components/dashboard/os/content-brain/StoryBank';
@@ -45,7 +47,7 @@ export default async function ContentPage({
   // Charabanc existem antes de a primeira manhã correr.
   await seedFromMentor().catch(() => null);
 
-  const [content, inventory, hoje, banco, trends, lab, broll, braga, proof, screen, learnings, performance, brain, desempenho] = await Promise.all([
+  const [content, inventory, hoje, banco, trends, lab, broll, braga, proof, screen, learnings, performance, brain, desempenho, guia] = await Promise.all([
     listContent(),
     capabilityInventory(),
     todayContent().catch(() => []),
@@ -60,6 +62,7 @@ export default async function ContentPage({
     latestPerformanceByIdea(),
     contentScreen(),
     performanceScreen(),
+    guideEntry(),
   ]);
 
   const byRole = (role: FunnelRole) => content.filter((c) => c.funnelRole === role);
@@ -87,6 +90,10 @@ export default async function ContentPage({
               ? `${brain.stories.length} ${brain.stories.length === 1 ? 'história salva' : 'histórias salvas'}`
               : 'nada salvo ainda'}
         </span>
+        {/* Ao lado do estado, não ao lado da ação: quem vem trabalhar não
+            tropeça nele, e quem não sabe por onde começar encontra-o onde
+            olha primeiro. */}
+        <ContentGuide focus={brain.focus} offerFirstRun={guia.offerFirstRun} resumeAt={guia.resumeAt} />
       </div>
 
       <ContentStudio

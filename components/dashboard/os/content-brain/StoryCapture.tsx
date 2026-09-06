@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { supabaseBrowser } from '@/lib/supabase/browser';
 import Spinner from '@/components/dashboard/Spinner';
 import { audioUploadPath, tellStory } from '@/app/dashboard/content-brain-actions';
+import HelpNote from './HelpNote';
 
 /** Contar uma situação: falando ou escrevendo.
  *
@@ -243,6 +244,18 @@ export default function StoryCapture({
             Prefiro escrever
           </button>
         </div>
+      )}
+
+      {ocupado ? null : (
+        <HelpNote question="Por que estou fazendo isso?">
+          <p>
+            Porque o conteúdo nasce de uma coisa que aconteceu de verdade. Sem matéria-prima sua eu
+            não tenho o que estruturar — e não invento uma situação para preencher o dia.
+          </p>
+          <p>
+            Conte solto, fora de ordem, do jeito que sair. Organizar é a minha parte, e vem depois.
+          </p>
+        </HelpNote>
       )}
     </div>
   );

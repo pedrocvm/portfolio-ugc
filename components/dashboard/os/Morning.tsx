@@ -11,7 +11,7 @@ import MorningFlow from './MorningFlow';
  *
  *  Não é um destino novo. É a mesma tela de sempre, com o trabalho já feito. */
 
-export default function Morning({ brief }: { brief: MorningBrief }) {
+export default function Morning({ brief, guideSeen }: { brief: MorningBrief; guideSeen: boolean }) {
   const { decisions, prepared, preparedLines, gaps } = brief;
 
   return (
@@ -23,6 +23,7 @@ export default function Morning({ brief }: { brief: MorningBrief }) {
           decisions={decisions}
           closing={closingFor(brief)}
           prepared={preparedLines}
+          guideSeen={guideSeen}
         />
       ) : null}
 

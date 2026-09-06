@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useExit } from '@/components/dashboard/useExit';
 import type { Shot } from '@/modules/content/domain';
+import HelpNote from './content-brain/HelpNote';
 
 /** Modo de gravação.
  *
@@ -202,6 +203,19 @@ export default function RecordingMode({
                       ))}
                     </ul>
                   </details>
+                ) : null}
+
+                {story ? (
+                  <HelpNote question="Por que não vejo a estratégia aqui?">
+                    <p>
+                      Porque as decisões editoriais já foram tomadas. Reabrir uma delas com o celular
+                      na mão é o que faz a tomada não sair.
+                    </p>
+                    <p>
+                      Aqui fica só o necessário para executar: o ponto, o momento da vez e o que
+                      precisa continuar verdadeiro. O resto continua em Conteúdo.
+                    </p>
+                  </HelpNote>
                 ) : null}
 
                 <div className="recBar" aria-hidden="true">

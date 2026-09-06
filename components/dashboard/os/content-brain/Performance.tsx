@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { SNAPSHOT_WINDOW, type SnapshotKind } from '@/modules/content-brain/metrics';
 import { LADDER_LABEL, LADDER_PHRASING, type LadderState } from '@/modules/content-brain/learning';
+import HelpNote from './HelpNote';
 
 /** Publicado e desempenho.
  *
@@ -114,6 +115,17 @@ export default function Performance({
 
       <section className="osSection">
         <h2>O que os números ensinam</h2>
+        <HelpNote question="O que acontece depois de publicar?">
+          <p>
+            Você não precisa abrir os Insights. Eu detecto a publicação e meço sozinho em janelas
+            fixas — 1 hora, 6 horas, 24 horas, 72 horas, 7 dias e 30 dias — sempre comparando com a
+            sua própria mediana.
+          </p>
+          <p>
+            O que aparece sobe um degrau de cada vez: sinal, hipótese, aprendizado. Um vídeo bom não
+            vira regra; só o que se repete o suficiente passa a orientar decisão.
+          </p>
+        </HelpNote>
         {learnings.length === 0 ? (
           <p className="osEmpty">
             Ainda não temos repetição suficiente para chamar nada de padrão.

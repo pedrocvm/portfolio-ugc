@@ -35,6 +35,10 @@ export type TodayData = {
   /** O que a noite preparou. Nulo quando a consolidação não correu — e nesse
    *  caso mostra-se a fila de sempre em vez de inventar uma manhã. */
   morning: MorningBrief | null;
+  /** Falso enquanto a Carol nunca respondeu ao guia do Content Brain. Só
+   *  acrescenta uma recomendação pequena à decisão de conteúdo; nunca
+   *  interrompe e nunca impede a ação real. */
+  guideSeen: boolean;
   flags: Flags;
   integration: { status: string; lastSuccessAt: string | null; account: string };
 };
@@ -69,7 +73,7 @@ export default function Today({ data, read }: { data: TodayData; read?: React.Re
           desligado, ou consolidação falhada — o Hoje continua funcionando como
           antes, que é o que impede um trabalho em baixo de apagar a tela. */}
       {data.morning ? (
-        <Morning brief={data.morning} />
+        <Morning brief={data.morning} guideSeen={data.guideSeen} />
       ) : (
         <>
           <p className="osBrief">{data.brief}</p>

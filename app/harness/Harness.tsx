@@ -9,6 +9,7 @@ import { dailyBrief } from '@/modules/actions/brief';
 import { EMPTY_PREPARED, describePrepared, orderDecisions } from '@/modules/morning/domain';
 import { describeBackground } from '@/modules/actions/day';
 import RecordingMode from '@/components/dashboard/os/RecordingMode';
+import ContentGuide from '@/components/dashboard/os/content-brain/ContentGuide';
 
 /** Dados de exemplo com a forma do esquema real. Nomes de marca inventados de
  *  propósito: uma bancada não devia conter conversa verdadeira de ninguém. */
@@ -314,6 +315,30 @@ export default function Harness({ modo }: { modo?: string }) {
     );
   }
 
+  // `guia` abre o Content Brain com o convite da primeira visita à vista;
+  // `guia-visto` mostra o mesmo cabeçalho depois de ela já ter respondido.
+  if (modo === 'guia' || modo === 'guia-visto') {
+    return (
+      <>
+        <div className="dashBar">
+          <h1>Conteúdo</h1>
+          <span className="dashState">1 pronta para gravar</span>
+          <ContentGuide focus="attraction_journey" offerFirstRun={modo === 'guia'} resumeAt={0} />
+        </div>
+        <RecordPane
+          weekly={FOCO_SEMANA}
+          focus="attraction_journey"
+          ready={[]}
+          developing={[]}
+          candidates={[]}
+          trialToConfirm={[]}
+          unlinkedMedia={[]}
+          matchOptions={[]}
+        />
+      </>
+    );
+  }
+
   if (modo === 'lentes') {
     // O caminho real: é assim que o Hoje entra, com o workshop já aberto na
     // escolha de direção. As direções vêm da base pela server action.
@@ -441,6 +466,7 @@ export default function Harness({ modo }: { modo?: string }) {
         }),
         doneToday: 5,
         insights: [],
+        guideSeen: modo !== 'primeira-vez',
         // `modo=fila` mostra o Hoje sem manhã preparada, e `modo=passos` tira
         // a resposta da frente: sem sessão nenhuma ação de servidor corre, e
         // essa é a única decisão do fluxo que precisa de uma para avançar.

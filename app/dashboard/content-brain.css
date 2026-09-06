@@ -724,3 +724,635 @@
   font-size: 13px;
   color: var(--tinta3);
 }
+
+/* ── Ajuda contextual ─────────────────────────────────────────────────────── */
+
+/* Seis lugares no Content Brain inteiro. Um link de texto, discreto, que abre
+   por baixo — não um ícone de interrogação ao lado de cada campo. */
+.cbHelp {
+  width: 100%;
+  margin-top: 4px;
+  color: var(--tinta3);
+}
+
+.cbHelp summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13.5px;
+  color: var(--tinta3);
+  cursor: pointer;
+  border-bottom: 1px solid var(--rule);
+  transition: color var(--t-instant) var(--ease), border-color var(--t-instant) var(--ease);
+}
+
+.cbHelp summary:hover {
+  color: var(--ink);
+  border-bottom-color: var(--umbra);
+}
+
+.cbHelp[open] summary {
+  color: var(--ink);
+  border-bottom-color: transparent;
+}
+
+.cbHelpBody {
+  margin: 2px 0 8px;
+  padding-left: 14px;
+  border-left: 2px solid var(--areia2);
+  max-width: 58ch;
+}
+
+.cbHelpBody p {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+
+.cbHelpBody p:last-child {
+  margin-bottom: 0;
+}
+
+/* Dentro do modo de gravação o fundo é ferro: os mesmos tokens, invertidos. */
+.recOne .cbHelp summary {
+  color: var(--t2);
+  border-bottom-color: transparent;
+}
+
+.recOne .cbHelp summary:hover,
+.recOne .cbHelp[open] summary {
+  color: var(--t1);
+}
+
+.recOne .cbHelpBody {
+  border-left-color: var(--umbra);
+}
+
+.recOne .cbHelpBody p {
+  color: var(--t2);
+}
+
+/* ── Guia: o botão e o convite ────────────────────────────────────────────── */
+
+/* Ao lado do estado da tela, e no mesmo tom: não compete com nenhuma ação
+   primária. Um botão cheio aqui seria o CarolOS a pedir atenção para si. */
+.cbGuideOpen {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--tinta3);
+  cursor: pointer;
+  transition: color var(--t-instant) var(--ease), border-color var(--t-instant) var(--ease);
+}
+
+.cbGuideOpen:hover {
+  color: var(--ink);
+  border-bottom-color: var(--umbra);
+}
+
+/* Não bloqueia nada: fica por baixo do cabeçalho, na largura do texto, e
+   desaparece à primeira resposta. */
+.cbGuideOffer {
+  flex-basis: 100%;
+  margin: 6px 0 0;
+  padding: 14px 16px;
+  background: var(--areia);
+  border-left: 2px solid var(--umbra);
+}
+
+.cbGuideOfferText {
+  margin: 0 0 10px;
+  max-width: 56ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+
+.cbGuideOfferActs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+}
+
+/* No celular a casa põe a ação secundária numa linha inteira e centrada — é a
+   forma certa num modal de foco e a errada num aviso de quatro linhas, onde
+   se lê como um segundo botão principal. Aqui fica ao lado, em voz baixa. */
+.cbGuideOfferActs .focusSkip,
+.cbGuideActs .focusSkip {
+  flex-basis: auto;
+  margin-left: 0;
+  padding-left: 0;
+  text-align: left;
+}
+
+/* ── Guia: o modal ────────────────────────────────────────────────────────── */
+
+.cbGuide {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--ferro) 62%, transparent);
+  animation: cbFade var(--t-normal) var(--ease);
+}
+
+.cbGuide[data-closing] {
+  animation: cbFade var(--t-normal) var(--ease) reverse;
+}
+
+.cbGuideBox {
+  display: flex;
+  flex-direction: column;
+  width: min(1040px, 100%);
+  max-height: 94dvh;
+  overflow-y: auto;
+  padding: 20px clamp(18px, 4vw, 44px) 0;
+  background: var(--papel);
+  border-radius: 2px 2px 0 0;
+  animation: cbRise var(--t-slow) var(--exp);
+}
+
+.cbGuide[data-closing] .cbGuideBox {
+  animation: cbRise var(--t-normal) var(--ease) reverse;
+}
+
+.cbGuideTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cbGuideTop button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--tinta3);
+  cursor: pointer;
+}
+
+/* Um filete que enche, não uma barra de progresso de instalador. */
+.cbGuideBar {
+  height: 2px;
+  margin: 6px 0 24px;
+  background: var(--areia2);
+}
+
+.cbGuideBar span {
+  display: block;
+  height: 100%;
+  width: var(--p, 0%);
+  background: var(--umbra);
+  transition: width var(--t-normal) var(--ease);
+}
+
+.cbGuideBody {
+  display: grid;
+  gap: 28px;
+  align-items: start;
+  flex: 1;
+  animation: cbGuideIn var(--t-normal) var(--ease);
+}
+
+@keyframes cbGuideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cbGuideText h2 {
+  margin: 6px 0 14px;
+  font-size: clamp(26px, 3.6vw, 40px);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  max-width: 20ch;
+  text-wrap: balance;
+}
+
+.cbGuideP {
+  margin: 0 0 12px;
+  max-width: 48ch;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--tinta2);
+}
+
+.cbGuideQuote {
+  margin: 0 0 12px;
+  padding-left: 14px;
+  border-left: 2px solid var(--areia2);
+  max-width: 46ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+
+/* A frase que fica. Uma por etapa, e é a única coisa desta coluna com peso. */
+.cbGuideRuleText {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+  max-width: 44ch;
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.cbGuideActs {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: 24px;
+  /* A faixa segura do celular entra aqui: sem ela o «Continuar» ficava por
+     baixo do indicador de início. Não há campo de texto no guia, por isso o
+     teclado nunca chega a tapar isto. */
+  padding: 16px 0 calc(22px + env(safe-area-inset-bottom));
+  background: linear-gradient(rgba(248, 245, 240, 0) 0%, var(--papel) 22%);
+}
+
+
+@media (min-width: 900px) {
+  .cbGuide { align-items: center; }
+  .cbGuideBox { border-radius: 2px; max-height: 90dvh; }
+  .cbGuideBody { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 44px; }
+}
+
+/* ── Guia: as cenas ───────────────────────────────────────────────────────── */
+
+/* Ilustrações, não telas. Nada aqui é clicável e nada disto vai à base: o que
+   se reaproveita são as classes e os tokens da tela verdadeira. */
+.cbGuideScene {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.cbGuideCard {
+  padding: 18px;
+  background: var(--areia);
+  border-left: 2px solid var(--areia2);
+}
+
+.cbGuideH {
+  margin: 4px 0 8px;
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.cbGuideSerif {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--tinta2);
+}
+
+.cbGuideMute {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--tinta3);
+}
+
+.cbGuideRule {
+  height: 1px;
+  margin: 14px 0;
+  background: var(--areia2);
+}
+
+.cbGuideAsk {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.cbGuideQuestion {
+  margin: 0 0 6px;
+  font-size: 19px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  max-width: 24ch;
+}
+
+.cbGuideMic {
+  margin: 14px 0 10px;
+  cursor: default;
+}
+
+.cbGuideAlt {
+  display: block;
+  font-size: 13.5px;
+  color: var(--tinta3);
+  border-bottom: 1px solid var(--rule);
+  width: fit-content;
+}
+
+.cbGuideTag {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  font-variation-settings: var(--narrow);
+}
+
+/* De onde vem o conteúdo: duas origens e uma saída. */
+.cbGuideOrigin {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  text-align: center;
+}
+
+.cbGuideSource {
+  padding: 14px 16px;
+  background: var(--areia);
+  border-left: 2px solid var(--areia2);
+  text-align: left;
+}
+
+.cbGuideSource[data-mine] {
+  border-left-color: var(--umbra);
+}
+
+.cbGuideSource p {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--tinta2);
+}
+
+.cbGuideArrow {
+  font-size: 18px;
+  color: var(--pedra);
+}
+
+.cbGuideOut {
+  padding: 14px;
+  background: var(--umbra);
+  color: var(--papel);
+  font-size: 17px;
+  letter-spacing: 0.02em;
+}
+
+.cbGuideFacts {
+  margin: 10px 0 14px;
+  padding: 0 0 0 14px;
+  list-style: none;
+  border-left: 2px solid var(--areia2);
+}
+
+.cbGuideFacts li {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--tinta2);
+}
+
+.cbGuideBtns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+/* Aparência de botão sem ser botão: a cena não é operável de propósito. */
+.cbGuideBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 14px;
+  border: 1px solid var(--areia2);
+  font-size: 14px;
+  color: var(--tinta2);
+  background: var(--papel);
+}
+
+.cbGuideBtn[data-primary] {
+  background: var(--umbra);
+  border-color: var(--umbra);
+  color: var(--papel);
+}
+
+.cbGuideNo {
+  margin: 10px 0;
+}
+
+.cbGuideReply {
+  margin: 0 0 14px;
+  padding-left: 14px;
+  border-left: 2px solid var(--umbra);
+}
+
+.cbGuideReply p {
+  margin: 0 0 4px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--tinta2);
+}
+
+.cbGuideChain {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  counter-reset: cadeia;
+}
+
+.cbGuideChain li {
+  position: relative;
+  padding: 9px 0 9px 30px;
+  border-bottom: 1px solid var(--areia2);
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--tinta2);
+  counter-increment: cadeia;
+}
+
+.cbGuideChain li::before {
+  content: counter(cadeia);
+  position: absolute;
+  left: 0;
+  font-size: 12px;
+  color: var(--pedra);
+  font-variant-numeric: tabular-nums;
+}
+
+.cbGuideChain li:last-child {
+  border-bottom: 0;
+}
+
+.cbGuideLate {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--tinta3);
+  font-style: italic;
+  font-family: var(--serif);
+}
+
+/* O modo de gravação é mobile: a cena mostra-o como ele é. */
+.cbGuidePhone {
+  display: flex;
+  justify-content: center;
+}
+
+.cbGuidePhoneIn {
+  width: min(260px, 100%);
+  padding: 18px 16px 20px;
+  background: var(--ferro);
+  border-radius: 14px;
+  color: var(--t1);
+}
+
+.cbGuideCount {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--t2);
+  font-variant-numeric: tabular-nums;
+}
+
+.cbGuideShot {
+  margin: 0 0 6px;
+  font-size: 18px;
+  line-height: 1.25;
+  color: var(--papel);
+}
+
+.cbGuideNote {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--t2);
+}
+
+.cbGuidePhoneIn .cbGuideBtn[data-primary] {
+  background: var(--papel);
+  border-color: var(--papel);
+  color: var(--ferro);
+}
+
+.cbGuidePhoneIn .cbGuideMute {
+  margin-top: 12px;
+  color: var(--t2);
+}
+
+.cbGuideStage {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--umbra);
+  color: var(--papel);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cbGuideWindows {
+  margin: 12px 0 16px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--tinta3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cbGuideLadder {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cbGuideLadder li {
+  padding: 10px 0 10px 12px;
+  border-left: 2px solid var(--areia2);
+  border-bottom: 1px solid var(--areia2);
+  font-size: 14.5px;
+  line-height: 1.35;
+  color: var(--tinta3);
+}
+
+.cbGuideLadder li[data-on] {
+  border-left-color: var(--umbra);
+  color: var(--tinta2);
+}
+
+.cbGuideLadder li:last-child {
+  border-bottom: 0;
+}
+
+.cbGuideEnd {
+  padding: 20px 18px;
+  background: var(--areia);
+  border-left: 2px solid var(--umbra);
+}
+
+/* O ciclo, e é a última coisa que ela vê: seis passos, e o sexto devolve-a
+   ao Hoje. Não repete a frase da esquerda — mostra o que ela fecha. */
+.cbGuideLoop {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: ciclo;
+}
+
+.cbGuideLoop li {
+  position: relative;
+  padding: 8px 0 8px 30px;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--tinta2);
+  counter-increment: ciclo;
+}
+
+.cbGuideLoop li::before {
+  content: counter(ciclo);
+  position: absolute;
+  left: 0;
+  font-size: 12px;
+  color: var(--pedra);
+  font-variant-numeric: tabular-nums;
+}
+
+.cbGuideEndAsk {
+  margin: 6px 0 0;
+  padding-left: 30px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.3;
+  color: var(--tinta3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cbGuide,
+  .cbGuide[data-closing],
+  .cbGuideBox,
+  .cbGuide[data-closing] .cbGuideBox,
+  .cbGuideBody {
+    animation: none;
+  }
+  .cbGuideBar span {
+    transition: none;
+  }
+}

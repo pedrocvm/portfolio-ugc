@@ -25,6 +25,7 @@ import type { LensSummary } from '@/modules/content-brain/lens-service';
 import { confirmTrial, linkMedia, markLinkPrompted } from '@/modules/integrations/instagram/service';
 import { lensPickerData, recordLensEvent, setLensPreference } from '@/modules/content-brain/lens-service';
 import { inferLensForStory } from '@/modules/content-brain/service';
+import { writeGuide } from '@/modules/content-brain/guide-service';
 
 /** As ações do Story Workshop.
  *
@@ -299,6 +300,34 @@ export async function audioUploadPath(contentType: string): Promise<ResultWith<{
   const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
   if (!me) return { error: 'Não encontrei o usuário.' };
   return { ok: true, path: `${me.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${audioExtension(contentType)}` };
+}
+
+/* ── Guia ─────────────────────────────────────────────────────────────────── */
+
+/** O que a Carol já viu do guia.
+ *
+ *  Nenhuma destas revalida a tela de propósito: o guia é um modal por cima do
+ *  Conteúdo, e um `revalidatePath` a cada «Continuar» desmontava-lhe a página
+ *  por baixo a cada etapa. O que se salva é memória para a próxima visita, não
+ *  estado que a tela atual leia. */
+export async function saveGuideProgress(input: {
+  step?: number;
+  dismissed?: boolean;
+  completed?: boolean;
+}): Promise<Result> {
+  await requireUser();
+  const agora = new Date().toISOString();
+  try {
+    await writeGuide({
+      step: input.step,
+      dismissedAt: input.dismissed ? agora : undefined,
+      completedAt: input.completed ? agora : undefined,
+    });
+    return { ok: true };
+  } catch {
+    // Perder a memória do guia não pode fechar o guia à frente dela.
+    return { error: 'Não consegui salvar onde você parou.' };
+  }
 }
 
 export type { FunctionalPillar, StoryStatus };

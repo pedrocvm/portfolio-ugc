@@ -38,10 +38,13 @@ export default function MorningFlow({
   decisions,
   closing,
   prepared,
+  guideSeen,
 }: {
   decisions: Decision[];
   closing: string;
   prepared: string[];
+  /** Falso enquanto o guia do Content Brain nunca foi respondido. */
+  guideSeen: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [at, setAt] = useState(0);
@@ -131,7 +134,7 @@ export default function MorningFlow({
                 </button>
               </div>
             ) : atual ? (
-              <Step key={atual.id} decision={atual} onResolved={() => resolver(atual.id)} onSkip={() => resolver(atual.id)} />
+              <Step key={atual.id} decision={atual} guideSeen={guideSeen} onResolved={() => resolver(atual.id)} onSkip={() => resolver(atual.id)} />
             ) : null}
           </div>
         </div>
@@ -144,10 +147,12 @@ export default function MorningFlow({
 
 function Step({
   decision,
+  guideSeen,
   onResolved,
   onSkip,
 }: {
   decision: Decision;
+  guideSeen: boolean;
   onResolved: () => void;
   onSkip: () => void;
 }) {
@@ -160,7 +165,7 @@ function Step({
       {decision.kind === 'reply' ? (
         <ReplyStep decision={decision} onResolved={onResolved} onSkip={onSkip} />
       ) : decision.kind === 'content' ? (
-        <ContentStep decision={decision} onResolved={onResolved} onSkip={onSkip} />
+        <ContentStep decision={decision} guideSeen={guideSeen} onResolved={onResolved} onSkip={onSkip} />
       ) : (
         <LinkStep decision={decision} onSkip={onSkip} />
       )}
@@ -317,10 +322,12 @@ function ReplyStep({
  *  detesta faz o plano de amanhã sugeri-la outra vez. */
 function ContentStep({
   decision,
+  guideSeen,
   onResolved,
   onSkip,
 }: {
   decision: Decision;
+  guideSeen: boolean;
   onResolved: () => void;
   onSkip: () => void;
 }) {
@@ -414,6 +421,15 @@ function ContentStep({
           ))}
         </div>
       ) : null}
+
+      {/* Uma recomendação, nunca um portão: a ação real continua a ser o
+          primeiro botão, e isto some assim que ela responder ao guia. */}
+      {guideSeen ? null : (
+        <p className="mornMeta">
+          Primeira vez?{' '}
+          <Link href="/dashboard/content?tab=record">Como funciona o Conteúdo</Link>.
+        </p>
+      )}
 
       <div className="focusActs">
         <Link className="osGo" href={decision.href ?? '/dashboard/content'}>
