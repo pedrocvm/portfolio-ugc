@@ -7965,3 +7965,398 @@ a.aiSource:hover {
     padding: 18px 16px 20px;
   }
 }
+
+/* ── Decision-first: a próxima ação, a prova e a conversa ──────────── */
+
+/* O selo da CarolAI. Grafia fixa: nenhum `text-transform` lhe toca. */
+.aiMark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--tinta3);
+  white-space: nowrap;
+}
+.aiMark i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--jade);
+  box-shadow: 0 0 0 3px var(--jadeLeve);
+}
+
+.mailGistTop,
+.mornMsgTop,
+.nbaTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mailGistTop .mailGistAsk {
+  flex: 1;
+}
+
+.osRowNext {
+  margin: 2px 0 4px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 15px;
+  color: var(--umbra);
+}
+
+.mailConvoTitle {
+  margin: 22px 0 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.mailLinks {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+
+/* A próxima ação, pronta. Uma caixa só — e é a única coisa acionável da
+   tela, por isso pode ser uma caixa. */
+.nba {
+  margin: 0 0 18px;
+  padding: 16px 18px 14px;
+  border-left: 2px solid var(--umbra);
+  background: var(--realceLeve);
+}
+.nba[data-kind='none'] {
+  background: none;
+  border-left-color: var(--areia2);
+  padding: 8px 14px;
+}
+.nba[data-kind='confirm'] {
+  background: var(--areia);
+}
+.nbaEyebrow {
+  margin: 0 0 6px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.nba h3 {
+  margin: 0 0 4px;
+  font-size: clamp(19px, 2.2vw, 23px);
+  line-height: 1.22;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+.nba .osWhy {
+  margin-bottom: 8px;
+}
+.nbaWhy {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--tinta2);
+}
+.nbaLink {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: var(--umbra);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.nbaMail {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 14px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--areia2);
+}
+.nbaMail dt {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  padding-top: 3px;
+}
+.nbaMail dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.nbaMail input,
+.nbaMail textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  border: 1px solid var(--areia2);
+  background: var(--papel);
+  color: var(--tinta);
+}
+.nbaBody p {
+  margin: 0 0 10px;
+  line-height: 1.55;
+  color: var(--tinta2);
+}
+.nbaBody p:last-child {
+  margin-bottom: 0;
+}
+.nbaActs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.nbaActs .focusSkip {
+  margin-left: 0;
+  flex-basis: auto;
+  text-align: left;
+}
+.nbaFoot {
+  margin: 8px 0 0;
+}
+.nbaChoices {
+  margin: 10px 0 12px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nbaChoices button {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid var(--areia2);
+  background: #fff;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color var(--t-instant) var(--ease);
+}
+.nbaChoices button:hover:not(:disabled) {
+  border-color: var(--umbra);
+}
+.nbaChoices button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.nbaChoices strong {
+  font-weight: 500;
+}
+.nbaChoices span {
+  font-size: 13px;
+  color: var(--tinta3);
+}
+
+/* A conversa, à vista. */
+.convo {
+  margin: 0;
+}
+.convoHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding: 0 0 8px;
+}
+.convoWho {
+  margin: 0;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 14px;
+  color: var(--tinta2);
+}
+.convoWho span {
+  color: var(--tinta3);
+}
+.convoTurn {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--tinta2);
+}
+.convoSearch {
+  flex-basis: 100%;
+  margin-top: 6px;
+}
+.convoSearch input {
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--areia2);
+  background: #fff;
+}
+.mailMsg[data-latest] {
+  border-left: 2px solid var(--umbra);
+  padding-left: 12px;
+}
+.mailMsg[data-focus] {
+  background: var(--realceLeve);
+  outline: 0;
+  padding-left: 12px;
+  padding-right: 12px;
+  transition: background var(--t-slow) var(--ease);
+}
+.convo[data-compact] .mailMsg {
+  padding: 10px 0;
+}
+.convoFold > summary {
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--tinta2);
+  list-style: none;
+}
+.convoFold > summary::-webkit-details-marker {
+  display: none;
+}
+.convoFold[open] > summary {
+  color: var(--tinta3);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+/* O topo de uma marca: três respostas antes de qualquer número. */
+.rel {
+  display: grid;
+  gap: 22px;
+  margin: 0 0 30px;
+  padding: 0 0 22px;
+  border-bottom: 1px solid var(--rule);
+}
+.relEyebrow {
+  margin: 0 0 6px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+.relLine {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--tinta2);
+}
+.relLine .osTag {
+  margin-left: 8px;
+  vertical-align: middle;
+  font-style: normal;
+}
+.relNext h2 {
+  margin: 0 0 4px;
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.relWork .nba {
+  margin: 0;
+}
+.relConvo h2 {
+  margin-bottom: 4px;
+}
+.relThreads {
+  margin-top: 14px;
+}
+@media (min-width: 960px) {
+  .rel {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    grid-template-areas: 'now work' 'next work';
+    align-items: start;
+  }
+  .relNow { grid-area: now; }
+  .relNext { grid-area: next; }
+  .relWork { grid-area: work; }
+  .rel:not(:has(.relWork)) {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'now' 'next';
+  }
+}
+
+/* A história: o que se disse, à vista; o que o sistema fez, dobrado. */
+.osTimeline li[data-kind='system'] .osEventType {
+  color: var(--tinta3);
+}
+.osTimelineFold {
+  margin: 4px 0 10px;
+}
+.osTimelineFold > summary {
+  cursor: pointer;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 13px;
+  color: var(--tinta3);
+  list-style: none;
+  padding: 6px 0;
+}
+.osTimelineFold > summary::-webkit-details-marker {
+  display: none;
+}
+.osTimelineFold > summary::before {
+  content: '＋ ';
+}
+.osTimelineFold[open] > summary::before {
+  content: '－ ';
+}
+.osTimelineFold ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.osPanelTop,
+.cbStageTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+.osPanelTop h3,
+.cbStageTop h2 {
+  margin-bottom: 0;
+}
+
+/* Sinais do conteúdo na manhã: informação, não decisão. Filete, sem botão. */
+.mornSignals {
+  margin: 14px 0 0;
+  padding: 0 0 0 14px;
+  list-style: none;
+  border-left: 2px solid var(--areia2);
+}
+.mornSignals li {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--tinta2);
+  max-width: 62ch;
+}

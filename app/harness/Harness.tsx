@@ -31,6 +31,8 @@ const acao = (over: Partial<ActionRow> & Pick<ActionRow, 'id' | 'title'>): Actio
   brandName: 'Marca',
   stage: 'commercial_qualification',
   createdAt: dia(-2),
+  nextAction: null,
+  sourceThreadId: null,
   ...over,
 });
 
@@ -134,6 +136,7 @@ const MANHA = {
     mailboxesSynced: 2,
     followUpsCancelled: 1,
   },
+  signals: ['O Reel de ontem passou 1,7× a sua mediana de comentários. Ainda é só um sinal; vou acompanhar.'],
   preparedLines: describePrepared({
     ...EMPTY_PREPARED,
     brandsFound: 8,

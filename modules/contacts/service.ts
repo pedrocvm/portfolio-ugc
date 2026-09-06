@@ -26,6 +26,15 @@ export type ContactInput = {
   role?: string | null;
   preferredChannel?: 'email' | 'instagram' | 'whatsapp' | 'call' | 'other';
   source?: string | null;
+  /** De onde veio o endereço. Um contato indicado pela marca guarda a
+   *  mensagem em que o disse — é a resposta a «por que estou mandando para
+   *  marketing@?». */
+  provenance?: {
+    sourceMessageId: string | null;
+    sourceThreadId: string | null;
+    confidence: number | null;
+    text: string;
+  } | null;
 };
 
 export async function upsertContactByEmail(
@@ -37,18 +46,30 @@ export async function upsertContactByEmail(
 
   const { data: existente, error: erroBusca } = await db
     .from('contact')
-    .select('id, name, role')
+    .select('id, name, role, source_message_id')
     .ilike('email', email)
     .limit(1)
     .maybeSingle();
   if (erroBusca) return { error: erroBusca.message };
 
+  const prov = input.provenance
+    ? {
+        source_message_id: input.provenance.sourceMessageId,
+        source_thread_id: input.provenance.sourceThreadId,
+        source_confidence: input.provenance.confidence,
+        observed_at: new Date().toISOString(),
+        provenance: input.provenance.text,
+      }
+    : {};
+
   if (existente) {
     // Só se preenche o que estava vazio. Um nome vindo de uma assinatura de
-    // email não apaga o que ela escreveu à mão.
+    // email não apaga o que ela escreveu à mão — e a primeira prova de origem
+    // fica; a segunda não a substitui.
     const patch = {
       ...(!existente.name && input.name ? { name: input.name } : {}),
       ...(!existente.role && input.role ? { role: input.role } : {}),
+      ...(!existente.source_message_id ? prov : {}),
     };
     if (Object.keys(patch).length) await db.from('contact').update(patch).eq('id', existente.id);
     return { id: existente.id };
@@ -63,6 +84,7 @@ export async function upsertContactByEmail(
       role: input.role ?? '',
       ...(input.preferredChannel ? { preferred_channel: input.preferredChannel } : {}),
       ...(input.source ? { source: input.source } : {}),
+      ...prov,
     })
     .select('id')
     .maybeSingle();

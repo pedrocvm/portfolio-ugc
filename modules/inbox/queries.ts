@@ -23,6 +23,9 @@ export type ThreadRow = {
   lastDirection: 'inbound' | 'outbound' | null;
   snippet: string;
   replyTypes: string[];
+  /** A próxima ação, lida de madrugada. Nula enquanto a triagem não correu. */
+  nextTitle: string | null;
+  nextType: string | null;
 };
 
 export async function inboxThreads(): Promise<{
@@ -48,8 +51,18 @@ export async function inboxThreads(): Promise<{
   const ids = (threads ?? []).map((t) => t.id);
   const lastByThread = new Map<string, { direction: 'inbound' | 'outbound'; snippet: string }>();
   const asksByOpp = new Map<string, string[]>();
+  const nextByThread = new Map<string, { title: string; type: string }>();
 
   if (ids.length) {
+    const { data: intel } = await db
+      .from('thread_intel')
+      .select('thread_id, next_action, next_action_type')
+      .in('thread_id', ids)
+      .not('next_action_type', 'is', null);
+    for (const i of intel ?? []) {
+      const n = i.next_action as { title?: string } | null;
+      if (n?.title && i.next_action_type) nextByThread.set(i.thread_id, { title: n.title, type: i.next_action_type });
+    }
     const { data: messages } = await db
       .from('source_message')
       .select('thread_id, direction, snippet, sent_at')
@@ -105,6 +118,8 @@ export async function inboxThreads(): Promise<{
       // migração de dados para resolver um problema de apresentação.
       snippet: decodeEntities(last?.snippet ?? ''),
       replyTypes: t.opportunity_id ? (asksByOpp.get(t.opportunity_id) ?? []) : [],
+      nextTitle: nextByThread.get(t.id)?.title ?? null,
+      nextType: nextByThread.get(t.id)?.type ?? null,
     };
   });
 

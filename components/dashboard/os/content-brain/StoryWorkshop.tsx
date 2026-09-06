@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import CarolAI from '@/components/dashboard/CarolAI';
 import Spinner from '@/components/dashboard/Spinner';
 import { useExit } from '@/components/dashboard/useExit';
 import {
@@ -389,7 +390,10 @@ export default function StoryWorkshop({
 
             {etapa === 'structure' ? (
               <div className="cbStage">
-                <h2>Está montada.</h2>
+                <div className="cbStageTop">
+                  <h2>Está montada.</h2>
+                  <CarolAI what="Estruturada" />
+                </div>
                 <p className="osNote">
                   {resumo?.beats} momentos.{' '}
                   {resumo?.suggestions

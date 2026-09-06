@@ -35,6 +35,8 @@ export type Database = {
           title: string
           type: string
           updated_at: string
+          next_action: Json
+          source_thread_id: string | null
         }
         Insert: {
           brand_id?: string | null
@@ -56,6 +58,8 @@ export type Database = {
           title: string
           type: string
           updated_at?: string
+          next_action?: Json
+          source_thread_id?: string | null
         }
         Update: {
           brand_id?: string | null
@@ -77,6 +81,8 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
+          next_action?: Json
+          source_thread_id?: string | null
         }
         Relationships: [
           {
@@ -1513,6 +1519,11 @@ export type Database = {
           social_handle: string | null
           source: string | null
           updated_at: string
+          source_message_id: string | null
+          source_thread_id: string | null
+          source_confidence: number | null
+          observed_at: string | null
+          provenance: string
         }
         Insert: {
           brand_id: string
@@ -1529,6 +1540,11 @@ export type Database = {
           social_handle?: string | null
           source?: string | null
           updated_at?: string
+          source_message_id?: string | null
+          source_thread_id?: string | null
+          source_confidence?: number | null
+          observed_at?: string | null
+          provenance?: string
         }
         Update: {
           brand_id?: string
@@ -1545,6 +1561,11 @@ export type Database = {
           social_handle?: string | null
           source?: string | null
           updated_at?: string
+          source_message_id?: string | null
+          source_thread_id?: string | null
+          source_confidence?: number | null
+          observed_at?: string | null
+          provenance?: string
         }
         Relationships: [
           {
@@ -3481,6 +3502,12 @@ export type Database = {
           trial_status: string
           trial_status_source: string | null
           updated_at: string
+          last_seen_active_at: string | null
+          expired_at: string | null
+          sequence_id: string | null
+          audit: Json
+          audit_source: string | null
+          audited_at: string | null
         }
         Insert: {
           account_id: string
@@ -3510,6 +3537,12 @@ export type Database = {
           trial_status?: string
           trial_status_source?: string | null
           updated_at?: string
+          last_seen_active_at?: string | null
+          expired_at?: string | null
+          sequence_id?: string | null
+          audit?: Json
+          audit_source?: string | null
+          audited_at?: string | null
         }
         Update: {
           account_id?: string
@@ -3539,6 +3572,12 @@ export type Database = {
           trial_status?: string
           trial_status_source?: string | null
           updated_at?: string
+          last_seen_active_at?: string | null
+          expired_at?: string | null
+          sequence_id?: string | null
+          audit?: Json
+          audit_source?: string | null
+          audited_at?: string | null
         }
         Relationships: [
           {
@@ -3649,6 +3688,62 @@ export type Database = {
             columns: ["media_id"]
             isOneToOne: false
             referencedRelation: "instagram_media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instagram_story_sequence: {
+        Row: {
+          account_id: string
+          created_at: string
+          ended_at: string
+          id: string
+          label: string
+          locked: boolean
+          method: string
+          metrics: Json
+          policy_version: string
+          started_at: string
+          story_count: number
+          tags: Json
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          ended_at: string
+          id?: string
+          label?: string
+          locked?: boolean
+          method?: string
+          metrics?: Json
+          policy_version?: string
+          started_at: string
+          story_count?: number
+          tags?: Json
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          ended_at?: string
+          id?: string
+          label?: string
+          locked?: boolean
+          method?: string
+          metrics?: Json
+          policy_version?: string
+          started_at?: string
+          story_count?: number
+          tags?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instagram_story_sequence_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "instagram_account"
             referencedColumns: ["id"]
           },
         ]
@@ -5358,6 +5453,8 @@ export type Database = {
           summary: string
           sync_cursor: string | null
           updated_at: string
+          parent_thread_id: string | null
+          referral_message_id: string | null
         }
         Insert: {
           brand_id?: string | null
@@ -5378,6 +5475,8 @@ export type Database = {
           summary?: string
           sync_cursor?: string | null
           updated_at?: string
+          parent_thread_id?: string | null
+          referral_message_id?: string | null
         }
         Update: {
           brand_id?: string | null
@@ -5398,6 +5497,8 @@ export type Database = {
           summary?: string
           sync_cursor?: string | null
           updated_at?: string
+          parent_thread_id?: string | null
+          referral_message_id?: string | null
         }
         Relationships: [
           {
@@ -5571,6 +5672,8 @@ export type Database = {
           what_is_missing: string
           what_they_want: string
           who_wrote: string
+          next_action: Json
+          next_action_type: string | null
         }
         Insert: {
           brand_id?: string | null
@@ -5602,6 +5705,8 @@ export type Database = {
           what_is_missing?: string
           what_they_want?: string
           who_wrote?: string
+          next_action?: Json
+          next_action_type?: string | null
         }
         Update: {
           brand_id?: string | null
@@ -5633,6 +5738,8 @@ export type Database = {
           what_is_missing?: string
           what_they_want?: string
           who_wrote?: string
+          next_action?: Json
+          next_action_type?: string | null
         }
         Relationships: [
           {

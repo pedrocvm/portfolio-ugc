@@ -18,6 +18,8 @@ export const dynamic = 'force-dynamic';
 export default async function AnalyticsPage() {
   await requireUser();
   const [a, health, learnings] = await Promise.all([commercialAnalytics(90), automationHealth(30), contentLearnings(3)]);
+  // Amostra pequena: nenhum trabalho fechado e menos de vinte abordagens.
+  const cedo = a.won === 0 && a.outreach < 20;
 
   return (
     <>
@@ -31,6 +33,16 @@ export default async function AnalyticsPage() {
         aconteceu antes não foi reconstruído.
       </p>
 
+      {/* Doze números em que nove são um traço não são uma análise. Enquanto
+          não houver trabalho fechado, o que há para dizer cabe numa frase. */}
+      {cedo ? (
+        <p className="osBrief">
+          Ainda não temos amostra para comparar campanhas: {a.outreach}{' '}
+          {a.outreach === 1 ? 'abordagem' : 'abordagens'}, {a.replies}{' '}
+          {a.replies === 1 ? 'resposta' : 'respostas'} e nenhum trabalho fechado neste período. Quando
+          houver, a análise aparece aqui — taxa de resposta, ticket, ciclo, por nicho e por canal.
+        </p>
+      ) : (
       <div className="osStats">
         <div className="osStat">
           <b>{a.outreach}</b>
@@ -81,6 +93,7 @@ export default async function AnalyticsPage() {
           <span>trabalhos por produto</span>
         </div>
       </div>
+      )}
 
       <section className="osSection">
         <h2>O que o conteúdo está ensinando</h2>
@@ -103,7 +116,7 @@ export default async function AnalyticsPage() {
         )}
       </section>
 
-      {a.unavailable.length ? (
+      {a.unavailable.length && !cedo ? (
         <section className="osSection">
           <h2>O que ainda não dá para saber</h2>
           <p className="osNote">
@@ -123,6 +136,7 @@ export default async function AnalyticsPage() {
         </section>
       ) : null}
 
+      {a.followUpsSent > 0 ? (
       <section className="osSection">
         <h2>Follow-up</h2>
         <p className="osNote">Quanto pipeline é recuperado por não deixar um lead morrer calado.</p>
@@ -137,6 +151,7 @@ export default async function AnalyticsPage() {
           </div>
         </div>
       </section>
+      ) : null}
 
       {a.byNiche.length ? (
         <section className="osSection">

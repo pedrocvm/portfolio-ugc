@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { researchBrand } from '@/app/dashboard/carolos-actions';
 import { formatDate } from '@/lib/time';
 import type { BrandDossier } from '@/modules/ai/schemas';
+import CarolAI from '@/components/dashboard/CarolAI';
 
 /** Dossiê de marca: uma leitura comercial de uma página, para decidir se vale
  *  o tempo dela.
@@ -26,7 +27,10 @@ export default function Dossier({
 
   return (
     <div className="osPanel">
-      <h3>Dossiê</h3>
+      <div className="osPanelTop">
+        <h3>Dossiê</h3>
+        {dossier ? <CarolAI what="Pesquisado" /> : null}
+      </div>
 
       {!aiEnabled ? (
         <p className="osNote">

@@ -473,6 +473,20 @@ export const ThreadIntelSchema = z.object({
   /** A língua em que a conversa acontece, não a do sistema. */
   reply_language: z.enum(['pt-PT', 'pt-BR', 'en', 'es', 'other']),
   avoided_commitments: z.array(z.string()),
+  /** Para quem vai o rascunho. `referred_contact` quando a marca disse, por
+   *  escrito, «fale com X»: aí o rascunho é um email NOVO para X, não uma
+   *  resposta a quem encaminhou. */
+  reply_target: z.enum(['same_thread', 'referred_contact']).default('same_thread'),
+  /** O que a mensagem diz sobre o encaminhamento. Os endereços só valem se
+   *  estiverem no texto — quem valida é o código, não o modelo. */
+  referral: z
+    .object({
+      emails: z.array(z.string()),
+      team: z.string().nullable(),
+      person: z.string().nullable(),
+    })
+    .nullable()
+    .default(null),
   confidence,
 });
 export type ThreadIntel = z.infer<typeof ThreadIntelSchema>;

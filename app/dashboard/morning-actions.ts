@@ -45,6 +45,41 @@ export async function sendPreparedReply(input: {
   return { ok: true };
 }
 
+/** Envia o email NOVO para o contato que a marca indicou.
+ *
+ *  Não é uma resposta: sai sem `threadId`, para outra caixa, e fica ligado à
+ *  mesma oportunidade cá dentro. Passa pela mesma confirmação na interface. */
+export async function sendPreparedCompose(input: {
+  threadId: string;
+  to?: string | null;
+  subject: string;
+  body: string;
+  aiDraft?: string;
+}): Promise<Result & { newThreadId?: string }> {
+  await requireUser();
+  if (!uuid.safeParse(input.threadId).success) return { error: 'Conversa inválida.' };
+
+  const { sendCompose } = await import('@/modules/email/send-service');
+  const result = await sendCompose(input);
+  if (!result.ok) return { error: result.error };
+
+  refresh();
+  return { ok: true, newThreadId: result.newThreadId };
+}
+
+/** Entre dois endereços, ela disse qual. O email fica pronto sem nova chamada. */
+export async function chooseReferredContactAction(threadId: string, email: string): Promise<Result> {
+  await requireUser();
+  if (!uuid.safeParse(threadId).success) return { error: 'Conversa inválida.' };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { error: 'Endereço inválido.' };
+
+  const { chooseReferredContact } = await import('@/modules/email/send-service');
+  const r = await chooseReferredContact(threadId, email);
+  if (!r.ok) return { error: r.error };
+  refresh();
+  return { ok: true };
+}
+
 /** salva o rascunho na caixa dela em vez de o enviar. Continua existindo para
  *  quando ela quiser rever no Gmail antes de mandar. */
 export async function draftPreparedReply(input: {

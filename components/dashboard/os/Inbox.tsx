@@ -31,6 +31,9 @@ function Thread({ thread, onOpen }: { thread: ThreadRow; onOpen: (id: string) =>
     <button className="osRow osRowBtn" type="button" onClick={() => onOpen(thread.id)}>
       <div>
         <span className="osRowName">{thread.brandName ?? thread.subject}</span>
+        {/* O que há para fazer, antes do que a marca disse. É a mesma frase
+            que o Hoje mostra: sai da leitura da conversa, não de outra regra. */}
+        {thread.nextTitle ? <p className="osRowNext">{thread.nextTitle}</p> : null}
         <p className="osRowSub">
           {thread.snippet.slice(0, 180) || thread.subject}
         </p>
@@ -101,18 +104,20 @@ export default function Inbox({
   review,
   quiet,
   gmailConnected,
+  openThreadId = null,
 }: {
   waiting: ThreadRow[];
   review: ThreadRow[];
   quiet: ThreadRow[];
   gmailConnected: boolean;
+  openThreadId?: string | null;
 }) {
-  const [openThread, setOpenThread] = useState<string | null>(null);
+  const [openThread, setOpenThread] = useState<string | null>(openThreadId);
 
   return (
     <>
       <div className="dashBar">
-        <h1>Inbox</h1>
+        <h1>Conversas</h1>
         <span className="dashState">
           {waiting.length === 1 ? '1 à espera de resposta' : `${waiting.length} à espera de resposta`}
         </span>

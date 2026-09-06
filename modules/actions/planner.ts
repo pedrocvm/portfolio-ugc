@@ -11,6 +11,7 @@
 import { daysBetween } from '@/lib/time';
 import { REPLY_TYPE_LABEL, type ReplyType } from '@/modules/ai/schemas';
 import { STAGE_PROXIMITY, isOpen, type Stage } from '@/modules/opportunities/domain';
+import { isActionable, type NextAction } from './next-action';
 
 export const ACTION_TYPES = [
   'respond', 'follow_up', 'send_portfolio', 'ask_scope', 'send_rate',
@@ -22,6 +23,12 @@ export const ACTION_TYPES = [
   'content_map_story', 'content_develop_story', 'content_record_ready',
   'content_confirm_trial', 'content_save_event', 'content_review_signal',
   'content_link_media',
+  // Next Best Action. Uma conversa lida de madrugada diz mais do que
+  // «responder»: diz para quem, o quê, e se dá para sair sem perguntar.
+  'compose_to_new_contact', 'confirm_referral', 'schedule_call',
+  'ask_usage_rights', 'ask_budget', 'acknowledge_brief',
+  'request_shipping_info', 'provide_shipping_info', 'confirm_delivery',
+  'wait_until_date', 'no_action_required',
 ] as const;
 
 export type ActionType = (typeof ACTION_TYPES)[number];
@@ -55,6 +62,17 @@ export const ACTION_CTA: Record<ActionType, string> = {
   content_save_event: 'Ver o que aconteceu',
   content_review_signal: 'Revisar sinal',
   content_link_media: 'Confirmar',
+  compose_to_new_contact: 'Revisar e enviar',
+  confirm_referral: 'Escolher o contato',
+  schedule_call: 'Marcar a call',
+  ask_usage_rights: 'Clarificar direitos',
+  ask_budget: 'Perguntar o orçamento',
+  acknowledge_brief: 'Confirmar o briefing',
+  request_shipping_info: 'Pedir dados de envio',
+  provide_shipping_info: 'Mandar o endereço de entrega',
+  confirm_delivery: 'Confirmar a entrega',
+  wait_until_date: 'Esperar',
+  no_action_required: 'Nada a fazer',
 };
 
 /** Peso base por tipo. Não é a ordenação final — é o ponto de partida antes de
@@ -89,6 +107,19 @@ const BASE: Record<ActionType, number> = {
   content_develop_story: 36,
   content_review_signal: 28,
   content_map_story: 25,
+  // Um encaminhamento é uma marca a dizer «fale com quem decide»: pesa como
+  // uma resposta à espera, porque é isso que é.
+  compose_to_new_contact: 90,
+  confirm_referral: 88,
+  schedule_call: 82,
+  ask_usage_rights: 80,
+  ask_budget: 76,
+  acknowledge_brief: 70,
+  request_shipping_info: 64,
+  provide_shipping_info: 64,
+  confirm_delivery: 60,
+  wait_until_date: 10,
+  no_action_required: 0,
 };
 
 const RISK_BONUS: Record<Risk, number> = { none: 0, low: 5, medium: 15, high: 30 };
@@ -167,6 +198,10 @@ export type PlannedAction = {
   evidence: Record<string, unknown>;
   dedupeKey: string;
   priorityScore: number;
+  /** A ação estruturada de que este cartão é projeção, quando veio de uma
+   *  conversa. O Hoje mostra-a; a Inbox mostra a mesma. */
+  nextAction?: NextAction | null;
+  sourceThreadId?: string | null;
 };
 
 export type OpportunitySnapshot = {
@@ -190,6 +225,9 @@ export type OpportunitySnapshot = {
   dueFollowUp: { id: string; dueAt: string; reason: string } | null;
   hasQuote: boolean;
   hasProposalDoc: boolean;
+  /** A leitura mais recente de uma conversa desta oportunidade. Quando existe,
+   *  é ela que manda: é a única fonte, e o cartão do Hoje é uma projeção. */
+  threadAction?: NextAction | null;
 };
 
 const ASK_TO_ACTION: Record<string, { type: ActionType; title: string }> = {
@@ -250,8 +288,32 @@ export function planForOpportunity(
       : 'medium'
     : 'none';
 
-  // 1. A marca respondeu e a bola está do lado dela.
-  if (opp.awaitingReplySince && isOpen(opp.stage)) {
+  // 0. A conversa já foi lida e diz o que fazer. É a única fonte de verdade:
+  //    se a triagem diz «escrever para marketing@», o planeador não pode dizer
+  //    «responder». E se diz «nada a fazer» — a marca recusou, ou reagiu com um
+  //    emoji — a regra 1 não pode inventar uma resposta por cima.
+  if (opp.threadAction && isOpen(opp.stage)) {
+    const ta = opp.threadAction;
+    if (isActionable(ta)) {
+      out.push({
+        type: ta.type,
+        title: ta.title,
+        reason: ta.reason,
+        cta: ta.cta,
+        dueAt: ta.dueAt ?? opp.awaitingReplySince,
+        risk,
+        requiresApproval: ta.requiresConfirmation || ta.needsDecision !== null,
+        evidence: { ...ta.evidence, asks: opp.openAsks, riskFlags: opp.riskFlags },
+        dedupeKey: `opp:${opp.id}:thread:${ta.evidence.sourceThreadId ?? 'x'}:${ta.type}:${ta.evidence.sourceMessageId ?? 'x'}`,
+        priorityScore: priorityScore({ ...common, type: ta.type, inboundWaiting: true, risk, dueAt: opp.awaitingReplySince }),
+        nextAction: ta,
+        sourceThreadId: ta.evidence.sourceThreadId,
+      });
+    }
+  }
+
+  // 1. A marca respondeu e a bola está do lado dela — e ninguém leu ainda.
+  if (opp.awaitingReplySince && isOpen(opp.stage) && !opp.threadAction) {
     const waitingDays = daysBetween(new Date(opp.awaitingReplySince), now);
     const asks = opp.openAsks.filter((a) => ASK_TO_ACTION[a]);
     const primary = asks.length ? ASK_TO_ACTION[asks[0]] : null;

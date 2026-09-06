@@ -27,6 +27,14 @@ export default function Morning({ brief, guideSeen }: { brief: MorningBrief; gui
         />
       ) : null}
 
+      {brief.signals.length ? (
+        <ul className="mornSignals">
+          {brief.signals.map((s, i) => (
+            <li key={i}>{s}</li>
+          ))}
+        </ul>
+      ) : null}
+
       {preparedLines.length ? (
         <details className="mornWork">
           <summary>

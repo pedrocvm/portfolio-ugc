@@ -1,62 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { readMailThread, replyToMailThread, type MailThread as Thread } from '@/app/dashboard/carolos-actions';
 import { sendPreparedReply } from '@/app/dashboard/morning-actions';
+import CarolAI from '@/components/dashboard/CarolAI';
 import Spinner from '@/components/dashboard/Spinner';
 import { useExit } from '@/components/dashboard/useExit';
-import { formatDate } from '@/lib/time';
+import { isActionable } from '@/modules/actions/next-action';
+import Conversation from './Conversation';
+import NextActionCard from './NextActionCard';
 
 /** A conversa, pela ordem em que serve de alguma coisa.
  *
- *  Abria com catorze emails por ler e uma caixa de texto vazia. Ler catorze
- *  emails para descobrir que a marca pediu preço é trabalho que o sistema já
- *  fez na ingestão.
+ *  Primeiro o que a madrugada leu: quem escreveu, o que quer, o que falta, o
+ *  risco. Depois a próxima ação — que já não é «responder» por omissão: pode
+ *  ser um email novo para o contato que a marca indicou, ou uma escolha entre
+ *  dois endereços. E por baixo, a conversa inteira à vista, cronológica, com
+ *  busca e com a mensagem de origem a acender quando ela pede a prova.
  *
- *  Agora abre com o que interessa: o que pediram, há quanto tempo esperam, e o
- *  que o CarolOS acha que é o próximo passo. Essa recomendação é a mesma que
- *  enche o Hoje — sai do planeador, é determinística, e não depende de haver
- *  chave de modelo configurada. A conversa inteira fica logo abaixo, dobrada,
- *  para quando for preciso confirmar.
- *
- *  A leitura vem da base — o corpo das mensagens é salvo na ingestão — por
- *  isso abre depressa e continua funcionando com o Gmail em baixo. A resposta é
- *  que precisa do Gmail, e sai como rascunho: escrever e enviar são duas
- *  decisões, e a segunda é dela. */
-
-/** Os pedidos como substantivos, para caberem numa frase. As etiquetas do
- *  inbox são frases verbais e não colam depois de «pediu». */
-const ASK_NOUN: Record<string, string> = {
-  portfolio_request: 'o portfólio',
-  rate_request: 'o seu valor',
-  ads_rights: 'direitos para anúncios',
-  usage_request: 'direitos de uso',
-  barter_offer: 'uma permuta',
-  affiliate_offer: 'uma parceria de afiliação',
-  media_kit_request: 'o media kit',
-  call_request: 'uma call',
-  brief: 'o briefing',
-};
-
-function pedidos(asks: string[]): string | null {
-  const nomes = asks.map((a) => ASK_NOUN[a]).filter(Boolean);
-  if (!nomes.length) return null;
-  if (nomes.length === 1) return nomes[0];
-  return `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`;
-}
+ *  Estava dobrada atrás de «Ver a conversa». Uma recomendação cuja prova está
+ *  numa gaveta que ninguém descobre é uma recomendação em que ninguém confia. */
 
 export default function MailThread({ threadId, onClose }: { threadId: string; onClose: () => void }) {
   const { closing, close } = useExit(onClose);
   const [thread, setThread] = useState<Thread | null>(null);
   const [error, setError] = useState('');
-  const [reply, setReply] = useState('');
-  const [sending, setSending] = useState(false);
-  const [done, setDone] = useState('');
-  const [confirmar, setConfirmar] = useState(false);
-  // O que a madrugada escreveu, antes de ela mexer. É a diferença entre os dois
-  // que ensina o sistema a parar de escrever em português do Brasil.
-  const [rascunhoOriginal, setRascunhoOriginal] = useState('');
+  const [foco, setFoco] = useState<string | null>(null);
+  const [versao, setVersao] = useState(0);
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,20 +35,12 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
     readMailThread(threadId).then((r) => {
       if (!alive) return;
       if ('error' in r) setError(r.error);
-      else {
-        setThread(r);
-        // A caixa de resposta abria vazia e o botão ficava desactivado até ela
-        // escrever. Com o rascunho já preparado, abre escrita.
-        if (r.intel?.draftBody) {
-          setReply(r.intel.draftBody);
-          setRascunhoOriginal(r.intel.draftBody);
-        }
-      }
+      else setThread(r);
     });
     return () => {
       alive = false;
     };
-  }, [threadId]);
+  }, [threadId, versao]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -92,48 +55,10 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
     };
   }, [close]);
 
-  async function draft() {
-    setSending(true);
-    setDone('');
-    setError('');
-    const r = await replyToMailThread(threadId, reply);
-    setSending(false);
-    if ('error' in r && r.error) setError(r.error);
-    else setDone('Rascunho criado no Gmail, dentro desta conversa.');
-  }
+  const reler = useCallback(() => setVersao((v) => v + 1), []);
 
-  /** Enviar daqui. Sai para fora, por isso pede um segundo sim — e é o único
-   *  lugar desta gaveta que o pede. */
-  async function send() {
-    setSending(true);
-    setDone('');
-    setError('');
-    const r = await sendPreparedReply({
-      threadId,
-      body: reply,
-      subject: thread?.intel?.draftSubject,
-      aiDraft: rascunhoOriginal,
-    }).catch(() => ({ error: 'Não consegui enviar agora. A mensagem continua aqui.' }));
-    setSending(false);
-    setConfirmar(false);
-    if (r.error) setError(r.error);
-    else {
-      setDone('Enviada.');
-      setRascunhoOriginal('');
-    }
-  }
-
-  // Uma frase, não duas. A espera já vinha escrita outra vez dentro da razão da
-  // recomendação — a mesma informação, com as mesmas palavras, dois centímetros
-  // abaixo.
-  const pedido = thread ? pedidos(thread.asks) : null;
-  const espera =
-    thread && thread.waitingDays !== null && !thread.next?.reason.includes('à espera')
-      ? thread.waitingDays === 0
-        ? 'Chegou hoje e ainda não teve resposta.'
-        : `À espera de resposta há ${thread.waitingDays} ${thread.waitingDays === 1 ? 'dia' : 'dias'}.`
-      : null;
-  const resumo = pedido ? `Pediram ${pedido}.${espera ? ` ${espera}` : ''}` : espera;
+  const acao = thread?.nextAction ?? null;
+  const temAcao = isActionable(acao);
 
   return (
     <div className="pick" data-closing={closing || undefined}>
@@ -170,160 +95,154 @@ export default function MailThread({ threadId, onClose }: { threadId: string; on
         ) : null}
 
         {thread ? (
-          <>
-            <div className="mailScroll">
-              {/* O resumo primeiro. Se o sistema já sabe o que pediram, ela não
-                  tem de o descobrir a ler. */}
-              {/* A leitura da madrugada ganha à frase genérica: já sabe quem
-                  escreveu, o que quer, o que falta e o que recomendar. */}
-              {thread.intel ? (
-                <div className="mailGist">
+          <div className="mailScroll">
+            {thread.intel ? (
+              <div className="mailGist">
+                <div className="mailGistTop">
                   <p className="mailGistAsk">
                     {thread.intel.whoWrote ? `${thread.intel.whoWrote}: ` : ''}
-                    {thread.intel.whatTheyWant}
+                    {thread.intel.whatTheyWant || thread.intel.recommendation}
                   </p>
-                  <dl className="mornFacts">
-                    {thread.intel.whatChanged ? (
-                      <>
-                        <dt>O que mudou</dt>
-                        <dd>{thread.intel.whatChanged}</dd>
-                      </>
-                    ) : null}
-                    {thread.intel.whatIsMissing ? (
-                      <>
-                        <dt>O que falta</dt>
-                        <dd>{thread.intel.whatIsMissing}</dd>
-                      </>
-                    ) : null}
-                    {thread.intel.risk ? (
-                      <>
-                        <dt>Risco</dt>
-                        <dd data-risk={thread.intel.riskLevel}>{thread.intel.risk}</dd>
-                      </>
-                    ) : null}
-                  </dl>
+                  <CarolAI what="Lida" />
                 </div>
-              ) : resumo ? (
-                <div className="mailGist">
-                  <p className="mailGistAsk">{resumo}</p>
-                </div>
-              ) : null}
-
-              {thread.intel?.recommendation ? (
-                <div className="mailNext">
-                  <span className="mailNextLabel">O que eu faria</span>
-                  <p>{thread.intel.recommendation}</p>
-                </div>
-              ) : thread.next ? (
-                <div className="mailNext">
-                  <span className="mailNextLabel">O que eu faria</span>
-                  <b>{thread.next.title}</b>
-                  <p>{thread.next.reason}</p>
-                </div>
-              ) : null}
-
-              {/* A conversa inteira, dobrada. Quem precisa de confirmar abre. */}
-              <details className="mailAll">
-                <summary>
-                  {thread.messages.length
-                    ? `Ver a conversa (${thread.messages.length})`
-                    : 'Ver a conversa'}
-                </summary>
-                {/* A mais recente primeiro: o que interessa é o que a marca
-                    acabou de dizer, não como a conversa começou. */}
-                {[...thread.messages].reverse().map((m) => (
-                  <article className="mailMsg" key={m.id} data-dir={m.direction}>
-                    <div className="mailMeta">
-                      <b>{m.direction === 'outbound' ? 'Eu' : m.fromName || m.fromAddress}</b>
-                      <span>{formatDate(m.sentAt)}</span>
-                    </div>
-                    <p className="mailBody">{m.body || m.subject}</p>
-                  </article>
-                ))}
-                {thread.messages.length === 0 ? (
-                  <p className="osRowSub">Esta conversa não tem mensagens salvas.</p>
-                ) : null}
-              </details>
-            </div>
-
-            <div className="mailReply">
-              <label className="visually-hidden" htmlFor="mailReplyText">
-                Resposta
-              </label>
-              <textarea
-                id="mailReplyText"
-                rows={5}
-                placeholder={
-                  thread.replyTo
-                    ? `Responder a ${thread.replyTo}…`
-                    : 'Esta conversa não tem remetente para responder.'
-                }
-                value={reply}
-                onChange={(e) => setReply(e.target.value)}
-                disabled={!thread.replyTo || sending}
-              />
-              {done ? (
-                <p className="osWarn" data-tone="ok">
-                  {done}
-                </p>
-              ) : null}
-              <div className="mailActs">
-                {confirmar ? (
-                  <>
-                    <button className="osGo" type="button" onClick={send} disabled={sending}>
-                      {sending ? <Spinner label="Enviando" /> : null}
-                      Sim, enviar
-                    </button>
-                    <button
-                      className="osPageBtn"
-                      type="button"
-                      onClick={() => setConfirmar(false)}
-                      disabled={sending}
-                    >
-                      Afinal não
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className="osGo"
-                      type="button"
-                      onClick={() => setConfirmar(true)}
-                      disabled={!thread.replyTo || sending || reply.trim().length < 2}
-                    >
-                      Enviar
-                    </button>
-                    <button
-                      className="osPageBtn"
-                      type="button"
-                      onClick={draft}
-                      disabled={!thread.replyTo || sending || reply.trim().length < 2}
-                    >
-                      {sending ? <Spinner label="Preparando" /> : null}
-                      Deixar rascunho no Gmail
-                    </button>
-                  </>
-                )}
-                {thread.opportunityId ? (
-                  <Link className="chip" href={`/dashboard/opportunities/${thread.opportunityId}`}>
-                    Abrir a oportunidade
-                  </Link>
-                ) : null}
-                {thread.brandId ? (
-                  <Link className="chip" href={`/dashboard/brands/${thread.brandId}`}>
-                    Abrir a marca
-                  </Link>
-                ) : null}
+                <dl className="mornFacts">
+                  {thread.intel.whatChanged ? (
+                    <>
+                      <dt>O que mudou</dt>
+                      <dd>{thread.intel.whatChanged}</dd>
+                    </>
+                  ) : null}
+                  {thread.intel.whatIsMissing ? (
+                    <>
+                      <dt>O que falta</dt>
+                      <dd>{thread.intel.whatIsMissing}</dd>
+                    </>
+                  ) : null}
+                  {thread.intel.risk ? (
+                    <>
+                      <dt>Risco</dt>
+                      <dd data-risk={thread.intel.riskLevel}>{thread.intel.risk}</dd>
+                    </>
+                  ) : null}
+                </dl>
               </div>
-              <p className="osRowSub">
-                {thread.intel?.draftState === 'ready'
-                  ? 'Esta resposta foi escrita de madrugada. Nada sai sem o sim dela.'
-                  : 'O CarolOS não envia nada sozinho. Sai quando ela carregar em enviar.'}
-              </p>
+            ) : null}
+
+            {acao ? (
+              <NextActionCard
+                threadId={threadId}
+                action={acao}
+                whoWrote={thread.intel?.whoWrote}
+                onOpenSource={(id) => setFoco(id)}
+                onChanged={reler}
+                onDone={(what) => (what === 'sent' ? reler() : close())}
+              />
+            ) : thread.next ? (
+              <div className="mailNext">
+                <span className="mailNextLabel">O que eu faria</span>
+                <b>{thread.next.title}</b>
+                <p>{thread.next.reason}</p>
+              </div>
+            ) : null}
+
+            <h3 className="mailConvoTitle">A conversa</h3>
+            <Conversation messages={thread.messages} brandName={thread.brandName} focusId={foco} />
+
+            {/* Sem leitura da madrugada ainda, a caixa de sempre: escreve-se e
+                sai como resposta. Com leitura, quem envia é o cartão de cima. */}
+            {!temAcao && thread.replyTo ? <LegacyReply threadId={threadId} to={thread.replyTo} subject={thread.intel?.draftSubject} /> : null}
+
+            <div className="mailActs mailLinks">
+              {thread.opportunityId ? (
+                <Link className="chip" href={`/dashboard/opportunities/${thread.opportunityId}`}>
+                  Abrir o negócio
+                </Link>
+              ) : null}
+              {thread.brandId ? (
+                <Link className="chip" href={`/dashboard/brands/${thread.brandId}`}>
+                  Abrir a marca
+                </Link>
+              ) : null}
             </div>
-          </>
+          </div>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+/** A caixa de resposta de antes, para conversas sem leitura. */
+function LegacyReply({ threadId, to, subject }: { threadId: string; to: string; subject?: string }) {
+  const [reply, setReply] = useState('');
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState('');
+  const [error, setError] = useState('');
+  const [confirmar, setConfirmar] = useState(false);
+
+  async function draft() {
+    setSending(true);
+    setDone('');
+    setError('');
+    const r = await replyToMailThread(threadId, reply);
+    setSending(false);
+    if ('error' in r && r.error) setError(r.error);
+    else setDone('Rascunho criado no Gmail, dentro desta conversa.');
+  }
+
+  async function send() {
+    setSending(true);
+    setDone('');
+    setError('');
+    const r = await sendPreparedReply({ threadId, body: reply, subject }).catch(() => ({ error: 'Não consegui enviar agora. A mensagem continua aqui.' }));
+    setSending(false);
+    setConfirmar(false);
+    if (r.error) setError(r.error);
+    else setDone('Enviada.');
+  }
+
+  return (
+    <div className="mailReply">
+      <label className="visually-hidden" htmlFor="mailReplyText">
+        Resposta
+      </label>
+      <textarea
+        id="mailReplyText"
+        rows={5}
+        placeholder={`Responder a ${to}…`}
+        value={reply}
+        onChange={(e) => setReply(e.target.value)}
+        disabled={sending}
+      />
+      {error ? <p className="osWarn">{error}</p> : null}
+      {done ? (
+        <p className="osWarn" data-tone="ok">
+          {done}
+        </p>
+      ) : null}
+      <div className="mailActs">
+        {confirmar ? (
+          <>
+            <button className="osGo" type="button" onClick={send} disabled={sending}>
+              {sending ? <Spinner label="Enviando" /> : null}
+              Sim, enviar
+            </button>
+            <button className="osPageBtn" type="button" onClick={() => setConfirmar(false)} disabled={sending}>
+              Afinal não
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="osGo" type="button" onClick={() => setConfirmar(true)} disabled={sending || reply.trim().length < 2}>
+              Enviar
+            </button>
+            <button className="osPageBtn" type="button" onClick={draft} disabled={sending || reply.trim().length < 2}>
+              {sending ? <Spinner label="Preparando" /> : null}
+              Deixar rascunho no Gmail
+            </button>
+          </>
+        )}
+      </div>
+      <p className="osRowSub">O CarolOS não envia nada sozinho. Sai quando você carregar em enviar.</p>
     </div>
   );
 }

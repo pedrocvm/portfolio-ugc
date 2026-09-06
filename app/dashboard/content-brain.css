@@ -1098,6 +1098,13 @@
   border-left-color: var(--umbra);
 }
 
+/* «CarolOS» e «Carol» são nomes, não etiquetas: a grafia não se altera. */
+.cbGuideSource .cbGuideTag {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+}
+
 .cbGuideSource p {
   margin: 4px 0 0;
   font-size: 15px;

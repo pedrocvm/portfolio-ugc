@@ -11,8 +11,10 @@ import {
   finishMorning,
   openMorning,
   postponeReply,
+  sendPreparedCompose,
   sendPreparedReply,
 } from '@/app/dashboard/morning-actions';
+import CarolAI from '@/components/dashboard/CarolAI';
 import type { Decision } from '@/modules/morning/domain';
 import { REJECTION_REASONS, type RejectionReason } from '@/modules/creator/domain';
 
@@ -198,16 +200,29 @@ function ReplyStep({
   const risco = str(p, 'risk');
   const mudou = str(p, 'whatChanged');
   const para = str(p, 'replyTo');
+  // Um email novo para o contato que a marca indicou não é uma resposta: sai
+  // sem thread, para outra caixa. A leitura da conversa é que decide isto.
+  const emailNovo = str(p, 'targetKind') === 'compose';
+  const precisaEscolher = str(p, 'actionType') === 'confirm_referral';
+  const prova = str(p, 'evidenceBecause');
 
   const enviar = () =>
     start(async () => {
       setErro('');
-      const r = await sendPreparedReply({
-        threadId,
-        body: texto,
-        subject: str(p, 'draftSubject'),
-        aiDraft: original,
-      }).catch(() => ({ error: 'Não consegui enviar agora. A mensagem continua aqui.' }));
+      const r = emailNovo
+        ? await sendPreparedCompose({
+            threadId,
+            to: para,
+            subject: str(p, 'draftSubject'),
+            body: texto,
+            aiDraft: original,
+          }).catch(() => ({ error: 'Não consegui enviar agora. A mensagem continua aqui.' }))
+        : await sendPreparedReply({
+            threadId,
+            body: texto,
+            subject: str(p, 'draftSubject'),
+            aiDraft: original,
+          }).catch(() => ({ error: 'Não consegui enviar agora. A mensagem continua aqui.' }));
       if (r.error) {
         setErro(r.error);
         setConfirmar(false);
@@ -229,8 +244,27 @@ function ReplyStep({
       onSkip();
     });
 
+  // Dois endereços na mensagem: a escolha é dela, e faz-se na conversa.
+  if (precisaEscolher) {
+    return (
+      <>
+        <p className="mornMeta">{str(p, 'needsDecision')}</p>
+        {erro ? <p className="osWarn" role="alert">{erro}</p> : null}
+        <div className="focusActs">
+          <Link className="osGo" href={decision.href ?? '/dashboard/inbox'}>
+            Escolher o contato
+          </Link>
+          <button className="focusSkip" type="button" disabled={pending} onClick={depois}>
+            Depois
+          </button>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
+      {emailNovo && prova ? <p className="mornMeta">{prova}</p> : null}
       <dl className="mornFacts">
         {mudou ? (
           <>
@@ -262,7 +296,10 @@ function ReplyStep({
         />
       ) : (
         <div className="mornMsg">
-          <p className="mornTo">{para ? `Para ${para}` : 'Mensagem pronta'}</p>
+          <div className="mornMsgTop">
+            <p className="mornTo">{para ? `${emailNovo ? 'Email novo para' : 'Para'} ${para}` : 'Mensagem pronta'}</p>
+            {str(p, 'artifactSource') === 'model' ? <CarolAI what="Escrito" /> : null}
+          </div>
           <p className="mornSubject">{str(p, 'draftSubject')}</p>
           <div className="mornBody">
             {/* Parágrafos, não linhas: um email tem linhas em branco a separar,

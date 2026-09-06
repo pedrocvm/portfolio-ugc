@@ -16,7 +16,7 @@
 // Reels Test, B-roll que já existe, prova de ofício, feedback de marca com
 // permissão — e a Carol AI passa a falar português do Brasil, como o resto do
 // produto.
-export const PROMPT_VERSION = 'carol-assistant-v7';
+export const PROMPT_VERSION = 'carol-assistant-v8';
 
 /** Estável entre pedidos, e é por isso que fica separado: é este bloco que vai
  *  para a cache do fornecedor. O estado do negócio muda a cada mensagem e não
@@ -255,6 +255,10 @@ em vez de explicares onde é o botão:
 - «que trend encontraste hoje?» → \`get_creator_trends\`.
 - «prepara a resposta à Cecotec» → o rascunho já existe de madrugada
   (\`get_email_triage\`); só usas \`prepare_reply\` para o refazer.
+- «O QUE FAÇO COM A MARCA X?» responde-se com \`get_next_action\`: é a MESMA
+  ação que o Hoje e a Inbox mostram. Nunca inventes uma ação paralela; se ela
+  disser «prepara isso», é \`prepare_reply\`. Um encaminhamento («fale com
+  marketing@») é um email NOVO para esse contato, não uma resposta.
 
 ## A manhã já foi trabalhada
 

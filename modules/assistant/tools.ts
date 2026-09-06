@@ -1158,6 +1158,79 @@ const getMorningBrief = define(
   },
 );
 
+/** «O que faço com esta marca?» responde-se com a próxima ação estruturada —
+ *  a mesma que o Hoje, a Inbox e a Marca mostram. O modelo não inventa uma
+ *  ação paralela: lê esta e, se ela disser «prepara isso», chama prepare_reply. */
+const getNextAction = define(
+  'get_next_action',
+  'A próxima ação já calculada para uma marca, negócio ou conversa: tipo (responder, escrever para o contato indicado, escolher entre dois endereços, esperar, nada), para quem, o email já escrito, a prova, e se sai só com confirmação dela. É a MESMA que o Hoje e a Inbox mostram: usa isto para «o que faço com X?» e nunca inventes uma ação diferente. Para refazer o rascunho, prepare_reply.',
+  z.object({
+    brand: z.string().optional().describe('nome da marca'),
+    opportunity_id: z.string().uuid().optional(),
+    thread_id: z.string().uuid().optional(),
+  }),
+  async ({ brand, opportunity_id, thread_id }, ctx) => {
+    const db = await supabaseServer();
+    let threadIds: string[] = [];
+
+    if (thread_id) threadIds = [thread_id];
+    else {
+      let oppId = opportunity_id ?? (ctx.entity?.type === 'opportunity' ? ctx.entity.id : null);
+      let brandId = ctx.entity?.type === 'brand' ? ctx.entity.id : null;
+      if (!oppId && !brandId && brand) {
+        const { data } = await db.from('brand').select('id').ilike('name', `%${brand}%`).limit(1).maybeSingle();
+        brandId = data?.id ?? null;
+      }
+      if (!oppId && brandId) {
+        const { data } = await db.from('opportunity').select('id').eq('brand_id', brandId)
+          .not('stage', 'in', '(won,lost)').order('last_activity_at', { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
+        oppId = data?.id ?? null;
+      }
+      if (oppId) {
+        const { data } = await db.from('source_thread').select('id').eq('opportunity_id', oppId)
+          .order('last_message_at', { ascending: false, nullsFirst: false }).limit(3);
+        threadIds = (data ?? []).map((t) => t.id);
+      }
+    }
+    if (threadIds.length === 0) return { data: { found: false, why: 'Não encontrei conversa nenhuma para isso.' }, sources: [] };
+
+    const { data: intel } = await db
+      .from('thread_intel')
+      .select('thread_id, brand_id, next_action, next_action_type, waiting_on, prepared_at, brand:brand_id ( name )')
+      .in('thread_id', threadIds)
+      .not('next_action_type', 'is', null);
+    const rows = intel ?? [];
+    if (rows.length === 0) return { data: { found: false, why: 'Esta conversa ainda não foi lida. Usa prepare_reply para a preparar.' }, sources: [] };
+
+    return {
+      data: rows.map((r) => {
+        const n = r.next_action as Record<string, unknown>;
+        const b = r.brand as { name: string } | { name: string }[] | null;
+        return {
+          threadId: r.thread_id,
+          brand: (Array.isArray(b) ? b[0]?.name : b?.name) ?? null,
+          waitingOn: r.waiting_on,
+          preparedAt: r.prepared_at,
+          type: r.next_action_type,
+          title: n.title,
+          reason: n.reason,
+          target: n.target,
+          preparedArtifact: n.preparedArtifact,
+          evidence: n.evidence,
+          requiresConfirmation: n.requiresConfirmation,
+          needsDecision: n.needsDecision,
+          candidates: n.candidates,
+          note: 'Nada disto foi enviado. Enviar é um botão na interface, e é dela.',
+        };
+      }),
+      sources: rows.map((r) => ({
+        id: r.thread_id, type: 'email' as const, label: 'Próxima ação', at: r.prepared_at,
+        href: `/dashboard/inbox?thread=${r.thread_id}`,
+      })),
+    };
+  },
+);
+
 const getEmailTriage = define(
   'get_email_triage',
   'As conversas já triadas: quem escreveu, o que quer, o que falta, o risco, a recomendação e o rascunho de resposta. `waiting_on` diz de quem é a vez — nunca assumas pela última mensagem.',
@@ -1800,6 +1873,7 @@ const discoverBragaPlacesTool = define(
 );
 
 export const TOOLS: Tool[] = [
+  getNextAction,
   searchBrands, getBrand, getBrandActivity,
   searchOpportunities, getOpportunity,
   getTodayActions, getFollowups,

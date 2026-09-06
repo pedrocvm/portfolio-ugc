@@ -1,16 +1,22 @@
 /** A navegação do CarolOS, num lugar só.
  *
- *  Eram dezoito destinos no primeiro nível — dois fixos e cinco grupos que se
- *  abriam. Ler dezoito nomes para escolher um é trabalho, e quase todos os dias
- *  a escolha certa era a mesma: o Hoje.
+ *  Seis seções, e cada uma é um trabalho dela — não uma tabela da base:
  *
- *  Agora são cinco seções. As sub-áreas continuam existindo, com as mesmas
- *  rotas, mas só aparecem depois de se entrar na seção a que pertencem — é o
- *  `SectionNav` que as mostra. Nada foi apagado; foi arrumado por altura.
+ *    Hoje        o que precisa dela agora
+ *    Conversas   quem falou e o que sai a seguir
+ *    Marcas      a relação com cada marca, e onde procurar novas
+ *    Conteúdo    o dela
+ *    Produção    o das marcas, quando existe
+ *    Dinheiro    o que entrou e o que falta
+ *
+ *  «Trabalho» era um saco com sete coisas; «Prospeção» era uma seção inteira
+ *  para um lote que já chega pelo Hoje. As sub-áreas continuam existindo, com
+ *  as mesmas rotas, mas aparecem só depois de se entrar na seção — e as que
+ *  são base de conhecimento (clientes, cases, documentos, funil, análise)
+ *  ficam atrás do «mais». O site é utilidade: edita-se de vez em quando.
  *
  *  A Captura saiu do menu de propósito: passou a caber em qualquer lugar, pelo
- *  botão global e por colar na página. Uma tela que se tem de ir procurar não é
- *  captura rápida. */
+ *  botão global e por colar na página. */
 
 export type NavItem = {
   href: string;
@@ -37,16 +43,23 @@ export const SECTIONS: readonly Section[] = [
     items: [],
   },
   {
-    id: 'work',
-    label: 'Trabalho',
+    id: 'inbox',
+    label: 'Conversas',
     href: '/dashboard/inbox',
     items: [
       { href: '/dashboard/inbox', label: 'Conversas' },
+      { href: '/dashboard/followups', label: 'Follow-ups', quiet: true },
+    ],
+  },
+  {
+    id: 'brands',
+    label: 'Marcas',
+    href: '/dashboard/brands',
+    items: [
+      { href: '/dashboard/brands', label: 'Marcas' },
       { href: '/dashboard/opportunities', label: 'Negócios' },
-      { href: '/dashboard/followups', label: 'Follow-ups' },
-      { href: '/dashboard/production', label: 'Produção' },
-      { href: '/dashboard/content', label: 'Conteúdo' },
-      { href: '/dashboard/brands', label: 'Marcas', quiet: true },
+      { href: '/dashboard/outreach', label: 'Prospeção' },
+      { href: '/dashboard/outreach/history', label: 'Histórico', quiet: true },
       { href: '/dashboard/clients', label: 'Clientes', quiet: true },
       { href: '/dashboard/cases', label: 'Cases', quiet: true },
       { href: '/dashboard/documents', label: 'Documentos', quiet: true },
@@ -54,13 +67,16 @@ export const SECTIONS: readonly Section[] = [
     ],
   },
   {
-    id: 'prospecting',
-    label: 'Prospeção',
-    href: '/dashboard/outreach',
-    items: [
-      { href: '/dashboard/outreach', label: 'Prontas' },
-      { href: '/dashboard/outreach/history', label: 'Histórico', quiet: true },
-    ],
+    id: 'content',
+    label: 'Conteúdo',
+    href: '/dashboard/content',
+    items: [],
+  },
+  {
+    id: 'production',
+    label: 'Produção',
+    href: '/dashboard/production',
+    items: [],
   },
   {
     id: 'money',
@@ -68,33 +84,27 @@ export const SECTIONS: readonly Section[] = [
     href: '/dashboard/revenue',
     items: [
       { href: '/dashboard/revenue', label: 'Receita' },
-      { href: '/dashboard/analytics', label: 'Análise' },
-    ],
-  },
-  {
-    id: 'site',
-    label: 'O site',
-    href: '/dashboard/site',
-    items: [
-      { href: '/dashboard/site', label: 'Páginas' },
-      { href: '/dashboard/site/library', label: 'Biblioteca' },
-      { href: '/dashboard/site/links', label: 'Links' },
+      { href: '/dashboard/analytics', label: 'Análise', quiet: true },
     ],
   },
 ] as const;
 
-/** Fora das seções: não é trabalho dela, é manutenção do sistema. */
+/** Fora das seções: não é o trabalho de todos os dias. O site edita-se de vez
+ *  em quando; o resto é manutenção do sistema. */
 export const UTILITY: readonly NavItem[] = [
+  { href: '/dashboard/site', label: 'O site' },
   { href: '/dashboard/settings', label: 'Definições' },
   { href: '/dashboard/account', label: 'A minha conta' },
 ] as const;
 
-/** Rotas que respondem mas não pertencem a barra nenhuma: são sub-vistas de um
- *  tela que já as abre, ou restos anteriores ao CarolOS. Estão aqui nomeadas
- *  para a paleta de comandos as encontrar e o teste de portas não falhar por
- *  distração. */
+/** Rotas que respondem mas não pertencem a barra nenhuma: são sub-vistas de
+ *  uma tela que já as abre, ou restos anteriores ao CarolOS. Estão aqui
+ *  nomeadas para a paleta de comandos as encontrar e o teste de portas não
+ *  falhar por distração. */
 export const EXTRA: readonly NavItem[] = [
   { href: '/dashboard/capture', label: 'Captura' },
+  { href: '/dashboard/site/library', label: 'Biblioteca do site' },
+  { href: '/dashboard/site/links', label: 'Links do site' },
 ] as const;
 
 /** «/dashboard» só está ativo em si mesmo; as outras contam também os filhos,

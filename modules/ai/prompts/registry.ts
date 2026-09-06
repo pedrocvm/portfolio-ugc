@@ -1018,7 +1018,9 @@ export const readThread: Prompt<
   task: 'thread_intel',
   // v3: a voz ganha vocabulário — «percebi» e não «reparei», e o gerúndio em
   // vez de «a» mais infinitivo.
-  version: 'v3',
+  // v4: encaminhamento. «Fale com marketing@» não é uma resposta a quem o
+  // disse: é um email novo para quem decide, com o contexto da conversa.
+  version: 'v4',
   tier: 'reasoning',
   schema: ThreadIntelSchema,
   maxTokens: 2600,
@@ -1046,6 +1048,21 @@ E o rascunho de resposta, já escrito.
 NEEDS_REPLY é falso quando não há nada a responder: a bola está do lado da
 marca, ou a conversa fechou. Nesse caso o corpo vai vazio. Não escrevas uma
 mensagem só porque há uma caixa para a escrever.
+
+ENCAMINHAMENTO. Quando a marca diz, por escrito, que a pessoa certa é outra e
+deixa o endereço («envie para marketing@empresa.com», «fale com a equipe de
+parcerias em parcerias@…»):
+- intent é REFERRAL e reply_target é referred_contact;
+- referral.emails leva SÓ endereços que estão literalmente na mensagem;
+  referral.team é a equipe que a mensagem nomeia; referral.person é o nome
+  próprio de quem encaminhou, se o disser — nunca inventes um nome;
+- o rascunho é um email NOVO para esse endereço, não uma resposta a quem
+  encaminhou: reply_subject sem «Re:», e o corpo abre com quem indicou o
+  contato («Olá, equipe de marketing! A Estrella, do atendimento, me indicou
+  vocês…»), leva o argumento que a Carol já tinha feito, e fecha à disposição.
+  Se não houver nome de pessoa, «a equipe de atendimento da X me indicou».
+- se a marca encaminha sem deixar endereço, reply_target é same_thread e o
+  rascunho pede o contato, curto.
 
 ${LINGUA}
 

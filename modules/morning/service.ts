@@ -38,6 +38,9 @@ export type MorningBrief = {
   estimatedMinutes: number;
   prepared: PreparedCounts;
   preparedLines: string[];
+  /** O que os números do conteúdo disseram esta noite, sem pedir nada. «O
+   *  Reel de ontem passou 1,7× a sua mediana. É só um sinal; vou acompanhar.» */
+  signals: string[];
   gaps: Gap[];
   openedAt: string | null;
   completedAt: string | null;
@@ -54,10 +57,11 @@ export async function consolidateMorning(opts: { now?: Date } = {}): Promise<Mor
   const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
   if (!me) return null;
 
-  const [decisions, prepared, gaps] = await Promise.all([
+  const [decisions, prepared, gaps, signals] = await Promise.all([
     collectDecisions(now),
     countPrepared(now),
     collectGaps(now),
+    contentSignals(now),
   ]);
 
   const ordered = orderDecisions(decisions);
@@ -71,7 +75,7 @@ export async function consolidateMorning(opts: { now?: Date } = {}): Promise<Mor
       app_user_id: me.id,
       brief_date: date,
       status,
-      prepared: asJson(prepared),
+      prepared: asJson({ ...prepared, signals }),
       gaps: asJson(gaps),
       decisions: asJson(ordered),
       decision_count: ordered.length,
@@ -91,6 +95,7 @@ export async function consolidateMorning(opts: { now?: Date } = {}): Promise<Mor
     estimatedMinutes: minutes,
     prepared,
     preparedLines: describePrepared(prepared),
+    signals,
     gaps,
     openedAt: null,
     completedAt: null,
@@ -115,7 +120,8 @@ export async function readMorningBrief(opts: { now?: Date } = {}): Promise<Morni
 
   if (!data) return null;
 
-  const prepared = { ...EMPTY_PREPARED, ...((data.prepared ?? {}) as Partial<PreparedCounts>) };
+  const { signals, ...contagens } = (data.prepared ?? {}) as Partial<PreparedCounts> & { signals?: unknown };
+  const prepared = { ...EMPTY_PREPARED, ...contagens };
   return {
     date: data.brief_date,
     status: data.status as MorningBrief['status'],
@@ -125,6 +131,7 @@ export async function readMorningBrief(opts: { now?: Date } = {}): Promise<Morni
     estimatedMinutes: data.estimated_minutes ?? 1,
     prepared,
     preparedLines: describePrepared(prepared),
+    signals: Array.isArray(signals) ? signals.map(String) : [],
     gaps: (data.gaps ?? []) as Gap[],
     openedAt: data.opened_at,
     completedAt: data.completed_at,
@@ -163,36 +170,65 @@ async function collectDecisions(now: Date): Promise<Decision[]> {
   return [...replies, ...money, ...outreach, ...recordings, ...content];
 }
 
-/** Nível 1: marcas à espera dela, com a resposta já escrita. */
+/** Nível 1: marcas à espera dela, com a próxima ação já preparada.
+ *
+ *  A frase e o email vêm da mesma leitura que a Inbox e a Marca mostram. Um
+ *  encaminhamento não diz «responder»: diz para quem, e traz o email novo. */
 async function replyDecisions(): Promise<Decision[]> {
   const rows = await repliesWaiting(8);
-  return rows.map((r) => ({
-    id: `reply:${r.threadId}`,
-    kind: 'reply' as const,
-    subject: r.brandName,
-    headline: r.whatTheyWant || `${r.whoWrote} respondeu.`,
-    because: r.recommendation,
-    covers: 1,
-    weightCents: null,
-    urgent: r.urgent || r.riskLevel === 'high',
-    waitingDays: r.waitingDays,
-    minutes: 1,
-    href: `/dashboard/inbox?thread=${r.threadId}`,
-    payload: {
-      threadId: r.threadId,
-      brandId: r.brandId,
-      opportunityId: r.opportunityId,
-      intent: r.intent,
-      intentLabel: r.intentLabel,
-      whatChanged: r.whatChanged,
-      whatIsMissing: r.whatIsMissing,
-      risk: r.risk,
-      riskLevel: r.riskLevel,
-      draftSubject: r.draftSubject,
-      draftBody: r.draftBody,
-      replyTo: r.replyTo,
-    },
-  }));
+  return rows.map((r) => {
+    const next = r.nextAction;
+    const compose = next?.target.kind === 'compose';
+    const confirm = next?.type === 'confirm_referral';
+    const equipe = next?.candidates[0]?.team ?? null;
+
+    const headline = compose
+      ? `${r.whoWrote || 'A marca'} te encaminhou para ${equipe ? `a equipe de ${equipe}` : next!.target.to}.`
+      : confirm
+        ? next!.title
+        : r.whatTheyWant || `${r.whoWrote} respondeu.`;
+    const because = compose
+      ? 'Encontrei o contato que ela passou e deixei o próximo email pronto.'
+      : confirm
+        ? (next!.needsDecision ?? next!.reason)
+        : r.recommendation;
+
+    return {
+      id: `reply:${r.threadId}`,
+      kind: 'reply' as const,
+      subject: r.brandName,
+      headline,
+      because,
+      covers: 1,
+      weightCents: null,
+      urgent: r.urgent || r.riskLevel === 'high',
+      waitingDays: r.waitingDays,
+      minutes: 1,
+      href: `/dashboard/inbox?thread=${r.threadId}`,
+      payload: {
+        threadId: r.threadId,
+        brandId: r.brandId,
+        opportunityId: r.opportunityId,
+        intent: r.intent,
+        intentLabel: r.intentLabel,
+        whatChanged: r.whatChanged,
+        whatIsMissing: r.whatIsMissing,
+        risk: r.risk,
+        riskLevel: r.riskLevel,
+        draftSubject: next?.preparedArtifact?.subject ?? r.draftSubject,
+        draftBody: next?.preparedArtifact?.body ?? r.draftBody,
+        replyTo: compose ? next!.target.to : r.replyTo,
+        targetKind: next?.target.kind ?? 'reply',
+        actionType: next?.type ?? 'respond',
+        actionTitle: next?.title ?? '',
+        needsDecision: next?.needsDecision ?? null,
+        evidenceBecause: next?.evidence.because ?? '',
+        evidenceQuote: next?.evidence.quote ?? null,
+        sourceMessageId: next?.evidence.sourceMessageId ?? null,
+        artifactSource: next?.preparedArtifact?.source ?? (r.draftBody ? 'model' : null),
+      },
+    };
+  });
 }
 
 /** Nível 2: dinheiro perto. Vencido primeiro, licença a acabar a seguir. */
@@ -366,6 +402,29 @@ async function contentDecisions(now: Date): Promise<Decision[]> {
       payload: { actionType: decisao.type, cta: decisao.cta, covers: decisao.covers },
     },
   ];
+}
+
+/** Sinais do conteúdo: o que a escada de aprendizado subiu nas últimas 24 h.
+ *
+ *  Não é decisão — é informação, e diz-se como tal: «ainda é só um sinal». A
+ *  regra do produto é que um vídeo bom não vira regra, e a manhã é o primeiro
+ *  lugar onde isso se veria a falhar. */
+async function contentSignals(now: Date): Promise<string[]> {
+  const db = supabaseService();
+  const desde = new Date(now.getTime() - 24 * 3_600_000).toISOString();
+  const { data } = await db
+    .from('content_learning')
+    .select('statement, ladder_state, sample_size')
+    .eq('active', true)
+    .in('ladder_state', ['signal', 'hypothesis'])
+    .gte('derived_at', desde)
+    .order('derived_at', { ascending: false })
+    .limit(2);
+  return (data ?? []).map((l) =>
+    l.ladder_state === 'signal'
+      ? `${l.statement} Ainda é só um sinal; vou acompanhar.`
+      : `${l.statement} Nenhuma ação necessária hoje.`,
+  );
 }
 
 /* ── Prova de vida e falhas ───────────────────────────────────────────────── */

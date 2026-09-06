@@ -11,6 +11,7 @@ export const EVENT_TYPES = [
   'contact.discovered',
   'outreach.sent',
   'reply.received', 'reply.classified', 'reply.drafted', 'reply.sent', 'note.added',
+  'referral.received',
   'portfolio.requested', 'rates.requested', 'usage.requested',
   'barter.offered', 'affiliate.offered', 'media_kit.requested',
   'call.requested', 'call.scheduled',
@@ -49,6 +50,7 @@ export const EVENT_LABEL: Partial<Record<EventType, string>> = {
   'reply.classified': 'Resposta classificada',
   'reply.drafted': 'Rascunho de resposta preparado',
   'reply.sent': 'Resposta enviada',
+  'referral.received': 'Encaminhada para outro contato',
   'note.added': 'Nota',
   'portfolio.requested': 'Pediram portfólio',
   'rates.requested': 'Pediram preço',
@@ -99,6 +101,20 @@ export const EVENT_LABEL: Partial<Record<EventType, string>> = {
 
 export const eventLabel = (type: string) =>
   EVENT_LABEL[type as EventType] ?? type;
+
+/** O que foi dito entre pessoas, por oposição ao que o sistema anotou.
+ *
+ *  Uma cronologia que mistura «a marca respondeu» com «etapa alterada» e
+ *  «resposta classificada» é barulho: a Carol quer ver a conversa e o dinheiro,
+ *  e o resto quando pedir. */
+export const COMMUNICATION_EVENTS: ReadonlySet<string> = new Set<EventType>([
+  'outreach.sent', 'reply.received', 'reply.sent', 'followup.sent', 'referral.received',
+  'call.requested', 'call.scheduled', 'proposal.sent', 'quote.sent', 'brief.received',
+  'product.shipped', 'product.received', 'content.delivered', 'content.approved',
+  'revision.requested', 'invoice.sent', 'payment.received', 'capture.received', 'note.added',
+]);
+
+export const isCommunicationEvent = (type: string): boolean => COMMUNICATION_EVENTS.has(type);
 
 /** A chave que torna o reprocessamento seguro. Correr a sincronização duas
  *  vezes sobre a mesma mensagem tem de produzir a mesma linha, não duas. */

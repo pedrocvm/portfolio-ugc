@@ -17,16 +17,22 @@ const ICON = {
       <path d="m8.8 14.4 2 2 3.6-3.8" />
     </>
   ),
-  work: (
+  inbox: (
     <>
       <path d="M3.6 12.6 6 5.4h12l2.4 7.2v6H3.6z" />
       <path d="M3.6 12.6h4.2l1.2 2.4h5.9l1.3-2.4h4.2" />
     </>
   ),
-  prospecting: (
+  brands: (
     <>
-      <circle cx="10.8" cy="10.8" r="6.2" />
-      <path d="m15.4 15.4 4 4" />
+      <path d="M4.4 9.2 12 4.6l7.6 4.6v9.6H4.4z" />
+      <path d="M9.6 18.8v-5.4h4.8v5.4" />
+    </>
+  ),
+  content: (
+    <>
+      <path d="M5 5.4h14v13.2H5z" />
+      <path d="m10 9.4 4.6 2.6-4.6 2.6z" />
     </>
   ),
   ai: (
@@ -44,9 +50,9 @@ const ICON = {
 };
 
 /* No celular só cabem quatro mais o «Mais». São as quatro que ela usa em
-   movimento: decidir o dia, ver o trabalho, ver quem apareceu, e perguntar.
-   A captura saiu daqui porque passou a ser global — cola-se de qualquer lugar. */
-const TABS = ['today', 'work', 'prospecting'] as const;
+   movimento: decidir o dia, responder, ver a marca, e perguntar. A captura
+   saiu daqui porque passou a ser global — cola-se de qualquer lugar. */
+const TABS = ['today', 'inbox', 'brands'] as const;
 
 function Glyph({ name }: { name: keyof typeof ICON }) {
   return (

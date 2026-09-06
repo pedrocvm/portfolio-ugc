@@ -61,9 +61,25 @@ test('nenhum destino aparece duas vezes', () => {
 });
 
 /** O ponto de toda a reorganização. Se isto crescer, cresceu por descuido. */
-test('o primeiro nível cabe de um olhar: cinco seções e duas utilidades', () => {
-  assert.equal(SECTIONS.length, 5, `${SECTIONS.length} seções no carril`);
-  assert.equal(UTILITY.length, 2, `${UTILITY.length} utilidades`);
+test('o primeiro nível cabe de um olhar: seis seções e três utilidades', () => {
+  assert.equal(SECTIONS.length, 6, `${SECTIONS.length} seções no carril`);
+  assert.equal(UTILITY.length, 3, `${UTILITY.length} utilidades`);
+});
+
+/** A UI representa o trabalho dela, não a base. Cada seção é uma coisa que
+ *  ela faz; o que é consulta ocasional fica atrás do «mais». */
+test('as seções são o trabalho da Carol, pela ordem do dia', () => {
+  assert.deepEqual(
+    SECTIONS.map((s) => s.label),
+    ['Hoje', 'Conversas', 'Marcas', 'Conteúdo', 'Produção', 'Dinheiro'],
+  );
+});
+
+test('base de conhecimento fica atrás do «mais», não na barra', () => {
+  const quiet = SECTIONS.flatMap((s) => s.items.filter((i) => i.quiet).map((i) => i.href));
+  for (const href of ['/dashboard/clients', '/dashboard/cases', '/dashboard/documents', '/dashboard/funnel', '/dashboard/analytics']) {
+    assert.ok(quiet.includes(href), `${href} devia estar atrás do «mais»`);
+  }
 });
 
 test('cada seção leva a uma sub-área sua, não a um índice à parte', () => {
@@ -100,21 +116,25 @@ test('nenhuma seção é prefixo de outra', () => {
 });
 
 test('cada sub-área pertence à seção que a lista', () => {
-  assert.equal(sectionFor('/dashboard/site/links')?.id, 'site');
-  assert.equal(sectionFor('/dashboard/outreach/history')?.id, 'prospecting');
-  assert.equal(sectionFor('/dashboard/inbox')?.id, 'work');
+  assert.equal(sectionFor('/dashboard/outreach/history')?.id, 'brands');
+  assert.equal(sectionFor('/dashboard/inbox')?.id, 'inbox');
+  assert.equal(sectionFor('/dashboard/followups')?.id, 'inbox');
   assert.equal(sectionFor('/dashboard/revenue')?.id, 'money');
+  assert.equal(sectionFor('/dashboard/analytics')?.id, 'money');
 });
 
 test('uma tela de detalhe mantém acesa a seção a que pertence', () => {
-  assert.equal(sectionFor('/dashboard/opportunities/abc-123')?.id, 'work');
-  assert.equal(sectionFor('/dashboard/brands/abc-123')?.id, 'work');
-  assert.equal(sectionFor('/dashboard/production/abc-123')?.id, 'work');
+  assert.equal(sectionFor('/dashboard/opportunities/abc-123')?.id, 'brands');
+  assert.equal(sectionFor('/dashboard/brands/abc-123')?.id, 'brands');
+  assert.equal(sectionFor('/dashboard/production/abc-123')?.id, 'production');
 });
 
 test('uma rota fora das seções não acende nenhuma', () => {
   assert.equal(sectionFor('/dashboard/settings'), null);
   assert.equal(sectionFor('/dashboard/capture'), null);
+  // O site é utilidade: acende no carril de baixo, não numa seção.
+  assert.equal(sectionFor('/dashboard/site/links'), null);
+  assert.equal(isCurrent('/dashboard/site/links', '/dashboard/site'), true);
 });
 
 test('«/dashboard» só está ativo em si mesmo', () => {

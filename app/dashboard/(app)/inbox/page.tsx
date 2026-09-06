@@ -5,9 +5,15 @@ import { integrationHealth } from '@/modules/settings/service';
 
 export const dynamic = 'force-dynamic';
 
-export default async function InboxPage() {
+/** `?thread=` abre a conversa logo. É o link que o Hoje e a busca usam — e
+ *  chegava aqui a uma lista, com a conversa certa algures no meio. */
+export default async function InboxPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ thread?: string }>;
+}) {
   await requireUser();
-  const [threads, integration] = await Promise.all([inboxThreads(), integrationHealth()]);
+  const [threads, integration, { thread }] = await Promise.all([inboxThreads(), integrationHealth(), searchParams]);
 
   return (
     <Inbox
@@ -15,6 +21,7 @@ export default async function InboxPage() {
       review={threads.review}
       quiet={threads.quiet}
       gmailConnected={integration.status === 'connected'}
+      openThreadId={thread ?? null}
     />
   );
 }

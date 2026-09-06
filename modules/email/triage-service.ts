@@ -22,7 +22,20 @@ import {
   waitingLine,
   type ThreadIntent,
   type ThreadMessage,
+  type ThreadState,
 } from './thread-state';
+import {
+  extractReferredContacts,
+  isActionable,
+  nextActionForThread,
+  readNextAction,
+  type NextAction,
+  type ReferredContact,
+  type ThreadReading,
+} from '@/modules/actions/next-action';
+import { replanActions } from '@/modules/actions/service';
+import { recordEvent } from '@/modules/activity/service';
+import { upsertContactByEmail } from '@/modules/contacts/service';
 
 /** A triagem de email, feita antes de ela chegar.
  *
@@ -78,7 +91,9 @@ export async function triageThreads(flags: Flags, limit = TRIAGE_LIMIT): Promise
   if (rows.length === 0) return { processed: 0, prepared: 0, unchanged: 0, failed: 0, drafts: 0, gaps: [] };
 
   // A voz dela é a mesma para todas as conversas: lê-se uma vez, não quarenta.
-  const voice = await voiceExamples();
+  // As caixas dela também: é o que separa «a marca indicou um endereço» de
+  // «a Carol está em cópia».
+  const [voice, self] = await Promise.all([voiceExamples(), carolAddresses()]);
 
   let prepared = 0;
   let unchanged = 0;
@@ -86,7 +101,7 @@ export async function triageThreads(flags: Flags, limit = TRIAGE_LIMIT): Promise
   let drafts = 0;
 
   for (const t of rows) {
-    const outcome = await triageThread(t.id, flags, { voice });
+    const outcome = await triageThread(t.id, flags, { voice, self });
     if (outcome.status === 'unchanged') unchanged++;
     else if (outcome.status === 'failed') {
       failed++;
@@ -101,6 +116,17 @@ export async function triageThreads(flags: Flags, limit = TRIAGE_LIMIT): Promise
 }
 
 type VoiceExamples = { text: string; language: string };
+
+/** Os endereços dela, para nunca contarem como contato indicado. */
+async function carolAddresses(): Promise<string[]> {
+  const db = supabaseService();
+  const { data } = await db
+    .from('integration_connection')
+    .select('account_identifier')
+    .eq('provider', 'google_gmail')
+    .neq('status', 'revoked');
+  return (data ?? []).map((r) => r.account_identifier.toLowerCase()).filter(Boolean);
+}
 
 /** Como ela escreve, a partir do que ela escreveu mesmo.
  *
@@ -152,7 +178,7 @@ async function voiceExamples(): Promise<VoiceExamples> {
 export async function triageThread(
   threadId: string,
   flags: Flags,
-  opts: { voice?: VoiceExamples; force?: boolean } = {},
+  opts: { voice?: VoiceExamples; self?: string[]; force?: boolean } = {},
 ): Promise<TriageOutcome> {
   const db = supabaseService();
 
@@ -185,8 +211,10 @@ export async function triageThread(
 
   // A impressão digital é o estado do mundo de que esta preparação saiu.
   // Enquanto não chegar mensagem nova, correr outra vez não gasta um cêntimo.
+  // A versão da regra entra na impressão digital: quando a próxima ação
+  // passa a calcular-se de outra forma, cada conversa é relida uma vez.
   const fingerprint = await hashContent(
-    `${state.last?.id ?? 'vazio'}:${messages.length}:${flags.ai_drafting ? 'ai' : 'det'}`,
+    `${state.last?.id ?? 'vazio'}:${messages.length}:${flags.ai_drafting ? 'ai' : 'det'}:nba1`,
   );
 
   const { data: existing } = await db
@@ -215,9 +243,115 @@ export async function triageThread(
     updated_at: new Date().toISOString(),
   };
 
-  const save = async (patch: Record<string, unknown>) => {
-    await db.from('thread_intel').upsert({ ...base, ...patch }, { onConflict: 'thread_id' });
+  const self = opts.self ?? (await carolAddresses());
+  const referred = state.lastExternal
+    ? extractReferredContacts(state.lastExternal.bodyText ?? '', {
+        exclude: [state.lastExternal.fromAddress ?? '', ...self],
+      })
+    : [];
+  const primeiraDela = messages.find((m) => m.direction === 'outbound') ?? null;
+
+  /** Grava a leitura E a próxima ação, calculadas pela mesma função que o
+   *  planeador e a manhã leem. É aqui que as três telas passam a concordar. */
+  const save = async (
+    patch: Record<string, unknown>,
+    reading: {
+      intent: ThreadIntent;
+      confidence: number;
+      draft: ThreadReading['draft'];
+      recommendation: string;
+      whatTheyWant: string;
+      referral?: { emails: string[]; team: string | null; person: string | null } | null;
+      promisedDate?: string | null;
+    },
+  ): Promise<NextAction> => {
+    const candidatos = mergeReferred(referred, reading.referral);
+    let contactId: string | null = null;
+
+    // O contato indicado nasce aqui, com a prova. Só quando há um endereço
+    // válido e sem ambiguidade: dois endereços é pergunta, não escrita.
+    const validos = candidatos.filter((c) => c.valid);
+    if (validos.length === 1 && thread.brand_id && state.lastExternal) {
+      const c = validos[0];
+      const contato = await upsertContactByEmail(db, {
+        brandId: thread.brand_id,
+        email: c.email,
+        name: '',
+        role: c.team ? `equipe de ${c.team}` : '',
+        preferredChannel: 'email',
+        source: 'referral',
+        provenance: {
+          sourceMessageId: state.lastExternal.id,
+          sourceThreadId: threadId,
+          confidence: reading.confidence,
+          text: `Indicado por ${state.lastExternal.fromAddress ?? brandName} em ${state.lastExternal.sentAt.slice(0, 10)}: «${c.context}»`,
+        },
+      });
+      if (!('error' in contato)) {
+        contactId = contato.id;
+        await recordEvent(db, {
+          eventType: 'referral.received',
+          brandId: thread.brand_id,
+          contactId,
+          opportunityId: thread.opportunity_id,
+          sourceThreadId: threadId,
+          sourceMessageId: state.lastExternal.id,
+          actorType: 'brand',
+          channel: 'gmail',
+          occurredAt: state.lastExternal.sentAt,
+          summary: `A marca indicou ${c.email}${c.team ? ` (${c.team})` : ''} como o contato certo.`,
+          payload: { email: c.email, team: c.team, quote: c.context },
+          confidence: reading.confidence,
+          dedupeKey: `gmail:message:${state.lastExternal.id}:referral.received`,
+        });
+      }
+    }
+
+    const next = nextActionForThread({
+      threadId,
+      opportunityId: thread.opportunity_id,
+      brandId: thread.brand_id,
+      brandName,
+      intent: reading.intent,
+      confidence: reading.confidence,
+      waitingOn: state.waitingOn,
+      waitingSince: state.waitingSince,
+      lastExternal: state.lastExternal
+        ? {
+            id: state.lastExternal.id,
+            fromAddress: state.lastExternal.fromAddress ?? '',
+            fromName: reading.referral?.person || state.lastExternal.fromName || '',
+            bodyText: state.lastExternal.bodyText ?? '',
+            sentAt: state.lastExternal.sentAt,
+          }
+        : null,
+      draft: reading.draft,
+      recommendation: reading.recommendation,
+      whatTheyWant: reading.whatTheyWant,
+      referred: candidatos,
+      referredContactId: contactId,
+      promisedDate: reading.promisedDate ?? null,
+      originalOutbound: primeiraDela ? { subject: primeiraDela.subject ?? '', body: primeiraDela.bodyText ?? '' } : null,
+    });
+
+    await db.from('thread_intel').upsert(
+      { ...base, ...patch, next_action: asJson(next), next_action_type: next.type },
+      { onConflict: 'thread_id' },
+    );
+
+    // A fila do Hoje é uma projeção disto. Refaz-se já, não daqui a uma hora.
+    if (thread.opportunity_id) await replanActions(db, [thread.opportunity_id]).catch(() => null);
+    return next;
   };
+
+  const lida = (
+    intent: ThreadIntent,
+    confidence: number,
+    draft: ThreadReading['draft'],
+    recommendation: string,
+    whatTheyWant: string,
+    extra: { referral?: { emails: string[]; team: string | null; person: string | null } | null; promisedDate?: string | null } = {},
+  ) => ({ intent, confidence, draft, recommendation, whatTheyWant, ...extra });
 
   // ── Sem nada da marca, não há nada para classificar ─────────────────────
   if (!state.lastExternal) {
@@ -237,7 +371,7 @@ export async function triageThread(
       draft_subject: '',
       draft_body: '',
       failure: null,
-    });
+    }, lida('UNCERTAIN', 0, null, waitingLine(state, brandName), ''));
     return { threadId, status: 'no_reply_needed', intent: 'UNCERTAIN', detail: 'Sem mensagem da marca.' };
   }
 
@@ -254,12 +388,12 @@ export async function triageThread(
       risk: '',
       risk_level: URGENT_INTENTS.has(palpite.intent) ? 'medium' : 'none',
       recommendation: waitingLine(state, brandName),
-      draft_state: 'skipped',
+      draft_state: referred.some((r) => r.valid) ? 'ready' : 'skipped',
       draft_reason: 'A camada de IA está fechada, por isso não há rascunho escrito.',
       draft_subject: '',
       draft_body: '',
       failure: null,
-    });
+    }, lida(palpite.intent, palpite.confidence, null, waitingLine(state, brandName), `Pelo que está escrito, ${INTENT_LABEL[palpite.intent]}.`));
     return { threadId, status: 'deterministic', intent: palpite.intent, detail: 'Preparada sem IA.' };
   }
 
@@ -356,43 +490,77 @@ export async function triageThread(
       draft_subject: '',
       draft_body: '',
       failure: result.message.slice(0, 300),
-    });
+    }, lida(palpite.intent, palpite.confidence, null, waitingLine(state, brandName), `Pelo que está escrito, ${INTENT_LABEL[palpite.intent]}.`));
     return { threadId, status: 'failed', intent: palpite.intent, detail: `${brandName}: ${result.message}` };
   }
 
   const out = result.output;
   const intent: ThreadIntent = isThreadIntent(out.intent) ? out.intent : palpite.intent;
-  const assunto =
-    out.reply_subject?.trim() ||
-    (thread.subject?.toLowerCase().startsWith('re:') ? thread.subject : `Re: ${thread.subject || '(sem assunto)'}`);
+  const paraIndicado = out.reply_target === 'referred_contact';
+  const assunto = paraIndicado
+    ? (out.reply_subject?.trim() || '').replace(/^\s*(re|fwd?):\s*/i, '')
+    : out.reply_subject?.trim() ||
+      (thread.subject?.toLowerCase().startsWith('re:') ? thread.subject : `Re: ${thread.subject || '(sem assunto)'}`);
 
-  await save({
-    intent,
-    intent_confidence: out.confidence,
-    secondary_intents: asJson(out.secondary_intents.filter(isThreadIntent)),
-    who_wrote: out.who_wrote,
-    what_they_want: out.what_they_want,
-    what_changed: out.what_changed,
-    what_is_missing: out.what_is_missing.join('; '),
-    risk: out.risk,
-    risk_level: out.risk_level,
-    recommendation: out.recommendation,
-    draft_subject: out.needs_reply ? assunto : '',
-    draft_body: out.needs_reply ? out.reply_body : '',
-    draft_language: out.reply_language,
-    draft_state: out.needs_reply ? 'ready' : 'skipped',
-    draft_reason: out.needs_reply ? '' : 'Não há nada a responder agora.',
-    draft_run_id: result.runId,
-    failure: null,
-  });
+  const next = await save(
+    {
+      intent,
+      intent_confidence: out.confidence,
+      secondary_intents: asJson(out.secondary_intents.filter(isThreadIntent)),
+      who_wrote: out.who_wrote,
+      what_they_want: out.what_they_want,
+      what_changed: out.what_changed,
+      what_is_missing: out.what_is_missing.join('; '),
+      risk: out.risk,
+      risk_level: out.risk_level,
+      recommendation: out.recommendation,
+      draft_subject: out.needs_reply ? assunto : '',
+      draft_body: out.needs_reply ? out.reply_body : '',
+      draft_language: out.reply_language,
+      draft_state: out.needs_reply ? 'ready' : 'skipped',
+      draft_reason: out.needs_reply ? '' : 'Não há nada a responder agora.',
+      draft_run_id: result.runId,
+      failure: null,
+    },
+    lida(
+      intent,
+      out.confidence,
+      {
+        subject: assunto,
+        body: out.needs_reply ? out.reply_body : '',
+        language: out.reply_language,
+        needsReply: out.needs_reply,
+        target: paraIndicado ? 'referred_contact' : 'same_thread',
+      },
+      out.recommendation,
+      out.what_they_want,
+      { referral: out.referral, promisedDate: promisedDateFrom(facts) },
+    ),
+  );
 
   return {
     threadId,
-    status: out.needs_reply ? 'prepared' : 'no_reply_needed',
+    status: isActionable(next) ? 'prepared' : 'no_reply_needed',
     intent,
-    detail: out.recommendation,
+    detail: next.title,
   };
 }
+
+/** Os endereços do modelo só valem se o texto os tiver. O regex é o juiz; o
+ *  modelo, no máximo, acrescenta a equipe e a pessoa que a mensagem nomeia. */
+function mergeReferred(
+  fromText: readonly ReferredContact[],
+  fromModel: { emails: string[]; team: string | null; person: string | null } | null | undefined,
+): ReferredContact[] {
+  if (!fromModel) return [...fromText];
+  const ditos = new Set(fromModel.emails.map((e) => e.trim().toLowerCase()));
+  return fromText.map((c) => (ditos.has(c.email) && !c.team && fromModel.team ? { ...c, team: fromModel.team.toLowerCase() } : c));
+}
+
+const promisedDateFrom = (facts: Record<string, unknown>): string | null =>
+  typeof facts.promisedReplyDate === 'string' && facts.promisedReplyDate ? facts.promisedReplyDate : null;
+
+export type { ThreadState };
 
 async function brandNameFor(db: ReturnType<typeof supabaseService>, brandId: string | null): Promise<string> {
   if (!brandId) return 'a marca';
@@ -449,12 +617,15 @@ export type ThreadIntelRow = {
   draftReason: string;
   replyTo: string | null;
   preparedAt: string | null;
+  /** A próxima ação, calculada de madrugada. É a mesma que o Hoje e a Marca
+   *  mostram; ler outra coisa aqui seria a divergência que este campo mata. */
+  nextAction: NextAction | null;
 };
 
 const SELECT_INTEL = `
   id, thread_id, brand_id, opportunity_id, intent, intent_confidence, waiting_on, waiting_since,
   who_wrote, what_they_want, what_changed, what_is_missing, risk, risk_level, recommendation,
-  draft_subject, draft_body, draft_state, draft_reason, prepared_at,
+  draft_subject, draft_body, draft_state, draft_reason, prepared_at, next_action, next_action_type,
   thread:thread_id ( subject ),
   brand:brand_id ( name )
 `;
@@ -479,6 +650,8 @@ type RawIntel = {
   draft_state: string;
   draft_reason: string;
   prepared_at: string | null;
+  next_action: unknown;
+  next_action_type: string | null;
   thread: { subject: string } | { subject: string }[] | null;
   brand: { name: string } | { name: string }[] | null;
 };
@@ -513,6 +686,7 @@ function toRow(r: RawIntel, replyTo: string | null): ThreadIntelRow {
     draftReason: r.draft_reason,
     replyTo,
     preparedAt: r.prepared_at,
+    nextAction: readNextAction(r.next_action),
   };
 }
 
@@ -525,11 +699,17 @@ export async function repliesWaiting(limit = 8): Promise<ThreadIntelRow[]> {
     .from('thread_intel')
     .select(SELECT_INTEL)
     .eq('waiting_on', 'carol')
-    .in('draft_state', ['ready', 'stale'])
     .order('waiting_since', { ascending: true })
-    .limit(limit);
+    .limit(limit * 3);
 
-  const rows = (data ?? []) as unknown as RawIntel[];
+  // O que entra é o que precisa dela: uma ação por tomar. Uma linha antiga,
+  // sem ação calculada, entra pelo rascunho, como antes.
+  const rows = ((data ?? []) as unknown as RawIntel[]).filter((r) => {
+    const next = readNextAction(r.next_action);
+    if (next) return isActionable(next);
+    return r.draft_state === 'ready' || r.draft_state === 'stale';
+  }).slice(0, limit);
+
   const replyTo = await replyAddresses(rows.map((r) => r.thread_id));
   return rows.map((r) => toRow(r, replyTo.get(r.thread_id) ?? null));
 }

@@ -7,6 +7,7 @@ import type { FlagKey } from '@/lib/flags';
 import { supabaseServer } from '@/lib/supabase/server';
 import { completeAction, dismissAction, reopenAction as reopen, replanActions, snoozeAction } from '@/modules/actions/service';
 import { ACTION_CTA, type ActionType } from '@/modules/actions/planner';
+import type { NextAction } from '@/modules/actions/next-action';
 import { decodeEntities } from '@/lib/html';
 import { applyCapture, createCapture, discardCapture, type CaptureKind } from '@/modules/capture/service';
 import { draftCase, publishToPortfolio, requestMetrics, setPermission, unpublishFromPortfolio, updateCase } from '@/modules/cases/service';
@@ -896,6 +897,9 @@ export type MailThread = {
   next: { title: string; reason: string; cta: string } | null;
   /** Há quantos dias a marca está à espera. Nulo se a bola não é dela. */
   waitingDays: number | null;
+  /** A próxima ação desta conversa, estruturada: para quem, o quê, o email já
+   *  escrito, a prova. É a mesma que o Hoje e a Marca mostram. */
+  nextAction: NextAction | null;
   /** O que a triagem da madrugada preparou: quem escreveu, o que quer, o que
    *  falta, o risco, a recomendação e a resposta já escrita.
    *
@@ -1004,6 +1008,7 @@ export async function readMailThread(threadId: string): Promise<MailThread | { e
       last?.direction === 'inbound'
         ? Math.max(0, Math.round((Date.now() - new Date(last.sentAt).getTime()) / 86400000))
         : null,
+    nextAction: intel?.nextAction ?? null,
     intel: intel
       ? {
           intentLabel: intel.intentLabel,

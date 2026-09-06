@@ -15,6 +15,7 @@ import {
   type OpportunitySnapshot,
   type Risk,
 } from './planner';
+import { readNextAction, type NextAction } from './next-action';
 
 /** O planeador corre aqui e escreve em `action_item`. A tela Hoje só lê.
  *
@@ -39,11 +40,15 @@ export type ActionRow = {
   brandName: string;
   stage: string | null;
   createdAt: string;
+  /** A ação estruturada de que este cartão é projeção, quando veio de uma
+   *  conversa: para quem, o quê, o email já escrito. */
+  nextAction: NextAction | null;
+  sourceThreadId: string | null;
 };
 
 const SELECT = `
   id, type, title, reason, due_at, risk, priority_score, status, snoozed_until,
-  requires_approval, evidence, opportunity_id, brand_id, created_at,
+  requires_approval, evidence, opportunity_id, brand_id, created_at, next_action, source_thread_id,
   brand:brand_id ( name ),
   opportunity:opportunity_id ( stage )
 `;
@@ -52,7 +57,7 @@ type RawAction = {
   id: string; type: string; title: string; reason: string; due_at: string | null;
   risk: string; priority_score: number; status: string; snoozed_until: string | null;
   requires_approval: boolean; evidence: unknown; opportunity_id: string | null;
-  brand_id: string | null; created_at: string;
+  brand_id: string | null; created_at: string; next_action: unknown; source_thread_id: string | null;
   brand: { name: string } | null;
   opportunity: { stage: string } | null;
 };
@@ -77,6 +82,8 @@ const toAction = (r: RawAction): ActionRow => ({
   brandName: r.brand?.name ?? '—',
   stage: r.opportunity?.stage ?? null,
   createdAt: r.created_at,
+  nextAction: readNextAction(r.next_action),
+  sourceThreadId: r.source_thread_id,
 });
 
 /** A fila do Hoje. Adiados só reaparecem quando a data passa. */
@@ -211,6 +218,31 @@ async function snapshotOpportunities(db: Db, opportunityIds?: string[]) {
     db.from('document').select('id, opportunity_id').in('opportunity_id', ids).eq('kind', 'proposal'),
   ]);
 
+  // A leitura da conversa mais recente de cada oportunidade. Quando existe, é
+  // a fonte da ação — o planeador projeta-a em vez de opinar por cima.
+  const threadAction = new Map<string, NextAction>();
+  {
+    const threadIds = (threads ?? []).map((t) => t.id);
+    if (threadIds.length) {
+      const { data: intel } = await db
+        .from('thread_intel')
+        .select('thread_id, next_action, next_action_type')
+        .in('thread_id', threadIds)
+        .not('next_action_type', 'is', null);
+      const porThread = new Map((intel ?? []).map((i) => [i.thread_id, i.next_action]));
+      const maisRecente = new Map<string, { at: string; action: NextAction }>();
+      for (const t of threads ?? []) {
+        if (!t.opportunity_id) continue;
+        const action = readNextAction(porThread.get(t.id));
+        if (!action) continue;
+        const at = t.last_message_at ?? '';
+        const atual = maisRecente.get(t.opportunity_id);
+        if (!atual || at > atual.at) maisRecente.set(t.opportunity_id, { at, action });
+      }
+      for (const [oppId, v] of maisRecente) threadAction.set(oppId, v.action);
+    }
+  }
+
   // Última mensagem inbound sem resposta posterior da Carol.
   const threadIds = (threads ?? []).map((t) => t.id);
   const awaiting = new Map<string, string>();
@@ -281,6 +313,7 @@ async function snapshotOpportunities(db: Db, opportunityIds?: string[]) {
       dueFollowUp: followUpByOpp.get(o.id) ?? null,
       hasQuote: quoteSet.has(o.id),
       hasProposalDoc: docSet.has(o.id),
+      threadAction: threadAction.get(o.id) ?? null,
     };
   });
 }
@@ -327,6 +360,8 @@ export async function replanActions(db: Db, opportunityIds?: string[]): Promise<
       status: 'open' as const,
       requires_approval: p.requiresApproval,
       dedupe_key: p.dedupeKey,
+      next_action: asJson(p.nextAction ?? {}),
+      source_thread_id: p.sourceThreadId ?? null,
     })),
   );
   if (rows.length) {

@@ -2,13 +2,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { formatMoney } from '@/lib/money';
-import { formatDate, relativeDays } from '@/lib/time';
+import { formatDate } from '@/lib/time';
 import { label } from '@/lib/labels';
 import { supabaseServer } from '@/lib/supabase/server';
-import { actionsForOpportunity } from '@/modules/actions/service';
 import { opportunityTimeline } from '@/modules/activity/service';
-import { threadsForOpportunity } from '@/modules/inbox/queries';
-import { STAGE_LABEL, MODEL_LABEL } from '@/modules/opportunities/domain';
+import { MODEL_LABEL } from '@/modules/opportunities/domain';
 import { STATUS_LABEL, type CollaborationStatus } from '@/modules/production/domain';
 import { documentsFor, unlinkedDocumentsFor } from '@/modules/documents/service';
 import { getOpportunity } from '@/modules/opportunities/service';
@@ -19,14 +17,24 @@ import BarterCheck from '@/components/dashboard/os/BarterCheck';
 import Copilot from '@/components/dashboard/os/Copilot';
 import Documents from '@/components/dashboard/os/Documents';
 import QuoteBuilder from '@/components/dashboard/os/QuoteBuilder';
+import RelationshipHeader from '@/components/dashboard/os/RelationshipHeader';
 import StageControl from '@/components/dashboard/os/StageControl';
 import Timeline from '@/components/dashboard/os/Timeline';
 import { describeRisks } from '@/modules/rights/engine';
 
 export const dynamic = 'force-dynamic';
 
-/** A bancada de trabalho de uma negociação. Tudo o que é preciso para decidir
- *  está nesta página: história, estado, riscos, preço, permuta e resposta. */
+/** A bancada de um negócio, pela ordem das perguntas dela.
+ *
+ *    O que está acontecendo, e o que faço a seguir?   — o topo
+ *    O que a marca disse?                             — a conversa
+ *    Onde está o negócio?                             — etapa, valor, direitos
+ *    E depois?                                        — produção
+ *    O que aconteceu antes?                           — a história
+ *
+ *  Abria com quatro números — modelo, valor, última atividade, fit — e um
+ *  formulário de etapa. Números que na maior parte dos negócios são um traço
+ *  não são um resumo: são quatro formas de dizer que ainda não há nada. */
 export default async function OpportunityPage({ params }: { params: Promise<{ id: string }> }) {
   await requireUser();
   const { id } = await params;
@@ -35,66 +43,40 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
   if (!opportunity) notFound();
 
   const db = await supabaseServer();
-  const [timeline, actions, quotes, policy, licenses, flags, threads, collab, documents, candidates] =
-    await Promise.all([
-      opportunityTimeline(id),
-      actionsForOpportunity(id),
-      quotesFor(id),
-      activePolicy(),
-      licensesForBrand(opportunity.brandId),
-      getFlags(),
-      threadsForOpportunity(id),
-      db.from('collaboration').select('id, status').eq('opportunity_id', id).maybeSingle(),
-      documentsFor(id),
-      unlinkedDocumentsFor(opportunity.brandId),
-    ]);
+  const [timeline, quotes, policy, licenses, flags, collab, documents, candidates] = await Promise.all([
+    opportunityTimeline(id),
+    quotesFor(id),
+    activePolicy(),
+    licensesForBrand(opportunity.brandId),
+    getFlags(),
+    db.from('collaboration').select('id, status').eq('opportunity_id', id).maybeSingle(),
+    documentsFor(id),
+    unlinkedDocumentsFor(opportunity.brandId),
+  ]);
 
   const classified = timeline.find((e) => e.eventType === 'reply.classified');
   const facts = (classified?.payload ?? {}) as {
-    replyTypes?: string[];
     riskFlags?: string[];
     paidUsageRequested?: boolean;
     usagePeriod?: string | null;
-    cashAmountCents?: number | null;
-    questions?: string[];
-    uncertainties?: string[];
   };
-
   const riscos = describeRisks(facts.riskFlags ?? []);
+
+  // Só o que já tem valor. Um traço não é informação.
+  const resumo = [
+    opportunity.commercialModel !== 'unclear' ? MODEL_LABEL[opportunity.commercialModel] : null,
+    opportunity.expectedCashCents ? `${formatMoney(opportunity.expectedCashCents)} esperados` : null,
+    typeof opportunity.brandFitScore === 'number' ? `fit ${opportunity.brandFitScore}` : null,
+  ].filter(Boolean);
 
   return (
     <>
       <div className="dashBar">
         <h1>{opportunity.brandName}</h1>
-        <span className="osTag" data-tone={opportunity.stage === 'won' ? 'won' : opportunity.stage === 'lost' ? 'lost' : 'mute'}>
-          {STAGE_LABEL[opportunity.stage]}
-        </span>
+        {resumo.length ? <span className="dashState">{resumo.join(' · ')}</span> : null}
         <Link className="chip" href={`/dashboard/brands/${opportunity.brandId}`}>
           Ver a marca
         </Link>
-      </div>
-
-      <div className="osStats">
-        <div className="osStat">
-          <b><em>{MODEL_LABEL[opportunity.commercialModel]}</em></b>
-          <span>modelo</span>
-        </div>
-        <div className="osStat">
-          {opportunity.expectedCashCents ? (
-            <b>{formatMoney(opportunity.expectedCashCents)}</b>
-          ) : (
-            <b><em>—</em></b>
-          )}
-          <span>valor esperado</span>
-        </div>
-        <div className="osStat">
-          <b><em>{opportunity.lastActivityAt ? relativeDays(opportunity.lastActivityAt) : '—'}</em></b>
-          <span>última atividade</span>
-        </div>
-        <div className="osStat">
-          <b>{opportunity.brandFitScore ?? '—'}</b>
-          <span>fit da marca</span>
-        </div>
       </div>
 
       {opportunity.waitingUntil ? (
@@ -113,25 +95,9 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
         </p>
       ) : null}
 
-      {actions.length ? (
-        <section className="osSection">
-          <h2>O que falta fazer aqui</h2>
-          <div className="osRows">
-            {actions.map((a) => (
-              <div className="osRow" key={a.id}>
-                <div>
-                  <span className="osRowName" style={{ fontSize: 17 }}>{a.title}</span>
-                  <p className="osRowSub">{a.reason}</p>
-                </div>
-                <div className="osRowSide">
-                  {a.dueAt ? <span>{relativeDays(a.dueAt)}</span> : null}
-                  {a.risk !== 'none' ? <span className="osTag" data-tone="bad">{a.risk}</span> : null}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <RelationshipHeader opportunityId={id} brandName={opportunity.brandName} stage={opportunity.stage} />
+
+      <h2 className="osDivider">Negócio</h2>
 
       <StageControl
         opportunityId={id}
@@ -139,19 +105,6 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
         waitingUntil={opportunity.waitingUntil}
         waitingReason={opportunity.waitingReason}
         hasCollaboration={Boolean(collab.data)}
-      />
-
-      {collab.data ? (
-        <p className="osWarn" data-tone="ok">
-          A produção está aberta ({STATUS_LABEL[collab.data.status as CollaborationStatus] ?? collab.data.status}).{' '}
-          <Link href={`/dashboard/production/${collab.data.id}`}>Abrir</Link>.
-        </p>
-      ) : null}
-
-      <Copilot
-        opportunityId={id}
-        aiEnabled={flags.ai_enabled && flags.ai_drafting}
-        gmailDraftEnabled={flags.gmail_draft_creation}
       />
 
       <QuoteBuilder opportunityId={id} quotes={quotes} policyVersion={policy.version} />
@@ -192,28 +145,30 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
         </div>
       ) : null}
 
-      {threads.length ? (
-        <div className="osPanel">
-          <h3>Conversas</h3>
-          <div className="osRows">
-            {threads.map((t) => (
-              <div className="osRow" key={t.id}>
-                <div>
-                  <span className="osRowName" style={{ fontSize: 16 }}>{t.subject || '(sem assunto)'}</span>
-                  <p className="osRowSub">{t.provider} · {t.message_count} mensagem(ns)</p>
-                </div>
-                <div className="osRowSide">
-                  {t.last_message_at ? <span>{relativeDays(t.last_message_at)}</span> : null}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* O copiloto fica atrás do trabalho já preparado: é para quando ela
+          quer outra leitura, não a primeira. */}
+      <details className="osRest">
+        <summary>Pedir outra leitura à CarolAI</summary>
+        <Copilot
+          opportunityId={id}
+          aiEnabled={flags.ai_enabled && flags.ai_drafting}
+          gmailDraftEnabled={flags.gmail_draft_creation}
+        />
+      </details>
+
+      {collab.data ? (
+        <>
+          <h2 className="osDivider">Produção</h2>
+          <p className="osWarn" data-tone="ok">
+            A produção está aberta ({STATUS_LABEL[collab.data.status as CollaborationStatus] ?? collab.data.status}).{' '}
+            <Link href={`/dashboard/production/${collab.data.id}`}>Abrir</Link>.
+          </p>
+        </>
       ) : null}
 
       <section className="osSection">
         <h2>História</h2>
-        <p className="osNote">Tudo o que aconteceu, com origem e prova. Nada foi escrito à mão.</p>
+        <p className="osNote">O que foi dito à vista; o que o sistema anotou, dobrado. Nada foi escrito à mão.</p>
         <Timeline entries={timeline} />
       </section>
     </>
