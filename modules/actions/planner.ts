@@ -10,7 +10,7 @@
 
 import { daysBetween } from '@/lib/time';
 import { REPLY_TYPE_LABEL, type ReplyType } from '@/modules/ai/schemas';
-import { STAGE_PROXIMITY, isOpen, type Stage } from '@/modules/opportunities/domain';
+import { STAGE_PROXIMITY, isClosed, isOpen, type Stage } from '@/modules/opportunities/domain';
 import { isActionable, type NextAction } from './next-action';
 
 export const ACTION_TYPES = [
@@ -291,8 +291,10 @@ export function planForOpportunity(
   // 0. A conversa já foi lida e diz o que fazer. É a única fonte de verdade:
   //    se a triagem diz «escrever para marketing@», o planeador não pode dizer
   //    «responder». E se diz «nada a fazer» — a marca recusou, ou reagiu com um
-  //    emoji — a regra 1 não pode inventar uma resposta por cima.
-  if (opp.threadAction && isOpen(opp.stage)) {
+  //    emoji — a regra 1 não pode inventar uma resposta por cima. Vale em
+  //    qualquer fase que não esteja fechada: uma marca em nurture que encaminha
+  //    para o marketing é precisamente o momento de a retomar.
+  if (opp.threadAction && !isClosed(opp.stage)) {
     const ta = opp.threadAction;
     if (isActionable(ta)) {
       out.push({
@@ -338,8 +340,9 @@ export function planForOpportunity(
     });
   }
 
-  // 2. Follow-up vencido.
-  if (opp.dueFollowUp && !opp.awaitingReplySince) {
+  // 2. Follow-up vencido — salvo quando a conversa já disse o que fazer:
+  //    «insistir» ao lado de «escrever para o Ferino» seriam duas verdades.
+  if (opp.dueFollowUp && !opp.awaitingReplySince && !(opp.threadAction && isActionable(opp.threadAction))) {
     out.push({
       type: 'follow_up',
       title: 'Enviar o follow-up',

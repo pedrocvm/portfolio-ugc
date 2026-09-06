@@ -265,3 +265,22 @@ test('uma abordagem feita em inglês gera o email novo em inglês', () => {
   assert.match(t.body, /The Orbitkey support team pointed me/);
   assert.equal(looksEnglish('Olá equipe! Pensei num ângulo para vocês.'), false);
 });
+
+test('uma marca em nurture que encaminha para o marketing volta à fila', () => {
+  // A Orbitkey estava em nurture quando disse «fala com o Ferino». A manhã
+  // mostrava o email pronto; a fila mostrava um follow-up velho. Uma verdade só.
+  const ta = nextActionForThread(leitura());
+  const [acao] = planForOpportunity(snap({ stage: 'nurture', threadAction: ta }), NOW);
+  assert.equal(acao.type, 'compose_to_new_contact');
+  assert.equal(planForOpportunity(snap({ stage: 'lost', threadAction: ta }), NOW).some((a) => a.type === 'compose_to_new_contact'), false);
+});
+
+test('um follow-up vencido não fica ao lado do email que a conversa já pediu', () => {
+  const ta = nextActionForThread(leitura());
+  const vencido = { id: 'f1', dueAt: '2026-08-24T09:00:00Z', reason: 'Sem resposta há 3 semanas.' };
+  const com = planForOpportunity(snap({ stage: 'nurture', awaitingReplySince: null, dueFollowUp: vencido, threadAction: ta }), NOW);
+  assert.equal(com.some((a) => a.type === 'follow_up'), false);
+  assert.equal(com[0].type, 'compose_to_new_contact');
+  const sem = planForOpportunity(snap({ stage: 'nurture', awaitingReplySince: null, dueFollowUp: vencido, threadAction: null }), NOW);
+  assert.equal(sem.some((a) => a.type === 'follow_up'), true);
+});
