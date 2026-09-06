@@ -168,5 +168,5 @@ test('CarolOS e CarolAI escrevem-se sempre assim', () => {
   }
   assert.deepEqual(maus, []);
   // E o selo não passa por um `text-transform` de eyebrow.
-  assert.match(ler('app/dashboard/dashboard.css'), /\.aiMark \{[\s\S]*?text-transform: none/);
+  assert.match(ler('app/dashboard/dashboard.css'), /\.aiBadge \{[\s\S]*?text-transform: none/);
 });

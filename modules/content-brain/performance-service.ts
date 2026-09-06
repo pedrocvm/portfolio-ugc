@@ -556,7 +556,12 @@ export async function feedAudit(limit = 60, opts: { db?: Client } = {}): Promise
       publishedAt: m.published_at,
       mediaProductType: m.media_product_type,
       pillarLabel: story?.functional_pillar ? PILLAR_SPEC[story.functional_pillar as FunctionalPillar]?.label ?? null : null,
-      mechanism: mechanismOf(story?.structure ?? null, story?.story_lens_id ?? null),
+      // Em português, nunca a chave interna: «talking_head:eu complico» é o
+      // sistema a falar consigo próprio à frente dela.
+      mechanism: (() => {
+        const chave = mechanismOf(story?.structure ?? null, story?.story_lens_id ?? null);
+        return chave ? describeMechanism(chave) : null;
+      })(),
       tags: story?.functional_pillar && !tags.format ? { ...tags, source: 'story_link' } : tags,
       readings,
       latestKind: (leitura?.snapshot_kind as SnapshotKind | undefined) ?? null,

@@ -6,7 +6,7 @@
  *  passada a maiúsculas por um `text-transform` de eyebrow. */
 export default function CarolAI({ what }: { what?: string }) {
   return (
-    <span className="aiMark" title={what ? `${what} pela CarolAI` : 'Pela CarolAI'}>
+    <span className="aiBadge" title={what ? `${what} pela CarolAI` : 'Pela CarolAI'}>
       <i aria-hidden="true" />
       Powered by CarolAI
     </span>

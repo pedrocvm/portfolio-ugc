@@ -167,7 +167,7 @@ const MANHA = {
       covers: 1,
       weightCents: null,
       urgent: false,
-      waitingDays: 2,
+      waitingDays: 3,
       minutes: 1,
       href: '/dashboard/inbox?thread=00000000-0000-4000-8000-000000000002',
       payload: {
@@ -506,9 +506,11 @@ export default function Harness({ modo }: { modo?: string }) {
       );
     }
 
+    // Sem o `.pick`: é um scrim animado, e numa bancada estática fica a meio
+    // da animação. Aqui interessa a gaveta, não a entrada dela.
     return (
-      <div className="pick" style={{ position: 'static' }}>
-        <div className="pickBox mailBox" style={{ margin: '24px auto' }}>
+      <div style={{ maxWidth: 760, margin: '24px auto', padding: '0 8px' }}>
+        <div className="mailBox" style={{ background: 'var(--papel)' }}>
           <header className="mailHead">
             <div>
               <h2>Re: UGC | Ideia de criativo para a Cora</h2>
@@ -519,7 +521,7 @@ export default function Harness({ modo }: { modo?: string }) {
             <div className="mailGist">
               <div className="mailGistTop">
                 <p className="mailGistAsk">Estrella: Redirecionar para o time de marketing.</p>
-                <span className="aiMark"><i aria-hidden="true" />Powered by CarolAI</span>
+                <span className="aiBadge"><i aria-hidden="true" />Powered by CarolAI</span>
               </div>
             </div>
             <NextActionCard threadId="00000000-0000-4000-8000-000000000002" action={acao} whoWrote="Estrella" />
@@ -542,7 +544,7 @@ export default function Harness({ modo }: { modo?: string }) {
       readings, latestKind: 'latest', readingAgeDays: 60,
     });
     const entradas: FeedPieceInput[] = [
-      peca('f1', 'O cenário que eu compliquei', dia(-9), { format: 'humor', theme: 'cenário de gravação', hook: 'contraste' }, [leitura('views', 1.4), leitura('reach', 1.6), leitura('comments', 2.2)], 'talking_head:eu complico tentando melhorar demais'),
+      peca('f1', 'O cenário que eu compliquei', dia(-9), { format: 'humor', theme: 'cenário de gravação', hook: 'contraste' }, [leitura('views', 1.4), leitura('reach', 1.6), leitura('comments', 2.2)], '«eu complico tentando melhorar demais», falando'),
       peca('f2', 'Uma coisa não tem nada a ver com a outra', dia(-30), { format: 'humor', theme: 'vida em Braga', hook: 'humor' }, [leitura('views', 1.1), leitura('reach', 1.0), leitura('comments', 1.7)]),
       peca('f3', 'Charabanc · montagem', dia(-120), { format: 'estético', theme: 'hotel', hook: 'sem gancho' }, [leitura('views', 6.9), leitura('reach', 4.1), leitura('comments', 0.6)]),
       peca('f4', 'Café e edição', dia(-200), { format: 'estético', theme: 'rotina', hook: 'sem gancho' }, [leitura('views', 0.8), leitura('reach', 0.7), leitura('comments', 0.5)]),

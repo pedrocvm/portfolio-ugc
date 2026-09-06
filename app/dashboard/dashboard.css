@@ -7969,7 +7969,7 @@ a.aiSource:hover {
 /* ── Decision-first: a próxima ação, a prova e a conversa ──────────── */
 
 /* O selo da CarolAI. Grafia fixa: nenhum `text-transform` lhe toca. */
-.aiMark {
+.aiBadge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -7981,7 +7981,7 @@ a.aiSource:hover {
   color: var(--tinta3);
   white-space: nowrap;
 }
-.aiMark i {
+.aiBadge i {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -7993,9 +7993,41 @@ a.aiSource:hover {
 .mornMsgTop,
 .nbaTop {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: 6px 12px;
+  min-width: 0;
+}
+/* O selo nunca fica cortado à direita: a frase cede, o selo não. */
+.mailGistTop > :first-child,
+.mornMsgTop > :first-child,
+.nbaTop > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mailGistTop .aiBadge,
+.mornMsgTop .aiBadge,
+.nbaTop .aiBadge {
+  flex: 0 0 auto;
+}
+/* No celular o selo desce para a linha seguinte, em vez de ficar cortado à
+   direita da frase. */
+@media (max-width: 600px) {
+  .mailGistTop,
+  .mornMsgTop,
+  .nbaTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+/* Um endereço comprido não pode empurrar o modal para fora do celular. */
+.dash .mornTo,
+.dash .mornSubject,
+.nbaMail dd,
+.nba h3 {
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 .mailGistTop .mailGistAsk {
   flex: 1;
