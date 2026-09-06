@@ -36,10 +36,10 @@ export const dynamic = 'force-dynamic';
 export default async function ContentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ idea?: string; tab?: string }>;
+  searchParams: Promise<{ idea?: string; tab?: string; find?: string }>;
 }) {
   await requireUser();
-  const { idea, tab } = await searchParams;
+  const { idea, tab, find } = await searchParams;
 
   // Idempotente e barato: Braga Real, as experiências e o feedback da
   // Charabanc existem antes de a primeira manhã correr.
@@ -95,6 +95,7 @@ export default async function ContentPage({
           record: (
             <>
               <RecordPane
+                autoFind={Boolean(find)}
                 weekly={brain.weekly}
                 focus={brain.focus}
                 ready={brain.ready.map((r) => {

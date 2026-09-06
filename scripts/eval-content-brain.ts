@@ -12,7 +12,11 @@
  *  Um teste estrutural garante que a instrução está no prompt. Isto garante
  *  que o modelo lhe obedeceu, que é outra coisa. */
 
-import { answerIdeaRequest, PILLAR_SPEC, checkVoice, quoteIsGrounded } from '../modules/content-brain/domain.ts';
+import {
+  answerIdeaRequest, PILLAR_SPEC, checkMemoryPrompt, checkVoice, lensById,
+  lensesForPillar, nextLensAfterMiss, quoteIsGrounded, rankLenses,
+} from '../modules/content-brain/domain.ts';
+import { inferStoryLens } from '../modules/content-brain/prompts.ts';
 import {
   confirmStoryFacts, extractStoryFacts, proposeFraming, structureStory, writeVoiceScript,
 } from '../modules/content-brain/prompts.ts';
@@ -189,6 +193,89 @@ const casos: Caso[] = [
       if (!voz.ok) notas.push(`voz errada: ${voz.flags.join(', ')}`);
       for (const q of r.output.source_quotes) {
         if (!quoteIsGrounded(q, [...citacoes, RELATO, ...fatos])) notas.push(`citação inventada: «${q}»`);
+      }
+      return { ok: notas.length === 0, notas };
+    },
+  },
+
+  /* ── Caso 7: direções ───────────────────────────────────────────────────── */
+  {
+    id: 'caso-7-nao-faco-ideia',
+    titulo: '«é atração mas não faço ideia» oferece caminhos, não uma história',
+    async run() {
+      // Determinístico de propósito: a resposta a «não sei o que contar» não
+      // passa por um modelo. É a biblioteca de direções, e é essa a garantia.
+      const notas: string[] = [];
+      const r = rankLenses({ pillar: 'attraction_journey', states: [] });
+      if (r.length < 4) notas.push('menos de quatro direções para escolher');
+
+      const quatro = r.slice(0, 4).map((x) => x.lens);
+      // Nenhuma direção pode conter um acontecimento.
+      for (const l of quatro) {
+        if (/\b(uma marca (te )?respondeu|você ficou|aconteceu que)\b/i.test(l.description)) {
+          notas.push(`direção com acontecimento: «${l.label}»`);
+        }
+        for (const q of l.memoryPrompts) {
+          const c = checkMemoryPrompt(q);
+          if (!c.ok) notas.push(`pergunta pressupõe fato: «${q}» — ${c.reason}`);
+        }
+      }
+      // Os quatro caminhos que o briefing nomeia têm de existir.
+      const ids = r.map((x) => x.lens.id);
+      for (const esperado of ['failure', 'surprise', 'expectation_vs_reality', 'small_win']) {
+        if (!ids.includes(esperado)) notas.push(`falta o caminho «${esperado}»`);
+      }
+      return { ok: notas.length === 0, notas };
+    },
+  },
+
+  /* ── Caso 8 ─────────────────────────────────────────────────────────────── */
+  {
+    id: 'caso-8-nao-lembrei-de-nada',
+    titulo: '«não lembrei de nada» troca de caminho e não inventa',
+    async run() {
+      const notas: string[] = [];
+      const r = rankLenses({ pillar: 'attraction_journey', states: [] });
+      const seguinte = nextLensAfterMiss(r, ['expectation_vs_reality']);
+      if (!seguinte) notas.push('não ofereceu outro caminho');
+      if (seguinte?.id === 'expectation_vs_reality') notas.push('ofereceu o mesmo caminho outra vez');
+      // E o caminho seguinte continua a ser uma direção, não uma história.
+      if (seguinte) {
+        for (const q of seguinte.memoryPrompts) {
+          if (!checkMemoryPrompt(q).ok) notas.push(`o caminho seguinte pressupõe fato: «${q}»`);
+        }
+      }
+      return { ok: notas.length === 0, notas };
+    },
+  },
+
+  /* ── Caso 9 ─────────────────────────────────────────────────────────────── */
+  {
+    id: 'caso-9-ja-sei-o-que-contar',
+    titulo: 'uma situação real é classificada sem ser alterada',
+    async run() {
+      const notas: string[] = [];
+      const opcoes = lensesForPillar('attraction_journey');
+
+      const r = await runPrompt(inferStoryLens, {
+        situation: RELATO,
+        options: opcoes.map((l) => `${l.id} — ${l.label}: ${l.whatToLookFor}`).join('\n'),
+      });
+      if (!r.ok) return { ok: false, notas: [`inferência falhou: ${r.message}`] };
+
+      if (r.output.lens_id !== null && !lensById(r.output.lens_id)) {
+        notas.push(`inventou um id que não existe: «${r.output.lens_id}»`);
+      }
+      // Não precisa acertar numa lente específica — precisa não inventar, e
+      // justificar com o que está no relato.
+      if (r.output.lens_id) {
+        const esperadas = ['failure', 'expectation_vs_reality', 'conflict', 'frustration'];
+        if (!esperadas.includes(r.output.lens_id)) {
+          notas.push(`classificou como «${r.output.lens_id}», que não descreve o relato`);
+        }
+      }
+      for (const re of INVENTADO) {
+        if (re.test(r.output.because)) notas.push(`a justificação inventou: ${re}`);
       }
       return { ok: notas.length === 0, notas };
     },

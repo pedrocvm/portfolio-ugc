@@ -197,3 +197,16 @@ export const CommentQualitySchema = z.object({
   ),
 });
 export type CommentQuality = z.infer<typeof CommentQualitySchema>;
+
+/* ── Lentes ───────────────────────────────────────────────────────────────── */
+
+/** Classificar uma situação que ela já contou numa lente conhecida.
+ *
+ *  Só se usa quando ela chega dizendo «já sei o que quero contar» — a
+ *  classificação fica gravada como `inferred` e nunca passa por escolha dela. */
+export const LensInferenceSchema = z.object({
+  lens_id: z.string().nullable().describe('o id de uma lente que existe, ou null se nenhuma serve'),
+  confidence,
+  because: z.string().max(200).describe('o que na situação aponta para essa direção'),
+});
+export type LensInference = z.infer<typeof LensInferenceSchema>;

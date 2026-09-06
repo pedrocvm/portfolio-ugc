@@ -20,6 +20,7 @@ import {
   buildBaseline,
   classifyLadder,
   formatMetric,
+  lensById,
   presentMetric,
   relativeToMedian,
   type Baseline,
@@ -116,7 +117,7 @@ export async function publishedPieces(limit = 30): Promise<PublishedPiece[]> {
   const db = await supabaseServer();
   const { data: medias } = await db
     .from('instagram_media')
-    .select('id, external_media_id, permalink, caption, published_at, media_product_type, trial_status, story_id, content_idea_id, creator_story(title, functional_pillar, structure)')
+    .select('id, external_media_id, permalink, caption, published_at, media_product_type, trial_status, story_id, content_idea_id, creator_story(title, functional_pillar, structure, story_lens_id)')
     .order('published_at', { ascending: false })
     .limit(limit);
 
@@ -141,7 +142,7 @@ export async function publishedPieces(limit = 30): Promise<PublishedPiece[]> {
   const out: PublishedPiece[] = [];
 
   for (const m of rows) {
-    const story = (m.creator_story ?? null) as { title?: string; functional_pillar?: string; structure?: Record<string, unknown> } | null;
+    const story = (m.creator_story ?? null) as { title?: string; functional_pillar?: string; structure?: Record<string, unknown>; story_lens_id?: string | null } | null;
     const lista = porMidia.get(m.id) ?? [];
     const ultimo = lista[lista.length - 1];
 
@@ -188,7 +189,7 @@ export async function publishedPieces(limit = 30): Promise<PublishedPiece[]> {
       storyTitle: story?.title ?? null,
       contentIdeaId: m.content_idea_id,
       pillar: (story?.functional_pillar as FunctionalPillar | undefined) ?? null,
-      mechanism: mechanismOf(story?.structure ?? null),
+      mechanism: mechanismOf(story?.structure ?? null, story?.story_lens_id ?? null),
       snapshots: lista.map((s) => ({
         kind: s.snapshot_kind as SnapshotKind,
         ageSeconds: s.age_seconds,
@@ -209,13 +210,25 @@ export async function publishedPieces(limit = 30): Promise<PublishedPiece[]> {
 /** O mecanismo declarado na estrutura da peça.
  *
  *  O motor só aprende sobre mecanismo que esteja aqui. Sem isto, uma IA podia
- *  analisar o vídeo depois e inventar «gancho de vulnerabilidade» como causa. */
-function mechanismOf(structure: Record<string, unknown> | null): string | null {
-  if (!structure) return null;
-  const frame = structure.frame as { label?: string } | undefined;
-  const formato = typeof structure.format === 'string' ? structure.format : null;
-  if (frame?.label && formato) return `${formato}:${frame.label}`;
-  return formato;
+ *  analisar o vídeo depois e inventar «gancho de vulnerabilidade» como causa.
+ *
+ *  A lente entra quando a história foi encontrada por ela — é o que permitirá,
+ *  com amostra, dizer «expectativa x realidade parece render mais comentários».
+ *  Com uma peça só, continua a ser observação: quem decide é a escada. */
+function mechanismOf(
+  structure: Record<string, unknown> | null,
+  lensId?: string | null,
+): string | null {
+  const partes: string[] = [];
+  if (lensId) partes.push(`lens:${lensId}`);
+
+  if (structure) {
+    const frame = structure.frame as { label?: string } | undefined;
+    const formato = typeof structure.format === 'string' ? structure.format : null;
+    if (formato) partes.push(frame?.label ? `${formato}:${frame.label}` : formato);
+  }
+
+  return partes.length ? partes.join(' · ') : null;
 }
 
 /* ── Escada ───────────────────────────────────────────────────────────────── */
@@ -241,7 +254,7 @@ export async function deriveLearnings(): Promise<{ evaluated: number; written: n
 
   const { data: medias } = await db
     .from('instagram_media')
-    .select('id, media_product_type, story_id, creator_story(functional_pillar, structure)')
+    .select('id, media_product_type, story_id, creator_story(functional_pillar, structure, story_lens_id)')
     .not('story_id', 'is', null)
     .limit(120);
 
@@ -265,8 +278,8 @@ export async function deriveLearnings(): Promise<{ evaluated: number; written: n
   const porMecanismo = new Map<string, { pillar: FunctionalPillar | null; pieces: PieceEvidence[] }>();
 
   for (const m of rows) {
-    const story = (m.creator_story ?? null) as { functional_pillar?: string; structure?: Record<string, unknown> } | null;
-    const mecanismo = mechanismOf(story?.structure ?? null);
+    const story = (m.creator_story ?? null) as { functional_pillar?: string; structure?: Record<string, unknown>; story_lens_id?: string | null } | null;
+    const mecanismo = mechanismOf(story?.structure ?? null, story?.story_lens_id ?? null);
     if (!mecanismo) continue;
 
     const lista = (porMidia.get(m.id) ?? []).sort((a, b) => a.age_seconds - b.age_seconds);
@@ -353,10 +366,21 @@ const FORMAT_LABEL: Record<string, string> = {
  *  melhorar`. Isso é um identificador, e um identificador na tela é o sistema
  *  a falar consigo próprio à frente dela. */
 function describeMechanism(mechanism: string): string {
-  const [formato, ...resto] = mechanism.split(':');
-  const ponto = resto.join(':').trim();
-  const nome = FORMAT_LABEL[formato] ?? formato.replace(/_/g, ' ');
-  return ponto ? `«${ponto}», ${nome}` : nome;
+  const partes: string[] = [];
+
+  for (const bloco of mechanism.split(' · ')) {
+    if (bloco.startsWith('lens:')) {
+      const lens = lensById(bloco.slice(5));
+      if (lens) partes.push(`«${lens.label}»`);
+      continue;
+    }
+    const [formato, ...resto] = bloco.split(':');
+    const ponto = resto.join(':').trim();
+    const nome = FORMAT_LABEL[formato] ?? formato.replace(/_/g, ' ');
+    partes.push(ponto ? `«${ponto}», ${nome}` : nome);
+  }
+
+  return partes.join(', ');
 }
 
 /** A frase que aparece na tela. O degrau da escada dita o verbo. */

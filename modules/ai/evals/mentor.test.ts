@@ -196,7 +196,7 @@ test('a manhã comporta o teste como terceira decisão, e não mais do que isso'
 });
 
 test('a Carol AI aplica a mentoria em português do Brasil, e a versão subiu', () => {
-  assert.equal(PROMPT_VERSION, 'carol-assistant-v6');
+  assert.equal(PROMPT_VERSION, 'carol-assistant-v7');
   assert.match(CORE_PROMPT, /Falas português do Brasil/);
   assert.match(CORE_PROMPT, /Nunca recitas a mentoria/);
   assert.match(CORE_PROMPT, /get_three_hooks/);

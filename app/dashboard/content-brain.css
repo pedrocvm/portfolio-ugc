@@ -617,3 +617,110 @@
 .cbActs .focusSkip {
   margin-left: 0;
 }
+
+/* ── Lentes: por onde procurar ────────────────────────────────────────────── */
+
+.cbLensEyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  font-variation-settings: var(--narrow);
+}
+
+/* Uma lista, não um catálogo de vinte cartões. Cada linha é uma direção de
+   busca, e só se selecciona uma — por isso é botão, não caixa decorativa. */
+.cbLenses {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cbLenses button {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px 16px;
+  text-align: left;
+  border: 1px solid var(--rule);
+  background: none;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color var(--t-instant) var(--ease), background var(--t-instant) var(--ease);
+}
+
+.cbLenses button:hover:not(:disabled) {
+  border-color: var(--umbra);
+  background: var(--areia);
+}
+
+.cbLenses button strong {
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.cbLenses button span {
+  color: var(--tinta3);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Gatilhos de memória. Filete à esquerda, como o resto do que é «voz do
+   sistema a explicar»; nunca uma lista numerada, que se lê como formulário. */
+.cbTriggers {
+  margin: 0;
+  padding: 4px 0 4px 16px;
+  list-style: none;
+  border-left: 2px solid var(--areia2);
+  width: 100%;
+}
+
+.cbTriggers li {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--tinta2);
+  max-width: 52ch;
+}
+
+.cbTriggers li:last-child {
+  margin-bottom: 0;
+}
+
+.cbShapes {
+  width: 100%;
+  color: var(--tinta3);
+}
+
+.cbShapes summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cbShapes ul {
+  margin: 0 0 4px;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Discreta de propósito: é uma correção de rota, não uma ação do fluxo. */
+.cbLensRate {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--tinta3);
+}

@@ -21,6 +21,7 @@ export * from './planner';
 export * from './taste';
 export * from './events';
 export * from './interview';
+export * from './lenses';
 
 import { MIN_STORIES_FOR_WEEK, PILLAR_LABEL, type FunctionalPillar, type PillarCoverage } from './pillars';
 import type { StoryFactState } from './story';
@@ -43,7 +44,7 @@ export const CONTENT_ACTION_TYPES = [
 export type ContentActionType = (typeof CONTENT_ACTION_TYPES)[number];
 
 export const CONTENT_ACTION_CTA: Record<ContentActionType, string> = {
-  content_map_story: 'Contar uma situação',
+  content_map_story: 'Encontrar uma história',
   content_develop_story: 'Continuar história',
   content_record_ready: 'Gravar',
   content_confirm_trial: 'Confirmar',
@@ -183,7 +184,9 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
           : `Você tem ${foco.available} ${foco.available === 1 ? 'situação salva' : 'situações salvas'} nesse pilar. Uma sessão curta abastece a semana.`,
       cta: CONTENT_ACTION_CTA.content_map_story,
       covers: 1,
-      href: `/dashboard/content?tab=strategy&map=${input.primaryPillar}`,
+      // Direto às direções de busca. Cair numa caixa de texto vazia é o que
+      // esta camada existe para não deixar acontecer.
+      href: `/dashboard/content?tab=record&find=${input.primaryPillar}`,
     };
   }
 

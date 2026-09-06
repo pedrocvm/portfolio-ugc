@@ -43,6 +43,7 @@ export default function RecordPane({
   trialToConfirm,
   unlinkedMedia,
   matchOptions,
+  autoFind,
 }: {
   weekly: WeeklyFocusData;
   focus: FunctionalPillar;
@@ -52,12 +53,15 @@ export default function RecordPane({
   trialToConfirm: { mediaId: string; caption: string; publishedAt: string; permalink: string | null }[];
   unlinkedMedia: { mediaId: string; caption: string; publishedAt: string }[];
   matchOptions: { storyId: string; title: string; contentIdeaId: string | null }[];
+  /** Verdadeiro quando ela chegou pelo Hoje a pedir para encontrar história.
+   *  Abre as direções direto, sem passar por uma tela intermédia. */
+  autoFind?: boolean;
 }) {
   return (
     <>
       <WeeklyFocus
         data={weekly}
-        mapCta={<StoryWorkshop focus={focus} trigger="Contar uma situação" />}
+        mapCta={<StoryWorkshop focus={focus} trigger="Encontrar uma história" autoOpen={autoFind} />}
       />
 
       {unlinkedMedia.length ? (
@@ -149,7 +153,7 @@ export default function RecordPane({
             Quando acontecer alguma coisa que você queira contar, me conte. Eu não invento histórias
             para preencher calendário.
           </p>
-          <StoryWorkshop focus={focus} trigger="Contar uma situação" />
+          <StoryWorkshop focus={focus} trigger="Encontrar uma história" autoOpen={autoFind} />
         </section>
       ) : null}
     </>

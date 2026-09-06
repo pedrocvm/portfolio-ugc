@@ -48,7 +48,7 @@ export const ACTION_CTA: Record<ActionType, string> = {
   wait_expired: 'A espera terminou',
   integration_fix: 'Consertar ligação',
   chase_payment: 'Cobrar',
-  content_map_story: 'Contar uma situação',
+  content_map_story: 'Encontrar uma história',
   content_develop_story: 'Continuar história',
   content_record_ready: 'Gravar',
   content_confirm_trial: 'Confirmar',

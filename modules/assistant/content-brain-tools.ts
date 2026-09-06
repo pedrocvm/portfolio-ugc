@@ -241,6 +241,75 @@ const listContentSeries = define(
   },
 );
 
+const listStoryLenses = define(
+  'list_story_lenses',
+  'As direções de busca para um pilar: que TIPO de situação procurar na memória da Carol. Usa isto quando ela disser «não sei o que contar», «me ajuda a pensar em atração», «não faço ideia». NÃO devolvas ideias — devolve caminhos, e deixa ela escolher.',
+  z.object({
+    pillar: z.enum(['attraction_journey', 'information_retention', 'authority_conversion', 'connection_personal']),
+  }),
+  async ({ pillar }) => {
+    const { lensPickerData } = await import('@/modules/content-brain/lens-service');
+    const d = await lensPickerData(pillar, { visible: 4 });
+    return {
+      data: {
+        introducao: d.intro,
+        caminhos: d.primary.map((l) => ({
+          id: l.id,
+          nome: l.label,
+          oQueE: l.description,
+          perguntasQueAjudamALembrar: l.memoryPrompts,
+        })),
+        outros: d.more.map((l) => ({ id: l.id, nome: l.label })),
+        comoUsar:
+          'Oferece três ou quatro caminhos e pergunta por qual ela quer começar. Uma lente NÃO é uma história: nunca digas que alguma coisa aconteceu com ela.',
+      },
+      sources: [],
+    };
+  },
+);
+
+const openStoryLens = define(
+  'open_story_lens',
+  'Abre uma direção de busca e devolve as perguntas que ativam a memória dela. Faz UMA pergunta de cada vez na conversa; as outras ficam para se ela não se lembrar da primeira.',
+  z.object({ lens_id: z.string() }),
+  async ({ lens_id }) => {
+    const { lensById } = await import('@/modules/content-brain/lens-service');
+    const { recordLensEvent } = await import('@/modules/content-brain/lens-service');
+    const lens = lensById(lens_id);
+    if (!lens) return { data: { encontrada: false }, sources: [] };
+    await recordLensEvent({ kind: 'lens_selected', lensId: lens.id, pillar: lens.pillar }).catch(() => null);
+    return {
+      data: {
+        encontrada: true,
+        nome: lens.label,
+        oQueProcurar: lens.whatToLookFor,
+        perguntas: lens.memoryPrompts,
+        depoisQueElaLembrar: lens.followUpPrompts,
+        formasPossiveis: lens.abstractStructures,
+        regra:
+          'Nenhuma destas perguntas afirma que alguma coisa aconteceu. Se ela disser que não lembrou de nada, oferece OUTRA direção — nunca inventes a situação.',
+      },
+      sources: [],
+    };
+  },
+  'write',
+);
+
+const rateStoryLens = define(
+  'rate_story_lens',
+  'Guarda o que ela achou de um caminho: liked, not_for_carol (deixa de ser recomendado), later. Usa quando ela disser «esse caminho não é a minha cara» ou «gosto de pensar assim».',
+  z.object({
+    lens_id: z.string(),
+    preference: z.enum(['liked', 'not_for_carol', 'later', 'none']),
+  }),
+  async ({ lens_id, preference }) => {
+    const { setLensPreference } = await import('@/modules/content-brain/lens-service');
+    const r = await setLensPreference(lens_id, preference);
+    return { data: r.ok ? { ok: true, preference } : { ok: false, motivo: r.error }, sources: [] };
+  },
+  'write',
+);
+
 /* ── Escrita de baixo risco ───────────────────────────────────────────────── */
 
 const captureStoryTool = define(
@@ -249,10 +318,16 @@ const captureStoryTool = define(
   z.object({
     text: z.string().min(10).describe('o que ela contou, com as palavras dela'),
     occurred_at: z.string().nullable().optional().describe('AAAA-MM-DD quando aconteceu, se ela disse'),
+    lens_id: z.string().nullable().optional().describe('a direção que a fez lembrar, se ela escolheu uma'),
   }),
-  async ({ text, occurred_at }) => {
+  async ({ text, occurred_at, lens_id }) => {
     const { captureStory, extractFacts } = await import('@/modules/content-brain/service');
-    const criada = await captureStory({ text, source: 'user_text', occurredAt: occurred_at ?? null });
+    const criada = await captureStory({
+      text,
+      source: 'user_text',
+      occurredAt: occurred_at ?? null,
+      lens: lens_id ? { id: lens_id, source: 'selected' } : null,
+    });
     if (!criada.ok) return { data: { ok: false, motivo: criada.error }, sources: [] };
 
     const extraida = await extractFacts(criada.data.storyId);
@@ -426,7 +501,8 @@ const addStoryToSeriesTool = define(
 );
 
 export const CONTENT_BRAIN_TOOLS: Tool[] = [
-  getContentFocus, listStoryBank, getStoryTool, getContentWeekPlan,
+  getContentFocus, listStoryLenses, openStoryLens, rateStoryLens,
+  listStoryBank, getStoryTool, getContentWeekPlan,
   getInstagramPerformance, getContentLearningsTool, listCurrentHypotheses, listContentSeries,
   captureStoryTool, confirmStoryFactsTool, saveStoryMeaningTool, mapStoryToPillarTool,
   selectStoryFrameTool, structureStoryTool, setContentStatusTool, markStoryPrivateTool,

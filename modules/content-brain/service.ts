@@ -27,6 +27,8 @@ import {
   factStatusAfterEdit,
   factsEditReopens,
   isFunctionalPillar,
+  isLensId,
+  LENS_LIBRARY_VERSION,
   pillarCoverage,
   quoteIsGrounded,
   unsupportedBeats,
@@ -80,10 +82,14 @@ export type StoryRow = {
   transcript: string | null;
   audioPath: string | null;
   contentIdeaIds: string[];
+  /** Por que porta ela chegou aqui. Null nas histórias anteriores às lentes,
+   *  e isso é um estado válido — não se inventa origem retroativamente. */
+  storyLensId: string | null;
+  storyLensSource: 'selected' | 'inferred' | null;
 };
 
 const SELECT =
-  'id, title, summary, source_type, occurred_at, captured_at, factual_sequence, uncertain_points, carol_meaning, carol_quotes, functional_pillar, territories, privacy_level, allowed_for_content, fact_status, fact_confirmed_at, status, frame_id, frame_label, frame_options, structure, series_id, transcript, audio_path';
+  'id, title, summary, source_type, occurred_at, captured_at, factual_sequence, uncertain_points, carol_meaning, carol_quotes, functional_pillar, territories, privacy_level, allowed_for_content, fact_status, fact_confirmed_at, status, frame_id, frame_label, frame_options, structure, series_id, transcript, audio_path, story_lens_id, story_lens_source';
 
 type RawStory = Record<string, unknown>;
 
@@ -119,6 +125,8 @@ function toStory(r: RawStory, links: string[] = []): StoryRow {
     transcript: (r.transcript as string | null) ?? null,
     audioPath: (r.audio_path as string | null) ?? null,
     contentIdeaIds: links,
+    storyLensId: (r.story_lens_id as string | null) ?? null,
+    storyLensSource: (r.story_lens_source as 'selected' | 'inferred' | null) ?? null,
   };
 }
 
@@ -182,6 +190,10 @@ export async function captureStory(input: {
   source: StorySourceType;
   hint?: string | null;
   occurredAt?: string | null;
+  /** Por que porta ela entrou. `selected` quando escolheu a direção antes de
+   *  se lembrar; `inferred` quando chegou já sabendo e o sistema classificou
+   *  depois. A lente sozinha nunca cria nada: o que cria é o que ela contou. */
+  lens?: { id: string; source: 'selected' | 'inferred' } | null;
 }): Promise<Result<{ storyId: string; needsAi: boolean }>> {
   const db = await supabaseServer();
   const { data: me } = await db.from('app_user').select('id').limit(1).maybeSingle();
@@ -198,6 +210,10 @@ export async function captureStory(input: {
         : 'Haircare está fora da estratégia de conteúdo.',
     );
   }
+
+  // Uma lente que não existe é ignorada em vez de gravada: a coluna aceita
+  // texto e um id inventado ficaria lá para sempre a mentir sobre a origem.
+  const lente = input.lens && isLensId(input.lens.id) ? input.lens.id : null;
 
   const padrao = defaultPrivacy(input.source);
   const { data, error } = await db
@@ -221,6 +237,9 @@ export async function captureStory(input: {
       fact_status: padrao.factStatus,
       status: padrao.status,
       sot_version: SOT_VERSION,
+      story_lens_id: lente,
+      story_lens_version: lente ? LENS_LIBRARY_VERSION : null,
+      story_lens_source: lente ? input.lens!.source : null,
       provenance: asJson({ capturedBy: 'carol', source: input.source, at: new Date().toISOString() }),
     })
     .select('id')
@@ -291,6 +310,39 @@ export async function extractFacts(storyId: string): Promise<Result<{ facts: str
   };
 }
 
+/** Classifica em que direção uma situação já contada teria sido encontrada.
+ *
+ *  Só corre quando ela chegou dizendo «já sei o que quero contar». Fica
+ *  gravado como `inferred` — uma inferência nunca passa por escolha dela, e é
+ *  por isso que a coluna guarda a origem. */
+export async function inferLensForStory(storyId: string): Promise<Result<{ lensId: string | null }>> {
+  const story = await getStory(storyId);
+  if (!story) return fail('História não encontrada.');
+  if (!story.pillar) return { ok: true, data: { lensId: null } };
+
+  const { lensesForPillar } = await import('./lenses');
+  const opcoes = lensesForPillar(story.pillar);
+  if (opcoes.length === 0) return { ok: true, data: { lensId: null } };
+
+  const { inferStoryLens } = await import('./prompts');
+  const r = await runPrompt(
+    inferStoryLens,
+    {
+      situation: [story.summary, ...story.facts.map((f) => f.text)].filter(Boolean).join(' '),
+      options: opcoes.map((l) => `${l.id} — ${l.label}: ${l.whatToLookFor}`).join('\n'),
+    },
+    { entityType: 'creator_story', entityId: storyId },
+  );
+  if (!r.ok) return { ok: true, data: { lensId: null } };
+
+  const { isLensId: valida } = await import('./lenses');
+  if (!r.output.lens_id || !valida(r.output.lens_id)) return { ok: true, data: { lensId: null } };
+
+  const { attachLensToStory } = await import('./lens-service');
+  await attachLensToStory({ storyId, lensId: r.output.lens_id, source: 'inferred' });
+  return { ok: true, data: { lensId: r.output.lens_id } };
+}
+
 /* ── Confirmação ──────────────────────────────────────────────────────────── */
 
 /** A confirmação factual. É a única porta para `fact_status = 'confirmed'`. */
@@ -328,6 +380,19 @@ export async function confirmFacts(
     .eq('id', storyId);
 
   if (error) return fail(error.message);
+
+  // Só agora existe matéria-prima. É este o momento em que a lente conta como
+  // tendo encontrado uma história — não quando ela clicou no cartão.
+  if (story.factStatus !== 'confirmed') {
+    const { recordLensEvent } = await import('./lens-service');
+    await recordLensEvent({
+      kind: 'story_confirmed',
+      lensId: story.storyLensId,
+      pillar: story.pillar,
+      storyId,
+    }).catch(() => null);
+  }
+
   return { ok: true, data: { reopened: mudou } };
 }
 
@@ -631,6 +696,14 @@ export async function promoteToContent(storyId: string): Promise<Result<{ conten
 
   await db.from('content_story_link').insert({ story_id: storyId, content_idea_id: data.id, relation: 'primary' });
   await db.from('creator_story').update({ status: 'ready_to_record' }).eq('id', storyId);
+
+  const { recordLensEvent } = await import('./lens-service');
+  await recordLensEvent({
+    kind: 'content_derived',
+    lensId: story.storyLensId,
+    pillar: gate.pillar,
+    storyId,
+  }).catch(() => null);
 
   return { ok: true, data: { contentId: data.id } };
 }

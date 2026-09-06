@@ -122,7 +122,10 @@ test('o prompt proíbe inventar e diz o que fazer com o banco vazio', () => {
   assert.match(PROMPT, /sem matéria-prima real confirmada, não existe\s*\n?conteúdo pessoal estruturado/i);
   assert.match(PROMPT, /Nunca devolvas uma lista de ideias/);
   assert.match(PROMPT, /NÃO INVENTES/);
-  assert.match(PROMPT, /Você viveu\s*\n?\s*alguma coisa assim\?/);
+  // Banco vazio já não leva à pergunta aberta: leva às direções de busca, que
+  // é a correção desta camada.
+  assert.match(PROMPT, /list_story_lenses/);
+  assert.match(PROMPT, /DIREÇÕES DE BUSCA/);
 });
 
 test('o prompt manda ler o banco antes de responder «me dá uma ideia»', () => {
@@ -147,4 +150,59 @@ test('o prompt separa sinal de regra', () => {
 
 test('o prompt manda marcar privado na hora', () => {
   assert.match(PROMPT, /mark_story_private.*na hora/);
+});
+
+/* ── Direções de busca ────────────────────────────────────────────────────── */
+
+test('as três ferramentas de direção existem, e só as que escrevem escrevem', () => {
+  const ler = TODAS.find((f) => f.nome === 'list_story_lenses');
+  assert.ok(ler, 'falta list_story_lenses');
+  assert.equal(ler.risco, 'read');
+
+  for (const nome of ['open_story_lens', 'rate_story_lens']) {
+    const f = TODAS.find((x) => x.nome === nome);
+    assert.ok(f, `falta ${nome}`);
+    assert.equal(f.risco, 'write', `«${nome}» muda estado e tinha de ser escrita`);
+  }
+});
+
+test('listar direções diz explicitamente que não são ideias', () => {
+  const f = TODAS.find((x) => x.nome === 'list_story_lenses');
+  assert.match(f!.descricao, /NÃO devolvas ideias/i);
+  assert.match(f!.descricao, /que TIPO de situação/i);
+  // E a instrução vai no dado, que é o que o modelo lê ao decidir o passo
+  // seguinte — não só na descrição.
+  assert.match(SRC, /Uma lente NÃO é uma história: nunca digas que alguma coisa aconteceu com ela/);
+});
+
+test('abrir uma direção instrui a trocar de porta quando ela não lembra', () => {
+  const f = TODAS.find((x) => x.nome === 'open_story_lens');
+  assert.match(f!.descricao, /UMA pergunta de cada vez/i);
+  assert.match(SRC, /oferece OUTRA direção — nunca inventes a situação/);
+  assert.match(SRC, /Nenhuma destas perguntas afirma que alguma coisa aconteceu/);
+});
+
+test('o prompt oferece direções em vez da pergunta aberta', () => {
+  assert.match(PROMPT, /Uma direção NÃO é uma ideia/);
+  assert.match(PROMPT, /onde ela vai procurar dentro da própria memória/i);
+  // Os quatro caminhos do eval do briefing.
+  assert.match(PROMPT, /alguma coisa que deu\s*\n?\s*errado/i);
+  assert.match(PROMPT, /expectativa que\s*\n?\s*foi diferente da realidade/i);
+});
+
+test('o prompt sabe o que fazer com «não lembrei de nada»', () => {
+  assert.match(PROMPT, /não lembrei de nada.*resposta legítima/is);
+  assert.match(PROMPT, /Nunca inventas a situação para desbloquear/);
+});
+
+test('o prompt não obriga quem já sabe a atravessar o assistente', () => {
+  assert.match(PROMPT, /já sei o que quero contar.*salta as direções/is);
+  assert.match(PROMPT, /Não a obrigues a atravessar um assistente/);
+});
+
+test('o prompt mostra a forma certa e a errada de perguntar', () => {
+  // A pergunta que pressupõe o fato, nomeada como erro.
+  assert.match(PROMPT, /Quando uma marca recusou\s+a tua proposta/);
+  assert.match(PROMPT, /dá a recusa por adquirida/);
+  assert.match(PROMPT, /respondeu de um jeito diferente do que esperavas/i);
 });

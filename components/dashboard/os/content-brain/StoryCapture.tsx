@@ -33,10 +33,14 @@ function pickMime(): string {
 export default function StoryCapture({
   question,
   help,
+  lensId,
   onCaptured,
 }: {
   question: string;
   help?: string;
+  /** A direção por onde ela procurou, quando escolheu uma. Vai gravada na
+   *  história: sem isso não dá para saber que porta a fez lembrar. */
+  lensId?: string | null;
   onCaptured: (r: { storyId: string; facts: string[]; questions: string[] }) => void;
 }) {
   const [fase, setFase] = useState<Fase>('idle');
@@ -86,7 +90,7 @@ export default function StoryCapture({
         }
 
         setFase('thinking');
-        const r = await tellStory({ audioPath: caminho.path });
+        const r = await tellStory({ audioPath: caminho.path, lensId });
         if ('error' in r) {
           setErro(r.error);
           setFase('error');
@@ -96,7 +100,7 @@ export default function StoryCapture({
         onCaptured({ storyId: r.storyId, facts: r.facts, questions: r.questions });
       });
     },
-    [onCaptured],
+    [onCaptured, lensId],
   );
 
   const gravar = async () => {
@@ -162,7 +166,7 @@ export default function StoryCapture({
     setErro('');
     start(async () => {
       setFase('thinking');
-      const r = await tellStory({ text: t });
+      const r = await tellStory({ text: t, lensId });
       if ('error' in r) {
         setErro(r.error);
         setFase('error');

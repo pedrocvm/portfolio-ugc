@@ -2704,6 +2704,9 @@ export type Database = {
           source_refs: Json
           source_type: string
           status: string
+          story_lens_id: string | null
+          story_lens_source: string | null
+          story_lens_version: string | null
           structure: Json | null
           summary: string
           territories: string[]
@@ -2738,6 +2741,9 @@ export type Database = {
           source_refs?: Json
           source_type?: string
           status?: string
+          story_lens_id?: string | null
+          story_lens_source?: string | null
+          story_lens_version?: string | null
           structure?: Json | null
           summary?: string
           territories?: string[]
@@ -2772,6 +2778,9 @@ export type Database = {
           source_refs?: Json
           source_type?: string
           status?: string
+          story_lens_id?: string | null
+          story_lens_source?: string | null
+          story_lens_version?: string | null
           structure?: Json | null
           summary?: string
           territories?: string[]
@@ -5417,6 +5426,116 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_lens_event: {
+        Row: {
+          app_user_id: string
+          detail: Json
+          id: string
+          kind: string
+          lens_id: string | null
+          occurred_at: string
+          pillar: string | null
+          story_id: string | null
+        }
+        Insert: {
+          app_user_id: string
+          detail?: Json
+          id?: string
+          kind: string
+          lens_id?: string | null
+          occurred_at?: string
+          pillar?: string | null
+          story_id?: string | null
+        }
+        Update: {
+          app_user_id?: string
+          detail?: Json
+          id?: string
+          kind?: string
+          lens_id?: string | null
+          occurred_at?: string
+          pillar?: string | null
+          story_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_lens_event_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_lens_event_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "creator_story"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_lens_state: {
+        Row: {
+          app_user_id: string
+          content_derived: number
+          created_at: string
+          dismissed_count: number
+          id: string
+          last_shown_at: string | null
+          last_used_at: string | null
+          lens_id: string
+          library_version: string
+          note: string | null
+          preference: string
+          stories_found: number
+          times_selected: number
+          times_shown: number
+          updated_at: string
+        }
+        Insert: {
+          app_user_id: string
+          content_derived?: number
+          created_at?: string
+          dismissed_count?: number
+          id?: string
+          last_shown_at?: string | null
+          last_used_at?: string | null
+          lens_id: string
+          library_version: string
+          note?: string | null
+          preference?: string
+          stories_found?: number
+          times_selected?: number
+          times_shown?: number
+          updated_at?: string
+        }
+        Update: {
+          app_user_id?: string
+          content_derived?: number
+          created_at?: string
+          dismissed_count?: number
+          id?: string
+          last_shown_at?: string | null
+          last_used_at?: string | null
+          lens_id?: string
+          library_version?: string
+          note?: string | null
+          preference?: string
+          stories_found?: number
+          times_selected?: number
+          times_shown?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_lens_state_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
             referencedColumns: ["id"]
           },
         ]

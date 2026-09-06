@@ -2,6 +2,7 @@ import type { ActionRow } from '@/modules/actions/service';
 import Today from '@/components/dashboard/os/Today';
 import Performance, { type LearningView, type PieceView } from '@/components/dashboard/os/content-brain/Performance';
 import RecordPane from '@/components/dashboard/os/content-brain/RecordPane';
+import StoryWorkshop from '@/components/dashboard/os/content-brain/StoryWorkshop';
 import StoryBank from '@/components/dashboard/os/content-brain/StoryBank';
 import { type WeeklyFocusData } from '@/components/dashboard/os/content-brain/WeeklyFocus';
 import { dailyBrief } from '@/modules/actions/brief';
@@ -310,6 +311,20 @@ export default function Harness({ modo }: { modo?: string }) {
           }}
         />
       </div>
+    );
+  }
+
+  if (modo === 'lentes') {
+    // O caminho real: é assim que o Hoje entra, com o workshop já aberto na
+    // escolha de direção. As direções vêm da base pela server action.
+    return (
+      <>
+        <div className="dashBar">
+          <h1>Conteúdo</h1>
+          <span className="dashState">procurando uma história</span>
+        </div>
+        <StoryWorkshop focus="attraction_journey" trigger="Encontrar uma história" autoOpen />
+      </>
     );
   }
 

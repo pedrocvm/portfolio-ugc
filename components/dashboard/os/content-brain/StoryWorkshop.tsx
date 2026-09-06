@@ -14,14 +14,20 @@ import {
   structureThisStory,
   writeScript,
 } from '@/app/dashboard/content-brain-actions';
+import { classifyStoryDirection } from '@/app/dashboard/content-brain-actions';
 import type { FunctionalPillar } from '@/modules/content-brain/domain';
+import LensPicker from './LensPicker';
 import StoryCapture from './StoryCapture';
 
 /** O Story Workshop.
  *
  *  A ordem é a que a Source of Truth define e não se salta:
  *
- *    contar → confirmar os fatos → o ponto → a estrutura → (roteiro)
+ *    direção → contar → confirmar os fatos → o ponto → a estrutura → (roteiro)
+ *
+ *  A direção é o degrau que faltava. «Me conte uma situação real» é abstrato
+ *  demais: primeiro escolhe-se ONDE procurar na memória. Quem já sabe o que
+ *  quer contar salta — não se obriga ninguém a atravessar um assistente.
  *
  *  O roteiro é a última etapa e é opcional. O botão nem existe antes de haver
  *  estrutura — e se alguém chamar a action à mão, ela recusa na mesma. A
@@ -30,7 +36,7 @@ import StoryCapture from './StoryCapture';
  *  Uma etapa por tela. Fechar a meio não apaga nada: a história já está
  *  salva desde a primeira frase. */
 
-type Etapa = 'capture' | 'facts' | 'meaning' | 'point' | 'structure' | 'done';
+type Etapa = 'lens' | 'capture' | 'facts' | 'meaning' | 'point' | 'structure' | 'done';
 
 export type WorkshopStory = {
   id: string;
@@ -56,6 +62,7 @@ export default function StoryWorkshop({
   question,
   help,
   trigger,
+  autoOpen,
   onClose,
 }: {
   story?: WorkshopStory;
@@ -63,15 +70,20 @@ export default function StoryWorkshop({
   question?: string;
   help?: string;
   trigger: string;
+  /** O Hoje manda-a para aqui já a procurar. Abrir sozinho evita o clique a
+   *  mais entre «encontrar uma história» e as direções. */
+  autoOpen?: boolean;
   onClose?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(Boolean(autoOpen));
   const { closing, close } = useExit(() => {
     setOpen(false);
     onClose?.();
   }, 340);
 
-  const [etapa, setEtapa] = useState<Etapa>(story ? (story.factConfirmed ? 'point' : 'facts') : 'capture');
+  // Uma história que já existe entra onde parou. Uma nova começa pela direção.
+  const [etapa, setEtapa] = useState<Etapa>(story ? (story.factConfirmed ? 'point' : 'facts') : 'lens');
+  const [lente, setLente] = useState<{ id: string; label: string; question: string } | null>(null);
   const [storyId, setStoryId] = useState(story?.id ?? '');
   const [fatos, setFatos] = useState<string[]>(story?.facts ?? []);
   const [perguntas, setPerguntas] = useState<string[]>([]);
@@ -98,15 +110,21 @@ export default function StoryWorkshop({
     };
   }, [open, close]);
 
-  const capturada = useCallback((r: { storyId: string; facts: string[]; questions: string[] }) => {
-    setStoryId(r.storyId);
-    setFatos(r.facts);
-    setPerguntas(r.questions);
-    setErro('');
-    // Sem fatos extraídos (transcrição falhou, IA indisponível) a história fica
-    // guardada e ela vê isso escrito, em vez de uma tela vazia.
-    setEtapa(r.facts.length ? 'facts' : 'done');
-  }, []);
+  const capturada = useCallback(
+    (r: { storyId: string; facts: string[]; questions: string[] }) => {
+      setStoryId(r.storyId);
+      setFatos(r.facts);
+      setPerguntas(r.questions);
+      setErro('');
+      // Ela chegou já sabendo o que contar: classifica-se a direção depois, em
+      // segundo plano, e fica gravada como inferência — nunca como escolha.
+      if (!lente) void classifyStoryDirection(r.storyId);
+      // Sem fatos extraídos (transcrição falhou, IA indisponível) a história fica
+      // salva e ela vê isso escrito, em vez de uma tela vazia.
+      setEtapa(r.facts.length ? 'facts' : 'done');
+    },
+    [lente],
+  );
 
   const confirmar = () => {
     setErro('');
@@ -176,7 +194,7 @@ export default function StoryWorkshop({
     });
   };
 
-  const passo = ['capture', 'facts', 'meaning', 'point', 'structure'].indexOf(etapa) + 1;
+  const passo = ['lens', 'capture', 'facts', 'meaning', 'point', 'structure'].indexOf(etapa) + 1;
 
   return (
     <>
@@ -189,7 +207,7 @@ export default function StoryWorkshop({
           <div className="cbShopBox" role="dialog" aria-modal="true" aria-label="História" tabIndex={-1} ref={caixa}>
             <header className="cbShopTop">
               <span className="cbStep">
-                {etapa === 'done' ? 'Salvo' : `${passo} de 5 · ${PILLAR_LABEL[focus]}`}
+                {etapa === 'done' ? 'Salvo' : `${passo} de 6 · ${PILLAR_LABEL[focus]}`}
               </span>
               <button type="button" onClick={close} aria-label="Fechar">
                 ×
@@ -209,10 +227,29 @@ export default function StoryWorkshop({
               </p>
             ) : null}
 
+            {etapa === 'lens' ? (
+              <LensPicker
+                pillar={focus}
+                pillarLabel={PILLAR_LABEL[focus]}
+                onPicked={(l) => {
+                  setLente(l);
+                  setEtapa('capture');
+                }}
+                onSkip={() => setEtapa('capture')}
+              />
+            ) : null}
+
             {etapa === 'capture' ? (
               <StoryCapture
-                question={question ?? 'Aconteceu alguma coisa nos últimos dias que fez você rir, te irritou, te surpreendeu ou mudou alguma coisa?'}
-                help={help ?? 'Pode ser bom, ruim, estranho ou pequeno.'}
+                lensId={lente?.id ?? null}
+                question={
+                  // A pergunta da direção escolhida. Sem direção — ela já sabia
+                  // o que contar — fica a pergunta aberta, que aqui é a certa.
+                  lente?.question ??
+                  question ??
+                  'Aconteceu alguma coisa nos últimos dias que fez você rir, te irritou, te surpreendeu ou mudou alguma coisa?'
+                }
+                help={lente ? `Procurando por: ${lente.label.toLowerCase()}.` : (help ?? 'Pode ser bom, ruim, estranho ou pequeno.')}
                 onCaptured={capturada}
               />
             ) : null}

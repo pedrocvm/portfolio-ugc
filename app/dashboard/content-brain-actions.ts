@@ -20,8 +20,11 @@ import {
 } from '@/modules/content-brain/service';
 import { adoptSeries, buildWeekPlan, decideCandidate } from '@/modules/content-brain/plan-service';
 import { transcribeStoryAudio } from '@/modules/content-brain/transcription';
-import type { FunctionalPillar, PrivacyLevel, StoryStatus } from '@/modules/content-brain/domain';
+import type { FunctionalPillar, LensPreference, PrivacyLevel, StoryStatus } from '@/modules/content-brain/domain';
+import type { LensSummary } from '@/modules/content-brain/lens-service';
 import { confirmTrial, linkMedia, markLinkPrompted } from '@/modules/integrations/instagram/service';
+import { lensPickerData, recordLensEvent, setLensPreference } from '@/modules/content-brain/lens-service';
+import { inferLensForStory } from '@/modules/content-brain/service';
 
 /** As ações do Story Workshop.
  *
@@ -43,6 +46,9 @@ export async function tellStory(input: {
   text?: string;
   audioPath?: string;
   occurredAt?: string | null;
+  /** A direção por onde ela procurou. Ausente quando ela chegou já sabendo o
+   *  que contar — nesse caso o sistema classifica depois, como inferência. */
+  lensId?: string | null;
 }): Promise<ResultWith<{ storyId: string; facts: string[]; questions: string[] }>> {
   await requireUser();
 
@@ -51,8 +57,11 @@ export async function tellStory(input: {
     audioPath: input.audioPath,
     source: input.audioPath ? 'user_audio' : 'user_text',
     occurredAt: input.occurredAt ?? null,
+    lens: input.lensId ? { id: input.lensId, source: 'selected' } : null,
   });
   if (!criada.ok) return { error: criada.error };
+
+  await recordLensEvent({ kind: 'story_started', lensId: input.lensId ?? null, storyId: criada.data.storyId });
 
   // Áudio: transcreve primeiro. Se falhar, o áudio fica salvo dentro da
   // retenção e ela pode tentar de novo ou escrever.
@@ -164,6 +173,58 @@ export async function markReadyToRecord(storyId: string): Promise<ResultWith<{ c
   const r = await promoteToContent(storyId);
   refresh();
   return r.ok ? { ok: true, contentId: r.data.contentId } : { error: r.error };
+}
+
+/* ── Lentes: por onde procurar ────────────────────────────────────────────── */
+
+/** As direções de busca para um pilar, já ordenadas.
+ *
+ *  Regista que foram mostradas: uma lente que sai muitas vezes e nunca dá em
+ *  nada é uma lente que devia descer, e isso só se sabe medindo. */
+export async function directionsFor(
+  pillar: FunctionalPillar,
+  visible?: number,
+): Promise<ResultWith<{ intro: string; primary: LensSummary[]; more: LensSummary[] }>> {
+  await requireUser();
+  const dados = await lensPickerData(pillar, { visible });
+  for (const l of dados.primary) {
+    await recordLensEvent({ kind: 'lens_shown', lensId: l.id, pillar }).catch(() => null);
+  }
+  return { ok: true, intro: dados.intro, primary: dados.primary, more: dados.more };
+}
+
+export async function chooseDirection(lensId: string, pillar: FunctionalPillar): Promise<Result> {
+  await requireUser();
+  await recordLensEvent({ kind: 'lens_selected', lensId, pillar });
+  return { ok: true };
+}
+
+/** «Não lembrei de nada.» É informação, não fracasso: fica registado e a
+ *  direção desce nas próximas vezes. Nunca se gera uma história em troca. */
+export async function noMemoryForDirection(lensId: string, pillar: FunctionalPillar): Promise<Result> {
+  await requireUser();
+  await recordLensEvent({ kind: 'lens_dismissed', lensId, pillar });
+  return { ok: true };
+}
+
+export async function skipDirections(pillar: FunctionalPillar): Promise<Result> {
+  await requireUser();
+  await recordLensEvent({ kind: 'lens_skipped', pillar });
+  return { ok: true };
+}
+
+export async function rateDirection(lensId: string, preference: LensPreference): Promise<Result> {
+  await requireUser();
+  const r = await setLensPreference(lensId, preference);
+  refresh();
+  return r.ok ? { ok: true } : { error: r.error };
+}
+
+/** Ela chegou já sabendo. Classifica-se a direção depois, como inferência. */
+export async function classifyStoryDirection(storyId: string): Promise<ResultWith<{ lensId: string | null }>> {
+  await requireUser();
+  const r = await inferLensForStory(storyId);
+  return r.ok ? { ok: true, lensId: r.data.lensId } : { error: r.error };
 }
 
 /* ── Semana ───────────────────────────────────────────────────────────────── */
