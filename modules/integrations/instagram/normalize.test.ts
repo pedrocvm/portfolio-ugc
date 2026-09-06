@@ -175,7 +175,11 @@ test('rate limit e 5xx são recuperáveis; 4xx não', () => {
 });
 
 test('um token nunca sai numa mensagem de erro', () => {
-  const sujo = 'falhou em https://graph.instagram.com/v26.0/me?access_token=IGAAZA2nZAFCQOlBZAGEyUDdibWVrWi02UjJx';
+  // Token falso, com o formato certo. Este teste existe para provar que um
+  // token é redigido — copiar um pedaço do verdadeiro para dentro dele seria
+  // exatamente o vazamento que ele diz estar a impedir. E o repositório é
+  // público.
+  const sujo = 'falhou em https://graph.instagram.com/v26.0/me?access_token=IGAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
   const limpo = redact(sujo);
   assert.doesNotMatch(limpo, /IGAA/);
   assert.match(limpo, /\[redigido\]/);
