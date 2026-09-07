@@ -42,3 +42,15 @@ test('o cabeçalho do cartão quebra linha em vez de esmagar o resumo', () => {
 test('em toque nenhum campo fica abaixo de 16px', () => {
   assert.match(ler('app/dashboard/dashboard.css'), /\.dash\.dash :is\(input, textarea, select\) \{\n\s+font-size: max\(16px, 1em\);/);
 });
+
+test('a folha da landing só carrega nas rotas públicas', () => {
+  assert.match(ler('app/layout.tsx'), /import '\.\/base\.css';/);
+  assert.doesNotMatch(ler('app/layout.tsx'), /site\.css|globals\.css/);
+  assert.doesNotMatch(ler('app/dashboard/layout.tsx'), /site\.css/);
+  for (const page of ['app/page.tsx', 'app/preview/page.tsx', 'app/contato/page.tsx']) {
+    assert.match(ler(page), /site\.css';/, `${page} desenha a landing e precisa da folha dela`);
+  }
+  const site = ler('app/site.css');
+  assert.match(site, /#hero/);
+  assert.doesNotMatch(ler('app/base.css'), /#hero|#nav|#shelf/);
+});

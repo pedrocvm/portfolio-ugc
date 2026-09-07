@@ -1,90 +1,11 @@
-:root {
-      --paper: #f7f3ee;
-      --sandLight: #ddd2c3;
-      --stone: #a99887;
-      --umber: #4d3d34;
-      --graphite: #2e2c2a;
-      --mono: var(--font-mono), monospace;
-      --sans: var(--font-sans), sans-serif;
-      --serif: var(--font-serif), Georgia, serif;
-      --disp: var(--font-disp), sans-serif;
-      --script: 'Ferly', var(--font-script), cursive;
---jade: #8fa886;
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: var(--sans);
-      font-size: 17px;
-      line-height: 1.55;
-      color: var(--graphite);
-      background: var(--graphite);
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-    button {
-      font: inherit;
-      border: 0;
-      background: none;
-      cursor: pointer;
-      color: inherit;
-    }
-    input,
-    textarea,
-    select {
-      font: inherit;
-      color: inherit;
-    }
-    a {
-      color: inherit;
-    }
-    img {
-      display: block;
-    }
-    ::selection {
-      background: var(--umber);
-      color: var(--paper);
-    }
-    .mono {
-      font-family: var(--mono);
-      font-weight: 400;
-      font-size: 11px;
-      letter-spacing: 0.13em;
-      text-transform: uppercase;
-      line-height: 1.5;
-    }
+/* A landing pública. Carregada pelas páginas que a desenham (/ e /preview),
+   nunca pela área privada: 48 KB e id como #hero, #nav e #shelf não têm
+   nada que fazer no dashboard. */
     .chapHead .cn,
     .chapHead .eyebrow,
     #meet .eyebrow {
       font-size: 16px;
       letter-spacing: 0.1em;
-    }
-    .disp {
-      font-family: var(--disp);
-      font-variation-settings: 'wdth' 106;
-      font-weight: 530;
-      letter-spacing: -0.015em;
-      line-height: 1.08;
-      text-transform: none;
-    }
-    .serif-it {
-      font-family: var(--serif);
-      font-style: italic;
-      text-transform: none;
-      letter-spacing: 0;
-      font-weight: 400;
-    }
-    .script {
-      font-family: var(--script);
-      font-weight: 400;
-      font-style: normal;
-      text-transform: none;
-      letter-spacing: 0;
-      font-size: 1.95em;
-      line-height: 0.8;
     }
     .wrap {
       padding-left: 24px;

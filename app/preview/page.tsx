@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Live from '@/components/dashboard/Live';
 import { requireEditor } from '@/lib/auth';
 import { getDraft, getNicheMedia } from '@/lib/content-store';
+import '../site.css';
 
 export const dynamic = 'force-dynamic';
 

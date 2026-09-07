@@ -1,5 +1,6 @@
 import Site from '@/components/Site';
 import { getNicheMedia, getPublished } from '@/lib/content-store';
+import './site.css';
 
 export default async function Page() {
   const [c, media] = await Promise.all([getPublished(), getNicheMedia()]);

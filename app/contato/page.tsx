@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import LinkTree from '@/components/links/LinkTree';
 import { wa } from '@/lib/content';
 import { getPublished } from '@/lib/content-store';
+import '../site.css';
 import './links.css';
 
 export async function generateMetadata(): Promise<Metadata> {

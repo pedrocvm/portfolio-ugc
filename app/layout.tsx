@@ -7,7 +7,7 @@ import {
   Tangerine,
 } from 'next/font/google';
 import { getPublished } from '@/lib/content-store';
-import './globals.css';
+import './base.css';
 
 const archivo = Archivo({
   subsets: ['latin'],
