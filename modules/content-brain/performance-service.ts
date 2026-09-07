@@ -451,6 +451,7 @@ const HOOK_TAG_LABEL: Record<string, string> = {
 
 export type FeedAuditPiece = FeedPieceInput & {
   permalink: string | null;
+  isSharedToFeed: boolean | null;
   audit: PieceAudit;
   storyTitle: string | null;
 };
@@ -463,7 +464,7 @@ export type FeedAuditView = {
 };
 
 type MediaAuditRow = {
-  id: string; permalink: string | null; caption: string; published_at: string; media_product_type: string;
+  id: string; permalink: string | null; is_shared_to_feed: boolean | null; caption: string; published_at: string; media_product_type: string;
   story_id: string | null; audit: unknown; audit_source: string | null;
   creator_story: { title?: string; functional_pillar?: string; structure?: Record<string, unknown>; story_lens_id?: string | null } | null;
 };
@@ -489,7 +490,7 @@ export async function feedAudit(limit = 60, opts: { db?: Client } = {}): Promise
   const [{ data: medias }, { data: conta }] = await Promise.all([
     db
       .from('instagram_media')
-      .select('id, permalink, caption, published_at, media_product_type, story_id, audit, audit_source, creator_story(title, functional_pillar, structure, story_lens_id)')
+      .select('id, permalink, is_shared_to_feed, caption, published_at, media_product_type, story_id, audit, audit_source, creator_story(title, functional_pillar, structure, story_lens_id)')
       .neq('media_product_type', 'STORY')
       .order('published_at', { ascending: false })
       .limit(limit),
@@ -567,7 +568,7 @@ export async function feedAudit(limit = 60, opts: { db?: Client } = {}): Promise
       latestKind: (leitura?.snapshot_kind as SnapshotKind | undefined) ?? null,
       readingAgeDays: leitura ? Math.round(leitura.age_seconds / 86_400) : null,
     };
-    pieces.push({ ...input, permalink: m.permalink, storyTitle: story?.title ?? null, audit: auditPiece(input) });
+    pieces.push({ ...input, permalink: m.permalink, isSharedToFeed: m.is_shared_to_feed, storyTitle: story?.title ?? null, audit: auditPiece(input) });
   }
 
   const comparable = pieces.filter((p) => p.readings.some((r) => r.comparable)).length;

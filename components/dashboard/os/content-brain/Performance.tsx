@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { SNAPSHOT_WINDOW, type SnapshotKind } from '@/modules/content-brain/metrics';
 import { LADDER_LABEL, LADDER_PHRASING, type LadderState } from '@/modules/content-brain/learning';
 import HelpNote from './HelpNote';
+import InstagramPeek from './InstagramPeek';
 
 /** Publicado e desempenho.
  *
@@ -102,11 +102,7 @@ export default function Performance({
               </div>
               <div className="osRowSide">
                 {!p.storyTitle ? <span className="osTag" data-tone="hot">Sem história</span> : null}
-                {p.permalink ? (
-                  <Link className="chip" href={p.permalink} target="_blank" rel="noreferrer">
-                    Ver
-                  </Link>
-                ) : null}
+                {p.permalink ? <InstagramPeek permalink={p.permalink} label="Ver" /> : null}
               </div>
             </div>
           ))}

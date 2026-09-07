@@ -13,6 +13,7 @@ import {
   socialProofVault,
   strategyScreen,
 } from '@/modules/creator/content-os-service';
+import { planFromStructure } from '@/modules/content-brain/domain';
 import { contentScreen, performanceScreen, toBankRows } from '@/modules/content-brain/screen-service';
 import { feedAudit, storyAudit } from '@/modules/content-brain/performance-service';
 import { schedulerState } from '@/modules/jobs/scheduler';
@@ -75,17 +76,15 @@ export default async function ContentPage({
 
   const byRole = (role: FunnelRole) => content.filter((c) => c.funnelRole === role);
   const publicadas = banco.filter((i) => i.status === 'recorded' || i.status === 'published');
-  const salvas = banco.filter((i) => i.status === 'saved');
+  // As peças que nasceram de uma história já têm casa: «Pronto para gravar» e
+  // o Banco de histórias. Repeti-las como «ideia salva» era a mesma coisa duas
+  // vezes na mesma tela.
+  const salvas = banco.filter((i) => i.status === 'saved' && !i.storyId);
   const sementes = banco.filter((i) => i.status === 'seed');
-  const aberta = idea ? banco.find((i) => i.id === idea) : undefined;
 
-  const initial: StudioTab = isStudioTab(tab)
-    ? tab
-    : aberta && (aberta.status === 'recorded' || aberta.status === 'published')
-      ? 'published'
-      : aberta && aberta.status === 'saved'
-        ? 'bank'
-        : 'record';
+  // A ficha de uma ideia vive em «Para gravar», seja de hoje, salva ou já
+  // gravada. «Ver plano» abria a aba do Banco e mostrava nada.
+  const initial: StudioTab = isStudioTab(tab) ? tab : 'record';
 
   return (
     <>
@@ -105,6 +104,7 @@ export default async function ContentPage({
       </div>
 
       <ContentStudio
+        key={`${tab ?? ''}:${idea ?? ''}`}
         initial={initial}
         panes={{
           record: (
@@ -114,28 +114,17 @@ export default async function ContentPage({
                 weekly={brain.weekly}
                 focus={brain.focus}
                 ready={brain.ready.map((r) => {
-                  const e = (r.structure ?? {}) as {
-                    beats?: { order: number; purpose: string; intent: string }[];
-                    visualSupport?: { beat: number; kind: string; description: string }[];
-                    mustNotInvent?: string[];
-                    durationSeconds?: number;
-                    centralPoint?: string;
-                  };
-                  const beats = e.beats ?? [];
+                  const plano = planFromStructure(r.structure);
                   return {
                     id: r.id,
                     title: r.title,
-                    point: e.centralPoint ?? r.frameLabel,
-                    beats: beats.length,
-                    durationSeconds: e.durationSeconds ?? null,
-                    // Cada momento vira uma tomada; a prova visual entra como
-                    // nota do momento a que pertence, não como lista à parte.
-                    shots: beats.map((b) => ({
-                      shot: b.intent,
-                      note: (e.visualSupport ?? []).find((v) => v.beat === b.order)?.description,
-                      required: true,
-                    })),
-                    mustNotInvent: e.mustNotInvent ?? [],
+                    point: plano.centralPoint ?? r.frameLabel,
+                    beats: plano.moments.length,
+                    durationSeconds: plano.durationSeconds,
+                    shots: plano.shots,
+                    mustNotInvent: plano.mustNotInvent,
+                    moments: plano.moments,
+                    script: plano.script,
                   };
                 })}
                 developing={brain.developing.map((d) => ({
@@ -164,7 +153,7 @@ export default async function ContentPage({
                   storyId: s2.id, title: s2.title, contentIdeaId: null,
                 }))}
               />
-              <ContentBank today={hoje} bank={banco.filter((i) => i.status !== 'seed')} trends={trends} openId={idea} />
+              <ContentBank today={hoje} bank={banco.filter((i) => i.status !== 'seed' && !(i.storyId && i.status === 'saved'))} trends={trends} openId={idea} />
             </>
           ),
           tests: <ReelsTestLab lab={lab} />,

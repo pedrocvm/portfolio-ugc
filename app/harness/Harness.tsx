@@ -407,9 +407,15 @@ export default function Harness({ modo }: { modo?: string }) {
           weekly={vazio ? FOCO_VAZIO : FOCO_SEMANA}
           focus="attraction_journey"
           ready={vazio ? [] : [{
-            id: HISTORIA.id, title: HISTORIA.title, point: HISTORIA.meaning, beats: 4, durationSeconds: 42,
+            id: HISTORIA.id, title: HISTORIA.title, point: HISTORIA.meaning, beats: TOMADAS.length, durationSeconds: 42,
             shots: TOMADAS.map((t) => ({ shot: t.shot, note: t.note, required: true })),
             mustNotInvent: ['As duas horas aconteceram mesmo.'],
+            moments: TOMADAS.map((t, i) => ({
+              order: i + 1, purpose: ['Abrir', 'Mostrar', 'Virar', 'Fechar'][i] ?? 'Momento', intent: t.shot,
+              line: i === 2 ? 'O primeiro take estava melhor. Duas horas para descobrir isso.' : null,
+              visual: t.note ?? null, suggestion: i === 3,
+            })),
+            script: 'Passei quase duas horas mudando o cenário de um vídeo.\nTirei tudo da mesa, achei que o problema era o fundo.\nDepois fui ver o primeiro take. Estava melhor.\nEu complico tentando melhorar demais.',
           }]}
           developing={vazio ? [] : [{
             id: '00000000-0000-4000-8000-000000000002', title: 'A primeira marca que respondeu',
@@ -554,7 +560,7 @@ export default function Harness({ modo }: { modo?: string }) {
     ];
     const pecas = entradas.map((p) => ({ input: p, audit: auditPiece(p) }));
     const feed: FeedAuditView = {
-      pieces: pecas.map(({ input, audit }) => ({ ...input, audit, permalink: null, storyTitle: null })),
+      pieces: pecas.map(({ input, audit }, i) => ({ ...input, audit, permalink: i === 0 ? 'https://www.instagram.com/reel/DctIXdHM14l/' : null, isSharedToFeed: i === 0, storyTitle: null })),
       summary: feedSummary(pecas),
       sample: { total: 7, comparable: 6, legacy: 6, recent: 1, withTags: 6 },
       lastSyncAt: dia(0),

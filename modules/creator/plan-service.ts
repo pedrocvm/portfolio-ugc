@@ -66,6 +66,7 @@ import {
   seedFromMentor,
   type BrollRow,
 } from './content-os-service';
+import { planFromStructure } from '@/modules/content-brain/domain';
 
 export * from './domain';
 
@@ -902,6 +903,7 @@ export type ContentIdeaRow = {
   assetsAvailable: string[];
   brollAssetIds: string[];
   parentIdeaId: string | null;
+  storyId: string | null;
 };
 
 const SELECT_IDEA = `
@@ -910,7 +912,7 @@ const SELECT_IDEA = `
   duration_seconds, estimated_record_minutes, estimated_edit_minutes, why_it_can_work,
   authority_signal, engagement_mechanism, brand_audience_effect, quality, trend_ids, milestone_id,
   episode, fresh_until, content_function, editorial_modes, hooks, story, reels_test, decision_trace,
-  language, track, broll_asset_ids, parent_idea_id, series:series_id ( name )
+  language, track, broll_asset_ids, parent_idea_id, structure_json, story_id, series:series_id ( name )
 `;
 
 type RawIdea = Record<string, unknown> & { series?: { name: string } | { name: string }[] | null };
@@ -927,6 +929,10 @@ function toIdeaRow(r: RawIdea): ContentIdeaRow {
   const track = (TRACKS as readonly string[]).includes(String(r.track)) ? (String(r.track) as Track) : 'main';
   const fn = typeof r.content_function === 'string' ? r.content_function : null;
   const modes = ((r.editorial_modes ?? []) as string[]).filter(isEditorialMode);
+  // Uma peça que nasceu de uma história traz o plano dentro da estrutura:
+  // gancho, roteiro e tomadas vêm de lá quando a peça não os tem próprios.
+  const plano = planFromStructure(r.structure_json);
+  const shotList = (r.shot_list ?? []) as ContentIdeaRow['shotList'];
 
   return {
     id: String(r.id),
@@ -939,10 +945,10 @@ function toIdeaRow(r: RawIdea): ContentIdeaRow {
     format: String(r.format ?? ''),
     whyNow: String(r.source_reason ?? ''),
     title: String(r.title ?? ''),
-    hook: String(r.hook ?? ''),
+    hook: String(r.hook ?? '') || plano.centralPoint || '',
     altHooks: (r.alt_hooks ?? []) as string[],
-    script: String(r.script ?? ''),
-    shotList: (r.shot_list ?? []) as ContentIdeaRow['shotList'],
+    script: String(r.script ?? '') || plano.script || '',
+    shotList: shotList.length ? shotList : plano.shots,
     bRoll: (r.b_roll ?? []) as string[],
     onScreenText: (r.on_screen_text ?? []) as string[],
     editing: {
@@ -998,6 +1004,7 @@ function toIdeaRow(r: RawIdea): ContentIdeaRow {
     assetsAvailable: (trace.assetsAvailable ?? []) as string[],
     brollAssetIds: (r.broll_asset_ids ?? []) as string[],
     parentIdeaId: (r.parent_idea_id as string | null) ?? null,
+    storyId: (r.story_id as string | null) ?? null,
   };
 }
 

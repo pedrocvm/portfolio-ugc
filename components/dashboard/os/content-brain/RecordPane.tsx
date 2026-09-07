@@ -1,5 +1,6 @@
-import type { FunctionalPillar } from '@/modules/content-brain/domain';
+import type { FunctionalPillar, StoryMoment } from '@/modules/content-brain/domain';
 import RecordingMode from '../RecordingMode';
+import StoryPlan from './StoryPlan';
 import StoryWorkshop from './StoryWorkshop';
 import WeeklyFocus, { type WeeklyFocusData } from './WeeklyFocus';
 import { PublicationMatch, StoryCandidates, TrialReelConfirm } from './StoryDecisions';
@@ -22,6 +23,9 @@ export type ReadyItem = {
   /** Os momentos, já na forma que o modo de gravação lê. */
   shots: { shot: string; note?: string; required?: boolean }[];
   mustNotInvent: string[];
+  /** Os momentos legíveis e o roteiro, quando existe: o que ela abre antes de gravar. */
+  moments: StoryMoment[];
+  script: string | null;
 };
 export type DevelopingItem = {
   id: string;
@@ -77,7 +81,7 @@ export default function RecordPane({
           <p className="osNote">Sem decisões editoriais pendentes. É só gravar.</p>
           <div className="osRows">
             {ready.map((r) => (
-              <div className="osRow" key={r.id}>
+              <div className="osRow" key={r.id} id={`story-${r.id}`}>
                 <div>
                   <span className="osRowName">{r.title}</span>
                   {r.point ? <p className="osRowSub">{r.point}</p> : null}
@@ -89,6 +93,7 @@ export default function RecordPane({
                       <span className="osTag" data-tone="mute">~{r.durationSeconds}s</span>
                     ) : null}
                   </div>
+                  <StoryPlan storyId={r.id} moments={r.moments} script={r.script} mustNotInvent={r.mustNotInvent} />
                 </div>
                 <div className="osRowSide">
                   {r.shots.length ? (

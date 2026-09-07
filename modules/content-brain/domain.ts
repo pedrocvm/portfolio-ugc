@@ -260,3 +260,61 @@ export function composeStage(story: StoryFactState & { hasMeaning: boolean; hasS
   if (!story.hasStructure) return { current: 'frame', next: 'structure', blocked: null };
   return { current: 'structure', next: 'record', blocked: null };
 }
+
+/* ── O plano que sai da estrutura ─────────────────────────────────────────── */
+
+/** O que a estrutura de uma história guarda, na forma em que a tela lê.
+ *
+ *  A mesma leitura serve o «Pronto para gravar» e a peça de conteúdo que a
+ *  história virou: sem isto, a peça nascia com gancho vazio e sem roteiro, e
+ *  «Ver plano» abria uma ficha em branco. */
+export type StoryMoment = {
+  order: number;
+  purpose: string;
+  intent: string;
+  line: string | null;
+  visual: string | null;
+  suggestion: boolean;
+};
+
+export type StoryPlan = {
+  centralPoint: string | null;
+  moments: StoryMoment[];
+  script: string | null;
+  mustNotInvent: string[];
+  durationSeconds: number | null;
+  shots: { shot: string; note?: string; required?: boolean }[];
+};
+
+export function planFromStructure(structure: unknown): StoryPlan {
+  const e = (structure && typeof structure === 'object' ? structure : {}) as {
+    centralPoint?: string;
+    beats?: { order: number; purpose: string; intent: string }[];
+    visualSupport?: { beat: number; kind: string; description: string }[];
+    mustNotInvent?: string[];
+    durationSeconds?: number;
+    script?: string;
+    takes?: { beat: number; line: string }[];
+    suggestionBeats?: number[];
+  };
+  const beats = Array.isArray(e.beats) ? e.beats : [];
+  const visual = Array.isArray(e.visualSupport) ? e.visualSupport : [];
+  const takes = Array.isArray(e.takes) ? e.takes : [];
+  const sugestoes = new Set(Array.isArray(e.suggestionBeats) ? e.suggestionBeats : []);
+  const moments = beats.map((b) => ({
+    order: b.order,
+    purpose: b.purpose,
+    intent: b.intent,
+    line: takes.find((t) => t.beat === b.order)?.line ?? null,
+    visual: visual.find((v) => v.beat === b.order)?.description ?? null,
+    suggestion: sugestoes.has(b.order),
+  }));
+  return {
+    centralPoint: typeof e.centralPoint === 'string' && e.centralPoint.trim() ? e.centralPoint : null,
+    moments,
+    script: typeof e.script === 'string' && e.script.trim() ? e.script : null,
+    mustNotInvent: Array.isArray(e.mustNotInvent) ? e.mustNotInvent : [],
+    durationSeconds: typeof e.durationSeconds === 'number' ? e.durationSeconds : null,
+    shots: moments.map((m) => ({ shot: m.intent, note: m.visual ?? undefined, required: true })),
+  };
+}

@@ -1,10 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 import Segmented from '@/components/dashboard/Segmented';
 import type { FeedAuditView, StoryAuditView } from '@/modules/content-brain/performance-service';
 import Performance, { type LearningView, type PieceView } from './Performance';
+import InstagramPeek from './InstagramPeek';
 
 /** Publicado, em três leituras: o que aprendemos, o Feed peça a peça, e os
  *  Stories por sequência.
@@ -137,11 +137,7 @@ export default function ContentIntelligence({
                     <dt>Próximo teste</dt>
                     <dd>{p.audit.nextTest}</dd>
                   </dl>
-                  {p.permalink ? (
-                    <Link className="chip" href={p.permalink} target="_blank" rel="noreferrer">
-                      Ver no Instagram
-                    </Link>
-                  ) : null}
+                  {p.permalink ? <InstagramPeek permalink={p.permalink} isSharedToFeed={p.isSharedToFeed} /> : null}
                 </details>
               ))}
             </div>

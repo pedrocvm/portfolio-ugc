@@ -26,6 +26,7 @@ import {
   pillarToMap,
   type FunctionalPillar,
   type StoryFactState,
+  planFromStructure,
 } from './domain';
 
 /* ── Pilares funcionais ───────────────────────────────────────────────────── */
@@ -319,4 +320,38 @@ test('com tudo pronto, a etapa seguinte é gravar', () => {
   const s = composeStage({ ...story(), hasMeaning: true, hasStructure: true });
   assert.equal(s.next, 'record');
   assert.equal(s.blocked, null);
+});
+
+/* ── O plano que sai da estrutura ─────────────────────────────────────────── */
+
+test('a estrutura vira um plano legível: momentos, falas, apoio visual e roteiro', () => {
+  const p = planFromStructure({
+    centralPoint: 'Eu complico tentando melhorar demais.',
+    beats: [
+      { order: 1, purpose: 'Abrir', intent: 'Mostrar a mesa cheia' },
+      { order: 2, purpose: 'Virar', intent: 'Comparar com o primeiro take' },
+    ],
+    visualSupport: [{ beat: 1, kind: 'broll', description: 'A mesa antes e depois' }],
+    takes: [{ beat: 2, line: 'O primeiro estava melhor.' }],
+    suggestionBeats: [2],
+    script: 'Passei duas horas…',
+    mustNotInvent: ['As duas horas aconteceram mesmo.'],
+    durationSeconds: 42,
+  });
+  assert.equal(p.centralPoint, 'Eu complico tentando melhorar demais.');
+  assert.equal(p.moments.length, 2);
+  assert.equal(p.moments[0].visual, 'A mesa antes e depois');
+  assert.equal(p.moments[1].line, 'O primeiro estava melhor.');
+  assert.equal(p.moments[1].suggestion, true);
+  assert.equal(p.script, 'Passei duas horas…');
+  assert.equal(p.durationSeconds, 42);
+  assert.deepEqual(p.shots[0], { shot: 'Mostrar a mesa cheia', note: 'A mesa antes e depois', required: true });
+});
+
+test('sem estrutura o plano é vazio, não uma ficha com undefined', () => {
+  const p = planFromStructure(null);
+  assert.deepEqual(p.moments, []);
+  assert.equal(p.script, null);
+  assert.equal(p.centralPoint, null);
+  assert.deepEqual(p.shots, []);
 });

@@ -257,3 +257,28 @@ export function normalizeMedia(raw: RawMedia): NormalizedMedia {
     likeCount: typeof raw.like_count === 'number' ? raw.like_count : null,
   };
 }
+
+/* ── Embed ────────────────────────────────────────────────────────────────── */
+
+/** O endereço que o Instagram serve para ser mostrado dentro de um iframe.
+ *
+ *  Só publicações do feed têm um: um Story ou um perfil não, e um Reel que
+ *  ficou só no separador Reels (`is_shared_to_feed=false`) devolve «este link
+ *  pode estar quebrado» — verificado a 07/09/2026 com dois Reels da conta.
+ *  Nesses casos a única saída é abrir no Instagram. */
+export function instagramEmbedUrl(
+  permalink: string | null | undefined,
+  media: { isSharedToFeed?: boolean | null } = {},
+): string | null {
+  if (!permalink || media.isSharedToFeed === false) return null;
+  let u: URL;
+  try {
+    u = new URL(permalink);
+  } catch {
+    return null;
+  }
+  if (!/(^|\.)instagram\.com$/.test(u.hostname)) return null;
+  const m = u.pathname.match(/^\/(p|reel|reels|tv)\/([A-Za-z0-9_-]+)\/?/);
+  if (!m) return null;
+  return `https://www.instagram.com/${m[1] === 'reels' ? 'reel' : m[1]}/${m[2]}/embed/`;
+}

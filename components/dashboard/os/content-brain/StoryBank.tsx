@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import StoryWorkshop, { type WorkshopStory } from './StoryWorkshop';
 import type { FunctionalPillar } from '@/modules/content-brain/domain';
@@ -106,6 +107,11 @@ export default function StoryBank({
                 <span className="osTag" data-tone={s.status === 'ready_to_record' ? 'won' : s.needsConfirmation ? 'hot' : 'mute'}>
                   {s.statusLabel}
                 </span>
+                {s.status === 'ready_to_record' ? (
+                  <Link className="chip" href={`/dashboard/content?tab=record#story-${s.id}`}>
+                    Ver o plano
+                  </Link>
+                ) : null}
                 {!s.isPrivate && !s.used ? (
                   <StoryWorkshop
                     focus={focus}

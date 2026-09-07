@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import CarolAI from '@/components/dashboard/CarolAI';
 import Spinner from '@/components/dashboard/Spinner';
@@ -426,11 +427,16 @@ export default function StoryWorkshop({
                 <h2>Salvei.</h2>
                 <p className="osNote">
                   {fatos.length
-                    ? 'Está em Conteúdo, pronta para quando quiser gravar.'
+                    ? 'Está em Conteúdo, na aba «Para gravar», com os momentos e o roteiro. É só abrir quando quiser gravar.'
                     : 'A história ficou salva. Não consegui transcrever agora — dá para tentar de novo no Banco.'}
                 </p>
                 <div className="cbActs">
-                  <button className="osStart" type="button" onClick={close}>
+                  {fatos.length ? (
+                    <Link className="osStart" href={`/dashboard/content?tab=record#story-${storyId}`} onClick={close}>
+                      Ver o plano
+                    </Link>
+                  ) : null}
+                  <button className={fatos.length ? 'focusSkip' : 'osStart'} type="button" onClick={close}>
                     Fechar
                   </button>
                 </div>

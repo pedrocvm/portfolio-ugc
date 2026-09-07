@@ -1492,3 +1492,106 @@
     margin-bottom: 8px;
   }
 }
+
+/* ── O plano de uma história pronta ───────────────────────────────────────── */
+
+.cbStoryPlan {
+  margin-top: 10px;
+}
+
+.cbMoments {
+  margin: 8px 0 12px;
+  padding-left: 22px;
+  display: grid;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.cbMoments b {
+  font-weight: 600;
+}
+
+.cbMoments q {
+  display: block;
+  font-style: italic;
+  color: var(--ink2);
+}
+
+.cbMoments q::before,
+.cbMoments q::after {
+  content: '';
+}
+
+.cbMoments small {
+  display: block;
+  font-size: 12.5px;
+  color: var(--tinta3);
+}
+
+/* ── Uma publicação vista sem sair daqui ─────────────────────────────────── */
+
+.igPeek {
+  margin: auto;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+}
+
+.igPeek::backdrop {
+  background: color-mix(in srgb, var(--ferro) 62%, transparent);
+}
+
+.igPeekBox {
+  width: min(420px, 94vw);
+  background: var(--papel);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.igPeekTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 13px;
+}
+
+.igPeekTop a {
+  color: var(--tinta3);
+  text-decoration: none;
+}
+
+.igPeekTop a:hover {
+  text-decoration: underline;
+}
+
+.igPeekTop button {
+  border: 0;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--tinta3);
+  cursor: pointer;
+}
+
+.igPeek iframe {
+  display: block;
+  width: 100%;
+  height: min(78vh, 760px);
+  border: 0;
+  background: #fff;
+}
+
+/* Estado, «Ver o plano» e o botão: no celular quebram em linhas, não o chip. */
+.cbStoryRow .osRowSide {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cbStoryRow .osRowSide a.chip {
+  white-space: nowrap;
+}
