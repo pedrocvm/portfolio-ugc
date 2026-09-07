@@ -2,14 +2,12 @@
 
 import { useCallback, useState } from 'react';
 import type { Content } from '@/lib/content';
-import { useReel } from './useReel';
 import Lightbox from './Lightbox';
 import Pic from './Pic';
 
 const nome = (i: number) => `Foto UGC ${String(i + 1).padStart(2, '0')}`;
 
 export default function Photos({ c }: { c: Content['photos'] }) {
-  const { reelRef, atStart, atEnd, page, auto, setAuto } = useReel(5000);
   const [aberta, setAberta] = useState<number | null>(null);
   /* identidade estável: sem isto o efeito do visor corre a cada render e
      perde o botão a que tem de devolver o foco */
@@ -27,36 +25,8 @@ export default function Photos({ c }: { c: Content['photos'] }) {
           <h2 className="disp">
             {c.titleLead} <em className="serif-it">{c.titleEm}</em>
           </h2>
-          <div className="ctrls">
-            <button
-              className="rnd"
-              type="button"
-              aria-label={auto ? 'Parar o desfile' : 'Recomeçar o desfile'}
-              onClick={() => setAuto(!auto)}
-            >
-              {auto ? '❚❚' : '▶'}
-            </button>
-            <button
-              className="rnd prev"
-              type="button"
-              aria-label="Anterior"
-              disabled={atStart}
-              onClick={() => page(-1)}
-            >
-              ←
-            </button>
-            <button
-              className="rnd next"
-              type="button"
-              aria-label="Seguinte"
-              disabled={atEnd}
-              onClick={() => page(1)}
-            >
-              →
-            </button>
-          </div>
         </div>
-        <ul className="pgrid" id="fotosReel" ref={reelRef}>
+        <ul className="pgrid" id="fotosReel">
           {c.items.map((p, i) => (
             <li key={i}>
               <button

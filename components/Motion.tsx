@@ -237,7 +237,7 @@ function run(gsap: any, ScrollTrigger: any) {
       });
     });
     gsap.from('#fotosReel button', {
-      x: 30,
+      y: 30,
       opacity: 0,
       duration: 0.7,
       stagger: 0.07,

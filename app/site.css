@@ -571,27 +571,15 @@
         --gap: 14px;
       }
     }
-    /* Fotos UGC: um desfile lateral. Quantas cabem de cada vez é o que muda
-       com o ecrã — a forma de cada foto não, para nenhuma sair espremida. */
+    /* Fotos UGC: uma grelha que troca de colunas com o ecrã. O que muda é
+       quantas cabem por linha — a forma de cada foto nunca, para nenhuma sair
+       espremida. */
     .pgrid {
-      --cols: 1.25;
       --gap: 12px;
       list-style: none;
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--gap);
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-snap-type: x mandatory;
-      scroll-behavior: smooth;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    .pgrid::-webkit-scrollbar {
-      display: none;
-    }
-    .pgrid > li {
-      flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
-      scroll-snap-align: start;
     }
     .pgrid button {
       position: relative;
@@ -633,12 +621,7 @@
     }
     @media (min-width: 620px) {
       .pgrid {
-        --cols: 2;
-      }
-    }
-    @media (min-width: 900px) {
-      .pgrid {
-        --cols: 3;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
 
@@ -705,8 +688,8 @@
     }
     @media (min-width: 1080px) {
       .pgrid {
-        --cols: 4;
         --gap: 14px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
     }
 
