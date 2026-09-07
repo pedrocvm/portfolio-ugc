@@ -54,3 +54,19 @@ test('a folha da landing só carrega nas rotas públicas', () => {
   assert.match(site, /#hero/);
   assert.doesNotMatch(ler('app/base.css'), /#hero|#nav|#shelf/);
 });
+
+test('uma paleta, um nome por valor, e a escala de camadas só em base.css', () => {
+  const base = ler('app/base.css');
+  assert.match(base, /^@layer reset, tokens, base, layout, components, utilities, overrides;/m);
+  assert.match(base, /@layer tokens \{\n  :root \{/);
+  for (const t of ['--papel', '--areia2', '--pedra', '--umbra', '--tinta', '--grafite', '--ferro', '--jade', '--z-sticky', '--z-fab', '--z-modal', '--z-cmd']) {
+    assert.match(base, new RegExp(`\\s${t}: `), `${t} nasce em base.css`);
+  }
+  const folhas = ['app/site.css', 'app/contato/links.css', 'app/dashboard/dashboard.css', 'app/dashboard/content-brain.css'];
+  for (const f of folhas) {
+    const css = ler(f);
+    assert.doesNotMatch(css, /var\(--(paper|sandLight|stone|umber|graphite|ink|ink2|rule|rule2|t[1-4]|accent)\)/, `${f} usa nomes antigos`);
+    assert.doesNotMatch(css, /^\s*--(paper|graphite|jade|z-[a-z]+):/m, `${f} redefine um token do base`);
+    assert.doesNotMatch(css, /z-index:\s*-?\d{2,}/, `${f} tem z-index cru; usa a escala`);
+  }
+});

@@ -1,85 +1,132 @@
-/* O chão comum do site e da área privada: tokens de fonte e de cor, o reset
-   e as três utilidades de tipo. Tudo o que é da landing vive em site.css e
-   só carrega nas rotas públicas. */
-:root {
-      --paper: #f7f3ee;
-      --sandLight: #ddd2c3;
-      --stone: #a99887;
-      --umber: #4d3d34;
-      --graphite: #2e2c2a;
-      --mono: var(--font-mono), monospace;
-      --sans: var(--font-sans), sans-serif;
-      --serif: var(--font-serif), Georgia, serif;
-      --disp: var(--font-disp), sans-serif;
-      --script: 'Ferly', var(--font-script), cursive;
---jade: #8fa886;
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: var(--sans);
-      font-size: 17px;
-      line-height: 1.55;
-      color: var(--graphite);
-      background: var(--graphite);
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-    button {
-      font: inherit;
-      border: 0;
-      background: none;
-      cursor: pointer;
-      color: inherit;
-    }
-    input,
-    textarea,
-    select {
-      font: inherit;
-      color: inherit;
-    }
-    a {
-      color: inherit;
-    }
-    img {
-      display: block;
-    }
-    ::selection {
-      background: var(--umber);
-      color: var(--paper);
-    }
-    .mono {
-      font-family: var(--mono);
-      font-weight: 400;
-      font-size: 11px;
-      letter-spacing: 0.13em;
-      text-transform: uppercase;
-      line-height: 1.5;
-    }
-    .disp {
-      font-family: var(--disp);
-      font-variation-settings: 'wdth' 106;
-      font-weight: 530;
-      letter-spacing: -0.015em;
-      line-height: 1.08;
-      text-transform: none;
-    }
-    .serif-it {
-      font-family: var(--serif);
-      font-style: italic;
-      text-transform: none;
-      letter-spacing: 0;
-      font-weight: 400;
-    }
-    .script {
-      font-family: var(--script);
-      font-weight: 400;
-      font-style: normal;
-      text-transform: none;
-      letter-spacing: 0;
-      font-size: 1.95em;
-      line-height: 0.8;
-    }
+/* O chão comum do site e da área privada: tokens, reset e as três utilidades
+   de tipo. Tudo o que é da landing vive em site.css e só carrega nas rotas
+   públicas; tudo o que é da área privada vive em dashboard.css.
+
+   A ordem das camadas é a ordem da cascata: o que está numa camada perde
+   para o que está fora dela, por isso só o reset e os tokens vivem em
+   camadas — o resto continua a resolver-se por ordem e especificidade,
+   como sempre resolveu, até ser mudado de propósito. */
+@layer reset, tokens, base, layout, components, utilities, overrides;
+
+@layer tokens {
+  :root {
+    --mono: var(--font-mono), monospace;
+    --sans: var(--font-sans), sans-serif;
+    --serif: var(--font-serif), Georgia, serif;
+    --disp: var(--font-disp), sans-serif;
+    --script: 'Ferly', var(--font-script), cursive;
+
+    /* Superfícies e tinta: um nome por valor, em português, para o site e
+       para a área privada. As superfícies são quentes; o ferro da barra
+       lateral tem um toque frio de propósito, e a grafite é o escuro do site. */
+    --papel: #f8f5f0;
+    --areia: #efe7da;
+    --areia2: #ddd2c3;
+    --pedra-clara: #b3a595;
+    --pedra: #a99887;
+    --pedra-escura: #8d7a68;
+    --umbra-clara: #6d5a4c;
+    --umbra: #4d3d34;
+    --tinta3: #6b6259;
+    --tinta2: #564f47;
+    --tinta: #191714;
+    --grafite: #2e2c2a;
+    --ferro: #1b2027;
+    --ferro2: #262d35;
+    --jade-claro: #8fa886;
+    --jade: #6a8760;
+    --jadeLeve: #eceee7;
+    --alerta: #8c3f2f;
+    --alertaLeve: #f4ebe7;
+    --realce: var(--umbra);
+    --realceLeve: #ece5dc;
+
+    /* Camadas. Cada coisa que flutua diz de que degrau é; um número solto
+       num componente foi como um popover ficou atrás de um modal. */
+    --z-below: -1;
+    --z-base: 0;
+    --z-raised: 1;
+    --z-atmos: 50;
+    --z-sticky: 100;
+    --z-fab: 200;
+    --z-drawer: 300;
+    --z-overlay: 400;
+    --z-modal: 500;
+    --z-lightbox: 600;
+    --z-toast: 700;
+    --z-cmd: 800;
+  }
+}
+
+@layer reset {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--grafite);
+    background: var(--grafite);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  button {
+    font: inherit;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: inherit;
+  }
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  a {
+    color: inherit;
+  }
+  img {
+    display: block;
+  }
+  ::selection {
+    background: var(--umbra);
+    color: var(--papel);
+  }
+}
+
+.mono {
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+.disp {
+  font-family: var(--disp);
+  font-variation-settings: 'wdth' 106;
+  font-weight: 530;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  text-transform: none;
+}
+.serif-it {
+  font-family: var(--serif);
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.script {
+  font-family: var(--script);
+  font-weight: 400;
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 1.95em;
+  line-height: 0.8;
+}

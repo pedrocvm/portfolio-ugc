@@ -12,7 +12,7 @@
 .cbFocus {
   margin: 0 0 32px;
   padding: 0 0 24px;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
 }
 
 .cbFocusEyebrow {
@@ -63,7 +63,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 9px 0;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
 }
 
 .cbFocusSlots li:last-child {
@@ -237,7 +237,7 @@
   gap: 12px;
   margin: 0 0 22px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
 }
 
 .cbShopTop button {
@@ -296,7 +296,7 @@
   align-items: flex-start;
   gap: 8px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
 }
 
 .cbFacts textarea {
@@ -306,7 +306,7 @@
   resize: vertical;
   font: inherit;
   line-height: 1.5;
-  color: var(--ink);
+  color: var(--tinta);
   padding: 0;
 }
 
@@ -356,10 +356,10 @@
   min-height: 44px;
   padding: 15px 17px;
   text-align: left;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--areia2);
   background: none;
   font: inherit;
-  color: var(--ink);
+  color: var(--tinta);
   cursor: pointer;
   transition: border-color var(--t-instant) var(--ease), background var(--t-instant) var(--ease);
 }
@@ -401,7 +401,7 @@
   white-space: pre-wrap;
   font: inherit;
   line-height: 1.6;
-  color: var(--ink2);
+  color: var(--tinta2);
 }
 
 /* ── Confirmações ─────────────────────────────────────────────────────────── */
@@ -419,7 +419,7 @@
 
 .cbCandidate {
   padding: 16px 0;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
 }
 
 .cbCandidate:last-child {
@@ -467,7 +467,7 @@
 }
 
 .cbFilters .chip[data-on] {
-  color: var(--ink);
+  color: var(--tinta);
   border-bottom-color: var(--umbra);
   border-bottom-width: 2px;
 }
@@ -479,7 +479,7 @@
 .cbBankFoot {
   margin-top: 22px;
   padding-top: 18px;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--areia2);
 }
 
 /* ── Desempenho ───────────────────────────────────────────────────────────── */
@@ -493,7 +493,7 @@
 
 .cbReading {
   font-size: 13px;
-  color: var(--ink2);
+  color: var(--tinta2);
   font-variant-numeric: tabular-nums;
 }
 
@@ -522,8 +522,8 @@
 
 .cbLadder li {
   padding: 14px 0 14px 14px;
-  border-bottom: 1px solid var(--rule);
-  border-left: 2px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
+  border-left: 2px solid var(--areia2);
 }
 
 .cbLadder li:last-child {
@@ -580,19 +580,19 @@
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--t2);
+  color: var(--pedra-escura);
 }
 
 .recPoint p {
   margin: 5px 0;
   font-size: 17px;
   line-height: 1.35;
-  color: var(--t1);
+  color: var(--pedra-clara);
 }
 
 .recLimits {
   margin-top: 16px;
-  color: var(--t2);
+  color: var(--pedra-escura);
 }
 
 .recLimits summary {
@@ -649,10 +649,10 @@
   min-height: 44px;
   padding: 14px 16px;
   text-align: left;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--areia2);
   background: none;
   font: inherit;
-  color: var(--ink);
+  color: var(--tinta);
   cursor: pointer;
   transition: border-color var(--t-instant) var(--ease), background var(--t-instant) var(--ease);
 }
@@ -742,17 +742,17 @@
   font-size: 13.5px;
   color: var(--tinta3);
   cursor: pointer;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
   transition: color var(--t-instant) var(--ease), border-color var(--t-instant) var(--ease);
 }
 
 .cbHelp summary:hover {
-  color: var(--ink);
+  color: var(--tinta);
   border-bottom-color: var(--umbra);
 }
 
 .cbHelp[open] summary {
-  color: var(--ink);
+  color: var(--tinta);
   border-bottom-color: transparent;
 }
 
@@ -778,13 +778,13 @@
 
 /* Dentro do modo de gravação o fundo é ferro: os mesmos tokens, invertidos. */
 .recOne .cbHelp summary {
-  color: var(--t2);
+  color: var(--pedra-escura);
   border-bottom-color: transparent;
 }
 
 .recOne .cbHelp summary:hover,
 .recOne .cbHelp[open] summary {
-  color: var(--t1);
+  color: var(--pedra-clara);
 }
 
 .recOne .cbHelpBody {
@@ -792,7 +792,7 @@
 }
 
 .recOne .cbHelpBody p {
-  color: var(--t2);
+  color: var(--pedra-escura);
 }
 
 /* ── Guia: o botão e o convite ────────────────────────────────────────────── */
@@ -803,7 +803,7 @@
   min-height: 44px;
   padding: 0;
   border: 0;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
   background: none;
   font: inherit;
   font-size: 14px;
@@ -813,7 +813,7 @@
 }
 
 .cbGuideOpen:hover {
-  color: var(--ink);
+  color: var(--tinta);
   border-bottom-color: var(--umbra);
 }
 
@@ -967,11 +967,11 @@
 .cbGuideRuleText {
   margin: 18px 0 0;
   padding-top: 14px;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--areia2);
   max-width: 44ch;
   font-size: 17px;
   line-height: 1.4;
-  color: var(--ink);
+  color: var(--tinta);
   font-weight: 500;
 }
 
@@ -1045,7 +1045,7 @@
   margin: 0;
   font-size: 17px;
   line-height: 1.35;
-  color: var(--ink);
+  color: var(--tinta);
 }
 
 .cbGuideQuestion {
@@ -1065,7 +1065,7 @@
   display: block;
   font-size: 13.5px;
   color: var(--tinta3);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
   width: fit-content;
 }
 
@@ -1229,7 +1229,7 @@
   padding: 18px 16px 20px;
   background: var(--ferro);
   border-radius: 14px;
-  color: var(--t1);
+  color: var(--pedra-clara);
 }
 
 .cbGuideCount {
@@ -1237,7 +1237,7 @@
   margin-bottom: 12px;
   font-size: 12px;
   letter-spacing: 0.12em;
-  color: var(--t2);
+  color: var(--pedra-escura);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1252,7 +1252,7 @@
   margin: 0 0 14px;
   font-size: 13px;
   line-height: 1.4;
-  color: var(--t2);
+  color: var(--pedra-escura);
 }
 
 .cbGuidePhoneIn .cbGuideBtn[data-primary] {
@@ -1263,7 +1263,7 @@
 
 .cbGuidePhoneIn .cbGuideMute {
   margin-top: 12px;
-  color: var(--t2);
+  color: var(--pedra-escura);
 }
 
 .cbGuideStage {
@@ -1381,7 +1381,7 @@
 .ciPoints li {
   padding: 12px 0 12px 14px;
   border-left: 2px solid var(--areia2);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
 }
 
 .ciPoints li:last-child {
@@ -1423,7 +1423,7 @@
 .ciRelative {
   margin: 6px 0 0;
   font-size: 13.5px;
-  color: var(--ink2);
+  color: var(--tinta2);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1437,7 +1437,7 @@
   gap: 6px 16px;
   margin: 14px 0 12px;
   padding: 12px 0 0;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--areia2);
 }
 
 .ciAudit dt {
@@ -1472,7 +1472,7 @@
   flex-wrap: wrap;
   gap: 4px 14px;
   padding: 7px 0;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--areia2);
   font-size: 13.5px;
   color: var(--tinta2);
   font-variant-numeric: tabular-nums;
@@ -1514,7 +1514,7 @@
 .cbMoments q {
   display: block;
   font-style: italic;
-  color: var(--ink2);
+  color: var(--tinta2);
 }
 
 .cbMoments q::before,
@@ -1556,7 +1556,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--areia2);
   font-size: 13px;
 }
 
