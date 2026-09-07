@@ -650,12 +650,6 @@
   .lkZapTexto {
     display: inline;
   }
-  .lk *,
-  .lk *::before,
-  .lk *::after {
-    animation: none !important;
-    transition: none !important;
-  }
   .lkNome .ch {
     clip-path: none;
   }

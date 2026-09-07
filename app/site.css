@@ -188,11 +188,6 @@
         transform: translateY(100%);
       }
     }
-    @media (prefers-reduced-motion: reduce) {
-      .bar {
-        display: none;
-      }
-    }
 
     #chip {
       position: fixed;
@@ -892,12 +887,6 @@
         transform: none;
       }
     }
-    @media (prefers-reduced-motion: reduce) {
-      #hero .kicker,
-      #hero .foot {
-        opacity: 1;
-      }
-    }
     #hero .kicker {
       display: flex;
       align-items: center;
@@ -934,11 +923,6 @@
     @keyframes write {
       to {
         clip-path: polygon(-30% -30%, 130% -30%, 114% 130%, -46% 130%);
-      }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      #hero .name .ch {
-        clip-path: none;
       }
     }
     #hero .hl .line {
@@ -1887,12 +1871,6 @@
         gap: min(8vw, 92px);
       }
     }
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation: none !important;
-        transition: none !important;
-      }
-    }
     .no-motion .bar {
       display: none;
     }
@@ -1973,4 +1951,19 @@
     }
     #navPanel .ppriv:hover {
       opacity: 1;
+    }
+
+    /* Movimento reduzido: o reset em base.css já pára tudo; aqui só os
+       estados finais. */
+    @media (prefers-reduced-motion: reduce) {
+      .bar {
+        display: none;
+      }
+      #hero .kicker,
+      #hero .foot {
+        opacity: 1;
+      }
+      #hero .name .ch {
+        clip-path: none;
+      }
     }

@@ -151,15 +151,6 @@
 .logoName .logoLine:last-child .nib {
   animation: nib 0.34s linear 0.4s forwards;
 }
-@media (prefers-reduced-motion: reduce) {
-  .logoName .ch {
-    clip-path: none;
-    animation: none;
-  }
-  .logoName .nib {
-    display: none;
-  }
-}
 
 /* ── barra lateral ─────────────────────────────────────────────────── */
 /* Três planos, não um. Grafite na lateral, papel na tela, branco onde ela
@@ -543,7 +534,7 @@
 }
 .dashState[data-tone='ok'] {
   background: var(--jadeLeve);
-  color: var(--jade);
+  color: var(--jade-escuro);
 }
 .dashState[data-tone='bad'] {
   background: var(--alertaLeve);
@@ -581,7 +572,7 @@
   color: var(--realce);
 }
 .btn:disabled {
-  color: var(--pedra);
+  color: var(--pedra-escura);
   cursor: default;
 }
 .btn.quiet {
@@ -1196,7 +1187,7 @@
   color: var(--alerta);
 }
 .okMsg {
-  color: var(--jade);
+  color: var(--jade-escuro);
 }
 .loginBack {
   display: inline-block;
@@ -1450,7 +1441,7 @@
 }
 .pill[data-stage='fechada'] {
   background: var(--jadeLeve);
-  color: var(--jade);
+  color: var(--jade-escuro);
 }
 .pill[data-stage='perdida'] {
   background: var(--alertaLeve);
@@ -1515,7 +1506,7 @@
 .fnVazio {
   margin: 16px 0 0;
   font-size: 14px;
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 .fnList {
   list-style: none;
@@ -1730,7 +1721,7 @@
 .docPapel {
   font-size: 6.6pt;
   letter-spacing: 0.2em;
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 .docRef {
   font-size: 6.8pt;
@@ -1876,7 +1867,7 @@
   border-top: 1px solid rgba(221, 210, 195, 0.7);
   font-size: 6.2pt;
   letter-spacing: 0.16em;
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 
 /* Em ecrã estreito a folha encolhe por inteiro, sem refluir: é a maqueta do
@@ -1892,14 +1883,6 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .dash *,
-  .dash *::before,
-  .dash *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
 
 /* ── o dia, em três estados ────────────────────────────────────────── */
 
@@ -2585,7 +2568,7 @@
 .recBonus {
   margin: 0;
   font-size: 16px;
-  color: var(--jade);
+  color: var(--jade-escuro);
 }
 .recActs {
   display: flex;
@@ -2972,18 +2955,6 @@
   isolation: isolate;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .dash *,
-  .dash *::before,
-  .dash *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  .cardWrap {
-    transition: none;
-  }
-}
 
 /* ── controlo segmentado ───────────────────────────────────────────── */
 .seg {
@@ -3125,6 +3096,12 @@
   background: var(--papel);
   box-shadow: 0 40px 90px -30px rgba(25, 23, 20, 0.5);
   animation: boxIn 0.36s var(--exp) both;
+}
+/* A paleta de comandos tira o outline do campo; o foco fica na caixa. */
+.cmdBox:focus-within {
+  box-shadow:
+    0 40px 90px -30px rgba(25, 23, 20, 0.5),
+    0 0 0 3px var(--realceLeve);
 }
 [data-closing] .cmdBox {
   animation: boxOut 0.18s var(--quart) both;
@@ -3796,17 +3773,6 @@
   opacity: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .spin svg,
-  .spinArc {
-    animation-duration: 2.4s;
-  }
-  .secHead,
-  .secHead h2,
-  .secHead .said {
-    transition: none;
-  }
-}
 
 /* ── título grande que encolhe ao rolar ────────────────────────────── */
 .topMark {
@@ -3865,12 +3831,6 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .dashSticky .dashBar,
-  .dashSticky h1 {
-    transition: none;
-  }
-}
 
 /* ── Os números da página de ligações ────────────────────────────────────
    A mesma gramática do resto da área privada: a hierarquia vem da escala e
@@ -4364,7 +4324,7 @@
 .osTag[data-tone='won'],
 .osTag[data-tone='ok'] {
   background: var(--jadeLeve);
-  color: var(--jade);
+  color: var(--jade-escuro);
 }
 .osTag[data-tone='lost'],
 .osTag[data-tone='bad'] {
@@ -4422,7 +4382,7 @@
 }
 .osWarn[data-tone='ok'] {
   background: var(--jadeLeve);
-  color: var(--jade);
+  color: var(--jade-escuro);
 }
 
 /* O dia dito por extenso, no lugar onde estavam quatro caixas com números.
@@ -4576,7 +4536,7 @@ a.osRow:hover .osRowName {
 }
 .osEventWhen {
   font-size: 13px;
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 .osEventText {
   margin: 3px 0 0;
@@ -4886,7 +4846,7 @@ a.osRow:hover .osRowName {
 }
 .osPageBtn:disabled {
   cursor: default;
-  color: var(--pedra-clara);
+  color: var(--pedra-escura);
   border-color: var(--areia);
 }
 .osPageBtn[aria-pressed='true'] {
@@ -4980,7 +4940,7 @@ a.osRow:hover .osRowName {
   color: var(--alerta);
 }
 .osList[data-tone='ok'] li::marker {
-  color: var(--jade);
+  color: var(--jade-escuro);
 }
 
 /* ── barras de composição ──────────────────────────────────────────────── */
@@ -5092,7 +5052,10 @@ a.osRow:hover .osRowName {
   font: inherit;
   font-size: 14px;
   cursor: pointer;
-  transition: all var(--t-normal) var(--quart);
+  transition:
+    background var(--t-normal) var(--quart),
+    border-color var(--t-normal) var(--quart),
+    color var(--t-normal) var(--quart);
 }
 .osKinds button[aria-pressed='true'] {
   background: var(--umbra);
@@ -5132,11 +5095,14 @@ a.osRow:hover .osRowName {
   color: var(--tinta3);
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--t-normal) var(--quart);
+  transition:
+    background var(--t-normal) var(--quart),
+    border-color var(--t-normal) var(--quart),
+    color var(--t-normal) var(--quart);
 }
 .osSwitch[aria-pressed='true'] {
-  background: var(--jade);
-  border-color: var(--jade);
+  background: var(--jade-escuro);
+  border-color: var(--jade-escuro);
   color: var(--papel);
 }
 
@@ -5665,11 +5631,6 @@ a.aiSource:hover {
     opacity: 0;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .aiCaret {
-    animation: none;
-  }
-}
 
 /* ── notificações ──────────────────────────────────────────────────────── */
 /* Fixo no topo, acima da barra pegajosa de cada página: o que está atrasado
@@ -5865,7 +5826,7 @@ a.aiSource:hover {
 }
 .outDetail > summary::before {
   content: '▸ ';
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 .outDetail[open] > summary::before {
   content: '▾ ';
@@ -6376,9 +6337,6 @@ a.aiSource:hover {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .dash .toast { animation: none; }
-}
 
 /* Dispensar um aviso da campainha. */
 .dash .notifBox li {
@@ -6680,9 +6638,6 @@ a.aiSource:hover {
 @keyframes findingPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.25; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .dash .findingDot { animation: none; }
 }
 @media (max-width: 700px) {
   /* Num ecrã estreito o texto não cabe ao lado da campainha; fica o ponto. */
@@ -7047,7 +7002,7 @@ a.aiSource:hover {
   resize: vertical;
 }
 .dash .focoNota2::placeholder {
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 .dash .focoNota2:focus-visible {
   outline: 2px solid var(--tinta);
@@ -7420,7 +7375,7 @@ a.aiSource:hover {
   padding: 2px 0;
 }
 .dash .refOpt {
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 .dash .refPlan {
   display: grid;
@@ -7573,7 +7528,7 @@ a.aiSource:hover {
   padding: 2px 0;
 }
 .dash .cbOpt {
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 .dash .cbPlan {
   display: grid;
@@ -7712,7 +7667,7 @@ a.aiSource:hover {
   margin: 8px 0 0;
   font-size: 12px;
   letter-spacing: 0.03em;
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 .dash .csRules {
   margin: 0;
@@ -7890,7 +7845,7 @@ a.aiSource:hover {
 .dash .outRel[data-kind='CLIENT'] {
   border-left-color: var(--jade);
   background: var(--jadeLeve);
-  color: var(--jade);
+  color: var(--jade-escuro);
 }
 .dash .outRel b {
   font-family: var(--disp);
@@ -8390,5 +8345,69 @@ a.aiSource:hover {
      campo. `.dash.dash` ganha às regras de componente sem `!important`. */
   .dash.dash :is(input, textarea, select) {
     font-size: max(16px, 1em);
+  }
+}
+
+/* ── movimento reduzido: o que fica por cima do reset ─────────────────── */
+/* O reset em base.css já torna tudo instantâneo. Aqui só o que precisa de
+   um estado final ou de um desenho estático. */
+@media (prefers-reduced-motion: reduce) {
+  .logoName .ch {
+    clip-path: none;
+    animation: none;
+  }
+  .logoName .nib {
+    display: none;
+  }
+  .cardWrap,
+  .secHead,
+  .secHead h2,
+  .secHead .said,
+  .dashSticky .dashBar,
+  .dashSticky h1 {
+    transition: none;
+  }
+  .aiCaret,
+  .dash .toast,
+  .dash .findingDot {
+    animation: none;
+  }
+}
+
+/* ── alvos de toque ───────────────────────────────────────────────────── */
+/* Em toque, o que se toca tem 44px de área mesmo quando o desenho é mais
+   pequeno: um pseudo-elemento invisível centrado no controlo estende a área
+   sem mexer no desenho. O `summary` da lista de clientes fica de fora porque
+   já usa o ::after para o seu chevron. */
+@media (pointer: coarse) {
+  .dash .icoBtn,
+  .dash .osSwitch,
+  .dash .chip,
+  .dash .btn.tiny,
+  .dash .sideToggle,
+  .dash .sideOut,
+  .dash .sideName,
+  .dash summary:not(.cli > summary) {
+    position: relative;
+  }
+  .dash .icoBtn::after,
+  .dash .osSwitch::after,
+  .dash .chip::after,
+  .dash .btn.tiny::after,
+  .dash .sideToggle::after,
+  .dash .sideOut::after,
+  .dash .sideName::after,
+  .dash summary:not(.cli > summary)::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+  }
+  .dash input[type='checkbox'],
+  .dash input[type='radio'] {
+    width: 24px;
+    height: 24px;
   }
 }

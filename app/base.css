@@ -14,7 +14,7 @@
     --sans: var(--font-sans), sans-serif;
     --serif: var(--font-serif), Georgia, serif;
     --disp: var(--font-disp), sans-serif;
-    --script: 'Ferly', var(--font-script), cursive;
+    --script: var(--font-script), cursive;
 
     /* Superfícies e tinta: um nome por valor, em português, para o site e
        para a área privada. As superfícies são quentes; o ferro da barra
@@ -35,6 +35,8 @@
     --ferro2: #262d35;
     --jade-claro: #8fa886;
     --jade: #6a8760;
+    /* Para texto: o jade sobre papel ou sobre o seu tom claro dá 3,4:1. */
+    --jade-escuro: #4e6746;
     --jadeLeve: #eceee7;
     --alerta: #8c3f2f;
     --alertaLeve: #f4ebe7;
@@ -95,6 +97,20 @@
   ::selection {
     background: var(--umbra);
     color: var(--papel);
+  }
+  /* Movimento reduzido, decidido uma vez para o site e para a área privada:
+     tudo o que anima ou transita passa a instantâneo. O que cada componente
+     precisa de fixar por cima disto (um estado final, um marcador estático)
+     vive junto dele, num bloco só por folha. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

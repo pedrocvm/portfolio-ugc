@@ -511,7 +511,7 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 
 .cbLadder {
@@ -551,18 +551,6 @@
 
 /* ── Movimento ────────────────────────────────────────────────────────────── */
 
-@media (prefers-reduced-motion: reduce) {
-  .cbShop,
-  .cbShop[data-closing],
-  .cbShopBox,
-  .cbShop[data-closing] .cbShopBox {
-    animation: none;
-  }
-  .cbDot {
-    animation: none;
-    opacity: 1;
-  }
-}
 
 /* ── Recording Mode: o contexto da história ───────────────────────────────── */
 
@@ -1114,7 +1102,7 @@
 
 .cbGuideArrow {
   font-size: 18px;
-  color: var(--pedra);
+  color: var(--tinta3);
 }
 
 .cbGuideOut {
@@ -1202,7 +1190,7 @@
   position: absolute;
   left: 0;
   font-size: 12px;
-  color: var(--pedra);
+  color: var(--tinta3);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1337,7 +1325,7 @@
   position: absolute;
   left: 0;
   font-size: 12px;
-  color: var(--pedra);
+  color: var(--tinta3);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1351,18 +1339,6 @@
   color: var(--tinta3);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cbGuide,
-  .cbGuide[data-closing],
-  .cbGuideBox,
-  .cbGuide[data-closing] .cbGuideBox,
-  .cbGuideBody {
-    animation: none;
-  }
-  .cbGuideBar span {
-    transition: none;
-  }
-}
 
 /* ── Content Intelligence ─────────────────────────────────────────────────── */
 
@@ -1479,7 +1455,7 @@
 }
 
 .ciFrames li span:first-child {
-  color: var(--pedra);
+  color: var(--tinta3);
   min-width: 1.5ch;
 }
 
@@ -1594,4 +1570,26 @@
 
 .cbStoryRow .osRowSide a.chip {
   white-space: nowrap;
+}
+
+/* ── movimento reduzido: o que fica por cima do reset ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .cbShop,
+  .cbShop[data-closing],
+  .cbShopBox,
+  .cbShop[data-closing] .cbShopBox,
+  .cbGuide,
+  .cbGuide[data-closing],
+  .cbGuideBox,
+  .cbGuide[data-closing] .cbGuideBox,
+  .cbGuideBody,
+  .cbDot {
+    animation: none;
+  }
+  .cbDot {
+    opacity: 1;
+  }
+  .cbGuideBar span {
+    transition: none;
+  }
 }

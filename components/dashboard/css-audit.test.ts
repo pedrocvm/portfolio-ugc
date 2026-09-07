@@ -70,3 +70,22 @@ test('uma paleta, um nome por valor, e a escala de camadas só em base.css', () 
     assert.doesNotMatch(css, /z-index:\s*-?\d{2,}/, `${f} tem z-index cru; usa a escala`);
   }
 });
+
+test('acessibilidade: contraste, alvos de toque, foco na paleta e um só bloco de movimento reduzido', () => {
+  const base = ler('app/base.css');
+  assert.match(base, /--jade-escuro: #4e6746;/);
+  assert.match(base, /@media \(prefers-reduced-motion: reduce\) \{\n\s+\*,\n\s+::before,\n\s+::after \{\n\s+animation-duration: 0\.01ms !important;/);
+  assert.doesNotMatch(base, /Ferly/, 'uma fonte que nunca carrega não se referencia');
+  const dash = ler('app/dashboard/dashboard.css');
+  assert.doesNotMatch(dash, /^\s*color: var\(--jade\);/m, 'jade só para fundos e filetes; para texto é --jade-escuro');
+  assert.doesNotMatch(dash, /^\s*color: var\(--pedra\);/m, 'pedra como texto dá 2,6:1');
+  assert.match(dash, /\.cmdBox:focus-within \{/);
+  assert.match(dash, /@media \(pointer: coarse\) \{[\s\S]*width: max\(100%, 44px\);/);
+  assert.doesNotMatch(dash, /transition: all/);
+  for (const f of ['app/dashboard/dashboard.css', 'app/dashboard/content-brain.css', 'app/site.css', 'app/contato/links.css']) {
+    const css = ler(f);
+    assert.equal((css.match(/prefers-reduced-motion: reduce/g) || []).length, 1, `${f}: um bloco de movimento reduzido`);
+    const fora = css.split('\n').filter((l, i, all) => l.includes('!important') && !all.slice(Math.max(0, i - 60), i).some((x) => x.includes('@media print')));
+    assert.deepEqual(fora.filter((l) => !l.trim().startsWith('/*') && !l.includes('sem `!important`')), [], `${f}: !important fora de print`);
+  }
+});
