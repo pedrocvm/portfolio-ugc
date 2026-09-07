@@ -290,7 +290,7 @@ export const SECTIONS: Section[] = [
         k: 'strings',
         path: 'nav.labels',
         label: 'Nomes das seções',
-        hint: 'Pela ordem: sobre, fotos, processo, pacotes e FAQ. Mudam o nome, não a ordem nem o destino.',
+        hint: 'Pela ordem: sobre, fotos, processo, pacotes e FAQ. Mudam o nome, não a ordem nem o destino. Um nome em branco esconde esse item do menu.',
         fixed: true,
       },
     ],

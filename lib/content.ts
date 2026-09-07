@@ -123,6 +123,26 @@ export const NAV_HREFS = [
   '#faq',
 ] as const;
 
+/** Uma seção que saiu do site deixa para trás um nome a mais no que ficou
+ *  salvo, e a partir daí cada item herdava a âncora do seguinte. Os nomes em
+ *  branco são os primeiros a cair porque não dizem nada. */
+export function navLabels(saved: string[]): string[] {
+  const names = saved.map((l) => l.trim());
+  while (names.length > NAV_HREFS.length) {
+    const vazio = names.findIndex((n) => !n);
+    names.splice(vazio < 0 ? names.length - 1 : vazio, 1);
+  }
+  return NAV_HREFS.map((_, i) => names[i] ?? '');
+}
+
+/** Um nome apagado no editor tira o item do menu; os que ficam continuam
+ *  presos à sua âncora, sem deslizar para a seção seguinte. */
+export function navLinks(saved: string[]) {
+  return navLabels(saved)
+    .map((label, i) => ({ href: NAV_HREFS[i], label }))
+    .filter((l) => l.label);
+}
+
 export const DEFAULT_CONTENT: Content = {
   meta: {
     title: 'Carol Queiroz — UGC Creator · Sessão privada',

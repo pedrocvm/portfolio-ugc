@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
-import { Content, DEFAULT_CONTENT } from './content';
+import { Content, DEFAULT_CONTENT, navLabels } from './content';
 import { merge } from './merge';
 import { SUPABASE_KEY, SUPABASE_URL } from './supabase/config';
 import { supabaseServer } from './supabase/server';
@@ -26,7 +26,8 @@ async function read(key: 'draft' | 'published'): Promise<Content | null> {
     .eq('key', key)
     .maybeSingle();
   if (error || !data) return null;
-  return merge(DEFAULT_CONTENT, data.data);
+  const c = merge(DEFAULT_CONTENT, data.data);
+  return { ...c, nav: { ...c.nav, labels: navLabels(c.nav.labels) } };
 }
 
 const publicado = unstable_cache(

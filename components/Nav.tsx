@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { NAV_HREFS, type Content } from '@/lib/content';
+import { NAV_HREFS, navLinks, type Content } from '@/lib/content';
 
 export default function Nav({
   c,
@@ -12,7 +12,7 @@ export default function Nav({
 }) {
   const [open, setOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
-  const links = NAV_HREFS.map((href, i) => ({ href, label: c.labels[i] ?? '' }));
+  const links = navLinks(c.labels);
 
   useEffect(() => {
     if (!open) return;

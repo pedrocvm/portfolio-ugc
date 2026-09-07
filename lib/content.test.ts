@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { getIn, setIn } from '../components/dashboard/paths.ts';
 import { fit } from './compress.ts';
-import { DEFAULT_CONTENT } from './content.ts';
+import {
+  DEFAULT_CONTENT,
+  NAV_HREFS,
+  navLabels,
+  navLinks,
+} from './content.ts';
 import { hashParts, isPwnedIn } from './hibp.ts';
 import { merge } from './merge.ts';
 
@@ -116,4 +121,42 @@ test('salvar uma seção não mexe no resto do rascunho', () => {
 
   assert.equal(out.process.num, '09');
   assert.deepEqual(out.session.takes, salvo.session.takes);
+});
+
+test('cada âncora do menu tem um nome no modelo de origem', () => {
+  assert.equal(DEFAULT_CONTENT.nav.labels.length, NAV_HREFS.length);
+});
+
+test('nome em branco tira o item do menu sem mexer nos outros destinos', () => {
+  const out = navLinks(['Sobre', '  ', 'Processo', 'Pacotes', 'FAQ']);
+  assert.deepEqual(
+    out.map((l) => l.href),
+    ['#meet', '#processo', '#pacotes', '#faq'],
+  );
+});
+
+test('o nome que sobrou de uma seção retirada não desloca os destinos', () => {
+  const out = navLinks(['Sobre', '', 'Fotos', 'Processo', 'Pacotes', 'FAQ']);
+  assert.deepEqual(
+    out.map((l) => `${l.href}:${l.label}`),
+    [
+      '#meet:Sobre',
+      '#fotos:Fotos',
+      '#processo:Processo',
+      '#pacotes:Pacotes',
+      '#faq:FAQ',
+    ],
+  );
+});
+
+test('o editor mostra uma linha por âncora, nem mais nem menos', () => {
+  const guardado = ['Sobre', '', 'Fotos', 'Processo', 'Pacotes', 'FAQ'];
+  assert.deepEqual(navLabels(guardado), [
+    'Sobre',
+    'Fotos',
+    'Processo',
+    'Pacotes',
+    'FAQ',
+  ]);
+  assert.equal(navLabels(['Sobre']).length, NAV_HREFS.length);
 });
