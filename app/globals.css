@@ -32,6 +32,12 @@
       cursor: pointer;
       color: inherit;
     }
+    input,
+    textarea,
+    select {
+      font: inherit;
+      color: inherit;
+    }
     a {
       color: inherit;
     }

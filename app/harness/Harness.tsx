@@ -15,6 +15,10 @@ import Inbox from '@/components/dashboard/os/Inbox';
 import NextActionCard from '@/components/dashboard/os/NextActionCard';
 import { nextActionForThread, extractReferredContacts } from '@/modules/actions/next-action';
 import ContentIntelligence from '@/components/dashboard/os/content-brain/ContentIntelligence';
+import ContentVault from '@/components/dashboard/os/ContentVault';
+import Notifications from '@/components/dashboard/Notifications';
+import QuickCapture from '@/components/dashboard/QuickCapture';
+import Assistant from '@/components/assistant/Assistant';
 import type { FeedAuditView, StoryAuditView } from '@/modules/content-brain/performance-service';
 import { auditPiece, feedSummary, type FeedPieceInput } from '@/modules/content-brain/feed-audit';
 import { sequenceMetrics } from '@/modules/content-brain/stories';
@@ -391,6 +395,49 @@ export default function Harness({ modo }: { modo?: string }) {
           <span className="dashState">procurando uma história</span>
         </div>
         <StoryWorkshop focus="attraction_journey" trigger="Encontrar uma história" autoOpen />
+      </>
+    );
+  }
+
+  // O cromo da área privada: a barra de ações, o sino, os botões flutuantes,
+  // o cabeçalho de um cartão do site e os campos do banco de conteúdo — tudo
+  // o que a auditoria de CSS mediu, na mesma tela, para medir aqui também.
+  if (modo === 'chrome' || modo === 'chrome-stuck') {
+    return (
+      <>
+        <i className="topMark" aria-hidden="true" />
+        <div className="dashSticky" data-stuck={modo === 'chrome-stuck' || undefined}>
+          <div className="dashBar">
+            <h1>Conteúdo do site</h1>
+            <span className="dashState" data-tone="ok">Publicado</span>
+            <button type="button" className="btn quiet">Repor</button>
+            <button type="button" className="btn">salvar</button>
+            <button type="button" className="btn solid">Publicar</button>
+          </div>
+        </div>
+        <Notifications
+          items={[
+            { id: 'n1', severity: 'urgent', title: 'A Cecotec está 3 dias atrasada', detail: 'O follow-up venceu na segunda.', href: '/dashboard/opportunities/x' },
+            { id: 'n2', severity: 'info', title: 'Encontrei 8 conteúdos novos', detail: 'No seu Instagram, desde ontem.', href: '/dashboard/content' },
+          ]}
+        />
+        <div className="card">
+          <div className="cardHead">
+            <span className="grip" aria-hidden="true"><i /><i /></span>
+            <button type="button" className="icoBtn" aria-label="Abrir">+</button>
+            <span className="n">CASA&DECOR</span>
+            <span className="t">Casa & Decor — a marca que respondeu em dois dias</span>
+            <button type="button" className="icoBtn mvUp" aria-label="Subir">↑</button>
+            <button type="button" className="icoBtn mvDown" aria-label="Descer">↓</button>
+            <button type="button" className="icoBtn" aria-label="Remover">✕</button>
+          </div>
+        </div>
+        <ContentVault saved={[]} seeds={[]} broll={[]} braga={null} proof={[]} />
+        <div className="fabStack" id="fabStack">
+          <QuickCapture />
+          <Assistant configured={false} />
+          <button type="button" className="pvFab">Ver o site</button>
+        </div>
       </>
     );
   }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Busy from './Busy';
 import Spinner from './Spinner';
@@ -23,6 +24,13 @@ export default function Editor({ initial }: { initial: Content }) {
   const [here, setHere] = useState(SECTIONS[0].id);
   const [pending, start] = useTransition();
   const router = useRouter();
+  // A pilha de botões flutuantes é do layout; o botão só existe aqui. Na
+  // hidratação ainda não há pilha, e o botão fica onde está até haver.
+  const pilha = useSyncExternalStore(
+    () => () => {},
+    () => document.getElementById('fabStack'),
+    () => null,
+  );
   const sticky = useRef<HTMLDivElement>(null);
   const tocadas = useRef(new Set<string>());
 
@@ -151,6 +159,21 @@ export default function Editor({ initial }: { initial: Content }) {
     });
   }
 
+  const verOSite = (
+    <button type="button" className="pvFab" onClick={() => setPreview(true)}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path
+          d="M2.4 12S6 5.4 12 5.4 21.6 12 21.6 12 18 18.6 12 18.6 2.4 12 2.4 12Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+        />
+        <circle cx="12" cy="12" r="3.1" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      </svg>
+      Ver o site
+    </button>
+  );
+
   return (
     <>
       <i className="topMark" aria-hidden="true" />
@@ -191,29 +214,7 @@ export default function Editor({ initial }: { initial: Content }) {
 
       </div>
 
-      <button
-        type="button"
-        className="pvFab"
-        onClick={() => setPreview(true)}
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path
-            d="M2.4 12S6 5.4 12 5.4 21.6 12 21.6 12 18 18.6 12 18.6 2.4 12 2.4 12Z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-          />
-          <circle
-            cx="12"
-            cy="12"
-            r="3.1"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-          />
-        </svg>
-        Ver o site
-      </button>
+      {pilha ? createPortal(verOSite, pilha) : verOSite}
 
       {preview ? (
         <PreviewFrame

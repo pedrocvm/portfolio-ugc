@@ -72,14 +72,17 @@ export default async function AppLayout({
           {/* Fixo no topo, em todos as telas. */}
           <Notifications items={alerts} />
           <Toasts />
-          <QuickCapture />
           <DiscoveryWatch />
           <Command />
-          {/* Só na área privada, e só com a bandeira aberta: o portfólio público
-              não conhece a Carol AI. */}
-          {flags.assistant_enabled ? (
-            <Assistant configured={assistantReady()} />
-          ) : null}
+          {/* Os botões flutuantes vivem numa pilha só; o «Ver o site» do editor
+              entra nela por portal. Só na área privada, e só com a bandeira
+              aberta: o portfólio público não conhece a Carol AI. */}
+          <div className="fabStack" id="fabStack">
+            <QuickCapture />
+            {flags.assistant_enabled ? (
+              <Assistant configured={assistantReady()} />
+            ) : null}
+          </div>
         </div>
       </AssistantProvider>
     </>

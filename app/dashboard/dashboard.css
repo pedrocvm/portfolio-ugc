@@ -801,6 +801,9 @@
 .dash input[type='text'],
 .dash input[type='password'],
 .dash input[type='date'],
+/* Um <input> sem `type` não é «sem estilo»: é o mesmo campo. `:where` fica com
+   especificidade zero para as regras de cada componente continuarem a mandar. */
+.dash :where(input:not([type]), input[type='search'], input[type='email'], input[type='url'], input[type='tel'], input[type='number']),
 .dash textarea,
 .dash select {
   width: 100%;
@@ -926,6 +929,7 @@
 }
 .cardHead {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   padding: 13px 0;
@@ -951,7 +955,9 @@
   min-width: 78px;
 }
 .cardHead .t {
-  flex: 1;
+  /* Com menos de 140px desce para a linha seguinte; antes ficava com 0–9px e
+     o texto existia mas não se via. */
+  flex: 1 1 140px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -971,10 +977,6 @@
 
 /* ── ver o site ────────────────────────────────────────────────────── */
 .pvFab {
-  position: fixed;
-  right: 28px;
-  bottom: 28px;
-  z-index: var(--z-fab);
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -2380,10 +2382,6 @@
 /* Ao lado do botão da Carol AI, e mais pequeno: é a ação secundária dos dois.
    No telemóvel sobe acima da barra de baixo, senão fica por baixo dela. */
 .capFab {
-  position: fixed;
-  right: clamp(16px, 2vw, 28px);
-  bottom: calc(clamp(16px, 2vw, 28px) + 70px);
-  z-index: var(--z-fab);
   display: grid;
   place-items: center;
   width: 46px;
@@ -2414,12 +2412,6 @@
   stroke-width: 1.7;
   stroke-linecap: round;
 }
-@media (max-width: 959px) {
-  .capFab {
-    bottom: calc(72px + env(safe-area-inset-bottom) + 70px);
-  }
-}
-
 .capBox {
   width: min(600px, 100%);
 }
@@ -3324,6 +3316,8 @@
     justify-content: space-between;
     gap: 16px;
     padding: max(8px, env(safe-area-inset-top)) 18px 8px;
+    /* A altura do sino (44px + filete), que vive fixo no canto direito. */
+    min-height: calc(max(8px, env(safe-area-inset-top)) + 46px);
   }
   /* o nome passa a uma linha: duas linhas de manuscrito comiam um terço do
      ecrã antes de o conteúdo começar */
@@ -3560,6 +3554,7 @@
   .dash input[type='text'],
   .dash input[type='password'],
   .dash input[type='date'],
+  .dash :where(input:not([type]), input[type='search'], input[type='email'], input[type='url'], input[type='tel'], input[type='number']),
   .dash textarea,
   .dash select,
   .libCardFoot select,
@@ -3654,10 +3649,7 @@
     animation: sheetDown 0.22s var(--quart) both;
   }
 
-  /* o botão flutuante sobe acima da barra */
   .pvFab {
-    right: 16px;
-    bottom: calc(74px + env(safe-area-inset-bottom));
     padding: 12px 18px 13px;
   }
 
@@ -5253,10 +5245,6 @@ a.osRow:hover .osRowName {
    que ela já sabe o que é assim que a abre uma vez, e ocupava metade do canto
    do ecrã. */
 .aiLauncher {
-  position: fixed;
-  right: clamp(16px, 2vw, 28px);
-  bottom: clamp(16px, 2vw, 28px);
-  z-index: var(--z-fab);
   display: grid;
   place-items: center;
   width: 58px;
@@ -5574,10 +5562,6 @@ a.aiSource:hover {
     width: 100vw;
     border-left: 0;
   }
-  .aiLauncher {
-    /* Acima da barra de separadores, que ocupa o fundo do ecrã. */
-    bottom: calc(env(safe-area-inset-bottom) + 74px);
-  }
 }
 
 /* ── Carol AI: anexos, web e avisos ────────────────────────────────────── */
@@ -5646,10 +5630,6 @@ a.aiSource:hover {
 }
 .aiComposerActs {
   justify-content: flex-start;
-}
-
-.aiLauncher {
-  position: fixed;
 }
 
 /* Os avisos no Hoje. Uma lista curta, e cada um leva a um sítio. */
@@ -5885,8 +5865,14 @@ a.aiSource:hover {
   padding-right: 58px;
 }
 @media (max-width: 959px) {
+  /* Dentro da barra escura do topo, que cresce para o receber (ver `.side`),
+     e não a cavalo da borda dela. Quando a barra de ações fica presa ao
+     topo é ela que lhe reserva o canto: sem isto o «Publicar» ficava por
+     baixo do sino. */
   .notif {
-    top: max(9px, env(safe-area-inset-top));
+    /* Centrado na barra de 54px (46px + 8px de topo); com o entalhe do iPhone
+       a barra cresce a mesma medida. */
+    top: calc(max(8px, env(safe-area-inset-top)) - 3px);
     right: 14px;
   }
   .notifBell {
@@ -5896,7 +5882,7 @@ a.aiSource:hover {
     height: 44px;
   }
   .dashBar {
-    padding-right: 0;
+    padding-right: 40px;
   }
 }
 
@@ -6087,21 +6073,27 @@ a.aiSource:hover {
   border-color: var(--umbra);
   box-shadow: 0 0 0 3px var(--areia);
 }
-.osSearch input {
+.dash .osSearch input,
+.dash .osSearch select {
   flex: 1;
+  width: auto;
   min-width: 0;
   padding: 12px 15px;
   border: 0;
-  background: none;
+  border-radius: 0;
+  background-color: transparent;
   font: inherit;
   font-size: 14.5px;
   color: var(--tinta);
+  box-shadow: none;
 }
-.osSearch input::placeholder {
+.dash .osSearch input::placeholder {
   color: var(--t1);
 }
-.osSearch input:focus {
+.dash .osSearch input:focus,
+.dash .osSearch select:focus {
   outline: none;
+  box-shadow: none;
 }
 .osSearch button {
   display: inline-flex;
@@ -7791,6 +7783,7 @@ a.aiSource:hover {
 .dash .csAdd .osSearch {
   flex: 1 1 240px;
   min-height: 44px;
+  margin-top: 0;
 }
 .dash .csAdd .csSeconds {
   flex: 0 0 72px;
@@ -8391,4 +8384,56 @@ a.aiSource:hover {
   line-height: 1.5;
   color: var(--tinta2);
   max-width: 62ch;
+}
+
+/* ── botões flutuantes: uma pilha só ──────────────────────────────────── */
+/* Eram três `position: fixed` no mesmo canto com o mesmo z-index: a Carol AI
+   tapava o «Ver o site» e o «+» assentava em cima do último campo da página.
+   A pilha decide a ordem; cada botão só sabe o seu desenho. */
+.fabStack {
+  position: fixed;
+  right: max(clamp(16px, 2vw, 28px), env(safe-area-inset-right));
+  bottom: max(clamp(16px, 2vw, 28px), env(safe-area-inset-bottom));
+  z-index: var(--z-fab);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+.fabStack > * {
+  pointer-events: auto;
+}
+.fabStack .capFab {
+  order: 1;
+}
+.fabStack .pvFab {
+  order: 2;
+}
+.fabStack .aiLauncher {
+  order: 3;
+}
+
+@media (max-width: 959px) {
+  .fabStack {
+    bottom: calc(74px + env(safe-area-inset-bottom));
+  }
+  /* A barra de abas já tem o botão da Carol AI; dois no mesmo ecrã de 400px
+     era um a mais, e o que tapava o último campo da página. */
+  .fabStack .aiLauncher {
+    display: none;
+  }
+  /* Um campo focado sobe acima da pilha, e o fim da página tem espaço para
+     o último campo sair de baixo dela. */
+  html {
+    scroll-padding-bottom: 260px;
+  }
+  .dash .sheet {
+    padding-bottom: calc(220px + env(safe-area-inset-bottom));
+  }
+  /* Piso de 16px em toque: abaixo disso o iOS amplia a página ao focar o
+     campo. `.dash.dash` ganha às regras de componente sem `!important`. */
+  .dash.dash :is(input, textarea, select) {
+    font-size: max(16px, 1em);
+  }
 }

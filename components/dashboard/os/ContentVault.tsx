@@ -143,21 +143,25 @@ function BrollBank({ broll }: { broll: BrollRow[] }) {
       </p>
 
       <div className="csAdd">
-        <input
-          className="osSearch"
-          value={nota}
-          onChange={(e) => setNota(e.target.value)}
-          placeholder="O que é o take: «eu editando no CapCut, uns 8 segundos»"
-          aria-label="O que é o take"
-        />
-        <input
-          className="osSearch csSeconds"
-          value={segundos}
-          onChange={(e) => setSegundos(e.target.value.replace(/[^\d]/g, ''))}
-          placeholder="seg"
-          inputMode="numeric"
-          aria-label="Segundos"
-        />
+        <div className="osSearch">
+          <input
+            type="text"
+            value={nota}
+            onChange={(e) => setNota(e.target.value)}
+            placeholder="O que é o take: «eu editando no CapCut, uns 8 segundos»"
+            aria-label="O que é o take"
+          />
+        </div>
+        <div className="osSearch csSeconds">
+          <input
+            type="text"
+            value={segundos}
+            onChange={(e) => setSegundos(e.target.value.replace(/[^\d]/g, ''))}
+            placeholder="seg"
+            inputMode="numeric"
+            aria-label="Segundos"
+          />
+        </div>
         <label className="osPageBtn">
           {busy ? <Spinner label="Subindo" /> : null}
           Subir arquivo
@@ -199,7 +203,9 @@ function BrollRowView({ id, title, tags, durationSeconds, usedCount }: { id: str
       <div>
         <span className="osRowName" style={{ fontSize: 17 }}>{title}</span>
         {edit ? (
-          <input className="osSearch" value={texto} onChange={(e) => setTexto(e.target.value)} aria-label="Etiquetas, separadas por vírgula" />
+          <div className="osSearch">
+            <input type="text" value={texto} onChange={(e) => setTexto(e.target.value)} aria-label="Etiquetas, separadas por vírgula" />
+          </div>
         ) : (
           <p className="osRowSub">
             {texto || 'sem etiquetas'}
@@ -361,8 +367,12 @@ function ProofVault({ proof }: { proof: SocialProofRow[] }) {
         O que uma marca disse do trabalho dela é prova social. Vira conteúdo e portfólio — depois de a marca autorizar. Sem permissão registada, o sistema mostra o processo e não cita ninguém.
       </p>
       <div className="csAdd">
-        <input className="osSearch" value={marca} onChange={(e) => setMarca(e.target.value)} placeholder="Marca" aria-label="Marca" />
-        <input className="osSearch" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="O que a marca disse" aria-label="O que a marca disse" />
+        <div className="osSearch">
+          <input type="text" value={marca} onChange={(e) => setMarca(e.target.value)} placeholder="Marca" aria-label="Marca" />
+        </div>
+        <div className="osSearch">
+          <input type="text" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="O que a marca disse" aria-label="O que a marca disse" />
+        </div>
         <button className="osPageBtn" type="button" disabled={pending || !marca.trim() || !texto.trim()} onClick={guardarFeedback}>
           {pending ? <Spinner label="Salvando" /> : null}
           Salvar feedback
@@ -381,8 +391,8 @@ function ProofVault({ proof }: { proof: SocialProofRow[] }) {
                   {p.feedback && p.context ? <p className="osRowSub">{p.context}</p> : null}
                 </div>
                 <div className="osRowSide">
+                  <div className="osSearch">
                   <select
-                    className="osSearch"
                     value={perm}
                     onChange={(e) => permissao(p.id, e.target.value as SocialProofRow['permission'])}
                     aria-label="Permissão da marca"
@@ -391,6 +401,7 @@ function ProofVault({ proof }: { proof: SocialProofRow[] }) {
                       <option key={k} value={k}>{PERMISSAO[k]}</option>
                     ))}
                   </select>
+                  </div>
                   {p.contentIdeaId ? (
                     <Link className="chip" href={`/dashboard/content?idea=${p.contentIdeaId}`}>Ver conteúdo</Link>
                   ) : (
