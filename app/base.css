@@ -146,3 +146,28 @@
   font-size: 1.95em;
   line-height: 0.8;
 }
+
+/* A assinatura escrita à mão: o nome sai letra a letra e a pena passa por
+   cima. O hero da landing e a logo da área privada escrevem o mesmo nome, por
+   isso o movimento vive aqui e não numa das duas folhas. */
+@keyframes write {
+  to {
+    clip-path: polygon(-30% -30%, 130% -30%, 114% 130%, -46% 130%);
+  }
+}
+@keyframes nib {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}

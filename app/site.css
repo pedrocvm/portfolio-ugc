@@ -912,11 +912,6 @@
       clip-path: polygon(-30% -30%, -30% -30%, -46% 130%, -46% 130%);
       animation: write 0.16s ease-out calc(0.15s + var(--i) * 0.035s) forwards;
     }
-    @keyframes write {
-      to {
-        clip-path: polygon(-30% -30%, 130% -30%, 114% 130%, -46% 130%);
-      }
-    }
     #hero .hl .line {
       position: relative;
       display: block;
@@ -945,22 +940,6 @@
     }
     #hero .line:last-child .nib {
       animation: nib 0.37s linear 0.43s forwards;
-    }
-    @keyframes nib {
-      0% {
-        left: 0;
-        opacity: 0;
-      }
-      8% {
-        opacity: 1;
-      }
-      88% {
-        opacity: 1;
-      }
-      100% {
-        left: 100%;
-        opacity: 0;
-      }
     }
     .no-motion #hero .nib {
       display: none;

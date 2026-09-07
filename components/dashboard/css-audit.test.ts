@@ -89,3 +89,35 @@ test('acessibilidade: contraste, alvos de toque, foco na paleta e um só bloco d
     assert.deepEqual(fora.filter((l) => !l.trim().startsWith('/*') && !l.includes('sem `!important`')), [], `${f}: !important fora de print`);
   }
 });
+
+/** A landing e a área privada escrevem o mesmo nome à mão, mas carregam
+ *  folhas diferentes: uma animação usada dos dois lados tem de viver no chão
+ *  comum, senão o nome fica recortado e invisível de um dos lados. */
+test('nenhuma folha usa uma animação que a sua página não carrega', () => {
+  const define = (f: string) =>
+    new Set([...ler(f).matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1]));
+  const palavras = new Set([
+    'none', 'linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out', 'infinite',
+    'forwards', 'backwards', 'both', 'alternate', 'alternate-reverse', 'reverse',
+    'normal', 'running', 'paused', 'steps', 'cubic-bezier', 'var', 'initial', 'inherit',
+  ]);
+  const usa = (f: string) =>
+    new Set(
+      [...ler(f).matchAll(/animation(?:-name)?:\s*([^;]+);/g)]
+        .flatMap((m) => m[1].split(/[,\s]+/))
+        .filter((t) => /^[a-zA-Z][\w-]*$/.test(t) && !palavras.has(t)),
+    );
+
+  const base = define('app/base.css');
+  const paginas: [string, string[]][] = [
+    ['área privada', ['app/dashboard/dashboard.css', 'app/dashboard/content-brain.css']],
+    ['landing', ['app/site.css']],
+    ['contatos', ['app/site.css', 'app/contato/links.css']],
+  ];
+  for (const [pagina, folhas] of paginas) {
+    const disponiveis = new Set([...base, ...folhas.flatMap((f) => [...define(f)])]);
+    for (const f of folhas)
+      for (const nome of usa(f))
+        assert.ok(disponiveis.has(nome), `${f} usa @keyframes ${nome}, que ${pagina} não carrega`);
+  }
+});
