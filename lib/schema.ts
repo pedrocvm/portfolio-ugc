@@ -107,6 +107,7 @@ export const SECTIONS: Section[] = [
     note: 'As tomadas que passam enquanto se rola a página.',
     fields: [
       { k: 'text', path: 'session.label', label: 'Etiqueta' },
+      ...heading('session', 'produções'),
       {
         k: 'list',
         path: 'session.takes',

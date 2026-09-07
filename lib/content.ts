@@ -57,7 +57,12 @@ export type Content = {
     shelfEyebrow: string;
     shelfFoot: string;
   };
-  session: { label: string; takes: Take[] };
+  session: {
+    label: string;
+    titleLead: string;
+    titleEm: string;
+    takes: Take[];
+  };
   photos: {
     num: string;
     eyebrow: string;
@@ -197,6 +202,8 @@ export const DEFAULT_CONTENT: Content = {
   },
   session: {
     label: 'A sessão',
+    titleLead: 'O que eu',
+    titleEm: 'gravo.',
     takes: [
       { label: 'Tomada 01', n: '01', niche: 'Casa & Decor', img: '/img/img-15.jpg' },
       { label: 'Tomada 02', n: '02', niche: 'Casa & Decor', img: '/img/img-16.jpg' },
