@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
+import DegradedNotice from '@/components/DegradedNotice';
 import LinkTree from '@/components/links/LinkTree';
 import { wa } from '@/lib/content';
-import { getPublished } from '@/lib/content-store';
+import { getPublishedMeta, getPublishedOrDefault } from '@/lib/content-store';
 import '../site.css';
 import './links.css';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { hero, meta } = await getPublished();
+  const { hero, meta } = await getPublishedMeta();
   const nome = `${hero.firstName} ${hero.lastName}`;
   return {
     title: `${nome} — Links`,
@@ -22,13 +23,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ContactoPage() {
-  const c = await getPublished();
+  const { content: c, degraded } = await getPublishedOrDefault();
   return (
-    <LinkTree
-      c={c.links}
-      hero={c.hero}
-      contact={c.contact}
-      whatsapp={wa(c.contact.phone, c.contact.whatsappMessage)}
-    />
+    <>
+      {degraded ? <DegradedNotice /> : null}
+      <LinkTree
+        c={c.links}
+        hero={c.hero}
+        contact={c.contact}
+        whatsapp={wa(c.contact.phone, c.contact.whatsappMessage)}
+      />
+    </>
   );
 }

@@ -1,8 +1,17 @@
+import DegradedNotice from '@/components/DegradedNotice';
 import Site from '@/components/Site';
-import { getNicheMedia, getPublished } from '@/lib/content-store';
+import { getNicheMedia, getPublishedOrDefault } from '@/lib/content-store';
 import './site.css';
 
 export default async function Page() {
-  const [c, media] = await Promise.all([getPublished(), getNicheMedia()]);
-  return <Site c={c} media={media} />;
+  const [{ content: c, degraded }, media] = await Promise.all([
+    getPublishedOrDefault(),
+    getNicheMedia(),
+  ]);
+  return (
+    <>
+      {degraded ? <DegradedNotice /> : null}
+      <Site c={c} media={media} />
+    </>
+  );
 }

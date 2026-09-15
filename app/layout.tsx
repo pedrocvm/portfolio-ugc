@@ -6,7 +6,7 @@ import {
   Space_Mono,
   Tangerine,
 } from 'next/font/google';
-import { getPublished } from '@/lib/content-store';
+import { getPublishedMeta } from '@/lib/content-store';
 import './base.css';
 
 const archivo = Archivo({
@@ -52,7 +52,7 @@ const fontVars = [archivo, sans, serif, mono, script]
   .join(' ');
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { meta } = await getPublished();
+  const { meta } = await getPublishedMeta();
   return {
     metadataBase: new URL('https://carolqueiroz.pt'),
     title: meta.title,
