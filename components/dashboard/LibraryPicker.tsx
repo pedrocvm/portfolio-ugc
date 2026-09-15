@@ -5,6 +5,7 @@ import { useExit } from './useExit';
 import { listMedia } from '@/app/dashboard/library-actions';
 import type { MediaItem } from '@/lib/library';
 import { isVideo } from '@/lib/media';
+import VideoThumb from './VideoThumb';
 
 export default function LibraryPicker({
   accept,
@@ -62,7 +63,7 @@ export default function LibraryPicker({
                 <button type="button" onClick={() => onPick(it.url)}>
                   <span className="libThumb">
                     {isVideo(it.url) ? (
-                      <video src={it.url} muted playsInline preload="metadata" />
+                      <VideoThumb src={it.url} />
                     ) : (
                       <img src={it.url} alt="" loading="lazy" />
                     )}

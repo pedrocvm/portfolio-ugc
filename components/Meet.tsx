@@ -211,7 +211,7 @@ export default function Meet({
                       muted
                       loop
                       playsInline
-                      preload="metadata"
+                      preload="none"
                     />
                   ) : (
                     <Pic src={src} alt="" />

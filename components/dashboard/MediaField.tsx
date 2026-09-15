@@ -6,6 +6,7 @@ import { compressVideo } from '@/lib/compress';
 import { isVideo } from '@/lib/media';
 import { supabaseBrowser } from '@/lib/supabase/browser';
 import LibraryPicker from './LibraryPicker';
+import VideoThumb from './VideoThumb';
 import Viewer from './Viewer';
 
 const slug = (name: string) =>
@@ -136,7 +137,7 @@ export default function MediaField({
             aria-label={`Ver ${label}`}
             onClick={() => setViewing(true)}
           >
-            <video src={value} muted playsInline preload="metadata" />
+            <VideoThumb src={value} />
           </button>
         ) : (
           <div className="mediaThumb">

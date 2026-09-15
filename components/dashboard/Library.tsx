@@ -12,6 +12,7 @@ import { KIND_LABEL, type MediaItem, type MediaKind } from '@/lib/library';
 import { useUpload } from './MediaField';
 import Segmented from './Segmented';
 import Spinner from './Spinner';
+import VideoThumb from './VideoThumb';
 import Viewer from './Viewer';
 
 const TODOS = '__todos__';
@@ -186,7 +187,7 @@ export default function Library({
                   aria-label={`Ver ${it.title || 'vídeo'}`}
                   onClick={() => setVer(it)}
                 >
-                  <video src={it.url} muted playsInline preload="metadata" />
+                  <VideoThumb src={it.url} />
                 </button>
               )}
               <input

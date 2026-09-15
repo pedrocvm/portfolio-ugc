@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Field } from '@/lib/schema';
 import { isMedia, isVideo } from '@/lib/media';
 import MediaField from './MediaField';
+import VideoThumb from './VideoThumb';
 import { getIn, join, setIn } from './paths';
 
 type Ctx = {
@@ -312,7 +313,7 @@ function Card({
         {thumb ? (
           <span className="cardPic" aria-hidden="true">
             {isVideo(thumb) ? (
-              <video src={thumb} muted playsInline preload="metadata" />
+              <VideoThumb src={thumb} />
             ) : (
               <img src={thumb} alt="" loading="lazy" />
             )}
