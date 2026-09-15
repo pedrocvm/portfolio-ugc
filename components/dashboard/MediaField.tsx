@@ -4,10 +4,32 @@ import { useCallback, useRef, useState } from 'react';
 import { addMedia } from '@/app/dashboard/library-actions';
 import { compressVideo } from '@/lib/compress';
 import { isVideo } from '@/lib/media';
-import { COMPRESS_OVER, MAX_PICK, MAX_UPLOAD, mb } from '@/lib/media-limits';
+import { supabaseBrowser } from '@/lib/supabase/browser';
 import LibraryPicker from './LibraryPicker';
 import VideoThumb from './VideoThumb';
 import Viewer from './Viewer';
+
+const slug = (name: string) =>
+  name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9.]+/g, '-')
+    .toLowerCase();
+
+/** ponytail: o teto de 50 MB é o do plano gratuito do Supabase, igual para
+ *  todos os buckets. Se o projeto passar a Pro, sobe aqui e nas definições de
+ *  Storage. Sem esta salva o pedido só volta com 413 e uma frase em inglês. */
+const MAX_UPLOAD = 50 * 1024 * 1024;
+/** O que ela pode escolher: acima disto o browser engasga-se a descodificar. */
+const MAX_PICK = 100 * 1024 * 1024;
+/** Acima disto o vídeo é reencodado antes de subir. Esteve em 20 MB, que
+ *  nenhum reel de celular alcança: os 18 vídeos da biblioteca passaram todos
+ *  por baixo e ficaram guardados como saíram da câmera, 163 MB ao todo, até a
+ *  cota de tráfego do Storage acabar e levar o site público com ela. Comprimir
+ *  custa-lhe o tempo do vídeo a passar uma vez; o original volta intacto
+ *  sempre que o reencode não compensa. */
+const COMPRESS_OVER = 4 * 1024 * 1024;
+const mb = (n: number) => Math.round(n / 1024 / 1024);
 
 export function useUpload() {
   const [busy, setBusy] = useState(false);
@@ -45,39 +67,19 @@ export function useUpload() {
       return null;
     }
 
-    /* O navegador nunca fala com o R2 nem vê uma credencial dele: pede ao
-       servidor uma URL assinada para aquele nome, tipo e tamanho exatos, e
-       só depois sobe o arquivo direto para ela. */
-    const authRes = await fetch('/api/media/upload', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        filename: file.name,
-        contentType: file.type || 'application/octet-stream',
-        size: file.size,
-      }),
-    });
-    const authJson: { uploadUrl?: string; path?: string; publicUrl?: string; error?: string } =
-      await authRes.json().catch(() => ({ error: 'Resposta inválida do servidor.' }));
-    if (!authRes.ok || !authJson.uploadUrl || !authJson.path || !authJson.publicUrl) {
-      setBusy(false);
-      setNote(null);
-      setError(`Não foi possível preparar o upload. ${authJson.error ?? ''}`.trim());
-      return null;
-    }
-
-    const putRes = await fetch(authJson.uploadUrl, {
-      method: 'PUT',
-      headers: { 'content-type': file.type || 'application/octet-stream' },
-      body: file,
-    });
+    const supabase = supabaseBrowser();
+    const path = `${Date.now()}-${slug(file.name)}`;
+    const { error: err } = await supabase.storage
+      .from('media')
+      .upload(path, file, { cacheControl: '31536000', upsert: false });
     setBusy(false);
     setNote(null);
-    if (!putRes.ok) {
-      setError(`Não foi possível carregar o arquivo. HTTP ${putRes.status}.`);
+    if (err) {
+      setError(`Não foi possível carregar o arquivo. ${err.message}`);
       return null;
     }
-    return { url: authJson.publicUrl, path: authJson.path };
+    const { publicUrl } = supabase.storage.from('media').getPublicUrl(path).data;
+    return { url: publicUrl, path };
   }
 
   return { upload, busy, note, error };

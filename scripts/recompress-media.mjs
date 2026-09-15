@@ -12,14 +12,16 @@
  *  substituído, e o caminho no Storage nunca muda: as páginas publicadas
  *  continuam a apontar para o mesmo endereço.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { VALE_A_PENA, reencodeVideo } from './lib/video-compress.mjs';
 
 const apply = process.argv.includes('--apply');
 const BACKUP = '.media-backup';
 const TMP = '/tmp/recompress-media';
 const BUCKET = 'media';
+/** Abaixo disto o reencode não tem nada para ganhar. */
+const VALE_A_PENA = 2 * 1024 * 1024;
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -66,15 +68,23 @@ for (const item of itens) {
     continue;
   }
 
-  const reencoded = reencodeVideo(entrada, saida);
-  if (!reencoded.ok) {
-    saltados.push(`${nome}: ffmpeg falhou — ${reencoded.reason.slice(0, 120)}`);
+  /* -crf 27 com faststart: o moov fica à cabeça do arquivo, que é o que torna
+     barato pedir só os metadados para desenhar a miniatura. */
+  const ff = spawnSync('ffmpeg', [
+    '-v', 'error', '-i', entrada,
+    '-vf', "scale='min(1080,iw)':'min(1920,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
+    '-c:v', 'libx264', '-crf', '27', '-preset', 'medium', '-profile:v', 'high',
+    '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k',
+    '-movflags', '+faststart', saida, '-y',
+  ]);
+  if (ff.status !== 0) {
+    saltados.push(`${nome}: ffmpeg falhou — ${String(ff.stderr).slice(0, 120)}`);
     antes += tamanhoAntes;
     depois += tamanhoAntes;
     continue;
   }
 
-  const tamanhoDepois = reencoded.size;
+  const tamanhoDepois = statSync(saida).size;
   antes += tamanhoAntes;
 
   /* Um reencode que engorda o arquivo não entra: o original fica. */

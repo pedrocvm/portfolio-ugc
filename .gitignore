@@ -22,8 +22,3 @@ pnpm-workspace.yaml
 
 # originais dos vídeos antes de serem reencodados; ficam só nesta máquina
 .media-backup/
-
-# backup dos originais e manifest da migração Supabase Storage → R2; ficam
-# só nesta máquina, nunca no repositório
-.media-migration-backup/
-.media-migration-manifest.json

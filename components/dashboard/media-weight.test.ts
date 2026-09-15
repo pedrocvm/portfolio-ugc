@@ -53,12 +53,10 @@ test('a prateleira de nichos não pré-carrega o que ninguém abriu', () => {
 
 /** Os vídeos que a biblioteca guardou antes deste limiar existir iam de 6,8 MB
  *  a 18,9 MB, e nenhum foi comprimido: o limiar estava em 20 MB. Tem de ficar
- *  abaixo do mais leve deles, ou volta a deixar passar a biblioteca inteira.
- *  Migrou de MediaField.tsx para lib/media-limits.ts (compartilhado com a
- *  rota que assina o upload para o R2), por isso o teste lê de lá agora. */
+ *  abaixo do mais leve deles, ou volta a deixar passar a biblioteca inteira. */
 test('o limiar de compressão apanha um reel de celular', () => {
-  const src = ler('lib/media-limits.ts');
-  const m = src.match(/export const COMPRESS_OVER = (\d+) \* 1024 \* 1024;/);
+  const src = ler('components/dashboard/MediaField.tsx');
+  const m = src.match(/const COMPRESS_OVER = (\d+) \* 1024 \* 1024;/);
   assert.ok(m, 'COMPRESS_OVER deixou de ser declarado em MB');
   assert.ok(
     Number(m[1]) <= 5,
