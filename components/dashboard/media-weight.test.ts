@@ -50,3 +50,16 @@ test('a prateleira de nichos não pré-carrega o que ninguém abriu', () => {
     'a prateleira do site público voltaria a pedir metadata de cada vídeo do nicho',
   );
 });
+
+/** Os vídeos que a biblioteca guardou antes deste limiar existir iam de 6,8 MB
+ *  a 18,9 MB, e nenhum foi comprimido: o limiar estava em 20 MB. Tem de ficar
+ *  abaixo do mais leve deles, ou volta a deixar passar a biblioteca inteira. */
+test('o limiar de compressão apanha um reel de celular', () => {
+  const src = ler('components/dashboard/MediaField.tsx');
+  const m = src.match(/const COMPRESS_OVER = (\d+) \* 1024 \* 1024;/);
+  assert.ok(m, 'COMPRESS_OVER deixou de ser declarado em MB');
+  assert.ok(
+    Number(m[1]) <= 5,
+    `limiar de ${m[1]} MB deixa passar os vídeos que encheram o Storage`,
+  );
+});

@@ -14,7 +14,8 @@
     "eval:ai": "node --import ./scripts/test-alias.mjs scripts/eval-ai.ts",
     "ai:keys": "node --env-file-if-exists=.env.local scripts/ai-keys.mjs",
     "eval:content": "node --env-file-if-exists=.env.local --import ./scripts/test-alias.mjs scripts/eval-content-brain.ts",
-    "import:audit": "node --env-file-if-exists=.env.local --import ./scripts/test-alias.mjs scripts/import-instagram-audit.ts"
+    "import:audit": "node --env-file-if-exists=.env.local --import ./scripts/test-alias.mjs scripts/import-instagram-audit.ts",
+    "media:recompress": "node --env-file-if-exists=.env.local scripts/recompress-media.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

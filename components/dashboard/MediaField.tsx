@@ -22,8 +22,13 @@ const slug = (name: string) =>
 const MAX_UPLOAD = 50 * 1024 * 1024;
 /** O que ela pode escolher: acima disto o browser engasga-se a descodificar. */
 const MAX_PICK = 100 * 1024 * 1024;
-/** Abaixo disto o vídeo já serve para a web e comprimir só custa tempo a ela. */
-const COMPRESS_OVER = 20 * 1024 * 1024;
+/** Acima disto o vídeo é reencodado antes de subir. Esteve em 20 MB, que
+ *  nenhum reel de celular alcança: os 18 vídeos da biblioteca passaram todos
+ *  por baixo e ficaram guardados como saíram da câmera, 163 MB ao todo, até a
+ *  cota de tráfego do Storage acabar e levar o site público com ela. Comprimir
+ *  custa-lhe o tempo do vídeo a passar uma vez; o original volta intacto
+ *  sempre que o reencode não compensa. */
+const COMPRESS_OVER = 4 * 1024 * 1024;
 const mb = (n: number) => Math.round(n / 1024 / 1024);
 
 export function useUpload() {
@@ -44,9 +49,9 @@ export function useUpload() {
 
     let file = input;
     if (input.type.startsWith('video/') && input.size > COMPRESS_OVER) {
-      setNote('A comprimir 0%');
+      setNote('Comprimindo 0%');
       file = await compressVideo(input, (r) =>
-        setNote(`A comprimir ${Math.round(r * 100)}%`),
+        setNote(`Comprimindo ${Math.round(r * 100)}%`),
       );
       setNote('Carregando');
     }
