@@ -5,6 +5,7 @@ import { requireEditor } from '@/lib/auth';
 import type { MediaItem } from '@/lib/library';
 import { MEDIA_TAG } from '@/lib/content-store';
 import { supabaseServer } from '@/lib/supabase/server';
+import { r2DeleteObject } from '@/lib/storage/r2';
 import type { Result } from './actions';
 
 export async function listMedia(): Promise<MediaItem[]> {
@@ -67,7 +68,9 @@ export async function removeMedia(id: string): Promise<Result> {
   const { error } = await supabase.from('media_item').delete().eq('id', id);
   if (error) return { error: 'Não foi possível apagar.' };
   if (data?.storage_path) {
-    await supabase.storage.from('media').remove([data.storage_path]);
+    /* O registro já saiu; se o R2 falhar aqui o pior caso é um arquivo órfão
+       lá, não um erro visível para a editora — apagar de novo não tem como. */
+    await r2DeleteObject(data.storage_path).catch(() => {});
   }
   revalidatePath('/dashboard/library');
   updateTag(MEDIA_TAG);
