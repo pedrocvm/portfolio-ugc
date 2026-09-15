@@ -126,6 +126,47 @@ As colunas antigas de `brand` (`stage`, `next_step`, `instagram`, `contact`)
 continuam lá e continuam a funcionar. O modelo novo vive ao lado, em
 `opportunity` e `action_item`, e o backfill preserva tudo.
 
+## Media (Cloudflare R2)
+
+A biblioteca de media — as fotos e vídeos que a Carol carrega no dashboard e
+que aparecem no site público — vive no **Cloudflare R2**, não no Supabase
+Storage. Postgres, Auth e RLS continuam no Supabase; só os ficheiros em si
+mudaram de sítio, depois de o Supabase Storage ter ficado bloqueado por
+excesso de egress em cache no plano gratuito.
+
+O `storage_path` de cada `media_item` continua o mesmo de sempre — o que
+mudou foi só onde esse caminho é lido. `lib/media.ts` tem a única função que
+sabe construir a URL pública (`publicMediaUrl`); nada mais no código fala
+directamente com o domínio do R2.
+
+Upload nunca passa pelo browser com credenciais do R2: o painel pede a
+`/api/media/upload` uma URL assinada, o servidor valida sessão, MIME e
+tamanho, e só depois devolve um PUT temporário (5 minutos) para o browser
+enviar o ficheiro directamente ao bucket. As chaves do R2
+(`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`) ficam em `lib/storage/r2.ts`,
+marcado `server-only`, e nunca chegam ao cliente.
+
+Variáveis (nomes em `.env.example`):
+
+| Variável | Onde |
+|---|---|
+| `R2_ACCOUNT_ID` | servidor |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | servidor, nunca `NEXT_PUBLIC_` |
+| `R2_BUCKET` | servidor — `carol-ugc-media-prod` em produção |
+| `NEXT_PUBLIC_R2_PUBLIC_BASE_URL` | pública — é a única coisa do R2 que o browser conhece |
+
+Migrar os ficheiros que ainda estão no bucket antigo do Supabase (idempotente,
+seguro repetir):
+
+```bash
+npm run media:migrate-r2 -- --dry     # só relatório, não escreve nada
+npm run media:migrate-r2 -- --apply
+```
+
+O bucket antigo do Supabase Storage fica intacto de propósito — é o caminho
+de rollback enquanto o R2 não tiver rodado tempo suficiente em produção.
+Nada é apagado do lado do Supabase por este processo.
+
 ## Ligar o Gmail
 
 O lado da aplicação está pronto. Falta o cliente de OAuth, que só pode ser
