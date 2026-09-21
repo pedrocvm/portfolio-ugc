@@ -415,8 +415,14 @@ function statementFor(mechanism: string, v: LadderVerdict): string {
 
 export { describeMechanism };
 
-export async function learningLadder(limit = 12): Promise<LearningRow[]> {
-  const db = await supabaseServer();
+/** A escada, como está gravada.
+ *
+ *  Aceita um cliente porque corre dos dois lados: com sessão nas telas, e com
+ *  service role no trabalho da auditoria. Sem isso, `supabaseServer()` chama
+ *  `cookies()` fora de um pedido e rebenta — foi o que aconteceu na primeira
+ *  corrida real da Auditoria. */
+export async function learningLadder(limit = 12, opts: { db?: Client } = {}): Promise<LearningRow[]> {
+  const db = await client(opts.db);
   const { data } = await db
     .from('content_learning')
     .select('id, mechanism, statement, ladder_state, confidence, sample_size, evidence_ids, derived_at')
@@ -454,6 +460,10 @@ export type FeedAuditPiece = FeedPieceInput & {
   isSharedToFeed: boolean | null;
   audit: PieceAudit;
   storyTitle: string | null;
+  /** O teste de que esta peça nasceu, e de que lado. Nasce de uma associação
+   *  explícita no CarolOS — nunca de inferir Trial Reel pela API, que não o
+   *  distingue. */
+  experiment: { id: string; label: string; hypothesis: string; arm: 'control' | 'variant' } | null;
 };
 
 export type FeedAuditView = {
@@ -466,6 +476,8 @@ export type FeedAuditView = {
 type MediaAuditRow = {
   id: string; permalink: string | null; is_shared_to_feed: boolean | null; caption: string; published_at: string; media_product_type: string;
   story_id: string | null; audit: unknown; audit_source: string | null;
+  experiment_arm: string | null;
+  content_experiment: { id?: string; label?: string; hypothesis?: string } | null;
   creator_story: { title?: string; functional_pillar?: string; structure?: Record<string, unknown>; story_lens_id?: string | null } | null;
 };
 
@@ -485,15 +497,21 @@ const tagsOf = (r: MediaAuditRow): AuditTags => {
  *
  *  Peças antigas comparam-se pela leitura atual e só com outras antigas;
  *  peças recentes pela janela em que estão. Nunca uma contra a outra. */
-export async function feedAudit(limit = 60, opts: { db?: Client } = {}): Promise<FeedAuditView> {
+export async function feedAudit(limit = 60, opts: { db?: Client; since?: string | null } = {}): Promise<FeedAuditView> {
   const db = await client(opts.db);
+  let q = db
+    .from('instagram_media')
+    .select('id, permalink, is_shared_to_feed, caption, published_at, media_product_type, story_id, audit, audit_source, experiment_arm, content_experiment(id, label, hypothesis), creator_story(title, functional_pillar, structure, story_lens_id)')
+    .neq('media_product_type', 'STORY')
+    .order('published_at', { ascending: false })
+    .limit(limit);
+  // A Auditoria recorta por período; as telas continuam a pedir tudo. O recorte
+  // é do lado da publicação, não da leitura: uma peça de agosto não entra nos
+  // «últimos 7 dias» só porque foi relida ontem.
+  if (opts.since) q = q.gte('published_at', opts.since);
+
   const [{ data: medias }, { data: conta }] = await Promise.all([
-    db
-      .from('instagram_media')
-      .select('id, permalink, is_shared_to_feed, caption, published_at, media_product_type, story_id, audit, audit_source, creator_story(title, functional_pillar, structure, story_lens_id)')
-      .neq('media_product_type', 'STORY')
-      .order('published_at', { ascending: false })
-      .limit(limit),
+    q,
     db.from('instagram_account').select('last_sync_at').limit(1).maybeSingle(),
   ]);
 
@@ -568,7 +586,17 @@ export async function feedAudit(limit = 60, opts: { db?: Client } = {}): Promise
       latestKind: (leitura?.snapshot_kind as SnapshotKind | undefined) ?? null,
       readingAgeDays: leitura ? Math.round(leitura.age_seconds / 86_400) : null,
     };
-    pieces.push({ ...input, permalink: m.permalink, isSharedToFeed: m.is_shared_to_feed, storyTitle: story?.title ?? null, audit: auditPiece(input) });
+    const teste = m.content_experiment;
+    pieces.push({
+      ...input,
+      permalink: m.permalink,
+      isSharedToFeed: m.is_shared_to_feed,
+      storyTitle: story?.title ?? null,
+      experiment: teste?.id && (m.experiment_arm === 'control' || m.experiment_arm === 'variant')
+        ? { id: teste.id, label: teste.label ?? 'Teste', hypothesis: teste.hypothesis ?? '', arm: m.experiment_arm }
+        : null,
+      audit: auditPiece(input),
+    });
   }
 
   const comparable = pieces.filter((p) => p.readings.some((r) => r.comparable)).length;
@@ -732,7 +760,7 @@ export async function storyAudit(opts: { syncScheduled: boolean; db?: Client }):
     active: frames.filter((f) => !f.expired_at).length,
     expired: frames.filter((f) => f.expired_at).length,
     sequences: views,
-    guidance: storyGuidance(views.map((v) => ({ startedAt: v.startedAt, metrics: v.metrics, tags: v.tags }))),
+    guidance: storyGuidance(views.map((v) => ({ id: v.id, startedAt: v.startedAt, metrics: v.metrics, tags: v.tags }))),
     policyVersion: STORY_SEQUENCE_POLICY_V1.version,
   };
 }

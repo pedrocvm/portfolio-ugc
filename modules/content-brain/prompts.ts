@@ -208,6 +208,8 @@ export const structureStory: Prompt<
   {
     title: string; facts: readonly string[]; meaning: string | null; quotes: readonly string[];
     frame: string; pillar: FunctionalPillar; broll: string;
+    /** O que os dados dela já ensinaram. Vazio quando ainda não há nada. */
+    learned?: string;
   },
   StoryStructure
 > = {
@@ -232,6 +234,11 @@ Como fazer:
 - \`must_not_invent\` lista o que tem de continuar factual.
 - A duração sai da história e da função, não de uma regra fixa. Justifica.
 - O formato estético é uma linguagem válida dela. Não forças talking head.
+- Quando vier uma secção «O que os dados dela ensinam», ela orienta a FORMA,
+  nunca o conteúdo: não muda um fato, não inventa um acontecimento e não
+  transforma a história noutra. Um aprendizado validado pode pesar; uma
+  hipótese só sugere. E não repitas o formato vencedor todas as vezes — um
+  perfil que repete sempre a mesma coisa deixa de aprender.
 
 ${describeTaste()}
 `.trim(),
@@ -246,6 +253,7 @@ ${describeTaste()}
       i.meaning ? `\nO que significou para ela: «${i.meaning}»` : '',
       i.quotes.length ? `\nPalavras dela:\n${i.quotes.map((q) => `- «${q}»`).join('\n')}` : '',
       i.broll ? `\nB-roll que já existe no banco:\n${i.broll}` : '',
+      i.learned ? `\nO que os dados dela ensinam:\n${i.learned}` : '',
     ].join('\n'),
   maxTokens: 1800,
 };

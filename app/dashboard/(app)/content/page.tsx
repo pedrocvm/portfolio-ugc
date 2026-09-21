@@ -16,6 +16,8 @@ import {
 import { planFromStructure } from '@/modules/content-brain/domain';
 import { contentScreen, performanceScreen, toBankRows } from '@/modules/content-brain/screen-service';
 import { feedAudit, storyAudit } from '@/modules/content-brain/performance-service';
+import { auditScreen } from '@/modules/content-brain/audit-service';
+import { isAuditPeriod } from '@/modules/content-brain/audit';
 import { schedulerState } from '@/modules/jobs/scheduler';
 import { guideEntry } from '@/modules/content-brain/guide-service';
 import { usableTrends } from '@/modules/trends/service';
@@ -28,6 +30,7 @@ import Published from '@/components/dashboard/os/Published';
 import ReelsTestLab from '@/components/dashboard/os/ReelsTestLab';
 import ContentGuide from '@/components/dashboard/os/content-brain/ContentGuide';
 import ContentIntelligence from '@/components/dashboard/os/content-brain/ContentIntelligence';
+import Audit from '@/components/dashboard/os/content-brain/Audit';
 import RecordPane from '@/components/dashboard/os/content-brain/RecordPane';
 import StoryBank from '@/components/dashboard/os/content-brain/StoryBank';
 
@@ -41,10 +44,10 @@ export const dynamic = 'force-dynamic';
 export default async function ContentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ idea?: string; tab?: string; find?: string }>;
+  searchParams: Promise<{ idea?: string; tab?: string; find?: string; period?: string }>;
 }) {
   await requireUser();
-  const { idea, tab, find } = await searchParams;
+  const { idea, tab, find, period } = await searchParams;
 
   // Idempotente e barato: Braga Real, as experiências e o feedback da
   // Charabanc existem antes de a primeira manhã correr.
@@ -72,7 +75,13 @@ export default async function ContentPage({
   // Só depois de saber se a captura está ligada: a cobertura de Stories diz
   // «não está ligada» ou «desde tal dia», nunca «0 Stories».
   const syncScheduled = Boolean(agendador?.rows.some((r) => r.jobName === 'carolos-instagram-sync' && r.active));
-  const historias = await storyAudit({ syncScheduled }).catch(() => null);
+  // A Auditoria lê o que o trabalho da madrugada gravou: nenhuma chamada à
+  // Meta ao renderizar, e a tela abre mesmo com a integração em baixo. As duas
+  // são independentes e vão juntas — em série custavam uma ida à base a mais.
+  const [historias, auditoria] = await Promise.all([
+    storyAudit({ syncScheduled }).catch(() => null),
+    auditScreen({ period: isAuditPeriod(period) ? period : '30d' }).catch(() => null),
+  ]);
 
   const byRole = (role: FunnelRole) => content.filter((c) => c.funnelRole === role);
   const publicadas = banco.filter((i) => i.status === 'recorded' || i.status === 'published');
@@ -157,19 +166,31 @@ export default async function ContentPage({
             </>
           ),
           tests: <ReelsTestLab lab={lab} />,
+          // A Auditoria é a casa de tudo o que o Instagram ensina. O detalhe
+          // peça a peça continua a ser o mesmo componente — dentro dela, em
+          // «Explorar dados», e não repetido noutra aba.
+          audit: auditoria ? (
+            <Audit
+              screen={auditoria}
+              explore={
+                feed && historias ? (
+                  <ContentIntelligence
+                    pieces={desempenho.pieces}
+                    learnings={desempenho.learnings}
+                    lastSyncAt={desempenho.lastSyncAt}
+                    feed={feed}
+                    stories={historias}
+                  />
+                ) : (
+                  <p className="osWarn">Não consegui abrir o detalhe peça a peça agora. As conclusões acima continuam válidas.</p>
+                )
+              }
+            />
+          ) : (
+            <p className="osWarn">Não consegui ler a auditoria agora. Tente recarregar daqui a pouco.</p>
+          ),
           published: (
             <>
-              {feed && historias ? (
-                <ContentIntelligence
-                  pieces={desempenho.pieces}
-                  learnings={desempenho.learnings}
-                  lastSyncAt={desempenho.lastSyncAt}
-                  feed={feed}
-                  stories={historias}
-                />
-              ) : (
-                <p className="osWarn">Não consegui ler o Instagram agora. As peças do plano continuam abaixo.</p>
-              )}
               <Published pieces={publicadas} performance={Object.fromEntries(performance)} learnings={learnings} />
               <BrandPieces content={content} inventory={inventory} byRole={byRole} />
             </>

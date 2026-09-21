@@ -548,6 +548,11 @@ export async function buildStructure(storyId: string): Promise<Result<{ beats: n
 
   const { describeBrollBank, brollBank } = await import('@/modules/creator/content-os-service');
   const broll = await brollBank(20).then(describeBrollBank).catch(() => '');
+  // O que a Auditoria já aprendeu entra aqui, e só aqui: orienta a forma,
+  // nunca o fato. Uma leitura que falhe não impede a história de ser
+  // estruturada — antes da Auditoria existir, isto era sempre vazio.
+  const { brainContext } = await import('./audit-service');
+  const aprendido = await brainContext().then((c) => c.text).catch(() => '');
 
   const r = await runPrompt(
     structurePrompt,
@@ -559,6 +564,7 @@ export async function buildStructure(storyId: string): Promise<Result<{ beats: n
       frame: story.frameLabel,
       pillar: gate.pillar,
       broll,
+      learned: aprendido,
     },
     { entityType: 'creator_story', entityId: storyId, policyVersions: { sot: SOT_VERSION } },
   );

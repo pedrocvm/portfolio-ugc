@@ -23,6 +23,7 @@ export type Database = {
           due_at: string | null
           evidence: Json
           id: string
+          next_action: Json
           opportunity_id: string | null
           priority_score: number
           reason: string
@@ -31,12 +32,11 @@ export type Database = {
           risk: string
           snoozed_until: string | null
           source_event_id: string | null
+          source_thread_id: string | null
           status: string
           title: string
           type: string
           updated_at: string
-          next_action: Json
-          source_thread_id: string | null
         }
         Insert: {
           brand_id?: string | null
@@ -46,6 +46,7 @@ export type Database = {
           due_at?: string | null
           evidence?: Json
           id?: string
+          next_action?: Json
           opportunity_id?: string | null
           priority_score?: number
           reason?: string
@@ -54,12 +55,11 @@ export type Database = {
           risk?: string
           snoozed_until?: string | null
           source_event_id?: string | null
+          source_thread_id?: string | null
           status?: string
           title: string
           type: string
           updated_at?: string
-          next_action?: Json
-          source_thread_id?: string | null
         }
         Update: {
           brand_id?: string | null
@@ -69,6 +69,7 @@ export type Database = {
           due_at?: string | null
           evidence?: Json
           id?: string
+          next_action?: Json
           opportunity_id?: string | null
           priority_score?: number
           reason?: string
@@ -77,12 +78,11 @@ export type Database = {
           risk?: string
           snoozed_until?: string | null
           source_event_id?: string | null
+          source_thread_id?: string | null
           status?: string
           title?: string
           type?: string
           updated_at?: string
-          next_action?: Json
-          source_thread_id?: string | null
         }
         Relationships: [
           {
@@ -118,6 +118,13 @@ export type Database = {
             columns: ["source_event_id"]
             isOneToOne: false
             referencedRelation: "activity_event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_item_source_thread_id_fkey"
+            columns: ["source_thread_id"]
+            isOneToOne: false
+            referencedRelation: "source_thread"
             referencedColumns: ["id"]
           },
         ]
@@ -1512,18 +1519,18 @@ export type Database = {
           language: string | null
           name: string
           notes: string
+          observed_at: string | null
           phone: string | null
           preferred_channel: string | null
+          provenance: string
           relationship_strength: number | null
           role: string
           social_handle: string | null
           source: string | null
-          updated_at: string
+          source_confidence: number | null
           source_message_id: string | null
           source_thread_id: string | null
-          source_confidence: number | null
-          observed_at: string | null
-          provenance: string
+          updated_at: string
         }
         Insert: {
           brand_id: string
@@ -1533,18 +1540,18 @@ export type Database = {
           language?: string | null
           name?: string
           notes?: string
+          observed_at?: string | null
           phone?: string | null
           preferred_channel?: string | null
+          provenance?: string
           relationship_strength?: number | null
           role?: string
           social_handle?: string | null
           source?: string | null
-          updated_at?: string
+          source_confidence?: number | null
           source_message_id?: string | null
           source_thread_id?: string | null
-          source_confidence?: number | null
-          observed_at?: string | null
-          provenance?: string
+          updated_at?: string
         }
         Update: {
           brand_id?: string
@@ -1554,18 +1561,18 @@ export type Database = {
           language?: string | null
           name?: string
           notes?: string
+          observed_at?: string | null
           phone?: string | null
           preferred_channel?: string | null
+          provenance?: string
           relationship_strength?: number | null
           role?: string
           social_handle?: string | null
           source?: string | null
-          updated_at?: string
+          source_confidence?: number | null
           source_message_id?: string | null
           source_thread_id?: string | null
-          source_confidence?: number | null
-          observed_at?: string | null
-          provenance?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -1573,6 +1580,20 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_source_message_id_fkey"
+            columns: ["source_message_id"]
+            isOneToOne: false
+            referencedRelation: "source_message"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_source_thread_id_fkey"
+            columns: ["source_thread_id"]
+            isOneToOne: false
+            referencedRelation: "source_thread"
             referencedColumns: ["id"]
           },
         ]
@@ -1681,12 +1702,82 @@ export type Database = {
           },
         ]
       }
+      content_audit_run: {
+        Row: {
+          comparable_media: number
+          conclusion_keys: string[]
+          conclusions: Json
+          coverage: string
+          created_at: string
+          dedupe_key: string
+          duration_ms: number | null
+          engine_version: string
+          failures: string[]
+          id: string
+          learnings_active: number
+          media_considered: number
+          period: string
+          previous_from: string | null
+          previous_to: string | null
+          recommendations_open: number
+          status: string
+          window_from: string | null
+          window_to: string
+        }
+        Insert: {
+          comparable_media?: number
+          conclusion_keys?: string[]
+          conclusions?: Json
+          coverage?: string
+          created_at?: string
+          dedupe_key: string
+          duration_ms?: number | null
+          engine_version: string
+          failures?: string[]
+          id?: string
+          learnings_active?: number
+          media_considered?: number
+          period?: string
+          previous_from?: string | null
+          previous_to?: string | null
+          recommendations_open?: number
+          status?: string
+          window_from?: string | null
+          window_to: string
+        }
+        Update: {
+          comparable_media?: number
+          conclusion_keys?: string[]
+          conclusions?: Json
+          coverage?: string
+          created_at?: string
+          dedupe_key?: string
+          duration_ms?: number | null
+          engine_version?: string
+          failures?: string[]
+          id?: string
+          learnings_active?: number
+          media_considered?: number
+          period?: string
+          previous_from?: string | null
+          previous_to?: string | null
+          recommendations_open?: number
+          status?: string
+          window_from?: string | null
+          window_to?: string
+        }
+        Relationships: []
+      }
       content_experiment: {
         Row: {
           cohort: Json
+          control_label: string | null
+          control_media_ids: string[]
           created_at: string
           ended_at: string | null
+          evaluated_at: string | null
           evidence_ids: string[]
+          higher_is_better: boolean
           hypothesis: string
           id: string
           idea_ids: string[]
@@ -1694,22 +1785,35 @@ export type Database = {
           label: string
           ladder_state: string
           learning: string | null
+          learning_id: string | null
           mechanism: string | null
+          origin: string
           policy_version: string | null
+          primary_metric: string | null
+          recommendation_id: string | null
           repeat: string | null
           result: string | null
           sample_size: number
+          secondary_metrics: string[]
           source: string
           started_at: string | null
           status: string
           updated_at: string
+          variable: string | null
+          variant_label: string | null
+          variant_media_ids: string[]
+          verdict: Json
           what_we_test: string
         }
         Insert: {
           cohort?: Json
+          control_label?: string | null
+          control_media_ids?: string[]
           created_at?: string
           ended_at?: string | null
+          evaluated_at?: string | null
           evidence_ids?: string[]
+          higher_is_better?: boolean
           hypothesis?: string
           id?: string
           idea_ids?: string[]
@@ -1717,22 +1821,35 @@ export type Database = {
           label: string
           ladder_state?: string
           learning?: string | null
+          learning_id?: string | null
           mechanism?: string | null
+          origin?: string
           policy_version?: string | null
+          primary_metric?: string | null
+          recommendation_id?: string | null
           repeat?: string | null
           result?: string | null
           sample_size?: number
+          secondary_metrics?: string[]
           source?: string
           started_at?: string | null
           status?: string
           updated_at?: string
+          variable?: string | null
+          variant_label?: string | null
+          variant_media_ids?: string[]
+          verdict?: Json
           what_we_test?: string
         }
         Update: {
           cohort?: Json
+          control_label?: string | null
+          control_media_ids?: string[]
           created_at?: string
           ended_at?: string | null
+          evaluated_at?: string | null
           evidence_ids?: string[]
+          higher_is_better?: boolean
           hypothesis?: string
           id?: string
           idea_ids?: string[]
@@ -1740,18 +1857,42 @@ export type Database = {
           label?: string
           ladder_state?: string
           learning?: string | null
+          learning_id?: string | null
           mechanism?: string | null
+          origin?: string
           policy_version?: string | null
+          primary_metric?: string | null
+          recommendation_id?: string | null
           repeat?: string | null
           result?: string | null
           sample_size?: number
+          secondary_metrics?: string[]
           source?: string
           started_at?: string | null
           status?: string
           updated_at?: string
+          variable?: string | null
+          variant_label?: string | null
+          variant_media_ids?: string[]
+          verdict?: Json
           what_we_test?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "content_experiment_learning_id_fkey"
+            columns: ["learning_id"]
+            isOneToOne: false
+            referencedRelation: "content_learning"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_experiment_recommendation_fk"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "content_recommendation"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       content_learning: {
         Row: {
@@ -1898,6 +2039,97 @@ export type Database = {
             columns: ["idea_id"]
             isOneToOne: false
             referencedRelation: "creator_content_idea"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_recommendation: {
+        Row: {
+          audit_run_id: string | null
+          because: string
+          closed_at: string | null
+          closed_because: string | null
+          confidence: string
+          content_idea_id: string | null
+          created_at: string
+          dedupe_key: string
+          engine_version: string
+          evidence: Json
+          experiment_id: string | null
+          feedback: string | null
+          feedback_at: string | null
+          id: string
+          kind: string
+          sample_size: number
+          statement: string
+          status: string
+          test_draft: Json | null
+          updated_at: string
+        }
+        Insert: {
+          audit_run_id?: string | null
+          because?: string
+          closed_at?: string | null
+          closed_because?: string | null
+          confidence?: string
+          content_idea_id?: string | null
+          created_at?: string
+          dedupe_key: string
+          engine_version: string
+          evidence?: Json
+          experiment_id?: string | null
+          feedback?: string | null
+          feedback_at?: string | null
+          id?: string
+          kind: string
+          sample_size?: number
+          statement: string
+          status?: string
+          test_draft?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          audit_run_id?: string | null
+          because?: string
+          closed_at?: string | null
+          closed_because?: string | null
+          confidence?: string
+          content_idea_id?: string | null
+          created_at?: string
+          dedupe_key?: string
+          engine_version?: string
+          evidence?: Json
+          experiment_id?: string | null
+          feedback?: string | null
+          feedback_at?: string | null
+          id?: string
+          kind?: string
+          sample_size?: number
+          statement?: string
+          status?: string
+          test_draft?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_recommendation_audit_run_id_fkey"
+            columns: ["audit_run_id"]
+            isOneToOne: false
+            referencedRelation: "content_audit_run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_recommendation_content_idea_id_fkey"
+            columns: ["content_idea_id"]
+            isOneToOne: false
+            referencedRelation: "creator_content_idea"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_recommendation_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "content_experiment"
             referencedColumns: ["id"]
           },
         ]
@@ -3315,14 +3547,21 @@ export type Database = {
           account_id: string
           accounts_engaged: number | null
           api_version: string
+          comments: number | null
           created_at: string
           followers_count: number | null
+          follows_count: number | null
           id: string
+          likes: number | null
+          media_count: number | null
           observed_on: string
           period: string
           profile_link_taps: number | null
           raw_metrics: Json
           reach: number | null
+          replies: number | null
+          saves: number | null
+          shares: number | null
           source: string
           total_interactions: number | null
           views: number | null
@@ -3331,14 +3570,21 @@ export type Database = {
           account_id: string
           accounts_engaged?: number | null
           api_version?: string
+          comments?: number | null
           created_at?: string
           followers_count?: number | null
+          follows_count?: number | null
           id?: string
+          likes?: number | null
+          media_count?: number | null
           observed_on: string
           period?: string
           profile_link_taps?: number | null
           raw_metrics?: Json
           reach?: number | null
+          replies?: number | null
+          saves?: number | null
+          shares?: number | null
           source?: string
           total_interactions?: number | null
           views?: number | null
@@ -3347,14 +3593,21 @@ export type Database = {
           account_id?: string
           accounts_engaged?: number | null
           api_version?: string
+          comments?: number | null
           created_at?: string
           followers_count?: number | null
+          follows_count?: number | null
           id?: string
+          likes?: number | null
+          media_count?: number | null
           observed_on?: string
           period?: string
           profile_link_taps?: number | null
           raw_metrics?: Json
           reach?: number | null
+          replies?: number | null
+          saves?: number | null
+          shares?: number | null
           source?: string
           total_interactions?: number | null
           views?: number | null
@@ -3476,14 +3729,21 @@ export type Database = {
       instagram_media: {
         Row: {
           account_id: string
+          audit: Json
+          audit_source: string | null
+          audited_at: string | null
           caption: string
           comments_count: number | null
           content_idea_id: string | null
           created_at: string
+          experiment_arm: string | null
+          experiment_id: string | null
+          expired_at: string | null
           external_media_id: string
           first_seen_at: string
           id: string
           is_shared_to_feed: boolean | null
+          last_seen_active_at: string | null
           like_count: number | null
           link_confidence: number | null
           link_prompted_at: string | null
@@ -3494,6 +3754,7 @@ export type Database = {
           permalink: string | null
           promoted_to_feed: string
           published_at: string
+          sequence_id: string | null
           source: string
           story_id: string | null
           thumbnail_url: string | null
@@ -3502,23 +3763,24 @@ export type Database = {
           trial_status: string
           trial_status_source: string | null
           updated_at: string
-          last_seen_active_at: string | null
-          expired_at: string | null
-          sequence_id: string | null
-          audit: Json
-          audit_source: string | null
-          audited_at: string | null
         }
         Insert: {
           account_id: string
+          audit?: Json
+          audit_source?: string | null
+          audited_at?: string | null
           caption?: string
           comments_count?: number | null
           content_idea_id?: string | null
           created_at?: string
+          experiment_arm?: string | null
+          experiment_id?: string | null
+          expired_at?: string | null
           external_media_id: string
           first_seen_at?: string
           id?: string
           is_shared_to_feed?: boolean | null
+          last_seen_active_at?: string | null
           like_count?: number | null
           link_confidence?: number | null
           link_prompted_at?: string | null
@@ -3529,6 +3791,7 @@ export type Database = {
           permalink?: string | null
           promoted_to_feed?: string
           published_at: string
+          sequence_id?: string | null
           source?: string
           story_id?: string | null
           thumbnail_url?: string | null
@@ -3537,23 +3800,24 @@ export type Database = {
           trial_status?: string
           trial_status_source?: string | null
           updated_at?: string
-          last_seen_active_at?: string | null
-          expired_at?: string | null
-          sequence_id?: string | null
-          audit?: Json
-          audit_source?: string | null
-          audited_at?: string | null
         }
         Update: {
           account_id?: string
+          audit?: Json
+          audit_source?: string | null
+          audited_at?: string | null
           caption?: string
           comments_count?: number | null
           content_idea_id?: string | null
           created_at?: string
+          experiment_arm?: string | null
+          experiment_id?: string | null
+          expired_at?: string | null
           external_media_id?: string
           first_seen_at?: string
           id?: string
           is_shared_to_feed?: boolean | null
+          last_seen_active_at?: string | null
           like_count?: number | null
           link_confidence?: number | null
           link_prompted_at?: string | null
@@ -3564,6 +3828,7 @@ export type Database = {
           permalink?: string | null
           promoted_to_feed?: string
           published_at?: string
+          sequence_id?: string | null
           source?: string
           story_id?: string | null
           thumbnail_url?: string | null
@@ -3572,12 +3837,6 @@ export type Database = {
           trial_status?: string
           trial_status_source?: string | null
           updated_at?: string
-          last_seen_active_at?: string | null
-          expired_at?: string | null
-          sequence_id?: string | null
-          audit?: Json
-          audit_source?: string | null
-          audited_at?: string | null
         }
         Relationships: [
           {
@@ -3592,6 +3851,20 @@ export type Database = {
             columns: ["content_idea_id"]
             isOneToOne: false
             referencedRelation: "creator_content_idea"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instagram_media_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "content_experiment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instagram_media_sequence_fk"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "instagram_story_sequence"
             referencedColumns: ["id"]
           },
           {
@@ -5447,14 +5720,14 @@ export type Database = {
           last_message_at: string | null
           message_count: number
           opportunity_id: string | null
+          parent_thread_id: string | null
           participants: string[]
           provider: string
+          referral_message_id: string | null
           subject: string
           summary: string
           sync_cursor: string | null
           updated_at: string
-          parent_thread_id: string | null
-          referral_message_id: string | null
         }
         Insert: {
           brand_id?: string | null
@@ -5469,14 +5742,14 @@ export type Database = {
           last_message_at?: string | null
           message_count?: number
           opportunity_id?: string | null
+          parent_thread_id?: string | null
           participants?: string[]
           provider: string
+          referral_message_id?: string | null
           subject?: string
           summary?: string
           sync_cursor?: string | null
           updated_at?: string
-          parent_thread_id?: string | null
-          referral_message_id?: string | null
         }
         Update: {
           brand_id?: string | null
@@ -5491,14 +5764,14 @@ export type Database = {
           last_message_at?: string | null
           message_count?: number
           opportunity_id?: string | null
+          parent_thread_id?: string | null
           participants?: string[]
           provider?: string
+          referral_message_id?: string | null
           subject?: string
           summary?: string
           sync_cursor?: string | null
           updated_at?: string
-          parent_thread_id?: string | null
-          referral_message_id?: string | null
         }
         Relationships: [
           {
@@ -5527,6 +5800,20 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "source_thread_parent_thread_id_fkey"
+            columns: ["parent_thread_id"]
+            isOneToOne: false
+            referencedRelation: "source_thread"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "source_thread_referral_message_id_fkey"
+            columns: ["referral_message_id"]
+            isOneToOne: false
+            referencedRelation: "source_message"
             referencedColumns: ["id"]
           },
         ]
@@ -5657,6 +5944,8 @@ export type Database = {
           intent_confidence: number | null
           last_carol_message_id: string | null
           last_external_message_id: string | null
+          next_action: Json
+          next_action_type: string | null
           opportunity_id: string | null
           prepared_at: string | null
           recommendation: string
@@ -5672,8 +5961,6 @@ export type Database = {
           what_is_missing: string
           what_they_want: string
           who_wrote: string
-          next_action: Json
-          next_action_type: string | null
         }
         Insert: {
           brand_id?: string | null
@@ -5690,6 +5977,8 @@ export type Database = {
           intent_confidence?: number | null
           last_carol_message_id?: string | null
           last_external_message_id?: string | null
+          next_action?: Json
+          next_action_type?: string | null
           opportunity_id?: string | null
           prepared_at?: string | null
           recommendation?: string
@@ -5705,8 +5994,6 @@ export type Database = {
           what_is_missing?: string
           what_they_want?: string
           who_wrote?: string
-          next_action?: Json
-          next_action_type?: string | null
         }
         Update: {
           brand_id?: string | null
@@ -5723,6 +6010,8 @@ export type Database = {
           intent_confidence?: number | null
           last_carol_message_id?: string | null
           last_external_message_id?: string | null
+          next_action?: Json
+          next_action_type?: string | null
           opportunity_id?: string | null
           prepared_at?: string | null
           recommendation?: string
@@ -5738,8 +6027,6 @@ export type Database = {
           what_is_missing?: string
           what_they_want?: string
           who_wrote?: string
-          next_action?: Json
-          next_action_type?: string | null
         }
         Relationships: [
           {

@@ -107,6 +107,13 @@ export default function ContentIntelligence({
                       <p className="ciRelative" data-weak={!p.readings.some((r) => r.comparable) || undefined}>{p.audit.relativeLine}</p>
                     </div>
                     <div className="osRowSide">
+                      {/* De que teste nasceu. Vem de uma associação feita aqui
+                          dentro — a API não distingue um Reel de teste. */}
+                      {p.experiment ? (
+                        <span className="osTag" data-tone="mute">
+                          {p.experiment.arm === 'control' ? 'controle' : 'variante'}
+                        </span>
+                      ) : null}
                       {p.audit.signals.length ? <span className="osTag" data-tone="hot">{p.audit.signals.length === 1 ? 'sinal' : `${p.audit.signals.length} sinais`}</span> : null}
                       <span className="osTag" data-tone="mute">{p.audit.sample}</span>
                     </div>
@@ -130,6 +137,15 @@ export default function ContentIntelligence({
                       <>
                         <dt>Sinais</dt>
                         <dd>{p.audit.signals.join(' · ')}</dd>
+                      </>
+                    ) : null}
+                    {p.experiment ? (
+                      <>
+                        <dt>Teste</dt>
+                        <dd>
+                          {p.experiment.label} · {p.experiment.arm === 'control' ? 'lado de controle' : 'lado da variante'}
+                          {p.experiment.hypothesis ? <span className="ciSource"> · {p.experiment.hypothesis}</span> : null}
+                        </dd>
                       </>
                     ) : null}
                     <dt>Hipótese</dt>

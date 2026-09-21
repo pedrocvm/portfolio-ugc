@@ -241,12 +241,15 @@ export async function buildWeekPlan(
 export async function todayContentDecision(now = new Date(), client_?: Db): Promise<ContentDecision | null> {
   const db = await client(client_);
 
-  const [disponiveis, plano, contagens, candidatos, sinais] = await Promise.all([
+  const [disponiveis, plano, contagens, candidatos, sinais, testes] = await Promise.all([
     suggestableStories(undefined, db),
     currentWeekPlan(now, db),
     instagramCountsSafe(),
     db.from('content_story_candidate').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     db.from('content_learning').select('id', { count: 'exact', head: true }).eq('ladder_state', 'hypothesis').eq('active', true),
+    // Um teste «medido» é um teste que já tem os dois braços lidos na mesma
+    // idade. Só esses interrompem o dia dela.
+    db.from('content_experiment').select('id', { count: 'exact', head: true }).eq('status', 'measured'),
   ]);
 
   const cobertura = pillarCoverage(disponiveis.map((s) => ({ pillar: s.pillar, status: s.status })));
@@ -261,6 +264,7 @@ export async function todayContentDecision(now = new Date(), client_?: Db): Prom
     trialUnknown: contagens.trialUnknown,
     openCandidates: candidatos.count ?? 0,
     signalsNeedingDecision: sinais.count ?? 0,
+    experimentsReady: testes.count ?? 0,
     weekCovered: Boolean(plano && !plano.mappingOnly),
   });
 }

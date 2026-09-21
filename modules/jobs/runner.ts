@@ -24,7 +24,7 @@ export const JOBS = [
   // Morning Autopilot. A ordem aqui não é o horário — é `runAllJobs`, abaixo.
   'triage', 'references', 'trends', 'milestones', 'content-plan', 'morning',
   // Content Brain + Instagram.
-  'instagram-sync', 'instagram-token', 'content-learning', 'story-candidates', 'audio-cleanup',
+  'instagram-sync', 'instagram-token', 'content-learning', 'content-audit', 'story-candidates', 'audio-cleanup',
 ] as const;
 export type JobName = (typeof JOBS)[number];
 
@@ -257,6 +257,19 @@ async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobRes
         };
       }
 
+      case 'content-audit': {
+        // Corre depois do aprendizado: avalia os testes, monta a auditoria
+        // consolidada e escreve as recomendações. A coleta já aconteceu no
+        // sync — se esta parte falhar, os dados continuam a entrar.
+        const { runContentAudit } = await import('@/modules/content-brain/audit-service');
+        const r = await runContentAudit();
+        return {
+          job,
+          status: r.status === 'failed' ? 'error' : 'success',
+          detail: { ...r, processed: r.conclusions },
+        };
+      }
+
       case 'story-candidates': {
         const { deriveStoryCandidates } = await import('@/modules/content-brain/plan-service');
         const r = await deriveStoryCandidates();
@@ -336,7 +349,7 @@ export async function runAllJobs(opts: { manual?: boolean } = {}): Promise<JobRe
     'insights', 'outreach', 'imports', 'references', 'trends', 'milestones',
     // Content Brain: saúde do token, depois sync, depois o que aprende com o
     // que o sync trouxe. Trocar a ordem faz o aprendizado ler dados de ontem.
-    'instagram-token', 'instagram-sync', 'content-learning', 'story-candidates', 'audio-cleanup',
+    'instagram-token', 'instagram-sync', 'content-learning', 'content-audit', 'story-candidates', 'audio-cleanup',
     'content-plan', 'morning',
   ];
   const results: JobResult[] = [];

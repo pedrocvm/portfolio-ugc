@@ -1593,3 +1593,361 @@
     transition: none;
   }
 }
+
+
+/* ── Auditoria ────────────────────────────────────────────────────────────── */
+
+/* O cabeçalho diz quem está ligado, desde quando e em que período. Nunca
+   token, versão da API ou nome de trabalho: isso vive em Definições. */
+.auHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 20px;
+  margin: 0 0 24px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--areia2);
+}
+
+.auAccount {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.auAvatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--areia);
+  color: var(--umbra);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.auHandle {
+  display: block;
+  font-size: 16px;
+  color: var(--tinta);
+}
+
+.auAccount .osNote {
+  margin: 2px 0 0;
+}
+
+/* O estado da ligação muda a cor do texto, nunca só a cor: a frase já diz
+   tudo sozinha para quem não distingue as duas. */
+.auAccount .osNote[data-health='auth_required'],
+.auAccount .osNote[data-health='provider_error'] {
+  color: var(--alerta);
+}
+
+.auAccount .osNote[data-health='delayed'],
+.auAccount .osNote[data-health='rate_limited'] {
+  color: var(--umbra-clara);
+}
+
+.auPeriods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.auPeriods a {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--tinta3);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.auPeriods a:hover {
+  color: var(--tinta);
+}
+
+.auPeriods a[aria-current='true'] {
+  background: var(--areia);
+  border-color: var(--areia2);
+  color: var(--umbra);
+}
+
+.auPeriods a:focus-visible {
+  outline: 2px solid var(--umbra);
+  outline-offset: 2px;
+}
+
+/* A camada 1. Vem antes de qualquer número, e por isso é a que respira mais. */
+.auNow > h2 {
+  font-family: var(--serif);
+  font-size: 22px;
+}
+
+.auBucket {
+  margin: 18px 0 0;
+}
+
+.auBucket h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  font-weight: 400;
+}
+
+.auConclusions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auConclusions li {
+  padding: 12px 0 12px 14px;
+  border-left: 2px solid var(--areia2);
+  border-bottom: 1px solid var(--areia2);
+}
+
+.auConclusions li:last-child {
+  border-bottom: 0;
+}
+
+.auConclusions li[data-confidence='medium'] { border-left-color: var(--umbra); }
+.auConclusions li[data-confidence='high'] { border-left-color: var(--jade); }
+.auConclusions li[data-bucket='worsened'],
+.auConclusions li[data-bucket='attention'] { border-left-color: var(--alerta); }
+
+.auConclusions li p {
+  margin: 0 0 4px;
+  font-size: 17px;
+  line-height: 1.4;
+  max-width: 64ch;
+  color: var(--tinta);
+}
+
+.auCoverage {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--areia2);
+}
+
+/* O próximo teste é a única ação principal da tela. */
+.auNext {
+  border: 1px solid var(--areia2);
+  border-left: 3px solid var(--umbra);
+  padding: 18px 20px;
+  background: var(--realceLeve);
+}
+
+.auNextStatement {
+  margin: 4px 0 6px;
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.35;
+  max-width: 58ch;
+  color: var(--tinta);
+}
+
+.auActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.auDone {
+  margin: 14px 0 0;
+  color: var(--jade-escuro);
+}
+
+.auRec .osRowName {
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+/* Ver evidências. Fechado por omissão: uma auditoria com seis conclusões não
+   abre seis listas que ninguém pediu. */
+.auEvidence {
+  margin: 10px 0 0;
+}
+
+.auEvidence > summary {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--umbra);
+  list-style: none;
+  border-bottom: 1px solid var(--areia2);
+  padding-bottom: 1px;
+}
+
+.auEvidence > summary::-webkit-details-marker {
+  display: none;
+}
+
+.auEvidence > summary:focus-visible {
+  outline: 2px solid var(--umbra);
+  outline-offset: 3px;
+}
+
+.auEvidence[open] > summary {
+  margin-bottom: 8px;
+}
+
+.auEvidenceList {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.auEvidenceList li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 7px 0;
+  border-top: 1px solid var(--areia2);
+  font-size: 14px;
+  color: var(--tinta2);
+}
+
+.auEvidenceList li > span:first-child {
+  flex: 1 1 18ch;
+  min-width: 0;
+  color: var(--tinta);
+}
+
+.auNoEvidence {
+  margin: 8px 0 0;
+}
+
+/* O movimento da conta. O sinal está no texto e no símbolo, não só na cor. */
+.auMovements {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auMovements li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--areia2);
+  font-size: 14.5px;
+  color: var(--tinta2);
+}
+
+.auMovements li > span:first-child {
+  flex: 1 1 16ch;
+  color: var(--tinta);
+}
+
+.auMovements b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+.auMovements li[data-direction='up'] b { color: var(--jade-escuro); }
+.auMovements li[data-direction='down'] b { color: var(--alerta); }
+
+/* Gráficos: só os que respondem a uma pergunta real. */
+.auChart {
+  display: grid;
+  gap: 20px;
+  margin: 12px 0 0;
+}
+
+.auChartOne {
+  margin: 0;
+}
+
+.auChartOne figcaption {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--tinta2);
+}
+
+.auChartOne svg {
+  display: block;
+  width: 100%;
+  height: 120px;
+  overflow: visible;
+}
+
+.auChartLine {
+  fill: none;
+  stroke: var(--umbra);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.auChartDot {
+  fill: var(--umbra);
+}
+
+.auChartZero {
+  stroke: var(--areia2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.auChartScale {
+  display: flex;
+  justify-content: space-between;
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--tinta3);
+  font-variant-numeric: tabular-nums;
+}
+
+.auExplore {
+  margin-top: 34px;
+  padding-top: 8px;
+}
+
+@media (max-width: 600px) {
+  /* No celular a conclusão vem primeiro e o período fica por baixo, em linha
+     rolável. Reduzir o desktop inteiro até caber era o erro fácil. */
+  .auHeader {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .auPeriods {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .auPeriods::-webkit-scrollbar {
+    display: none;
+  }
+  .auPeriods a {
+    white-space: nowrap;
+  }
+  .auNext {
+    padding: 16px;
+  }
+  .auNextStatement {
+    font-size: 18px;
+  }
+  .auActions .btn,
+  .auActions .chip {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+  .auChartOne svg {
+    height: 104px;
+  }
+}

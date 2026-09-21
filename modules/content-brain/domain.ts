@@ -39,6 +39,7 @@ export const CONTENT_ACTION_TYPES = [
   'content_save_event',
   'content_review_signal',
   'content_link_media',
+  'content_close_test',
 ] as const;
 
 export type ContentActionType = (typeof CONTENT_ACTION_TYPES)[number];
@@ -51,6 +52,7 @@ export const CONTENT_ACTION_CTA: Record<ContentActionType, string> = {
   content_save_event: 'Ver o que aconteceu',
   content_review_signal: 'Revisar sinal',
   content_link_media: 'Confirmar',
+  content_close_test: 'Ver resultado',
 };
 
 export type ContentDecisionInput = {
@@ -68,6 +70,9 @@ export type ContentDecisionInput = {
   openCandidates: number;
   /** Sinais que pedem decisão de novo teste. */
   signalsNeedingDecision: number;
+  /** Testes já medidos dos dois lados, à espera da leitura dela. Opcional
+   *  porque nem toda a chamada tem Instagram ligado. */
+  experimentsReady?: number;
   /** A semana já está abastecida. */
   weekCovered: boolean;
 };
@@ -120,6 +125,18 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
     };
   }
 
+  if ((input.experimentsReady ?? 0) > 0) {
+    const n = input.experimentsReady as number;
+    return {
+      type: 'content_close_test',
+      headline: n === 1 ? 'Um teste seu já tem dados suficientes.' : `${n} testes seus já têm dados suficientes.`,
+      because: 'Medi os dois lados na mesma idade de publicação. Falta você ler e decidir o que fazer com isso.',
+      cta: CONTENT_ACTION_CTA.content_close_test,
+      covers: n,
+      href: '/dashboard/content?tab=audit',
+    };
+  }
+
   if (input.openCandidates > 0) {
     return {
       type: 'content_save_event',
@@ -169,7 +186,7 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
       because: 'Repetir o mecanismo em outra história real é o que transforma sinal em aprendizado.',
       cta: CONTENT_ACTION_CTA.content_review_signal,
       covers: input.signalsNeedingDecision,
-      href: '/dashboard/content?tab=tests',
+      href: '/dashboard/content?tab=audit',
     };
   }
 

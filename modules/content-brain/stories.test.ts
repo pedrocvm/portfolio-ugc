@@ -144,7 +144,7 @@ const semana = (i: number) => new Date(Date.UTC(2026, 8, 1 + i)).toISOString();
 
 test('sem amostra suficiente a orientação diz «ainda não sei»', () => {
   const g = storyGuidance(
-    [{ startedAt: semana(1), metrics: seq(5, 0.8), tags: ['talking'] }, { startedAt: semana(2), metrics: seq(3, 0.6), tags: [] }],
+    [{ id: 'q1', startedAt: semana(1), metrics: seq(5, 0.8), tags: ['talking'] }, { id: 'q2', startedAt: semana(2), metrics: seq(3, 0.6), tags: [] }],
     { now: new Date('2026-09-20T00:00:00Z') },
   );
   assert.equal(g.lines.length, 0);
@@ -153,8 +153,8 @@ test('sem amostra suficiente a orientação diz «ainda não sei»', () => {
 
 test('com três de cada lado, uma etiqueta pode ser comparada — com amostra e confiança', () => {
   const seqs = [
-    ...[0.82, 0.8, 0.85].map((p, i) => ({ startedAt: semana(i), metrics: seq(5, p), tags: ['talking'] })),
-    ...[0.6, 0.55, 0.62].map((p, i) => ({ startedAt: semana(10 + i), metrics: seq(5, p), tags: ['broll'] })),
+    ...[0.82, 0.8, 0.85].map((p, i) => ({ id: `t${i}`, startedAt: semana(i), metrics: seq(5, p), tags: ['talking'] })),
+    ...[0.6, 0.55, 0.62].map((p, i) => ({ id: `b${i}`, startedAt: semana(10 + i), metrics: seq(5, p), tags: ['broll'] })),
   ];
   const g = storyGuidance(seqs, { now: new Date('2026-09-20T00:00:00Z') });
   const linha = g.lines.find((l) => l.text.includes('«talking»'));
@@ -190,4 +190,15 @@ test('a leitura atual é para o feed, depois das 24 h, uma vez por dia — nunca
 
 test('a política de sequências está versionada', () => {
   assert.equal(STORY_SEQUENCE_POLICY_V1.version, 'CAROL_STORY_SEQUENCE_V1');
+});
+
+test('um conselho sobre Stories aponta para as sequências que o sustentam', () => {
+  const seqs = [
+    ...[0.82, 0.8, 0.85].map((p, i) => ({ id: `t${i}`, startedAt: semana(i), metrics: seq(5, p), tags: ['talking'] })),
+    ...[0.6, 0.55, 0.62].map((p, i) => ({ id: `b${i}`, startedAt: semana(10 + i), metrics: seq(5, p), tags: ['broll'] })),
+  ];
+  const linha = storyGuidance(seqs, { now: new Date('2026-09-20T00:00:00Z') }).lines.find((l) => l.text.includes('«talking»'));
+  // Sem isto, o conselho não consegue abrir prova nenhuma — e uma recomendação
+  // sem prova rastreável é recusada pelo motor e pela base.
+  assert.deepEqual([...linha!.sequenceIds].sort(), ['b0', 'b1', 'b2', 't0', 't1', 't2']);
 });

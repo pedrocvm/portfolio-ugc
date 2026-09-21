@@ -500,6 +500,144 @@ const addStoryToSeriesTool = define(
   'write',
 );
 
+/* ── Auditoria ────────────────────────────────────────────────────────────── */
+
+const getContentAudit = define(
+  'get_content_audit',
+  'A auditoria do Instagram já fechada: o que mudou, o que aprendemos, o que merece atenção e o próximo teste que vale fazer. Use ANTES de responder «o que funcionou esse mês», «meus Stories estão piorando», «o que vale testar agora» ou qualquer pergunta sobre desempenho. Cada conclusão traz quantos conteúdos a sustentam — nunca apresente uma conclusão sem esse número.',
+  z.object({ period: z.enum(['7d', '30d', '90d', 'all']).optional() }),
+  async ({ period }) => {
+    const { auditScreen } = await import('@/modules/content-brain/audit-service');
+    const a = await auditScreen({ period: period ?? '30d' });
+    if (!a.run) {
+      return {
+        data: {
+          vazio: true,
+          oQueDizer: 'Ainda não fechei nenhuma auditoria deste período. Não vou concluir nada sem isso.',
+          ligacao: a.health.line,
+        },
+        sources: [],
+      };
+    }
+    return {
+      data: {
+        periodo: a.range.label,
+        fechadaEm: a.run.generatedAt,
+        conteudosConsiderados: a.run.mediaConsidered,
+        conteudosComparaveis: a.run.comparableMedia,
+        cobertura: a.run.coverage,
+        conclusoes: a.run.conclusions.map((c) => ({
+          oQue: c.text,
+          grupo: c.bucket,
+          amostra: c.sampleSize,
+          comparadoCom: c.comparator,
+          confianca: c.confidence,
+          conteudosQueSustentam: c.evidence.mediaIds,
+        })),
+        proximoTeste: a.nextTest
+          ? { recomendacao: a.nextTest.statement, porque: a.nextTest.because, amostra: a.nextTest.sampleSize, id: a.nextTest.id }
+          : null,
+      },
+      sources: [],
+    };
+  },
+);
+
+const listContentRecommendations = define(
+  'list_content_recommendations',
+  'As recomendações abertas, com a evidência que as sustenta. Toda recomendação aqui é específica dos dados dela. Nunca acrescente conselho genérico do tipo «poste mais» ou «capriche no gancho» — isso é recusado pelo sistema e não deve sair da sua boca também.',
+  z.object({}),
+  async () => {
+    const { openRecommendations } = await import('@/modules/content-brain/audit-service');
+    const r = await openRecommendations();
+    return {
+      data: r.length
+        ? r.map((x) => ({
+            id: x.id,
+            recomendacao: x.statement,
+            porque: x.because,
+            amostra: x.sampleSize,
+            confianca: x.confidence,
+            jaTemTesteSugerido: Boolean(x.testDraft),
+            conteudosQueSustentam: x.evidence.mediaIds,
+          }))
+        : { vazio: true, oQueDizer: 'Não tenho nenhuma recomendação aberta. Prefiro isso a inventar uma.' },
+      sources: [],
+    };
+  },
+);
+
+const listContentExperiments = define(
+  'list_content_experiments',
+  'Os testes de conteúdo e o que cada um mostrou. Um teste pode acabar inconclusivo, e isso é um resultado válido — NUNCA diga que uma variante «venceu». Diga a variável, a métrica, a diferença e a amostra.',
+  z.object({}),
+  async () => {
+    const { listExperiments } = await import('@/modules/content-brain/experiment-service');
+    const e = await listExperiments({ limit: 20 });
+    return {
+      data: e.length
+        ? e.map((x) => ({
+            id: x.id,
+            nome: x.label,
+            hipotese: x.hypothesis,
+            variavel: x.variable,
+            metricaPrincipal: x.primaryMetric,
+            estado: x.status,
+            resultado: x.outcomeLabel,
+            explicacao: x.because,
+            amostra: x.sampleSize,
+            controlo: x.controlMediaIds.length,
+            variante: x.variantMediaIds.length,
+          }))
+        : { vazio: true, oQueDizer: 'Ainda não há teste nenhum a correr.' },
+      sources: [],
+    };
+  },
+);
+
+const getAuditEvidence = define(
+  'get_audit_evidence',
+  'Os conteúdos, aprendizados e testes que sustentam uma conclusão. Use quando ela pedir «mostra os Reels usados para concluir isso» ou duvidar de uma afirmação. Passe os ids que vieram de get_content_audit ou list_content_recommendations.',
+  z.object({
+    statement: z.string().min(3),
+    media_ids: z.array(z.string().uuid()).optional(),
+    learning_ids: z.array(z.string().uuid()).optional(),
+    experiment_ids: z.array(z.string().uuid()).optional(),
+  }),
+  async (args) => {
+    const { evidenceFor } = await import('@/modules/content-brain/audit-service');
+    const pack = await evidenceFor({
+      statement: args.statement,
+      evidence: {
+        mediaIds: args.media_ids ?? [],
+        learningIds: args.learning_ids ?? [],
+        experimentIds: args.experiment_ids ?? [],
+        sequenceIds: [],
+      },
+    });
+    return {
+      data: {
+        conteudos: pack.pieces.map((p) => ({ titulo: p.title, publicado: p.publishedAt, link: p.permalink })),
+        aprendizados: pack.learnings.map((l) => ({ afirmacao: l.statement, degrau: l.ladderState, amostra: l.sampleSize })),
+        testes: pack.experiments.map((x) => ({ nome: x.label, resultado: x.outcomeLabel, explicacao: x.because })),
+      },
+      sources: [],
+    };
+  },
+);
+
+const createTestFromRecommendationTool = define(
+  'create_test_from_recommendation',
+  'Transforma uma recomendação aberta num teste, com a hipótese, a variável e a métrica já preenchidas. Só depois de ela concordar. Não publica nada: cria o teste para ela gravar o conteúdo quando quiser.',
+  z.object({ recommendation_id: z.string().uuid() }),
+  async ({ recommendation_id }) => {
+    const { createTestFromRecommendation } = await import('@/modules/content-brain/audit-service');
+    const r = await createTestFromRecommendation(recommendation_id);
+    return { data: 'error' in r ? { ok: false, motivo: r.error } : { ok: true, experimentId: r.experimentId }, sources: [] };
+  },
+  'write',
+);
+
 export const CONTENT_BRAIN_TOOLS: Tool[] = [
   getContentFocus, listStoryLenses, openStoryLens, rateStoryLens,
   listStoryBank, getStoryTool, getContentWeekPlan,
@@ -507,4 +645,6 @@ export const CONTENT_BRAIN_TOOLS: Tool[] = [
   captureStoryTool, confirmStoryFactsTool, saveStoryMeaningTool, mapStoryToPillarTool,
   selectStoryFrameTool, structureStoryTool, setContentStatusTool, markStoryPrivateTool,
   confirmTrialReelTool, planContentWeekTool, saveStoryCandidateTool, addStoryToSeriesTool,
+  getContentAudit, listContentRecommendations, listContentExperiments, getAuditEvidence,
+  createTestFromRecommendationTool,
 ];

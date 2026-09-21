@@ -110,6 +110,10 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
     label: 'Ler o que os números ensinam',
     why: 'Uma vez por dia, depois do sync. Calcula a mediana dela, procura sinais e só chama aprendizado ao que se repetiu.',
   },
+  'carolos-content-audit': {
+    label: 'Fechar a auditoria do dia',
+    why: 'Uma vez por dia, logo a seguir ao aprendizado. Compara o período com o anterior, avalia os testes com dados e escreve as recomendações. A tela lê o que isto gravou — nunca recalcula ao abrir.',
+  },
   'carolos-story-candidates': {
     label: 'Procurar o que talvez valha guardar',
     why: 'Uma vez por dia. Um evento comercial vira uma pergunta de significado, nunca um conteúdo.',

@@ -420,11 +420,25 @@ async function contentSignals(now: Date): Promise<string[]> {
     .gte('derived_at', desde)
     .order('derived_at', { ascending: false })
     .limit(2);
-  return (data ?? []).map((l) =>
+  const linhas = (data ?? []).map((l) =>
     l.ladder_state === 'signal'
       ? `${l.statement} Ainda é só um sinal; vou acompanhar.`
       : `${l.statement} Nenhuma ação necessária hoje.`,
   );
+
+  // A Auditoria só entra na manhã quando encontrou algo que muda uma decisão:
+  // amostra de três conteúdos para cima e confiança acima de baixa. Uma
+  // flutuação de alcance não interrompe ninguém — essa regra vive em
+  // `auditDelta`, e é ela que decide, não esta função.
+  try {
+    const { auditHighlight } = await import('@/modules/content-brain/audit-service');
+    const destaque = await auditHighlight({ db });
+    if (destaque) linhas.unshift(`${destaque.conclusion.text} ${destaque.conclusion.sample}.`);
+  } catch {
+    // Sem Instagram ligado a manhã continua igual. Era assim antes disto.
+  }
+
+  return linhas.slice(0, 3);
 }
 
 /* ── Prova de vida e falhas ───────────────────────────────────────────────── */

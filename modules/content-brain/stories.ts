@@ -228,13 +228,17 @@ export function storyCoverage(input: {
 /* ── O que as sequências ensinam ──────────────────────────────────────────── */
 
 export type SequenceForGuidance = {
+  /** A sequência que sustenta a frase. Sem isto, um conselho sobre Stories
+   *  não conseguia apontar para nada — e um conselho sem prova rastreável não
+   *  pode virar recomendação. */
+  id: string;
   startedAt: string;
   metrics: SequenceMetrics;
   tags: readonly string[];
 };
 
 export type StoryGuidance = {
-  lines: { text: string; sample: string; confidence: 'low' | 'medium' }[];
+  lines: { text: string; sample: string; confidence: 'low' | 'medium'; sequenceIds: string[] }[];
   because: string;
 };
 
@@ -284,6 +288,7 @@ export function storyGuidance(
         text: `Nas últimas ${weeks} semanas, sequências ${melhor} mantiveram mais gente até ao fim do que as ${pior}: ${pct(a)} contra ${pct(b)} do alcance inicial.`,
         sample: `Amostra: ${mc > ml ? curtas.length : longas.length} vs ${mc > ml ? longas.length : curtas.length} sequências.`,
         confidence: recentes.length >= min * 4 ? 'medium' : 'low',
+        sequenceIds: [...curtas, ...longas].map((x) => x.id),
       });
     }
   }
@@ -303,6 +308,7 @@ export function storyGuidance(
         : `Sequências «${tag}» perderam mais gente até ao fim do que as outras: ${pct(a)} contra ${pct(b)}.`,
       sample: `Amostra: ${com.length} vs ${sem.length} sequências.`,
       confidence: com.length >= min * 2 && sem.length >= min * 2 ? 'medium' : 'low',
+      sequenceIds: [...com, ...sem].map((x) => x.id),
     });
   }
 
