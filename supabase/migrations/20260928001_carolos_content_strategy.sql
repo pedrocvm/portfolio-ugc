@@ -502,8 +502,10 @@ alter table public.action_item
                   'content_map_story', 'content_develop_story', 'content_record_ready',
                   'content_confirm_trial', 'content_save_event', 'content_review_signal',
                   'content_link_media',
-                  'content_validate_week', 'content_validate_pack',
-                  'content_experiment_result', 'content_produce_ready'));
+                  -- Existia em código desde 21/09 e nunca entrou no `check`:
+                  -- uma decisão de fechar teste batia no Postgres.
+                  'content_close_test',
+                  'content_validate_week', 'content_validate_pack'));
 
 /* ── RLS ──────────────────────────────────────────────────────────────────── */
 

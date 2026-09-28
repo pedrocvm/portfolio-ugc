@@ -5,6 +5,7 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { STAGE_LABEL, type Stage } from '@/modules/opportunities/domain';
 import { previewQuote, activePolicy } from '@/modules/pricing/service';
 import { CONTENT_BRAIN_TOOLS } from './content-brain-tools';
+import { CONTENT_STRATEGY_TOOLS } from './content-strategy-tools';
 import type { Source } from './domain';
 
 /** As ferramentas do Carol AI.
@@ -1901,6 +1902,7 @@ export const TOOLS: Tool[] = [
   // oitocentas linhas, e porque são o único grupo que partilha um invariant:
   // nenhuma delas consegue inventar uma história.
   ...CONTENT_BRAIN_TOOLS,
+  ...CONTENT_STRATEGY_TOOLS,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));

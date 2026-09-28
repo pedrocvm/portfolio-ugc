@@ -12,6 +12,7 @@ import 'server-only';
 import { localDay } from '@/lib/time';
 import { asJson } from '@/lib/supabase/json';
 import { supabaseServer } from '@/lib/supabase/server';
+import { strategyClient } from '@/lib/supabase/strategy';
 import { supabaseService } from '@/lib/supabase/service';
 import { runPrompt } from '@/modules/ai/gateway';
 import {
@@ -241,7 +242,7 @@ export async function buildWeekPlan(
 export async function todayContentDecision(now = new Date(), client_?: Db): Promise<ContentDecision | null> {
   const db = await client(client_);
 
-  const [disponiveis, plano, contagens, candidatos, sinais, testes] = await Promise.all([
+  const [disponiveis, plano, contagens, candidatos, sinais, testes, propostas] = await Promise.all([
     suggestableStories(undefined, db),
     currentWeekPlan(now, db),
     instagramCountsSafe(),
@@ -250,7 +251,11 @@ export async function todayContentDecision(now = new Date(), client_?: Db): Prom
     // Um teste «medido» é um teste que já tem os dois braços lidos na mesma
     // idade. Só esses interrompem o dia dela.
     db.from('content_experiment').select('id', { count: 'exact', head: true }).eq('status', 'measured'),
+    // As duas validações da estratégia de conteúdo, numa leitura só.
+    strategyClient(db).from('content_proposal').select('status').eq('week_start', weekStart(now)),
   ]);
+
+  const porEstado = (estado: string) => (propostas.data ?? []).filter((p) => p.status === estado).length;
 
   const cobertura = pillarCoverage(disponiveis.map((s) => ({ pillar: s.pillar, status: s.status })));
   const foco = plano?.primaryPillar ?? (await pickFocus(cobertura, db));
@@ -265,6 +270,8 @@ export async function todayContentDecision(now = new Date(), client_?: Db): Prom
     openCandidates: candidatos.count ?? 0,
     signalsNeedingDecision: sinais.count ?? 0,
     experimentsReady: testes.count ?? 0,
+    proposalsToApprove: porEstado('proposed'),
+    packsToValidate: porEstado('to_validate'),
     weekCovered: Boolean(plano && !plano.mappingOnly),
   });
 }

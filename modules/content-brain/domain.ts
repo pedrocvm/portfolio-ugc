@@ -40,6 +40,9 @@ export const CONTENT_ACTION_TYPES = [
   'content_review_signal',
   'content_link_media',
   'content_close_test',
+  // Estratégia de conteúdo: as duas validações que o PDF deixa com a pessoa.
+  'content_validate_week',
+  'content_validate_pack',
 ] as const;
 
 export type ContentActionType = (typeof CONTENT_ACTION_TYPES)[number];
@@ -53,6 +56,8 @@ export const CONTENT_ACTION_CTA: Record<ContentActionType, string> = {
   content_review_signal: 'Revisar sinal',
   content_link_media: 'Confirmar',
   content_close_test: 'Ver resultado',
+  content_validate_week: 'Ver a semana',
+  content_validate_pack: 'Ver o material',
 };
 
 export type ContentDecisionInput = {
@@ -75,6 +80,10 @@ export type ContentDecisionInput = {
   experimentsReady?: number;
   /** A semana já está abastecida. */
   weekCovered: boolean;
+  /** Propostas da semana à espera da decisão estratégica dela. */
+  proposalsToApprove?: number;
+  /** Material preparado à espera de ela validar frase a frase. */
+  packsToValidate?: number;
 };
 
 export type ContentDecision = {
@@ -95,6 +104,33 @@ export type ContentDecision = {
  *  Devolve `null` quando não há decisão real. O Hoje não cria tarefa só para
  *  parecer ativo. */
 export function contentDecision(input: ContentDecisionInput): ContentDecision | null {
+  // A semana à espera de validação vem primeiro de tudo. É a decisão que
+  // destrava o resto: sem ela aprovar, nada é preparado, nada é gravado e a
+  // medição da semana seguinte não tem o que ler.
+  if ((input.proposalsToApprove ?? 0) > 0) {
+    const n = input.proposalsToApprove as number;
+    return {
+      type: 'content_validate_week',
+      headline: n === 1 ? 'Tem uma proposta esperando você.' : `A semana está pronta: ${n} propostas.`,
+      because: 'Cada uma diz o assunto, o ângulo e por que agora. Você aprova, ajusta ou troca.',
+      cta: CONTENT_ACTION_CTA.content_validate_week,
+      covers: n,
+      href: '/dashboard/content?tab=week',
+    };
+  }
+
+  if ((input.packsToValidate ?? 0) > 0) {
+    const n = input.packsToValidate as number;
+    return {
+      type: 'content_validate_pack',
+      headline: n === 1 ? 'Um roteiro está pronto para você ler.' : `${n} roteiros estão prontos para você ler.`,
+      because: 'Nada passa a «pronto para produzir» sem você validar.',
+      cta: CONTENT_ACTION_CTA.content_validate_pack,
+      covers: n,
+      href: '/dashboard/content?tab=production',
+    };
+  }
+
   // Vinculação e confirmação de Trial primeiro: são perguntas de um clique e,
   // se ficarem para trás, os snapshots começam sem contexto.
   if (input.unlinkedMedia > 0) {
@@ -107,7 +143,7 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
       because: 'Quero ligar cada um à história certa antes de começar a medir.',
       cta: CONTENT_ACTION_CTA.content_link_media,
       covers: input.unlinkedMedia,
-      href: '/dashboard/content?tab=published&confirm=link',
+      href: '/dashboard/content?tab=week&confirm=link',
     };
   }
 
@@ -121,7 +157,7 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
       because: 'O Instagram não me diz se foi publicado como Reel Test, e isso muda a comparação.',
       cta: CONTENT_ACTION_CTA.content_confirm_trial,
       covers: input.trialUnknown,
-      href: '/dashboard/content?tab=tests&confirm=trial',
+      href: '/dashboard/content?tab=week&confirm=trial',
     };
   }
 
@@ -147,7 +183,7 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
       because: 'Só você sabe se teve significado. Guardo ou deixo passar.',
       cta: CONTENT_ACTION_CTA.content_save_event,
       covers: input.openCandidates,
-      href: '/dashboard/content?tab=bank&candidates=open',
+      href: '/dashboard/content?tab=week&candidates=open',
     };
   }
 
@@ -161,7 +197,7 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
       because: 'Já tem estrutura e ponto definidos. Não falta decisão editorial nenhuma.',
       cta: CONTENT_ACTION_CTA.content_record_ready,
       covers: input.readyToRecord,
-      href: '/dashboard/content?tab=record',
+      href: '/dashboard/content?tab=production',
     };
   }
 
@@ -175,7 +211,7 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
       because: `Esta semana o foco é ${PILLAR_LABEL[input.primaryPillar]}. Falta escolher o ponto e montar a estrutura.`,
       cta: CONTENT_ACTION_CTA.content_develop_story,
       covers: input.developing,
-      href: '/dashboard/content?tab=record',
+      href: '/dashboard/content?tab=production',
     };
   }
 
@@ -203,7 +239,7 @@ export function contentDecision(input: ContentDecisionInput): ContentDecision | 
       covers: 1,
       // Direto às direções de busca. Cair numa caixa de texto vazia é o que
       // esta camada existe para não deixar acontecer.
-      href: `/dashboard/content?tab=record&find=${input.primaryPillar}`,
+      href: `/dashboard/content?tab=production&find=${input.primaryPillar}`,
     };
   }
 

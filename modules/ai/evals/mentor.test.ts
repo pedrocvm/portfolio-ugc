@@ -196,11 +196,20 @@ test('a manhã comporta o teste como terceira decisão, e não mais do que isso'
 });
 
 test('a Carol AI aplica a mentoria em português do Brasil, e a versão subiu', () => {
-  assert.equal(PROMPT_VERSION, 'carol-assistant-v8');
+  assert.equal(PROMPT_VERSION, 'carol-assistant-v9');
   assert.match(CORE_PROMPT, /Falas português do Brasil/);
   assert.match(CORE_PROMPT, /Nunca recitas a mentoria/);
   assert.match(CORE_PROMPT, /get_three_hooks/);
   assert.match(CORE_PROMPT, /get_reels_test_lab/);
+
+  // A v9 é a estratégia de conteúdo: o assistente lê o Motor de Prioridades em
+  // vez de ter uma noção própria de prioridade, e as duas decisões que ficam
+  // com ela não têm ferramenta nenhuma.
+  assert.match(CORE_PROMPT, /get_content_week/);
+  assert.match(CORE_PROMPT, /explain_content_proposal/);
+  assert.match(CORE_PROMPT, /get_editorial_map/);
+  assert.match(CORE_PROMPT, /nunca um quarto pilar/);
+  assert.match(CORE_PROMPT, /Aprovar uma proposta e validar um roteiro NÃO são tuas/);
 });
 
 test('os prompts novos têm versão e não carregam número da mentora', () => {

@@ -258,6 +258,34 @@ test('sem nada a decidir, o Hoje não inventa cartão de conteúdo', () => {
   assert.equal(contentDecision(decisionInput()), null);
 });
 
+test('a semana à espera de validação vem antes de tudo o resto', () => {
+  const d = contentDecision(decisionInput({
+    proposalsToApprove: 3,
+    readyToRecord: 4,
+    unlinkedMedia: 2,
+    openCandidates: 5,
+  }));
+  assert.equal(d?.type, 'content_validate_week');
+  assert.equal(d?.covers, 3);
+  assert.match(d!.href, /tab=week/);
+  // O cartão diz o que ela vai fazer, não o que o sistema calculou.
+  assert.doesNotMatch(`${d!.headline} ${d!.because}`, /motor|score|pipeline|engine/i);
+});
+
+test('o roteiro por validar vem depois da semana e antes de gravar', () => {
+  const d = contentDecision(decisionInput({ packsToValidate: 1, readyToRecord: 4 }));
+  assert.equal(d?.type, 'content_validate_pack');
+  assert.match(d!.because, /sem você validar/i);
+
+  const comSemana = contentDecision(decisionInput({ proposalsToApprove: 1, packsToValidate: 1 }));
+  assert.equal(comSemana?.type, 'content_validate_week');
+});
+
+test('cada métrica nova não vira tarefa: só o que precisa dela aparece', () => {
+  // Nada pendente, mesmo com semana montada e material validado.
+  assert.equal(contentDecision(decisionInput({ proposalsToApprove: 0, packsToValidate: 0 })), null);
+});
+
 test('sete sugestões viram um cartão só', () => {
   const d = contentDecision(decisionInput({ readyToRecord: 7 }));
   assert.equal(d?.type, 'content_record_ready');
