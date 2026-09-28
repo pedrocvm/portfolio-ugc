@@ -1951,3 +1951,307 @@
     height: 104px;
   }
 }
+
+/* ── Estratégia de conteúdo: Semana, Mapa, Produção, Laboratório ──────────── */
+
+/* Filetes e espaço. Caixa só onde o objeto tem estado próprio — uma proposta
+ * tem (esperando, aprovada, trocada), um assunto não. */
+
+.cbWeek {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--areia2);
+}
+
+.cbWeekSummary {
+  margin: 4px 0 8px;
+  max-width: 54ch;
+  font-size: clamp(19px, 2.6vw, 24px);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.cbProposals {
+  display: grid;
+  gap: 16px;
+}
+
+.cbProposal {
+  padding: 18px;
+  border: 1px solid var(--areia2);
+  border-radius: 10px;
+  background: var(--papel);
+}
+
+.cbProposal > header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.cbProposal h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.cbAngle {
+  margin: 0 0 12px;
+  max-width: 62ch;
+  font-family: var(--serif);
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+
+.cbWhy {
+  margin: 0 0 10px;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+
+.cbWhy b {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  font-variation-settings: var(--narrow);
+}
+
+.cbEvidence {
+  margin: 8px 0 12px;
+  padding: 0 0 0 14px;
+  list-style: none;
+  border-left: 2px solid var(--areia2);
+}
+
+.cbEvidence li {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--tinta2);
+}
+
+.cbAdjust {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--areia2);
+  display: grid;
+  gap: 8px;
+}
+
+.cbAdjustTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cbAdjust label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  font-variation-settings: var(--narrow);
+}
+
+.cbAdjust input,
+.cbAdjust textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--areia2);
+  border-radius: 8px;
+  background: var(--papel);
+  color: var(--tinta);
+  font: inherit;
+  /* 16px no telemóvel: abaixo disto o iOS dá zoom ao focar. */
+  font-size: 16px;
+}
+
+.cbAdjustAngle {
+  display: grid;
+  gap: 8px;
+}
+
+/* ── Production Pack ─────────────────────────────────────────────────────── */
+
+.cbPack {
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid var(--areia2);
+  border-radius: 10px;
+}
+
+.cbPack > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.cbPack h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.cbField {
+  margin: 0 0 8px;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cbField b {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+  font-variation-settings: var(--narrow);
+}
+
+/* Frase a frase. É assim que ela grava, e por isso é assim que se lê. */
+.cbLines {
+  margin: 8px 0 14px;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+
+.cbLines li {
+  line-height: 1.45;
+}
+
+.cbLines em {
+  display: block;
+  font-size: 12px;
+  color: var(--tinta3);
+  font-style: italic;
+}
+
+.cbSlides {
+  margin: 8px 0 14px;
+  padding-left: 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.cbSlides li p {
+  margin: 0 0 2px;
+  line-height: 1.45;
+}
+
+.cbAssets {
+  margin: 8px 0 12px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.cbAssets li {
+  font-size: 13px;
+  color: var(--tinta3);
+}
+
+.cbAssets li[data-ready] {
+  color: var(--jade-escuro);
+}
+
+.cbGaps {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--alerta);
+  background: var(--alertaLeve);
+}
+
+.cbGaps b {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.cbGaps ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.cbGaps li {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── Sessão de produção ──────────────────────────────────────────────────── */
+
+.cbSession {
+  margin: 0 0 18px;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--areia2);
+}
+
+.cbSession h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.cbChecklist {
+  margin: 8px 0 10px;
+  padding-left: 20px;
+  display: grid;
+  gap: 5px;
+}
+
+.cbChecklist li {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* ── Comunidade ──────────────────────────────────────────────────────────── */
+
+.cbReading {
+  margin: 4px 0 14px;
+  max-width: 60ch;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+
+/* ── Telemóvel ───────────────────────────────────────────────────────────── */
+
+/* A Carol trabalha no telemóvel. A Semana, a validação e a sessão têm de
+ * caber numa coluna sem comprimir nada — não é o desktop encolhido. */
+@media (max-width: 600px) {
+  .cbProposal,
+  .cbPack {
+    padding: 14px;
+    border-radius: 8px;
+  }
+
+  .cbProposal > header {
+    gap: 4px;
+  }
+
+  .cbWeekSummary {
+    font-size: 18px;
+  }
+
+  .cbActs {
+    flex-wrap: wrap;
+  }
+
+  .cbActs button {
+    /* Alvo de toque mínimo. */
+    min-height: 44px;
+  }
+
+  .cbLines,
+  .cbSlides,
+  .cbChecklist {
+    padding-left: 18px;
+  }
+}

@@ -24,7 +24,7 @@ import { usableTrends } from '@/modules/trends/service';
 import ContentBank from '@/components/dashboard/os/ContentBank';
 import ContentStrategy from '@/components/dashboard/os/ContentStrategy';
 import ContentStudio from '@/components/dashboard/os/ContentStudio';
-import { isStudioTab, type StudioTab } from '@/components/dashboard/os/studioTabs';
+import { resolveTab, type StudioTab } from '@/components/dashboard/os/studioTabs';
 import ContentVault from '@/components/dashboard/os/ContentVault';
 import Published from '@/components/dashboard/os/Published';
 import ReelsTestLab from '@/components/dashboard/os/ReelsTestLab';
@@ -32,7 +32,20 @@ import ContentGuide from '@/components/dashboard/os/content-brain/ContentGuide';
 import ContentIntelligence from '@/components/dashboard/os/content-brain/ContentIntelligence';
 import Audit from '@/components/dashboard/os/content-brain/Audit';
 import RecordPane from '@/components/dashboard/os/content-brain/RecordPane';
+import { PublicationMatch, StoryCandidates, TrialReelConfirm } from '@/components/dashboard/os/content-brain/StoryDecisions';
 import StoryBank from '@/components/dashboard/os/content-brain/StoryBank';
+import WeekPane from '@/components/dashboard/os/content-brain/WeekPane';
+import MapPane from '@/components/dashboard/os/content-brain/MapPane';
+import ProductionPane from '@/components/dashboard/os/content-brain/ProductionPane';
+import LabPane from '@/components/dashboard/os/content-brain/LabPane';
+import Community from '@/components/dashboard/os/content-brain/Community';
+import { COMMERCIAL_FOCUS } from '@/modules/content-brain/editorial';
+import { editorialMap, seedEditorialMap, strategySettings, visualTemplates } from '@/modules/content-brain/editorial-service';
+import { currentWeek } from '@/modules/content-brain/week-service';
+import { packFor } from '@/modules/content-brain/pack-service';
+import { activeLearningRows, experiments, formatLab, radarCreators, references, RADAR_AUTOMATIC_BLOCKED } from '@/modules/content-brain/lab-service';
+import { sessions } from '@/modules/content-brain/session-service';
+import { communityWindow } from '@/modules/content-brain/community-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,9 +62,13 @@ export default async function ContentPage({
   await requireUser();
   const { idea, tab, find, period } = await searchParams;
 
-  // Idempotente e barato: Braga Real, as experiências e o feedback da
-  // Charabanc existem antes de a primeira manhã correr.
-  await seedFromMentor().catch(() => null);
+  // Idempotente e barato: os assuntos confirmados, o foco atual, os quatro
+  // templates-mãe, e o que a mentoria já semeava. Nada disto chama a Meta nem
+  // um modelo: a Semana carrega da base.
+  await Promise.all([
+    seedFromMentor().catch(() => null),
+    seedEditorialMap().catch(() => null),
+  ]);
 
   const [content, inventory, hoje, banco, trends, lab, broll, braga, proof, screen, learnings, performance, brain, desempenho, guia, feed, agendador] = await Promise.all([
     listContent(),
@@ -72,6 +89,28 @@ export default async function ContentPage({
     feedAudit(60).catch(() => null),
     schedulerState().catch(() => null),
   ]);
+  const [semana, mapa, definicoes, templates, laboratorio, testes, refs, radar, aprendizados, sessoes, comunidade] = await Promise.all([
+    currentWeek().catch(() => null),
+    editorialMap().catch(() => null),
+    strategySettings().catch(() => null),
+    visualTemplates().catch(() => []),
+    formatLab().catch(() => null),
+    experiments().catch(() => []),
+    references({ limit: 12 }).catch(() => []),
+    radarCreators().catch(() => []),
+    activeLearningRows({ limit: 4 }).catch(() => []),
+    sessions().catch(() => null),
+    communityWindow({ days: 30 }).catch(() => null),
+  ]);
+
+  // Os packs das peças que esperam por ela. Um pedido por proposta, e só das
+  // que estão nesse estado — não das dez da semana passada.
+  const aValidar = (semana?.proposals ?? []).filter((p) => p.status === 'to_validate');
+  const packs = new Map(
+    (await Promise.all(aValidar.map(async (p) => [p.id, await packFor(p.id).catch(() => null)] as const)))
+      .filter(([, v]) => v !== null),
+  );
+
   // Só depois de saber se a captura está ligada: a cobertura de Stories diz
   // «não está ligada» ou «desde tal dia», nunca «0 Stories».
   const syncScheduled = Boolean(agendador?.rows.some((r) => r.jobName === 'carolos-instagram-sync' && r.active));
@@ -91,20 +130,46 @@ export default async function ContentPage({
   const salvas = banco.filter((i) => i.status === 'saved' && !i.storyId);
   const sementes = banco.filter((i) => i.status === 'seed');
 
-  // A ficha de uma ideia vive em «Para gravar», seja de hoje, salva ou já
-  // gravada. «Ver plano» abria a aba do Banco e mostrava nada.
-  const initial: StudioTab = isStudioTab(tab) ? tab : 'record';
+  const initial: StudioTab = resolveTab(tab);
+
+  const prontas = (semana?.readyToProduce ?? []).length;
+  const emProducao = (semana?.proposals ?? []).filter((p) => p.status === 'in_production');
+
+  const paraProducao = (list: typeof aValidar) =>
+    list.map((p) => ({
+      proposalId: p.id,
+      title: p.topicLabel,
+      angle: p.angle,
+      status: p.status,
+      statusLabel: p.statusLabel,
+      formatLabel: p.formatLabel,
+      pack: (() => {
+        const pk = packs.get(p.id);
+        return pk
+          ? {
+              id: pk.id,
+              proposalId: pk.proposalId,
+              kindLabel: pk.kindLabel,
+              deliverables: pk.deliverables,
+              payload: pk.payload,
+              gaps: pk.gaps,
+              status: pk.status,
+              templateKey: pk.templateKey,
+            }
+          : null;
+      })(),
+    }));
 
   return (
     <>
       <div className="dashBar">
         <h1>Conteúdo</h1>
         <span className="dashState">
-          {brain.ready.length
-            ? `${brain.ready.length} ${brain.ready.length === 1 ? 'pronta para gravar' : 'prontas para gravar'}`
-            : brain.stories.length
-              ? `${brain.stories.length} ${brain.stories.length === 1 ? 'história salva' : 'histórias salvas'}`
-              : 'nada salvo ainda'}
+          {semana?.needsYou.length
+            ? `${semana.needsYou.length} ${semana.needsYou.length === 1 ? 'decisão sua' : 'decisões suas'}`
+            : prontas
+              ? `${prontas} ${prontas === 1 ? 'pronta para produzir' : 'prontas para produzir'}`
+              : 'semana em aberto'}
         </span>
         {/* Ao lado do estado, não ao lado da ação: quem vem trabalhar não
             tropeça nele, e quem não sabe por onde começar encontra-o onde
@@ -116,8 +181,65 @@ export default async function ContentPage({
         key={`${tab ?? ''}:${idea ?? ''}`}
         initial={initial}
         panes={{
-          record: (
+          week: (
             <>
+              {/* As três confirmações que só ela pode dar vêm antes do plano:
+                  são de um clique e destravam a medição do resto. */}
+              {unlinkedMedia(brain) ? <PublicationMatch media={brain.unlinkedMedia[0]} candidates={brain.ready.concat(brain.developing).slice(0, 4).map((s2) => ({ storyId: s2.id, title: s2.title, contentIdeaId: null }))} /> : null}
+              <TrialReelConfirm items={brain.trialToConfirm} />
+              <StoryCandidates items={brain.candidates.map((c) => ({ id: c.id, fact: c.fact, question: c.question, brandName: c.brandName, source: c.source }))} />
+
+              {semana ? (
+                <WeekPane
+                  week={semana}
+                  learnings={aprendizados.slice(0, 2)}
+                  stock={{ ready: prontas, target: definicoes?.stockTarget ?? 3 }}
+                />
+              ) : (
+                <p className="osWarn">Não consegui ler a semana agora. Tente recarregar daqui a pouco.</p>
+              )}
+            </>
+          ),
+          map: mapa ? (
+            <>
+              <MapPane
+                pillars={mapa.pillars}
+                focus={mapa.focus}
+                capacity={definicoes?.weeklyCapacity ?? 3}
+                commercialFocus={COMMERCIAL_FOCUS}
+              />
+              <h2 className="osDivider">O que você já contou</h2>
+              <StoryBank
+                stories={toBankRows(brain.stories, new Set(brain.stories.filter((s2) => s2.contentIdeaIds.length).map((s2) => s2.id)))}
+                focus={brain.focus}
+              />
+              <ContentVault saved={salvas} seeds={sementes} broll={broll} braga={braga} proof={proof} />
+              <h2 className="osDivider">A estratégia por trás</h2>
+              <ContentStrategy screen={screen} />
+            </>
+          ) : (
+            <p className="osWarn">Não consegui ler o mapa agora.</p>
+          ),
+          production: (
+            <>
+              <ProductionPane
+                toValidate={paraProducao(aValidar)}
+                ready={paraProducao(semana?.readyToProduce ?? [])}
+                inProduction={paraProducao(emProducao)}
+                groups={(sessoes?.groups ?? []).map((g) => ({
+                  key: g.key,
+                  label: g.label,
+                  shared: g.shared,
+                  needsOuting: g.needsOuting,
+                  checklist: g.checklist,
+                  items: g.items.map((i) => ({ proposalId: i.proposalId, title: i.title })),
+                }))}
+                savedSessions={sessoes?.saved ?? []}
+                templates={templates.map((t) => ({ key: t.key, label: t.label, pendingTokens: t.pendingTokens }))}
+                stock={{ ready: prontas, target: definicoes?.stockTarget ?? 3 }}
+              />
+
+              <h2 className="osDivider">Matéria-prima</h2>
               <RecordPane
                 autoFind={Boolean(find)}
                 weekly={brain.weekly}
@@ -153,62 +275,73 @@ export default async function ContentPage({
                   meaning: d.carolMeaning,
                   frameLabel: d.frameLabel,
                 }))}
-                candidates={brain.candidates.map((c) => ({
-                  id: c.id, fact: c.fact, question: c.question, brandName: c.brandName, source: c.source,
-                }))}
-                trialToConfirm={brain.trialToConfirm}
-                unlinkedMedia={brain.unlinkedMedia}
-                matchOptions={brain.ready.concat(brain.developing).slice(0, 4).map((s2) => ({
-                  storyId: s2.id, title: s2.title, contentIdeaId: null,
-                }))}
+                candidates={[]}
+                trialToConfirm={[]}
+                unlinkedMedia={[]}
+                matchOptions={[]}
               />
               <ContentBank today={hoje} bank={banco.filter((i) => i.status !== 'seed' && !(i.storyId && i.status === 'saved'))} trends={trends} openId={idea} />
             </>
           ),
-          tests: <ReelsTestLab lab={lab} />,
+          lab: (
+            <>
+              {laboratorio ? (
+                <LabPane
+                  formats={laboratorio.formats}
+                  others={laboratorio.others}
+                  experiments={testes}
+                  references={refs}
+                  radar={radar.map((r) => ({ id: r.id, handle: r.handle, platform: r.platform, why: r.why }))}
+                  radarBlocked={RADAR_AUTOMATIC_BLOCKED}
+                />
+              ) : (
+                <p className="osWarn">Não consegui ler o laboratório agora.</p>
+              )}
+              <h2 className="osDivider">Reels Test</h2>
+              <ReelsTestLab lab={lab} />
+            </>
+          ),
           // A Auditoria é a casa de tudo o que o Instagram ensina. O detalhe
           // peça a peça continua a ser o mesmo componente — dentro dela, em
           // «Explorar dados», e não repetido noutra aba.
-          audit: auditoria ? (
-            <Audit
-              screen={auditoria}
-              explore={
-                feed && historias ? (
-                  <ContentIntelligence
-                    pieces={desempenho.pieces}
-                    learnings={desempenho.learnings}
-                    lastSyncAt={desempenho.lastSyncAt}
-                    feed={feed}
-                    stories={historias}
-                  />
-                ) : (
-                  <p className="osWarn">Não consegui abrir o detalhe peça a peça agora. As conclusões acima continuam válidas.</p>
-                )
-              }
-            />
-          ) : (
-            <p className="osWarn">Não consegui ler a auditoria agora. Tente recarregar daqui a pouco.</p>
-          ),
-          published: (
+          audit: (
             <>
+              {comunidade ? <Community data={comunidade} /> : null}
+              {auditoria ? (
+                <Audit
+                  screen={auditoria}
+                  explore={
+                    feed && historias ? (
+                      <ContentIntelligence
+                        pieces={desempenho.pieces}
+                        learnings={desempenho.learnings}
+                        lastSyncAt={desempenho.lastSyncAt}
+                        feed={feed}
+                        stories={historias}
+                      />
+                    ) : (
+                      <p className="osWarn">Não consegui abrir o detalhe peça a peça agora. As conclusões acima continuam válidas.</p>
+                    )
+                  }
+                />
+              ) : (
+                <p className="osWarn">Não consegui ler a auditoria agora. Tente recarregar daqui a pouco.</p>
+              )}
+              <h2 className="osDivider">Publicado</h2>
               <Published pieces={publicadas} performance={Object.fromEntries(performance)} learnings={learnings} />
               <BrandPieces content={content} inventory={inventory} byRole={byRole} />
             </>
           ),
-          bank: (
-            <>
-              <StoryBank
-                stories={toBankRows(brain.stories, new Set(brain.stories.filter((s2) => s2.contentIdeaIds.length).map((s2) => s2.id)))}
-                focus={brain.focus}
-              />
-              <ContentVault saved={salvas} seeds={sementes} broll={broll} braga={braga} proof={proof} />
-            </>
-          ),
-          strategy: <ContentStrategy screen={screen} />,
         }}
       />
     </>
   );
+}
+
+/** Existe uma mídia publicada por ligar a uma história? A pergunta é de um
+ *  clique e destrava a medição das outras, por isso vive na Semana. */
+function unlinkedMedia(brain: Awaited<ReturnType<typeof contentScreen>>) {
+  return brain.unlinkedMedia.length > 0;
 }
 
 /** O portfólio como banco de capacidades. Serve para responder a uma pergunta

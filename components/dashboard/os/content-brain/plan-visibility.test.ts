@@ -26,9 +26,17 @@ test('o Banco e o fim do Workshop levam ao plano, não a lugar nenhum', () => {
 
 test('«Ver plano» abre a aba onde a ficha existe e remonta o estúdio ao mudar de endereço', () => {
   const src = ler('app/dashboard/(app)/content/page.tsx');
-  assert.match(src, /const initial: StudioTab = isStudioTab\(tab\) \? tab : 'record';/);
+  assert.match(src, /const initial: StudioTab = resolveTab\(tab\);/);
   assert.match(src, /<ContentStudio\s+key=\{`\$\{tab \?\? ''\}:\$\{idea \?\? ''\}`\}/);
   assert.doesNotMatch(src, /aberta\.status === 'saved'/);
+
+  // As abas passaram a Semana/Mapa/Produção/Laboratório/Auditoria, e os links
+  // guardados continuam a dizer `tab=record`. A resolução tem de os levar à
+  // Produção, que é onde a ficha da história passou a viver — senão «Ver
+  // plano» abre a Semana e mostra outra coisa.
+  const tabs = ler('components/dashboard/os/studioTabs.ts');
+  assert.match(tabs, /record: 'production'/);
+  assert.match(tabs, /tests: 'lab'/);
 });
 
 test('uma peça que nasceu de uma história herda gancho, roteiro e tomadas da estrutura', () => {

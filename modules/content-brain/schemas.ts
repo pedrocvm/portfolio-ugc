@@ -232,3 +232,33 @@ export const MediaAuditSchema = z.object({
   confidence: z.number().min(0).max(1),
 });
 export type MediaAudit = z.infer<typeof MediaAuditSchema>;
+
+/* ── Engenharia de uma referência externa ─────────────────────────────────── */
+
+/** O que se extrai de um Reel que a Carol salvou.
+ *
+ *  Estrutura, nunca assunto. O tema e a personalidade da creator de referência
+ *  não entram: o que se aproveita é o mecanismo, e o mecanismo é o que ela
+ *  consegue reproduzir com a vida dela.
+ *
+ *  Tudo nullable de propósito. Uma pesquisa que não conseguiu ver o vídeo
+ *  devolve nulos, e nulo é a resposta honesta — não «médio». */
+export const ReferenceEngineeringSchema = z.object({
+  structure: z.string().max(400).nullable().describe('como a peça é construída, em uma ou duas frases'),
+  opening: z.enum(['speech', 'text', 'action', 'image', 'question', 'statement']).nullable(),
+  duration_seconds: z.number().int().min(1).max(600).nullable(),
+  speech_type: z.enum(['talking_head', 'voice_over', 'pov', 'dialogue', 'none']).nullable(),
+  screen_recording: z.boolean().nullable(),
+  b_roll: z.boolean().nullable(),
+  on_screen_text: z.enum(['absent', 'punctual', 'leading']).nullable(),
+  pace: z.enum(['slow', 'medium', 'fast']).nullable(),
+  scene_count: z.number().int().min(1).max(60).nullable(),
+  cta_structural: z.string().max(200).nullable().describe('o CTA como estrutura, não o texto da creator'),
+  effort: z.enum(['low', 'medium', 'high']).nullable(),
+  /** A pergunta que esta estrutura levanta para a Carol testar. Hipótese,
+   *  nunca receita. */
+  question: z.string().max(200).nullable(),
+  /** O que a pesquisa NÃO conseguiu ver. Sai para a tela como está. */
+  unknown: z.array(z.string().max(80)).max(12),
+});
+export type ReferenceEngineering = z.infer<typeof ReferenceEngineeringSchema>;
