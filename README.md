@@ -21,8 +21,37 @@ Na prática:
 - o preço sai de política versionada, e diz «por resolver» quando não sabe;
 - direitos de uso são uma licença separada da produção, com fim obrigatório;
 - nada sai para fora sem ela ler;
-- o trabalho — ler os emails, escolher marcas, separar referências, escrever o
-  plano de conteúdo — acontece de madrugada, para ela chegar e só decidir.
+- o trabalho — ler os emails, escolher marcas, separar referências, montar a
+  semana de conteúdo — acontece de madrugada, para ela chegar e só decidir.
+
+### A área de Conteúdo
+
+Cinco destinos, um por pergunta: **Semana** (o que fazemos agora), **Mapa**
+(sobre o que ela fala), **Produção** (o que está pronto e o que falta),
+**Laboratório** (o que ainda não sabemos) e **Auditoria** (o que funcionou e o
+que aprendemos).
+
+A Semana abre com três propostas — a capacidade que ela declarou — e cada uma
+diz assunto, ângulo, pilar, lente, objetivo, formato e **por que agora**. O
+«por que agora» não é prosa: deriva de razões estruturadas guardadas com a
+proposta, e a tela consegue mostrá-las uma a uma. Contar, comparar janelas e
+detectar repetição é código determinístico; o modelo escreve, não escolhe.
+
+Cinco eixos que a maior parte dos sistemas colapsa num só, e que aqui são
+cinco colunas: pilar é território (UGC como renda, Experiências, Casa),
+objetivo é função (atrair, reter, provar, converter), lente é dimensão da
+pessoa, formato é recipiente da plataforma, e modalidade comercial (Tech UGC,
+Canvas UGC) é o tipo de trabalho. SaaS e apps para negócios locais é o foco
+comercial — não um quarto pilar.
+
+Nenhuma peça chega a «pronto para produzir» sem validação humana, e isso está
+no domínio, no serviço e num `check` do Postgres. O Production Pack muda de
+forma com o formato: fala frase por frase num Reel falado, mecânica num Canvas
+UGC, slide a slide num carrossel.
+
+Um formato sem comparação fica «não testado», nunca «pior»: onze Reels
+seguidos são baseline de uso, não prova. E o que a Auditoria aprende volta ao
+motor — `modules/content-brain/loop.test.ts` falha se não voltar.
 
 ## Desenvolvimento
 
@@ -92,7 +121,15 @@ modules/                    o domínio, um por área
   morning/                  a manhã consolidada: a ordem do dia e a frase que a abre
   email/thread-state.ts     de quem é a vez numa conversa, e o que se classifica
   references/ trends/       referências criativas por marca; o que está a subir
-  creator/                  o conteúdo dela: pilares, repetição, plano do dia
+  creator/                  LEGADO: os pilares antigos, só para histórico
+  content-brain/            a área de Conteúdo
+    editorial.ts            pilares, objetivos, lentes, assuntos, guardrails
+    priority.ts             o Motor de Prioridades: determinístico, com evidência
+    pack.ts                 Production Pack, um schema por formato
+    format-dna.ts           a assinatura de uma peça e a maturidade de um formato
+    community.ts            intenção agregada dos comentários
+    pipeline.ts             os oito estados, e o que não se pode saltar
+    outcome.ts              julgar uma peça contra o objetivo que ela tinha
   milestones/               marcos reais, derivados de factos — nunca cadastrados
 
 lib/                        plataforma partilhada
@@ -125,6 +162,11 @@ npx supabase db push
 As colunas antigas de `brand` (`stage`, `next_step`, `instagram`, `contact`)
 continuam lá e continuam a funcionar. O modelo novo vive ao lado, em
 `opportunity` e `action_item`, e o backfill preserva tudo.
+
+O mesmo vale para o conteúdo: os quatro «pilares funcionais» de 05/09 eram
+objetivos disfarçados e continuam gravados. O objetivo editorial nasce deles
+por mapeamento marcado como inferido, e o território só é preenchido quando os
+dados antigos apontam para um só — ambíguo fica desconhecido.
 
 ## Ligar o Gmail
 
