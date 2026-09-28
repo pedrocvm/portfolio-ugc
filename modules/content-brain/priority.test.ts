@@ -138,6 +138,19 @@ test('a semana inteira não fica no pilar de trabalho', () => {
   assert.equal(guardrailBreaches(semana.proposals).filter((b) => b.rule === 'perfil_nao_e_so_trabalho').length, 0);
 });
 
+test('só com assuntos de trabalho, a semana vem incompleta em vez de ser toda trabalho', () => {
+  // O caso que o limite existe para apanhar: nada em Casa nem em Experiências
+  // está em «Agora». O motor prefere devolver duas propostas a devolver três
+  // que transformam o perfil numa conta de portfólio.
+  const semana = buildWeek(entrada({
+    topics: MAPA.filter((t) => t.pillar === 'ugc_income'),
+  }));
+  assert.ok(semana.proposals.length < 3, `devolveu ${semana.proposals.length} de trabalho`);
+  assert.equal(semana.proposals.filter((p) => p.pillar === 'ugc_income').length, 2);
+  assert.ok(semana.notes.some((n) => /Consegui 2 de 3/.test(n)));
+  assert.deepEqual(guardrailBreaches(semana.proposals).filter((b) => b.rule === 'perfil_nao_e_so_trabalho'), []);
+});
+
 test('a lente que sumiu volta como razão', () => {
   const semana = buildWeek(entrada({
     published: [0, 1, 2, 3, 4, 5].map((i) => publicada(i, 'ugc_income', { lens: 'what_i_do' })),

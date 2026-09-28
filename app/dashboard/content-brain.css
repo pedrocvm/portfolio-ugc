@@ -2212,7 +2212,10 @@
 
 /* ── Comunidade ──────────────────────────────────────────────────────────── */
 
-.cbReading {
+/* Nome próprio: `.cbReading` já existe desde o Content Brain e é a leitura
+   pequena de uma métrica. Reutilizá-la aqui reescrevia-a para serifa de 17px
+   em todas as telas que já a usavam. */
+.cbCommunityReading {
   margin: 4px 0 14px;
   max-width: 60ch;
   font-family: var(--serif);

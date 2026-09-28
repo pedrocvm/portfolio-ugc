@@ -23,7 +23,7 @@ export default function Community({ data }: { data: CommunityView }) {
   return (
     <section className="osSection">
       <h2>A comunidade</h2>
-      <p className="cbReading">{data.reading}</p>
+      <p className="cbCommunityReading">{data.reading}</p>
 
       <div className="osBars">
         {data.breakdown.map((b) => (

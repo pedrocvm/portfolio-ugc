@@ -39,6 +39,7 @@ import MapPane from '@/components/dashboard/os/content-brain/MapPane';
 import ProductionPane from '@/components/dashboard/os/content-brain/ProductionPane';
 import LabPane from '@/components/dashboard/os/content-brain/LabPane';
 import Community from '@/components/dashboard/os/content-brain/Community';
+import ObjectiveOutcomes from '@/components/dashboard/os/content-brain/ObjectiveOutcomes';
 import { COMMERCIAL_FOCUS } from '@/modules/content-brain/editorial';
 import { editorialMap, seedEditorialMap, strategySettings, visualTemplates } from '@/modules/content-brain/editorial-service';
 import { currentWeek } from '@/modules/content-brain/week-service';
@@ -46,6 +47,7 @@ import { packFor } from '@/modules/content-brain/pack-service';
 import { activeLearningRows, experiments, formatLab, radarCreators, references, RADAR_AUTOMATIC_BLOCKED } from '@/modules/content-brain/lab-service';
 import { sessions } from '@/modules/content-brain/session-service';
 import { communityWindow } from '@/modules/content-brain/community-service';
+import { objectiveOutcomes } from '@/modules/content-brain/outcome-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,7 +91,7 @@ export default async function ContentPage({
     feedAudit(60).catch(() => null),
     schedulerState().catch(() => null),
   ]);
-  const [semana, mapa, definicoes, templates, laboratorio, testes, refs, radar, aprendizados, sessoes, comunidade] = await Promise.all([
+  const [semana, mapa, definicoes, templates, laboratorio, testes, refs, radar, aprendizados, sessoes, comunidade, objetivos] = await Promise.all([
     currentWeek().catch(() => null),
     editorialMap().catch(() => null),
     strategySettings().catch(() => null),
@@ -101,6 +103,7 @@ export default async function ContentPage({
     activeLearningRows({ limit: 4 }).catch(() => []),
     sessions().catch(() => null),
     communityWindow({ days: 30 }).catch(() => null),
+    objectiveOutcomes({ days: 90, limit: 20 }).catch(() => null),
   ]);
 
   // Os packs das peças que esperam por ela. Um pedido por proposta, e só das
@@ -306,6 +309,7 @@ export default async function ContentPage({
           // «Explorar dados», e não repetido noutra aba.
           audit: (
             <>
+              {objetivos ? <ObjectiveOutcomes rows={objetivos.rows} unclassified={objetivos.unclassified} /> : null}
               {comunidade ? <Community data={comunidade} /> : null}
               {auditoria ? (
                 <Audit

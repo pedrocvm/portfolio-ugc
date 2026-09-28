@@ -283,10 +283,20 @@ create table if not exists public.content_format_dna (
   updated_at     timestamptz not null default now()
 );
 
-create unique index if not exists content_format_dna_media_uk on public.content_format_dna (media_id) where media_id is not null;
-create unique index if not exists content_format_dna_idea_uk on public.content_format_dna (content_idea_id) where content_idea_id is not null;
-create unique index if not exists content_format_dna_proposal_uk on public.content_format_dna (proposal_id) where proposal_id is not null;
-create unique index if not exists content_format_dna_reference_uk on public.content_format_dna (reference_id) where reference_id is not null;
+-- Unicidade simples, não parcial. Em Postgres vários NULL não colidem, por
+-- isso `unique (media_id)` já permite todas as linhas que não são de mídia —
+-- e, ao contrário de um índice parcial, serve de alvo a um `on conflict`.
+-- Com índice parcial, cada upsert de assinatura falhava.
+alter table public.content_format_dna drop constraint if exists content_format_dna_media_uk;
+alter table public.content_format_dna drop constraint if exists content_format_dna_idea_uk;
+alter table public.content_format_dna drop constraint if exists content_format_dna_proposal_uk;
+alter table public.content_format_dna drop constraint if exists content_format_dna_reference_uk;
+alter table public.content_format_dna
+  add constraint content_format_dna_media_uk unique (media_id),
+  add constraint content_format_dna_idea_uk unique (content_idea_id),
+  add constraint content_format_dna_proposal_uk unique (proposal_id),
+  add constraint content_format_dna_reference_uk unique (reference_id);
+
 create index if not exists content_format_dna_format_idx on public.content_format_dna (format, presentation);
 
 drop trigger if exists content_format_dna_touch on public.content_format_dna;
