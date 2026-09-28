@@ -106,6 +106,14 @@ export const JOB_PURPOSE: Record<string, { label: string; why: string }> = {
     label: 'Renovar o acesso ao Instagram',
     why: 'Uma vez por dia. Só renova dentro da janela de segurança — o token não pode depender de alguém se lembrar de o copiar.',
   },
+  'carolos-content-week': {
+    label: 'Montar a semana de conteúdo',
+    why: 'Segunda de manhã. As três propostas nascem antes de ela abrir o painel, para a semana não começar numa tela vazia.',
+  },
+  'carolos-content-community': {
+    label: 'Ler a qualidade dos comentários',
+    why: 'Uma vez por dia. Separa elogio solto de identificação, pergunta e conversa — é o sinal que ela disse importar mais.',
+  },
   'carolos-content-learning': {
     label: 'Ler o que os números ensinam',
     why: 'Uma vez por dia, depois do sync. Calcula a mediana dela, procura sinais e só chama aprendizado ao que se repetiu.',

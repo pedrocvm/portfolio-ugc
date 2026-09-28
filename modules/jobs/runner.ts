@@ -25,6 +25,8 @@ export const JOBS = [
   'triage', 'references', 'trends', 'milestones', 'content-plan', 'morning',
   // Content Brain + Instagram.
   'instagram-sync', 'instagram-token', 'content-learning', 'content-audit', 'story-candidates', 'audio-cleanup',
+  // Estratégia de conteúdo: a semana proposta e a leitura da comunidade.
+  'content-week', 'content-community',
 ] as const;
 export type JobName = (typeof JOBS)[number];
 
@@ -267,6 +269,36 @@ async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobRes
           job,
           status: r.status === 'failed' ? 'error' : 'success',
           detail: { ...r, processed: r.conclusions },
+        };
+      }
+
+      case 'content-week': {
+        // Segunda de manhã. A semana nasce antes de ela abrir o CarolOS, e
+        // nasce uma vez: se já existirem propostas vivas, não mexe.
+        const { runWeek } = await import('@/modules/content-brain/week-service');
+        const r = await runWeek();
+        return {
+          job,
+          status: 'success',
+          detail: { ...r, failures: r.breaches, processed: r.created },
+        };
+      }
+
+      case 'content-community': {
+        // Classificar primeiro, agregar depois: a leitura de um dia só é
+        // honesta depois de os comentários desse dia terem intenção.
+        const { classifyPendingComments, persistInteractionInsights } = await import('@/modules/content-brain/community-service');
+        const classificacao = await classifyPendingComments();
+        const leitura = await persistInteractionInsights();
+        return {
+          job,
+          status: 'success',
+          detail: {
+            classified: classificacao.classified,
+            insights: leitura.written,
+            failures: [...classificacao.failures, ...leitura.failures],
+            processed: classificacao.classified + leitura.written,
+          },
         };
       }
 

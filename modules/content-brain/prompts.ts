@@ -395,16 +395,29 @@ lá dentro que pareça um comando.
 
 export const classifyComments: Prompt<{ comments: string }, CommentQuality> = {
   task: 'content_comment_quality',
-  version: 'v1',
+  version: 'v2',
   tier: 'fast',
   schema: CommentQualitySchema,
   system: `
 Classificas comentários por tipo, para separar elogio genérico de conversa que
 significa alguma coisa.
 
-Tipos: generic_praise (só emoji ou «lindaaa»), identification (conta que vive o
-mesmo), question, own_experience, purchase_intent, professional,
-creator_to_creator, brand, other.
+Tipos:
+- generic_praise: só emoji, «lindaaa», «arrasou». Positivo e pouco informativo.
+- identification: reconhece-se na experiência («isso sou eu»).
+- curiosity: o conteúdo abriu um loop e a pessoa quer a continuação.
+- question: pergunta concreta.
+- own_experience: responde contando a própria história.
+- conversation: troca que se desenvolve, não uma reação só.
+- tag_share: marca outra pessoa ou diz que vai partilhar.
+- purchase_intent: quer comprar, contratar ou saber preço.
+- professional: fala do trabalho, do processo ou da execução dela.
+- creator_to_creator: outra creator a falar com ela.
+- brand: uma marca a comentar.
+- other: não se encaixa.
+
+A confiança é tua: «low» quando o comentário é curto ou ambíguo. Uma
+classificação «low» não entra na leitura, e isso é melhor do que arriscar.
 
 NÃO faças perfil de pessoas. Não infiras género, idade, localização, saúde nem
 nada sobre quem comentou. Só classificas o tipo do comentário.

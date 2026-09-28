@@ -191,8 +191,15 @@ export const CommentQualitySchema = z.object({
       id: z.string(),
       quality: z.enum([
         'generic_praise', 'identification', 'question', 'own_experience',
-        'purchase_intent', 'professional', 'creator_to_creator', 'brand', 'other',
+        'purchase_intent', 'professional', 'creator_to_creator', 'brand',
+        // v2: as três intenções que faltavam para cobrir o que a Carol
+        // descreveu como comunidade — curiosidade, conversa e marcação.
+        'curiosity', 'conversation', 'tag_share',
+        'other',
       ]),
+      /** Nunca se afirma o que uma pessoa quis dizer. A leitura é agregada e
+       *  o que vem com confiança baixa não entra nela. */
+      confidence,
     }),
   ),
 });
