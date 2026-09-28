@@ -14,6 +14,8 @@ import {
  *  vencedor por ausência de alternativa. «Não testado» é uma resposta
  *  completa, e é a que aparece na maior parte da tela hoje. */
 
+const EFFORT_LABEL: Record<string, string> = { low: 'baixo', medium: 'médio', high: 'alto' };
+
 export type MaturityRow = {
   dimension: string;
   dimensionLabel: string;
@@ -95,7 +97,7 @@ export default function LabPane({
           </p>
           <div className="osRows">
             {others.map((f) => (
-              <Maturity key={`${f.dimension}-${f.value}`} row={f} />
+              <Maturity key={`${f.dimension}-${f.value}`} row={f} withDimension />
             ))}
           </div>
         </section>
@@ -135,11 +137,13 @@ export default function LabPane({
   );
 }
 
-function Maturity({ row }: { row: MaturityRow }) {
+function Maturity({ row, withDimension }: { row: MaturityRow; withDimension?: boolean }) {
   return (
     <div className="osRow">
       <div>
-        <span className="osRowName">{row.valueLabel}</span>
+        <span className="osRowName">
+          {withDimension ? `${row.dimensionLabel}: ${row.valueLabel}` : row.valueLabel}
+        </span>
         <p className="osRowSub">{row.phrasing}</p>
         <p className="osRowSub">{row.because}</p>
       </div>
@@ -209,7 +213,7 @@ function References({ items }: { items: ReferenceRow[] }) {
                 <div className="osMeta">
                   {r.durationSeconds ? <span className="osTag" data-tone="mute">{r.durationSeconds}s</span> : null}
                   {r.sceneCount ? <span className="osTag" data-tone="mute">{r.sceneCount} cenas</span> : null}
-                  {r.effort ? <span className="osTag" data-tone="mute">esforço {r.effort}</span> : null}
+                  {r.effort ? <span className="osTag" data-tone="mute">esforço {EFFORT_LABEL[r.effort] ?? r.effort}</span> : null}
                   {r.fromRadar ? <span className="osTag" data-tone="mute">do Radar</span> : null}
                 </div>
                 {r.status !== 'done' ? (

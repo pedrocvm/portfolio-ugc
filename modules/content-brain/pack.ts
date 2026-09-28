@@ -337,5 +337,7 @@ export function emptyPack(kind: PackKind): PackPayload {
   }
 }
 
+/** O nome do pack na tela. Só acrescenta o recipiente quando ele diz mais
+ *  alguma coisa — «Carrossel · Carrossel» era o nome duas vezes. */
 export const packTitle = (kind: PackKind, format: Format) =>
-  kind === 'spoken_reel' ? PACK_LABEL.spoken_reel : `${PACK_LABEL[kind]} · ${FORMAT_LABEL[format]}`;
+  PACK_LABEL[kind] === FORMAT_LABEL[format] ? PACK_LABEL[kind] : `${PACK_LABEL[kind]} · ${FORMAT_LABEL[format]}`;

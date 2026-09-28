@@ -96,7 +96,8 @@ function checklist(items: readonly SessionItem[]): string[] {
   if (items.some((i) => i.screenRecording)) {
     out.push('Antes de começar: as gravações de tela, todas de uma vez');
   }
-  items.forEach((i, n) => out.push(`${n + 1}. ${i.title}`));
+  // Sem número no texto: quem numera é o `<ol>` da tela.
+  for (const i of items) out.push(i.title);
   if (items.length > 1) out.push('B-roll partilhado: grave uma vez e reaproveite');
   return out;
 }

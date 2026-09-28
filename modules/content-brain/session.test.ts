@@ -71,6 +71,8 @@ test('a lista começa pelos assets, que é o que trava a meio', () => {
   // O mesmo asset nas duas peças aparece uma vez.
   assert.equal(juntas[0].checklist.filter((c) => c.includes('print do painel')).length, 1);
   assert.ok(juntas[0].checklist.some((c) => c.includes('B-roll partilhado')));
+  // Quem numera é a tela: uma linha que já traga «1.» aparecia como «1. 1.».
+  assert.deepEqual(juntas[0].checklist.filter((c) => /^\d+\./.test(c)), []);
 });
 
 test('a sessão não tem datas nem duração: não é agenda de produção', () => {

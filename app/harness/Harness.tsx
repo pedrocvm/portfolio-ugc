@@ -25,6 +25,15 @@ import { auditPiece, feedSummary, type FeedPieceInput } from '@/modules/content-
 import { sequenceMetrics } from '@/modules/content-brain/stories';
 import { accountSeries, buildAudit, compareAccountWindows, periodRange, type AccountDay } from '@/modules/content-brain/audit';
 import type { AuditScreen } from '@/modules/content-brain/audit-service';
+import WeekPane, { type Proposal, type WeekData } from '@/components/dashboard/os/content-brain/WeekPane';
+import MapPane from '@/components/dashboard/os/content-brain/MapPane';
+import ProductionPane from '@/components/dashboard/os/content-brain/ProductionPane';
+import LabPane from '@/components/dashboard/os/content-brain/LabPane';
+import Community from '@/components/dashboard/os/content-brain/Community';
+import { COMMERCIAL_FOCUS, PILLAR, SOT_TOPICS } from '@/modules/content-brain/editorial';
+import { PACK_DELIVERABLES, parsePack } from '@/modules/content-brain/pack';
+import { aggregateIntents, INTENT_LABEL, type Intent } from '@/modules/content-brain/community';
+import { RADAR_AUTOMATIC_BLOCKED } from '@/modules/content-brain/lab-service';
 
 /** Dados de exemplo com a forma do esquema real. Nomes de marca inventados de
  *  propósito: uma bancada não devia conter conversa verdadeira de ninguém. */
@@ -345,7 +354,277 @@ const APRENDIZADOS: LearningView[] = [
   { id: 'l2', statement: 'Conteúdos como «Uma coisa não tem nada a ver com a outra», humor parecem render mais em Comentários. Vale repetir esse caminho em outra história real.', ladderState: 'hypothesis', confidence: 'medium', sampleSize: 2 },
 ];
 
+
+/* ── Estratégia de conteúdo ───────────────────────────────────────────────── */
+
+const proposta = (over: Partial<Proposal> & Pick<Proposal, 'id' | 'topicLabel' | 'angle'>): Proposal => ({
+  pillarLabel: 'UGC como renda',
+  lens: 'what_i_do', lensLabel: 'O que faço',
+  objective: 'prove', objectiveLabel: 'Provar',
+  format: 'reel', formatLabel: 'Reel',
+  structureLabel: null, modalityLabel: null,
+  whyNow: '', evidence: [],
+  status: 'proposed', statusLabel: 'Proposto', statusMeans: 'Esperando sua validação.',
+  packId: null, packGaps: [], reelTest: false,
+  ...over,
+});
+
+const SEMANA: WeekData = {
+  weekStart: '2026-09-28',
+  capacity: 3,
+  summary: '1 para atrair, 1 para reter e 1 para provar. Também temos um teste de formato nesta semana.',
+  proposals: [
+    proposta({
+      id: 'p1',
+      topicLabel: 'Experiências com marcas',
+      angle: 'A marca cancelou dois dias antes da gravação.',
+      whyNow: 'Aconteceu: a marca cancelou dois dias antes da gravação. Faltou provar nas últimas publicações. Serve ao foco comercial: SaaS e apps para negócios locais.',
+      evidence: [
+        { kind: 'recent_event', detail: 'Aconteceu: a marca cancelou dois dias antes da gravação.' },
+        { kind: 'objective_under', detail: 'Faltou provar nas últimas publicações.' },
+        { kind: 'commercial_value', detail: 'Serve ao foco comercial: SaaS e apps para negócios locais.' },
+      ],
+    }),
+    proposta({
+      id: 'p2',
+      topicLabel: 'Sete bichos',
+      angle: 'A rotina com a casa cheia, de um jeito que dê vontade de continuar acompanhando.',
+      pillarLabel: 'Casa', lens: 'who_i_am', lensLabel: 'Quem sou',
+      objective: 'retain', objectiveLabel: 'Reter',
+      format: 'story', formatLabel: 'Stories',
+      whyNow: 'Casa apareceu pouco nas últimas 6 publicações. «Quem sou» sumiu das últimas publicações. Você ainda não falou disso.',
+      evidence: [
+        { kind: 'pillar_absent', detail: 'Casa apareceu pouco nas últimas 6 publicações.' },
+        { kind: 'lens_absent', detail: '«Quem sou» sumiu das últimas publicações.' },
+        { kind: 'topic_rotation', detail: 'Você ainda não falou disso.' },
+      ],
+      status: 'approved_to_develop', statusLabel: 'Aprovado para desenvolver',
+      statusMeans: 'Assunto, ângulo e formato aceitos.',
+    }),
+    proposta({
+      id: 'p3',
+      topicLabel: 'Braga a Fundo',
+      angle: 'O olhar dela sobre o serviço, de um jeito que faça quem não te conhece reconhecer a situação.',
+      pillarLabel: 'Experiências', lens: 'how_i_think', lensLabel: 'Como penso',
+      objective: 'attract', objectiveLabel: 'Atrair',
+      format: 'carousel', formatLabel: 'Carrossel',
+      structureLabel: 'POV',
+      whyNow: 'Experiências apareceu pouco nas últimas 6 publicações. Carrossel funciona para a Carol?',
+      evidence: [
+        { kind: 'pillar_absent', detail: 'Experiências apareceu pouco nas últimas 6 publicações.' },
+        { kind: 'format_untested', detail: 'Carrossel funciona para a Carol?' },
+      ],
+      status: 'to_validate', statusLabel: 'Para validar',
+      statusMeans: 'O material está pronto para você revisar.',
+      packId: 'pk1',
+    }),
+  ],
+  needsYou: [],
+  readyToProduce: [],
+  exists: true,
+};
+SEMANA.needsYou = SEMANA.proposals.filter((p) => p.status === 'proposed' || p.status === 'to_validate');
+
+const MAPA = ['ugc_income', 'experiences', 'home'].map((slug) => {
+  const pilar = slug as 'ugc_income' | 'experiences' | 'home';
+  const assuntos = SOT_TOPICS.filter((t) => t.pillar === pilar);
+  return {
+    pillar: pilar,
+    label: PILLAR[pilar].label,
+    purpose: PILLAR[pilar].purpose,
+    guardrails: PILLAR[pilar].guardrails,
+    topics: assuntos.map((t, i) => ({
+      id: `t-${t.slug}`, label: t.label, howToTreat: t.howToTreat, state: t.state,
+      origin: 'sot', lastUsedAt: i === 0 ? dia(-31) : null, useCount: i === 0 ? 2 : 0,
+    })),
+    liveCount: assuntos.filter((t) => t.state === 'now').length,
+  };
+});
+
+const PACK_CARROSSEL = parsePack('carousel', {
+  cover: 'Fui a um sítio que toda a gente recomenda. Saí a pensar noutra coisa.',
+  slides: [
+    { index: 0, copy: 'A reserva foi a parte mais fácil do dia.', composition: 'Capa com título grande, foto de fundo.' },
+    { index: 1, copy: 'Chegámos às 20h. Ninguém nos olhou durante quatro minutos.', composition: 'Foto cheia, texto em baixo.' },
+    { index: 2, copy: 'A comida estava boa. O que ficou não foi a comida.', composition: 'Duas fotos, corte ao meio.' },
+    { index: 3, copy: 'Serviço é a parte que ninguém fotografa.', composition: 'Só texto, respiro à volta.' },
+  ],
+  templateKey: null,
+  typography: 'Título na fonte de display, corpo na de texto.',
+  palette: 'A paleta aprovada; o tom de destaque ainda está por decidir.',
+  assets: [
+    { kind: 'photo', what: 'A foto da sala vazia', ready: true },
+    { kind: 'photo', what: 'O prato, sem filtro', ready: false },
+  ],
+  caption: '',
+});
+
+const COMUNIDADE = aggregateIntents(
+  ([
+    ...Array.from({ length: 9 }, () => 'identification'),
+    ...Array.from({ length: 5 }, () => 'own_experience'),
+    ...Array.from({ length: 4 }, () => 'question'),
+    ...Array.from({ length: 3 }, () => 'curiosity'),
+    ...Array.from({ length: 7 }, () => 'generic_praise'),
+    'brand',
+  ] as const).map((intent, i) => ({ id: `c${i}`, intent: intent as Intent, confidence: 'medium' as const })),
+);
+
+const LAB_FORMATOS = [
+  { dimension: 'format', dimensionLabel: 'Formato', value: 'reel', valueLabel: 'Reel',
+    state: 'early_signal', stateLabel: 'Sinal inicial', phrasing: 'Começou a mostrar sinal.',
+    because: '11 peças, mas sem alternativa comparável. Uso não é vantagem.', sampleSize: 11, comparedWith: 0 },
+  { dimension: 'format', dimensionLabel: 'Formato', value: 'carousel', valueLabel: 'Carrossel',
+    state: 'untested', stateLabel: 'Não testado', phrasing: 'Você ainda não experimentou isso.',
+    because: 'Nenhuma peça usou isso ainda.', sampleSize: 0, comparedWith: 11 },
+  { dimension: 'format', dimensionLabel: 'Formato', value: 'photo_sequence', valueLabel: 'Sequência de fotos',
+    state: 'untested', stateLabel: 'Não testado', phrasing: 'Você ainda não experimentou isso.',
+    because: 'Nenhuma peça usou isso ainda.', sampleSize: 0, comparedWith: 11 },
+  { dimension: 'format', dimensionLabel: 'Formato', value: 'story', valueLabel: 'Stories',
+    state: 'testing', stateLabel: 'Em teste', phrasing: 'Está em teste. Ainda é cedo.',
+    because: 'Uma peça só. Ainda não dá para ler nada.', sampleSize: 1, comparedWith: 11 },
+];
+
 export default function Harness({ modo }: { modo?: string }) {
+
+  if (modo === 'semana' || modo === 'semana-vazia') {
+    const vazia = modo === 'semana-vazia';
+    return (
+      <>
+        <div className="dashBar">
+          <h1>Conteúdo</h1>
+          <span className="dashState">{vazia ? 'semana em aberto' : '2 decisões suas'}</span>
+        </div>
+        <WeekPane
+          week={vazia ? { ...SEMANA, proposals: [], needsYou: [], readyToProduce: [], exists: false } : SEMANA}
+          learnings={vazia ? [] : [{
+            id: 'l1',
+            statement: 'Terminar com uma pergunta trouxe mais histórias pessoais.',
+            level: 'Sinal',
+            because: '2 peças coerentes em salvamentos. Vale repetir em outra história real.',
+          }]}
+          stock={{ ready: vazia ? 0 : 2, target: 3 }}
+        />
+      </>
+    );
+  }
+
+  if (modo === 'mapa') {
+    return (
+      <>
+        <div className="dashBar"><h1>Conteúdo</h1><span className="dashState">Mapa</span></div>
+        <MapPane
+          pillars={MAPA}
+          focus={{
+            label: 'Construção de carreira em Tech UGC e Canvas UGC',
+            items: ['tech_ugc', 'canvas_ugc', 'saas_local_business', 'community'],
+            itemLabels: ['Tech UGC', 'Canvas UGC', 'SaaS e apps para negócios locais', 'Criação de comunidade'],
+            since: dia(-12),
+          }}
+          capacity={3}
+          commercialFocus={COMMERCIAL_FOCUS}
+        />
+      </>
+    );
+  }
+
+  if (modo === 'producao') {
+    const pack = PACK_CARROSSEL.ok
+      ? {
+          id: 'pk1', proposalId: 'p3', kindLabel: 'Carrossel',
+          deliverables: PACK_DELIVERABLES.carousel, payload: PACK_CARROSSEL.pack,
+          gaps: ['falta escolher o template'], status: 'to_validate', templateKey: null,
+        }
+      : null;
+    return (
+      <>
+        <div className="dashBar"><h1>Conteúdo</h1><span className="dashState">Produção</span></div>
+        <ProductionPane
+          toValidate={[{
+            proposalId: 'p3', title: 'Braga a Fundo',
+            angle: 'O olhar dela sobre o serviço.', status: 'to_validate',
+            statusLabel: 'Para validar', formatLabel: 'Carrossel', pack,
+          }]}
+          ready={[{
+            proposalId: 'p2', title: 'Sete bichos',
+            angle: 'A rotina com a casa cheia.', status: 'ready_to_produce',
+            statusLabel: 'Pronto para produzir', formatLabel: 'Stories', pack: null,
+          }]}
+          inProduction={[]}
+          groups={[{
+            key: 'casa:sem_tela:to_camera',
+            label: 'Uma montagem só: 2 peças',
+            shared: ['em casa', 'falando para a câmera', 'Casa'],
+            needsOuting: false,
+            checklist: [
+              'Antes de começar: o print do painel',
+              '1. Sete bichos',
+              '2. Tecnologia doméstica',
+              'B-roll partilhado: grave uma vez e reaproveite',
+            ],
+            items: [{ proposalId: 'p2', title: 'Sete bichos' }, { proposalId: 'p4', title: 'Tecnologia doméstica' }],
+          }]}
+          savedSessions={[]}
+          templates={[
+            { key: 'carousel_editorial', label: 'Carrossel editorial', pendingTokens: ['cor primária', 'tipografia de título'] },
+            { key: 'carousel_practical', label: 'Carrossel prático', pendingTokens: ['cor primária'] },
+          ]}
+          stock={{ ready: 2, target: 3 }}
+        />
+      </>
+    );
+  }
+
+  if (modo === 'laboratorio') {
+    return (
+      <>
+        <div className="dashBar"><h1>Conteúdo</h1><span className="dashState">Laboratório</span></div>
+        <LabPane
+          formats={LAB_FORMATOS}
+          others={[
+            { dimension: 'opening', dimensionLabel: 'Abertura', value: 'question', valueLabel: 'pergunta',
+              state: 'early_signal', stateLabel: 'Sinal inicial', phrasing: 'Começou a mostrar sinal.',
+              because: '2 peças comparadas. É cedo para padrão.', sampleSize: 2, comparedWith: 9 },
+          ]}
+          experiments={[{
+            id: 'e1', label: 'Braga a Fundo — formato',
+            question: 'Carrossel funciona para a Carol?', variable: 'formato',
+            constants: ['assunto', 'objetivo', 'duração aproximada'],
+            status: 'running', outcome: 'pending', outcomeLabel: 'Ainda sem leitura',
+            because: '', sampleSize: 0, reelTest: false,
+          }]}
+          references={[{
+            id: 'r1', url: 'https://www.instagram.com/reel/ABC123/', platform: 'instagram',
+            handle: 'umacreator', status: 'done',
+            structure: 'Três batidas curtas, corte seco, a terceira quebra a expectativa.',
+            question: 'Corte seco a cada 2s funciona quando é a Carol a falar?',
+            durationSeconds: 14, sceneCount: 3, effort: 'low', unknown: ['texto em tela'], fromRadar: false,
+          }]}
+          radar={[{ id: 'rc1', handle: 'umacreator', platform: 'instagram', why: 'Formatos curtos para marcas tech.' }]}
+          radarBlocked={RADAR_AUTOMATIC_BLOCKED}
+        />
+      </>
+    );
+  }
+
+  if (modo === 'comunidade') {
+    return (
+      <>
+        <div className="dashBar"><h1>Conteúdo</h1><span className="dashState">Auditoria</span></div>
+        <Community data={{ ...COMUNIDADE, mediaId: null, breakdown:
+          (Object.entries(COMUNIDADE.counts) as [string, number][])
+            .filter(([, n]) => n > 0)
+            .sort((a, b) => b[1] - a[1])
+            .map(([intent, count]) => ({
+              intent: intent as never,
+              label: INTENT_LABEL[intent as Intent] ?? intent,
+              count,
+            })),
+        }} />
+      </>
+    );
+  }
+
   if (modo === 'gravacao') {
     return (
       <div style={{ paddingTop: 40 }}>
