@@ -27,7 +27,7 @@ export function processedCount(result: JobResult): number {
   return detail.processed ?? detail.snapshotsWritten ?? detail.mediaSeen ?? 0;
 }
 
-export async function runJob(job: JobName): Promise<JobResult> {
+export async function runJob(job: JobName, _opts: { manual?: boolean } = {}): Promise<JobResult> {
   const result = await execute(job);
   await record(result);
   return result;
@@ -88,7 +88,7 @@ async function execute(job: JobName): Promise<JobResult> {
   }
 }
 
-export async function runAllJobs(): Promise<JobResult[]> {
+export async function runAllJobs(_opts: { manual?: boolean } = {}): Promise<JobResult[]> {
   const results: JobResult[] = [];
   // Renova primeiro, coleta depois. Não existe mais “correr todo o CarolOS”.
   for (const job of ['instagram-token', 'instagram-sync'] as const) {
