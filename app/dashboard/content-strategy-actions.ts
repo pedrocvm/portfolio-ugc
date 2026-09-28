@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth';
+import { supabaseServer } from '@/lib/supabase/server';
+import { strategyClient } from '@/lib/supabase/strategy';
 import type { FocusItem, Pillar, TopicState } from '@/modules/content-brain/editorial';
 import {
   addTopic,
@@ -50,7 +52,10 @@ const refresh = () => {
 
 export async function buildThisWeek(force = false): Promise<ResultWith<{ created: number; summary: string }>> {
   await requireUser();
-  const r = await runWeek({ force });
+  // Com a sessão dela, não com a chave de service role. O botão tem de
+  // funcionar hoje, e `SUPABASE_SERVICE_ROLE_KEY` ainda não está no ambiente:
+  // sem isto, «Montar a semana» rebentava com «falta a chave».
+  const r = await runWeek({ db: strategyClient(await supabaseServer()), force });
   refresh();
   return { ok: true, created: r.created, summary: r.summary };
 }
