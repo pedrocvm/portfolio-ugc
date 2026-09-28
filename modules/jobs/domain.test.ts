@@ -3,7 +3,6 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { JOB_PURPOSE, readSchedule } from './domain.ts';
-import { JOBS } from './runner.ts';
 
 const ROOT = path.join(import.meta.dirname, '..', '..');
 
@@ -28,7 +27,10 @@ test('a migração agenda somente a memória do Instagram', () => {
 });
 
 test('o endpoint manual conhece somente os mesmos dois trabalhos', () => {
-  assert.deepEqual([...JOBS].sort(), ['instagram-sync', 'instagram-token']);
+  const runner = readFileSync(path.join(ROOT, 'modules', 'jobs', 'runner.ts'), 'utf8');
+  const block = runner.slice(runner.indexOf('export const JOBS'), runner.indexOf('] as const', runner.indexOf('export const JOBS')));
+  const jobs = [...block.matchAll(/'(instagram-[a-z-]+)'/g)].map((match) => match[1]);
+  assert.deepEqual(jobs.sort(), ['instagram-sync', 'instagram-token']);
 });
 
 test('todo trabalho agendado tem nome e motivo', () => {
