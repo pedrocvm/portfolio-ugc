@@ -215,9 +215,9 @@ async function readTopics(client: LooseDb, appUserId: string): Promise<Editorial
       name: row.name,
       state: row.state as TopicState,
       focusWeight: Number(row.focus_weight ?? 0),
-      pillarKey: row.pillar?.key as EditorialPillarKey,
-      pillarName: row.pillar?.name ?? '',
-      sort: Number(row.pillar?.sort_order ?? 99),
+      pillarKey: row.pillar?.[0]?.key as EditorialPillarKey,
+      pillarName: row.pillar?.[0]?.name ?? '',
+      sort: Number(row.pillar?.[0]?.sort_order ?? 99),
     }))
     .sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name, 'pt-BR'))
     .map(({ sort: _sort, ...row }) => row);
@@ -249,7 +249,7 @@ async function readWeek(client: LooseDb, appUserId: string, start: string): Prom
       topicId: row.topic_id,
       topicName: row.topic_name,
       pillar: row.pillar_key as EditorialPillarKey,
-      pillarName: row.pillar?.name ?? row.pillar_key,
+      pillarName: row.pillar?.[0]?.name ?? row.pillar_key,
       angle: row.angle,
       lens: row.lens as ContentLens,
       objective: row.objective as EditorialObjective,
