@@ -275,12 +275,35 @@ async function execute(job: JobName, opts: { manual?: boolean }): Promise<JobRes
       case 'content-week': {
         // Segunda de manhã. A semana nasce antes de ela abrir o CarolOS, e
         // nasce uma vez: se já existirem propostas vivas, não mexe.
+        //
+        // Antes dela, três coisas idempotentes que a semana precisa de ter em
+        // cima da mesa: a reconciliação do que já existia, a assinatura das
+        // peças publicadas, e a maturidade de cada formato. Nenhuma delas
+        // escreve duas vezes, e uma falha não impede o plano.
+        const { backfillContentStrategy } = await import('@/modules/content-brain/backfill-service');
+        const { recomputeFormatStates } = await import('@/modules/content-brain/lab-service');
         const { runWeek } = await import('@/modules/content-brain/week-service');
+
+        const reconciliacao = await backfillContentStrategy().catch((e: unknown) => ({
+          dna: 0, ideas: 0, stories: 0, unknown: 0,
+          failures: [e instanceof Error ? e.message : 'reconciliação falhou'],
+        }));
+        const maturidade = await recomputeFormatStates().catch((e: unknown) => ({
+          written: 0, failures: [e instanceof Error ? e.message : 'maturidade falhou'],
+        }));
         const r = await runWeek();
+
         return {
           job,
           status: 'success',
-          detail: { ...r, failures: r.breaches, processed: r.created },
+          detail: {
+            ...r,
+            reconciled: reconciliacao.dna + reconciliacao.ideas + reconciliacao.stories,
+            unknownLeft: reconciliacao.unknown,
+            formatStates: maturidade.written,
+            failures: [...r.breaches, ...reconciliacao.failures, ...maturidade.failures],
+            processed: r.created,
+          },
         };
       }
 

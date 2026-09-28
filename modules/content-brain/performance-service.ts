@@ -14,6 +14,7 @@ import 'server-only';
 import { asJson } from '@/lib/supabase/json';
 import { supabaseServer } from '@/lib/supabase/server';
 import { supabaseService } from '@/lib/supabase/service';
+import { strategyClient } from '@/lib/supabase/strategy';
 import { runPrompt } from '@/modules/ai/gateway';
 import { classifyMediaCaption } from './prompts';
 import { auditPiece, feedSummary, type AuditTags, type FeedPieceInput, type PieceAudit, type SummaryPoint } from './feed-audit';
@@ -268,12 +269,29 @@ export async function deriveLearnings(): Promise<{ evaluated: number; written: n
 
   const { data: medias } = await db
     .from('instagram_media')
-    .select('id, media_product_type, story_id, creator_story(functional_pillar, structure, story_lens_id)')
+    .select('id, media_product_type, published_at, content_idea_id, story_id, creator_story(functional_pillar, structure, story_lens_id)')
     .not('story_id', 'is', null)
     .limit(120);
 
   const rows = medias ?? [];
   if (rows.length === 0) return { evaluated: 0, written: 0, validated: 0, failures: [] };
+
+  // A classificação editorial nova e a assinatura estrutural. Sem elas o
+  // aprendizado sabe que um mecanismo funcionou e não sabe PARA QUÊ — e um
+  // aprendizado sem dimensão não consegue voltar ao Motor de Prioridades, que
+  // é o único sítio onde aprender serve para alguma coisa.
+  const sdb = strategyClient(db);
+  const ideaIds = rows.map((m) => m.content_idea_id).filter((x): x is string => Boolean(x));
+  const [{ data: ideas }, { data: dnas }] = await Promise.all([
+    ideaIds.length
+      ? sdb.from('creator_content_idea').select('id, editorial_objective, content_lens').in('id', ideaIds)
+      : Promise.resolve({ data: [] as { id: string; editorial_objective: string | null; content_lens: string | null }[] }),
+    sdb.from('content_format_dna').select('media_id, format').in('media_id', rows.map((m) => m.id)),
+  ]);
+  const ideaById = new Map((ideas ?? []).map((i) => [i.id, i]));
+  const formatByMedia = new Map(
+    (dnas ?? []).flatMap((d) => (d.media_id ? [[d.media_id, d.format] as const] : [])),
+  );
 
   const { data: snaps } = await db
     .from('instagram_media_snapshot')
@@ -289,7 +307,13 @@ export async function deriveLearnings(): Promise<{ evaluated: number; written: n
 
   // Agrupa por mecanismo. Uma peça sem mecanismo registado não conta — é a
   // regra que impede o motor de aprender sobre uma causa inventada.
-  const porMecanismo = new Map<string, { pillar: FunctionalPillar | null; pieces: PieceEvidence[] }>();
+  const porMecanismo = new Map<string, {
+    pillar: FunctionalPillar | null;
+    pieces: PieceEvidence[];
+    contradictions: PieceEvidence[];
+    from: string | null;
+    to: string | null;
+  }>();
 
   for (const m of rows) {
     const story = (m.creator_story ?? null) as { functional_pillar?: string; structure?: Record<string, unknown>; story_lens_id?: string | null } | null;
@@ -313,26 +337,52 @@ export async function deriveLearnings(): Promise<{ evaluated: number; written: n
       })
       .filter((x): x is { name: string; relativeToMedian: number; alignedWithFunction: boolean } => x !== null);
 
-    const entrada = porMecanismo.get(mecanismo) ?? { pillar, pieces: [] };
-    entrada.pieces.push({
+    const idea = m.content_idea_id ? ideaById.get(m.content_idea_id) : undefined;
+    const entrada = porMecanismo.get(mecanismo) ?? { pillar, pieces: [], contradictions: [], from: null as string | null, to: null as string | null };
+    const peca: PieceEvidence = {
       mediaId: m.id,
-      contentId: null,
+      contentId: m.content_idea_id ?? null,
       mechanismDeclared: true,
-      cohort: { platform: 'instagram', mediaType: m.media_product_type, snapshotKind: snapshot.snapshot_kind as SnapshotKind, pillar },
+      cohort: {
+        platform: 'instagram',
+        mediaType: m.media_product_type,
+        snapshotKind: snapshot.snapshot_kind as SnapshotKind,
+        pillar,
+        // As dimensões novas. É por elas que o Motor volta a pegar.
+        format: formatByMedia.get(m.id) ?? null,
+        objective: idea?.editorial_objective ?? null,
+        lens: idea?.content_lens ?? null,
+      },
       metrics,
       externalCause: false,
-    });
+    };
+
+    // Uma peça com o mecanismo que ficou abaixo em TODAS as métricas alinhadas
+    // contradiz. Sem contar contradições, um aprendizado nunca perderia força
+    // — e memória eterna é o erro que a escada existe para evitar.
+    const alinhadasMedidas = metrics.filter((x) => x.alignedWithFunction);
+    const contradiz = alinhadasMedidas.length > 0 && alinhadasMedidas.every((x) => x.relativeToMedian < 1);
+    if (contradiz) entrada.contradictions.push(peca);
+    else entrada.pieces.push(peca);
+
+    const dia = String(m.published_at);
+    entrada.from = !entrada.from || dia < entrada.from ? dia : entrada.from;
+    entrada.to = !entrada.to || dia > entrada.to ? dia : entrada.to;
     porMecanismo.set(mecanismo, entrada);
   }
 
   let escritos = 0;
   let validados = 0;
 
-  for (const [mecanismo, { pillar, pieces }] of porMecanismo) {
-    const verdict: LadderVerdict = classifyLadder({ mechanism: mecanismo, pillar, evidence: pieces, contradictions: [] });
+  for (const [mecanismo, { pillar, pieces, contradictions, from, to }] of porMecanismo) {
+    const verdict: LadderVerdict = classifyLadder({ mechanism: mecanismo, pillar, evidence: pieces, contradictions });
     if (verdict.state === 'observation') continue;
 
-    const { error } = await db.from('content_learning').upsert(
+    // Perder força é um estado, não um delete. O aprendizado fica, com a data
+    // e o motivo — e deixa de pesar no planeamento da semana seguinte.
+    const perdeuForca = verdict.state === 'rejected';
+
+    const { error } = await sdb.from('content_learning').upsert(
       {
         dedupe_key: `mechanism:${mecanismo}`,
         statement: statementFor(mecanismo, verdict),
@@ -345,10 +395,19 @@ export async function deriveLearnings(): Promise<{ evaluated: number; written: n
         cohort: asJson(pieces[0]?.cohort ?? {}),
         policy_version: LEARNING_POLICY_V1.version,
         evidence: asJson({ metrics: verdict.agreeingMetrics, because: verdict.because }),
+        period_from: from,
+        period_to: to,
+        // Em que condições vale. Um aprendizado sem condição vira lei.
+        conditions: [pieces[0]?.cohort.mediaType, pieces[0]?.cohort.snapshotKind].filter(Boolean) as string[],
+        contradictions: asJson(contradictions.map((k) => ({ mediaId: k.mediaId }))),
         derived_at: new Date().toISOString(),
         validated_at: verdict.state === 'validated' ? new Date().toISOString() : null,
-        rejected_at: verdict.state === 'rejected' ? new Date().toISOString() : null,
-        active: verdict.state !== 'rejected',
+        rejected_at: perdeuForca ? new Date().toISOString() : null,
+        demoted_at: perdeuForca ? new Date().toISOString() : null,
+        demoted_because: perdeuForca
+          ? `Apareceu em ${contradictions.length} peças sem o efeito. Parei de tratar como padrão.`
+          : null,
+        active: !perdeuForca,
       },
       { onConflict: 'dedupe_key' },
     );

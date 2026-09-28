@@ -346,7 +346,9 @@ alter table public.creative_reference
   add column if not exists analysed_at      timestamptz,
   add column if not exists effort           text check (effort in ('low', 'medium', 'high')),
   add column if not exists scene_count      integer,
-  add column if not exists hypothesis_id    uuid references public.creative_hypothesis (id) on delete set null;
+  /** O teste que nasceu desta referência. Enquanto for nulo, a referência
+   *  continua a poder gerar hipótese; depois disso, não gera outra. */
+  add column if not exists experiment_id    uuid references public.content_experiment (id) on delete set null;
 
 create index if not exists creative_reference_creator_idx
   on public.creative_reference (purpose, captured_at desc) where purpose = 'creator';

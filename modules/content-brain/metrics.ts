@@ -337,6 +337,13 @@ export type Cohort = {
   mediaType: string;
   snapshotKind: SnapshotKind;
   pillar?: string | null;
+  /** As dimensões editoriais novas. Opcionais porque uma peça antiga não as
+   *  tem, e deduzi-las depois seria inventar a classificação. Existem aqui
+   *  para o aprendizado saber PARA QUÊ o mecanismo funcionou — sem isso não
+   *  há como devolvê-lo ao Motor de Prioridades. */
+  format?: string | null;
+  objective?: string | null;
+  lens?: string | null;
 };
 
 export const cohortKey = (c: Cohort): string =>

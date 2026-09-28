@@ -12,6 +12,8 @@
  *
  *  Puro. */
 
+import type { FunctionalPillar } from './pillars';
+
 /* ── Pilares ──────────────────────────────────────────────────────────────── */
 
 export const PILLARS = ['ugc_income', 'experiences', 'home'] as const;
@@ -687,3 +689,51 @@ export function strategySummary(input: {
   const capitalizada = frase.charAt(0).toUpperCase() + frase.slice(1);
   return input.experiment ? `${capitalizada}. ${input.experiment}` : `${capitalizada}.`;
 }
+
+/* ── Reconciliação com o modelo antigo ───────────────────────────────────── */
+
+/** Os quatro «pilares funcionais» de 05/09 eram funções, não territórios. A
+ *  função é o objetivo editorial, e esse mapeamento é defensável:
+ *  «atração» é atrair, «prova e autoridade» é provar, e tanto «informação»
+ *  como «conexão» existiam para dar motivo de ficar.
+ *
+ *  Dois para um é perda de informação, e é honesta: o pilar antigo continua
+ *  gravado, e quem quiser distinguir tem-no lá. */
+export const LEGACY_PILLAR_TO_OBJECTIVE: Record<FunctionalPillar, Objective> = {
+  attraction_journey: 'attract',
+  information_retention: 'retain',
+  authority_conversion: 'prove',
+  connection_personal: 'retain',
+};
+
+/** Território antigo para pilar novo. Só o que é inequívoco entra.
+ *
+ *  `tech` fica de fora de propósito: pode ser o robô aspirador da casa ou um
+ *  SaaS de cliente, e são pilares diferentes. `makeup`, `training` e
+ *  `portugal_brazil` também não têm casa óbvia — e Portugal não vira pauta por
+ *  causa de um backfill. */
+export const TERRITORY_TO_PILLAR: Record<string, Pillar> = {
+  ugc_journey: 'ugc_income',
+  career_transition: 'ugc_income',
+  brand_outreach: 'ugc_income',
+  brand_work: 'ugc_income',
+  creative_process: 'ugc_income',
+  editing: 'ugc_income',
+  filming: 'ugc_income',
+  hospitality: 'experiences',
+  travel: 'experiences',
+  home: 'home',
+  smart_home: 'home',
+  pets: 'home',
+  relationship: 'home',
+};
+
+/** O pilar que um conjunto de territórios indica, ou `null` quando indicam
+ *  mais do que um. Empate não se resolve à sorte. */
+export function pillarFromTerritories(territories: readonly string[]): Pillar | null {
+  const found = new Set(
+    territories.map((t) => TERRITORY_TO_PILLAR[t]).filter((p): p is Pillar => Boolean(p)),
+  );
+  return found.size === 1 ? [...found][0] : null;
+}
+

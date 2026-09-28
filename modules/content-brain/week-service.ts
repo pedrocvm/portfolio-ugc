@@ -266,10 +266,10 @@ async function formatGaps(c: StrategyClient, userId: string): Promise<FormatGap[
 async function referenceHypotheses(c: StrategyClient): Promise<ReferenceHypothesis[]> {
   const { data } = await c
     .from('creative_reference')
-    .select('id, structure, format, why_it_works, hypothesis_id, analysis_status')
+    .select('id, structure, format, why_it_works, experiment_id, analysis_status')
     .eq('purpose', 'creator')
     .eq('analysis_status', 'done')
-    .is('hypothesis_id', null)
+    .is('experiment_id', null)
     .order('captured_at', { ascending: false })
     .limit(5);
 
@@ -589,10 +589,75 @@ async function move(
 }
 
 /** Aprovar. É a decisão estratégica: assunto, ângulo e formato aceites. Só
- *  depois disto é que existe Production Pack. */
+ *  depois disto é que existe Production Pack.
+ *
+ *  Se a proposta carregava uma pergunta experimental, é aqui que ela vira um
+ *  teste a sério — com variável, constantes e janela. Antes da aprovação seria
+ *  abrir um teste para uma peça que talvez nunca exista. */
 export async function approveProposal(id: string): Promise<Result<{ status: ProposalStatus }>> {
   const c = await client();
-  return move(c, id, 'approved_to_develop', 'Aprovada.', { approved_at: new Date().toISOString() });
+  const r = await move(c, id, 'approved_to_develop', 'Aprovada.', { approved_at: new Date().toISOString() });
+  if (!r.ok) return r;
+  await ensureExperiment(c, id);
+  return r;
+}
+
+/** Cria o teste que a proposta carregava, se carregava algum.
+ *
+ *  «Reel Test recomendado» sai daqui e só daqui: é recomendação ligada a uma
+ *  pergunta, nunca o destino automático de todo Reel. */
+async function ensureExperiment(c: StrategyClient, proposalId: string): Promise<void> {
+  const { data: p } = await c
+    .from('content_proposal')
+    .select('id, week_start, format, topic_label, evidence, experiment_id')
+    .eq('id', proposalId)
+    .maybeSingle();
+  if (!p || p.experiment_id) return;
+
+  const evidence: Evidence[] = Array.isArray(p.evidence) ? (p.evidence as Evidence[]) : [];
+  const pergunta = evidence.find((e) => e.kind === 'format_untested' || e.kind === 'reference_hypothesis');
+  if (!pergunta) return;
+
+  const variable = pergunta.kind === 'format_untested' ? 'formato' : 'estrutura';
+  // `content_experiment` tem unicidade em `kind`. A chave natural inclui a
+  // semana: duas perguntas iguais em semanas diferentes são dois testes.
+  const kind = `${variable}:${p.format}:${p.week_start}`;
+
+  const { data: teste } = await c
+    .from('content_experiment')
+    .upsert(
+      {
+        kind,
+        label: `${p.topic_label} — ${variable}`,
+        question: pergunta.detail,
+        hypothesis: pergunta.detail,
+        what_we_test: variable,
+        variable,
+        // O que se tenta manter comparável. Sem isto, «o formato venceu» é
+        // ruído: mudou tudo ao mesmo tempo.
+        constants: ['assunto', 'objetivo', 'duração aproximada'],
+        status: 'running',
+        started_at: new Date().toISOString(),
+        window_days: 14,
+        origin: 'carol',
+        proposal_id: proposalId,
+        reel_test_recommended: p.format === 'reel',
+        reel_test_reason:
+          p.format === 'reel' ? `Há uma pergunta a responder: ${pergunta.detail}` : '',
+      },
+      { onConflict: 'kind' },
+    )
+    .select('id')
+    .maybeSingle();
+
+  if (teste) await c.from('content_proposal').update({ experiment_id: teste.id }).eq('id', proposalId);
+
+  // Uma referência que já gerou teste deixa de gerar outro. É o que impede o
+  // Radar de transformar o mesmo link salvo numa hipótese nova todas as
+  // semanas.
+  if (pergunta.kind === 'reference_hypothesis' && pergunta.refId && teste) {
+    await c.from('creative_reference').update({ experiment_id: teste.id }).eq('id', pergunta.refId);
+  }
 }
 
 export const ADJUSTABLE = ['angle', 'objective', 'format', 'lens', 'structure', 'modality'] as const;

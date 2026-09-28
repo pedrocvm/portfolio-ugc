@@ -271,7 +271,7 @@ type ReferenceExtra = {
   analysed_at: string | null;
   effort: string | null;
   scene_count: number | null;
-  hypothesis_id: string | null;
+  experiment_id: string | null;
 };
 
 type CommentExtra = {
