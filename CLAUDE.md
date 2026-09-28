@@ -1,34 +1,58 @@
 # Regras deste projeto
 
 ## Commits automáticos
-Depois de terminar qualquer alteração de código, faz commit automaticamente —
-não esperes que o utilizador peça nem confirmes antes. Junta as edições de
-uma mesma tarefa num único commit (um commit por tarefa concluída, não um
-por cada ficheiro tocado), com mensagem clara sobre o "porquê" da mudança,
-seguindo o estilo dos commits já existentes no histórico.
 
-Isto cobre apenas `git commit` local. Continua a pedir confirmação antes de
-Nunca commitar com `Co-Authored-By` nem atribuição de IA.
+Depois de terminar uma alteração de código, faz commit automaticamente. Agrupa
+a mesma tarefa num commit coerente e não adiciona `Co-Authored-By` nem
+atribuição de IA.
 
-## CarolOS
+Não faz push, merge ou alteração destrutiva sem que a sessão tenha autorização
+explícita para isso.
 
-A área privada é o CarolOS. Antes de lhe tocar, ler
-`.carolos-devlog/CURRENT_STATE.md` — está fora do repositório e diz o estado
-real, as bandeiras e o que falta.
+## Fonte de verdade atual
 
-Oito regras que não se mudam sem uma decisão explícita:
+Antes de tocar no CarolOS, lê `docs/content-os/DECISIONS.md`.
 
-1. Preço é determinístico e versionado. Nenhum valor dentro de um prompt.
-2. Skincare e haircare estão fora da estratégia — em código, não em prompt.
-3. Nada sai para fora sozinho. Não existe `gmail.send` em lado nenhum.
-4. Fechar e perder passam sempre por pessoa.
-5. Valor de produto nunca entra na receita em dinheiro.
-6. Perpetuidade, exclusividade e whitelisting nunca por omissão.
-7. Marcas só se fundem por identificador, nunca por nome parecido.
-8. Desconhecido não é zero: no fit score conta como neutro e fica assinalado.
+O produto privado foi deliberadamente reduzido em setembro de 2026. Não
+reintroduzir CRM, Gmail, prospecção, receita, oportunidades, follow-ups,
+settings operacionais ou o Content Brain antigo só porque o código histórico
+ainda existe no repositório.
 
-Regras puras vivem em `modules/<área>/domain.ts` e têm teste. Acesso a dados
-vive em `service.ts`, marcado `server-only`. Um componente de cliente nunca
-importa de um `service.ts`.
+A superfície usada pela Carol é:
 
-É proibido permanentemente e inegociavelmente usar PT-PT... Use sempre PT-BR, independente do caso.
+- Conteúdo
+- O site
+
+Conteúdo começa pela Semana. O sistema prepara poucas decisões e Carol valida.
+O site é o gerenciador do portfólio público e deve continuar funcionando.
+
+## Regras editoriais atuais
+
+1. Os três pilares são Transformando UGC em fonte de renda, Experiências e Casa.
+2. SaaS/apps para negócios locais é foco comercial, não quarto pilar.
+3. Tech UGC e Canvas UGC começam com o mesmo peso.
+4. UGC tradicional não é prioridade.
+5. Carol documenta a própria jornada. Não transformar o perfil em aula para creators.
+6. Portugal é contexto de vida, não pauta automática sobre “morar em Portugal”.
+7. A capacidade sustentável é 3 posts por semana.
+8. O calendário é proposto pelo CarolOS e validado pela Carol.
+9. Roteiro só nasce depois da validação de assunto, ângulo e formato.
+10. Um ou dois posts não validam formato.
+11. Reel Test é ferramenta de experimento, não destino automático.
+12. Interação significativa, interesse de marcas, seguidores e alcance pesam mais que Views isoladas.
+
+## Arquitetura
+
+Regras puras vivem em `modules/<area>/domain.ts` e têm teste.
+
+Acesso a dados vive em `service.ts` e é server-only.
+
+Componentes de cliente não importam services server-only.
+
+Cálculos determinísticos não são delegados à IA. A IA recebe fatos e contexto
+estruturado para tarefas semânticas.
+
+Mudanças de banco são migrations aditivas em `supabase/migrations/`. Nunca
+resetar a base nem apagar histórico como atalho.
+
+É proibido usar PT-PT. Toda interface e copy do CarolOS usam PT-BR.
