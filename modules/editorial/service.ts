@@ -25,6 +25,7 @@ import {
   type WeekProposalOutput,
 } from './prompts';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- as tabelas desta migração ainda não existem nos tipos gerados do Supabase nesta fatia.
 type LooseDb = SupabaseClient<any>;
 
 const PILLARS = [
@@ -127,7 +128,7 @@ export async function ensureEditorialSeed(appUserId: string) {
     .from('editorial_pillar')
     .select('id,key')
     .eq('app_user_id', appUserId);
-  const byKey = new Map((pillarRows ?? []).map((p: any) => [p.key, p.id]));
+  const byKey = new Map((pillarRows ?? []).map((p) => [p.key, p.id]));
 
   for (const [pillarKey, key, name, state, focusWeight] of TOPICS) {
     const pillarId = byKey.get(pillarKey);
@@ -208,7 +209,7 @@ async function readTopics(client: LooseDb, appUserId: string): Promise<Editorial
     .order('created_at', { ascending: true });
 
   return (data ?? [])
-    .map((row: any) => ({
+    .map((row) => ({
       id: row.id,
       key: row.key,
       name: row.name,
@@ -218,8 +219,8 @@ async function readTopics(client: LooseDb, appUserId: string): Promise<Editorial
       pillarName: row.pillar?.name ?? '',
       sort: Number(row.pillar?.sort_order ?? 99),
     }))
-    .sort((a: any, b: any) => a.sort - b.sort || a.name.localeCompare(b.name, 'pt-BR'))
-    .map(({ sort: _sort, ...row }: any) => row);
+    .sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name, 'pt-BR'))
+    .map(({ sort: _sort, ...row }) => row);
 }
 
 async function readWeek(client: LooseDb, appUserId: string, start: string): Promise<EditorialWeek | null> {
@@ -242,7 +243,7 @@ async function readWeek(client: LooseDb, appUserId: string, start: string): Prom
     weekStart: plan.week_start,
     summary: plan.summary,
     status: plan.status,
-    pieces: (pieces ?? []).map((row: any) => ({
+    pieces: (pieces ?? []).map((row) => ({
       id: row.id,
       slotOrder: row.slot_order,
       topicId: row.topic_id,
@@ -289,7 +290,7 @@ export async function generateWeek(appUserId: string, now = new Date()) {
     state: t.state,
     focusWeight: t.focusWeight,
   }));
-  const recent: RecentPiece[] = (recentRows.data ?? []).map((r: any) => ({
+  const recent: RecentPiece[] = (recentRows.data ?? []).map((r) => ({
     topicId: r.topic_id,
     pillar: r.pillar_key,
     objective: r.objective,
@@ -338,7 +339,7 @@ export async function generateWeek(appUserId: string, now = new Date()) {
     .select('id,key')
     .eq('app_user_id', appUserId);
   const pillarByKey = new Map<string, string>();
-  for (const p of pillarRows ?? []) pillarByKey.set((p as any).key, (p as any).id);
+  for (const p of pillarRows ?? []) pillarByKey.set(p.key, p.id);
 
   const rows = ai.output.proposals.map((proposal, index) => {
     const seed = byId.get(proposal.topicId)!;
@@ -425,7 +426,7 @@ export async function replacePiece(appUserId: string, pieceId: string) {
     .select('topic_id')
     .eq('week_plan_id', current.planId)
     .neq('id', pieceId);
-  const used = new Set((siblingRows ?? []).map((r: any) => r.topic_id));
+  const used = new Set((siblingRows ?? []).map((r) => r.topic_id));
   used.add(current.seed.topic.id);
 
   const alternative = topics
