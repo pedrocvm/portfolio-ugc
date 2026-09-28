@@ -43,7 +43,7 @@ import ObjectiveOutcomes from '@/components/dashboard/os/content-brain/Objective
 import { COMMERCIAL_FOCUS } from '@/modules/content-brain/editorial';
 import { editorialMap, seedEditorialMap, strategySettings, visualTemplates } from '@/modules/content-brain/editorial-service';
 import { currentWeek } from '@/modules/content-brain/week-service';
-import { packFor } from '@/modules/content-brain/pack-service';
+import { packsFor } from '@/modules/content-brain/pack-service';
 import { activeLearningRows, experiments, formatLab, radarCreators, references, RADAR_AUTOMATIC_BLOCKED } from '@/modules/content-brain/lab-service';
 import { sessions } from '@/modules/content-brain/session-service';
 import { communityWindow } from '@/modules/content-brain/community-service';
@@ -106,13 +106,10 @@ export default async function ContentPage({
     objectiveOutcomes({ days: 90, limit: 20 }).catch(() => null),
   ]);
 
-  // Os packs das peças que esperam por ela. Um pedido por proposta, e só das
-  // que estão nesse estado — não das dez da semana passada.
+  // Os packs das peças que esperam por ela, numa consulta só, e só das que
+  // estão nesse estado — não das dez da semana passada.
   const aValidar = (semana?.proposals ?? []).filter((p) => p.status === 'to_validate');
-  const packs = new Map(
-    (await Promise.all(aValidar.map(async (p) => [p.id, await packFor(p.id).catch(() => null)] as const)))
-      .filter(([, v]) => v !== null),
-  );
+  const packs = await packsFor(aValidar.map((p) => p.id)).catch(() => new Map());
 
   // Só depois de saber se a captura está ligada: a cobertura de Stories diz
   // «não está ligada» ou «desde tal dia», nunca «0 Stories».

@@ -14,7 +14,7 @@ import 'server-only';
 
 import { supabaseServer } from '@/lib/supabase/server';
 import { strategyClient, type StrategyClient } from '@/lib/supabase/strategy';
-import { communityFor } from './community-service';
+import { communityForMany } from './community-service';
 import { OBJECTIVE_LABEL, isObjective, type Objective } from './editorial';
 import { OUTCOME_LABEL, readAgainstObjective, type Outcome } from './outcome';
 
@@ -94,6 +94,9 @@ export async function objectiveOutcomes(
     medianas.set(sinal, valores.length >= 3 ? valores[Math.floor(valores.length / 2)] : null);
   }
 
+  // Uma consulta para os comentários de todas as peças. Em ciclo eram trinta.
+  const comunidades = await communityForMany(lista.map((m) => m.id), db);
+
   const rows: ObjectiveOutcomeRow[] = [];
   let unclassified = 0;
 
@@ -115,8 +118,11 @@ export async function objectiveOutcomes(
       };
     });
 
-    const comunidade = await communityFor(m.id, db).catch(() => null);
-    const leitura = readAgainstObjective({ objective: objetivo, signals, community: comunidade });
+    const leitura = readAgainstObjective({
+      objective: objetivo,
+      signals,
+      community: comunidades.get(m.id) ?? null,
+    });
 
     rows.push({
       mediaId: m.id,

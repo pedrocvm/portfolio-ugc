@@ -57,33 +57,40 @@ export type PackView = {
   templateKey: string | null;
 };
 
-export async function packFor(proposalId: string, c?: StrategyClient): Promise<PackView | null> {
+/** Os packs mais recentes de várias propostas, numa consulta só. */
+export async function packsFor(
+  proposalIds: readonly string[],
+  c?: StrategyClient,
+): Promise<Map<string, PackView>> {
+  const out = new Map<string, PackView>();
+  if (proposalIds.length === 0) return out;
+
   const db = await client(c);
   const { data } = await db
     .from('content_production_pack')
     .select('id, proposal_id, kind, payload, gaps, status, validated_at, version, template_key')
-    .eq('proposal_id', proposalId)
-    .order('version', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (!data || !isPackKind(data.kind)) return null;
+    .in('proposal_id', [...proposalIds])
+    .order('version', { ascending: false });
 
-  const parsed = parsePack(data.kind, data.payload);
-  if (!parsed.ok) return null;
-
-  return {
-    id: data.id,
-    proposalId: data.proposal_id,
-    kind: data.kind,
-    kindLabel: PACK_LABEL[data.kind],
-    deliverables: PACK_DELIVERABLES[data.kind],
-    payload: parsed.pack,
-    gaps: data.gaps ?? [],
-    status: data.status,
-    validatedAt: data.validated_at,
-    version: data.version,
-    templateKey: data.template_key,
-  };
+  for (const row of data ?? []) {
+    if (out.has(row.proposal_id) || !isPackKind(row.kind)) continue;
+    const parsed = parsePack(row.kind, row.payload);
+    if (!parsed.ok) continue;
+    out.set(row.proposal_id, {
+      id: row.id,
+      proposalId: row.proposal_id,
+      kind: row.kind,
+      kindLabel: PACK_LABEL[row.kind],
+      deliverables: PACK_DELIVERABLES[row.kind],
+      payload: parsed.pack,
+      gaps: row.gaps ?? [],
+      status: row.status,
+      validatedAt: row.validated_at,
+      version: row.version,
+      templateKey: row.template_key,
+    });
+  }
+  return out;
 }
 
 /** Gera o pack do formato certo para uma proposta já aprovada. */

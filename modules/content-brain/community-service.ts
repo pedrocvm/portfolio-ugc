@@ -124,6 +124,36 @@ export async function communityFor(mediaId: string, c?: StrategyClient): Promise
   return toView(mediaId, aggregateIntents(rows(data ?? [])));
 }
 
+/** A leitura de várias peças numa consulta só.
+ *
+ *  Chamar `communityFor` em ciclo é uma consulta por peça, e a Auditoria lê
+ *  trinta de uma vez. Uma peça sem comentários entra no mapa com a leitura
+ *  vazia, para quem chama não ter de distinguir «sem comentários» de «não
+ *  perguntei». */
+export async function communityForMany(
+  mediaIds: readonly string[],
+  c?: StrategyClient,
+): Promise<Map<string, CommunityView>> {
+  const out = new Map<string, CommunityView>();
+  if (mediaIds.length === 0) return out;
+
+  const db = await client(c);
+  const { data } = await db
+    .from('instagram_comment')
+    .select('id, media_id, quality, quality_confidence')
+    .in('media_id', [...mediaIds]);
+
+  const porMidia = new Map<string, CommentInput[]>();
+  for (const comentario of data ?? []) {
+    const lista = porMidia.get(comentario.media_id) ?? [];
+    lista.push(rows([comentario])[0]);
+    porMidia.set(comentario.media_id, lista);
+  }
+
+  for (const id of mediaIds) out.set(id, toView(id, aggregateIntents(porMidia.get(id) ?? [])));
+  return out;
+}
+
 /** A leitura de uma janela. É a que a Auditoria mostra: o perfil, não a peça. */
 export async function communityWindow(
   opts: { db?: StrategyClient; days?: number } = {},
@@ -159,14 +189,15 @@ export async function persistInteractionInsights(
     .limit(60);
 
   const dia = new Date().toISOString().slice(0, 10);
+  const leituras = await communityForMany((medias ?? []).map((m) => m.id), db);
   let written = 0;
 
   for (const m of medias ?? []) {
     // Uma peça que falhe não leva o lote: o trabalho tem de ser idempotente e
     // resistente, e uma média sem comentários é caso normal, não erro.
     try {
-      const view = await communityFor(m.id, db);
-      if (view.total === 0) continue;
+      const view = leituras.get(m.id);
+      if (!view || view.total === 0) continue;
       const { error } = await db.from('content_interaction_insight').upsert(
         {
           app_user_id: me.id,
