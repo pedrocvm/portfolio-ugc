@@ -5,8 +5,8 @@ import { completeOAuth, readState } from '@/modules/integrations/instagram/oauth
 
 export const dynamic = 'force-dynamic';
 
-const settings = (base: string, params: Record<string, string>) =>
-  NextResponse.redirect(`${base}/dashboard/settings?${new URLSearchParams(params)}`);
+const content = (base: string, params: Record<string, string>) =>
+  NextResponse.redirect(`${base}/dashboard/content?${new URLSearchParams(params)}`);
 
 /** O retorno do consentimento.
  *
@@ -17,17 +17,17 @@ export async function GET(request: NextRequest) {
   const url = request.nextUrl;
 
   const error = url.searchParams.get('error');
-  if (error) return settings(base, { instagram: 'error', code: error.slice(0, 40) });
+  if (error) return content(base, { instagram: 'error', code: error.slice(0, 40) });
 
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
-  if (!code || !state) return settings(base, { instagram: 'error', code: 'missing_params' });
+  if (!code || !state) return content(base, { instagram: 'error', code: 'missing_params' });
 
   const verified = await readState(state);
-  if (!verified) return settings(base, { instagram: 'error', code: 'bad_state' });
+  if (!verified) return content(base, { instagram: 'error', code: 'bad_state' });
 
   const r = await completeOAuth(code, verified.appUserId);
-  if (!r.ok) return settings(base, { instagram: 'error', code: 'exchange_failed' });
+  if (!r.ok) return content(base, { instagram: 'error', code: 'exchange_failed' });
 
   await recordEvent(supabaseService(), {
     eventType: 'integration.connected',
@@ -43,5 +43,5 @@ export async function GET(request: NextRequest) {
     .update({ status: 'done' })
     .eq('dedupe_key', 'integration:instagram:reconnect');
 
-  return settings(base, { instagram: 'ok', account: r.username });
+  return content(base, { instagram: 'ok', account: r.username });
 }

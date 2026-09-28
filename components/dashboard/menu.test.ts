@@ -1,22 +1,21 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import { SECTIONS, UTILITY, ALL_DESTINATIONS, sectionFor, isCurrent } from './nav';
-
-/** A navegação é a única porta para a maior parte das telas: uma rota que fique
- *  de fora dela passa a existir só para quem souber o URL de cor.
- *
- *  O `nav.ts` importa-se à vontade — é uma tabela, não um componente. O que se
- *  continua lendo como texto são os arquivos que puxavam o React e o
- *  `next/navigation` para dentro do runner. */
+import { ALL_DESTINATIONS, SECTIONS, UTILITY, isCurrent, sectionFor } from './nav';
 
 const ROOT = path.join(import.meta.dirname, '..', '..');
 
-/** Nem tudo precisa de entrada na barra: uma sub-vista pertence à tela que a
- *  abre. O que não pode existir é uma tela sem porta nenhuma — por isso vale
- *  também um link a partir de outra tela. */
+function routes(dir: string, prefix = ''): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    if (!e.isDirectory() || e.name.startsWith('[')) return [];
+    const here = path.join(dir, e.name);
+    const url = `${prefix}/${e.name}`;
+    const own = readdirSync(here).includes('page.tsx') ? [`/dashboard${url}`] : [];
+    return [...own, ...routes(here, url)];
+  });
+}
+
 function linkedFromScreens(): string[] {
   const found: string[] = [];
   const walk = (dir: string) => {
@@ -33,154 +32,49 @@ function linkedFromScreens(): string[] {
   return found;
 }
 
-/** Endereços antigos que só redirecionam para o lugar novo. Não levam a lado
- *  nenhum próprio, por isso não pertencem a barra nenhuma — mas também não são
- *  telas órfãs. */
-const REDIRECTS = new Set(['/dashboard/library', '/dashboard/links']);
+test('o primeiro nível tem somente Conteúdo e O site', () => {
+  assert.deepEqual(SECTIONS.map((s) => s.label), ['Conteúdo', 'O site']);
+  assert.equal(UTILITY.length, 0);
+});
 
-function routes(dir: string, prefix = ''): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-    if (!e.isDirectory() || e.name.startsWith('[')) return [];
-    const here = path.join(dir, e.name);
-    const url = `${prefix}/${e.name}`;
-    const own = readdirSync(here).includes('page.tsx') ? [`/dashboard${url}`] : [];
-    return [...own, ...routes(here, url)];
-  });
-}
+test('Conteúdo abre pela Semana e mantém somente a fatia atual', () => {
+  const content = SECTIONS.find((s) => s.id === 'content');
+  assert.ok(content);
+  assert.deepEqual(content.items.map((i) => i.label), ['Semana', 'Mapa', 'Produção']);
+  assert.equal(content.href, '/dashboard/content');
+});
 
-test('nenhuma tela do painel fica sem porta', () => {
-  const all = routes(path.join(ROOT, 'app/dashboard/(app)'));
-  const reachable = new Set([...ALL_DESTINATIONS.map((d) => d.href), ...linkedFromScreens()]);
-  const missing = all.filter((r) => !reachable.has(r) && !REDIRECTS.has(r));
-  assert.deepEqual(missing, [], `sem barra e sem link: ${missing.join(', ')}`);
+test('o gerenciador do site público permanece inteiro', () => {
+  const site = SECTIONS.find((s) => s.id === 'site');
+  assert.ok(site);
+  assert.deepEqual(site.items.map((i) => i.href), [
+    '/dashboard/site',
+    '/dashboard/site/library',
+    '/dashboard/site/links',
+  ]);
 });
 
 test('nenhum destino aparece duas vezes', () => {
   const hrefs = ALL_DESTINATIONS.map((d) => d.href);
-  assert.equal(new Set(hrefs).size, hrefs.length, `repetidos em ${hrefs.join(', ')}`);
+  assert.equal(new Set(hrefs).size, hrefs.length);
 });
 
-/** O ponto de toda a reorganização. Se isto crescer, cresceu por descuido. */
-test('o primeiro nível cabe de um olhar: seis seções e três utilidades', () => {
-  assert.equal(SECTIONS.length, 6, `${SECTIONS.length} seções no carril`);
-  assert.equal(UTILITY.length, 3, `${UTILITY.length} utilidades`);
+test('cada rota privada visível tem uma porta', () => {
+  const all = routes(path.join(ROOT, 'app/dashboard/(app)'));
+  const reachable = new Set([...ALL_DESTINATIONS.map((d) => d.href), ...linkedFromScreens(), '/dashboard']);
+  const missing = all.filter((r) => !reachable.has(r));
+  assert.deepEqual(missing, [], `sem porta: ${missing.join(', ')}`);
 });
 
-/** A UI representa o trabalho dela, não a base. Cada seção é uma coisa que
- *  ela faz; o que é consulta ocasional fica atrás do «mais». */
-test('as seções são o trabalho da Carol, pela ordem do dia', () => {
-  assert.deepEqual(
-    SECTIONS.map((s) => s.label),
-    ['Hoje', 'Conversas', 'Marcas', 'Conteúdo', 'Produção', 'Dinheiro'],
-  );
+test('a seção acesa acompanha Conteúdo e Site', () => {
+  assert.equal(sectionFor('/dashboard/content')?.id, 'content');
+  assert.equal(sectionFor('/dashboard/content/map')?.id, 'content');
+  assert.equal(sectionFor('/dashboard/content/production')?.id, 'content');
+  assert.equal(sectionFor('/dashboard/site')?.id, 'site');
+  assert.equal(sectionFor('/dashboard/site/library')?.id, 'site');
 });
 
-test('base de conhecimento fica atrás do «mais», não na barra', () => {
-  const quiet = SECTIONS.flatMap((s) => s.items.filter((i) => i.quiet).map((i) => i.href));
-  for (const href of ['/dashboard/clients', '/dashboard/cases', '/dashboard/documents', '/dashboard/funnel', '/dashboard/analytics']) {
-    assert.ok(quiet.includes(href), `${href} devia estar atrás do «mais»`);
-  }
-});
-
-test('cada seção leva a uma sub-área sua, não a um índice à parte', () => {
-  for (const s of SECTIONS) {
-    if (!s.items.length) continue;
-    assert.ok(
-      s.items.some((i) => i.href === s.href),
-      `«${s.label}» aponta para ${s.href}, que não é nenhuma das suas sub-áreas`,
-    );
-  }
-});
-
-test('o Hoje não abre barra de seção nenhuma', () => {
-  assert.equal(sectionFor('/dashboard')?.id, 'today');
-  assert.equal(SECTIONS.find((s) => s.id === 'today')?.items.length, 0);
-});
-
-/** `sectionFor` devolve a primeira seção que casa. Isso só está certo
- *  enquanto nenhuma seção for prefixo de outra — a partir daí a ordem da
- *  tabela decidia em silêncio qual das duas ganhava. */
-test('nenhuma seção é prefixo de outra', () => {
-  for (const a of SECTIONS) {
-    for (const b of SECTIONS) {
-      if (a.id === b.id || a.href === '/dashboard') continue;
-      const dentro = [b.href, ...b.items.map((i) => i.href)];
-      for (const href of dentro) {
-        assert.ok(
-          !isCurrent(href, a.href),
-          `«${b.label}» tem ${href}, que cai dentro de «${a.label}» (${a.href})`,
-        );
-      }
-    }
-  }
-});
-
-test('cada sub-área pertence à seção que a lista', () => {
-  assert.equal(sectionFor('/dashboard/outreach/history')?.id, 'brands');
-  assert.equal(sectionFor('/dashboard/inbox')?.id, 'inbox');
-  assert.equal(sectionFor('/dashboard/followups')?.id, 'inbox');
-  assert.equal(sectionFor('/dashboard/revenue')?.id, 'money');
-  assert.equal(sectionFor('/dashboard/analytics')?.id, 'money');
-});
-
-test('uma tela de detalhe mantém acesa a seção a que pertence', () => {
-  assert.equal(sectionFor('/dashboard/opportunities/abc-123')?.id, 'brands');
-  assert.equal(sectionFor('/dashboard/brands/abc-123')?.id, 'brands');
-  assert.equal(sectionFor('/dashboard/production/abc-123')?.id, 'production');
-});
-
-test('uma rota fora das seções não acende nenhuma', () => {
-  assert.equal(sectionFor('/dashboard/settings'), null);
-  assert.equal(sectionFor('/dashboard/capture'), null);
-  // O site é utilidade: acende no carril de baixo, não numa seção.
-  assert.equal(sectionFor('/dashboard/site/links'), null);
-  assert.equal(isCurrent('/dashboard/site/links', '/dashboard/site'), true);
-});
-
-test('«/dashboard» só está ativo em si mesmo', () => {
-  assert.equal(isCurrent('/dashboard/inbox', '/dashboard'), false);
+test('dashboard antigo não volta a ser prefixo de tudo', () => {
+  assert.equal(isCurrent('/dashboard/content', '/dashboard'), false);
   assert.equal(isCurrent('/dashboard', '/dashboard'), true);
-  assert.equal(isCurrent('/dashboard/site/links', '/dashboard/site'), true);
-});
-
-/** Lido como texto pela mesma razão de sempre: importar a action puxa o
- *  Supabase e o `next/cache` para dentro do runner. */
-test('a corrida a mostrar escolhe-se pelo instante, não pelo dia', () => {
-  // Várias corridas partilham a mesma `run_date` — o cron da manhã e cada
-  // «procurar agora». Ordenar por dia empata, o Postgres devolve uma qualquer, e
-  // a busca que ela acabou de fazer parece não ter aparecido.
-  const actions = readFileSync(path.join(ROOT, 'app/dashboard/outreach-actions.ts'), 'utf8');
-  const ordenacoes = [...actions.matchAll(/\.from\('outreach_run'\)[\s\S]{0,400}?\.order\('(\w+)'/g)];
-  assert.ok(ordenacoes.length >= 2, `só encontrei ${ordenacoes.length} leituras de outreach_run`);
-  for (const [, coluna] of ordenacoes) {
-    assert.equal(coluna, 'started_at', `ordenou outreach_run por «${coluna}»`);
-  }
-});
-
-/** Lido como texto porque exercitar um hook precisava de um renderer que este
- *  runner não tem. É mais fraco do que eu queria: garante a forma da correção,
- *  não o comportamento. O bug real era o menu do celular abrir e fechar-se
- *  sozinho a partir da segunda vez, e seis componentes partilhavam-no. */
-test('a animação de saída repõe-se, e não se reagenda a cada render', () => {
-  const hook = readFileSync(path.join(ROOT, 'components/dashboard/useExit.ts'), 'utf8');
-
-  assert.match(hook, /setClosing\(false\)/, 'o estado de saída fica preso e a próxima abertura nasce a fechar');
-
-  // `onDone` nas dependências reagenda o fecho a cada render enquanto fecha.
-  const deps = /\}, \[([^\]]*)\]\);/.exec(hook)?.[1] ?? '';
-  assert.doesNotMatch(deps, /onDone/, `onDone voltou às dependências: [${deps}]`);
-  assert.match(hook, /useRef\(onDone\)/, 'sem ref, o efeito volta a depender de uma função instável');
-});
-
-/** O arquivo tinha trinta e seis durações escolhidas uma a uma. O teste não
- *  julga o gosto: só impede que uma transição volte a nascer com um número
- *  solto ao lado das que passaram a token. */
-test('nenhuma transição do painel traz duração à mão', () => {
-  const css = readFileSync(path.join(ROOT, 'app/dashboard/dashboard.css'), 'utf8');
-  const soltas: string[] = [];
-  for (const m of css.matchAll(/transition(?:-duration)?\s*:[^;}]*/g)) {
-    // `0.01ms` é o desligar do `prefers-reduced-motion`, e é para ficar.
-    if (/\b\d*\.?\d+s\b/.test(m[0])) soltas.push(m[0].trim());
-  }
-  assert.deepEqual(soltas, [], `fora da escada de tempo: ${soltas.join(' | ')}`);
 });

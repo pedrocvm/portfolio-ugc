@@ -8411,3 +8411,24 @@ a.aiSource:hover {
     height: 24px;
   }
 }
+
+
+/* CarolOS editorial reset: a barra móvel agora tem somente Conteúdo, Site e Sair. */
+@media (max-width: 959px) {
+  .tabOut,
+  .tabOut form {
+    display: contents;
+  }
+  .tabbar .sideOut {
+    width: 100%;
+    min-height: 48px;
+    margin: 0;
+    padding: 0 2px;
+    align-self: stretch;
+    border: 0;
+    color: var(--tinta3);
+    font-family: var(--sans);
+    font-size: 10.5px;
+    text-align: center;
+  }
+}
