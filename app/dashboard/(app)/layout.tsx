@@ -55,6 +55,9 @@ export default async function AppLayout({
         </main>
 
         <MobileNav onSignOut={signOutForm} />
+        {/* O editor do site usa esta âncora para o único FAB que continua útil.
+            Conteúdo não injeta nada aqui. */}
+        <div className="fabStack" id="fabStack" />
         <Toasts />
       </div>
     </>
