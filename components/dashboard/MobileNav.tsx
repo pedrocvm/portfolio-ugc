@@ -36,7 +36,13 @@ function Glyph({ name }: { name: keyof typeof ICON }) {
   );
 }
 
-export default function MobileNav({ onSignOut }: { onSignOut: React.ReactNode }) {
+export default function MobileNav({
+  onSignOut,
+}: {
+  onSignOut: React.ReactNode;
+  /** Compatibilidade com a bancada antiga. A Carol AI global saiu do produto. */
+  assistantEnabled?: boolean;
+}) {
   const path = usePathname();
   const here = sectionFor(path);
   const [open, setOpen] = useState(false);
