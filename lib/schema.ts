@@ -41,7 +41,7 @@ export const SECTIONS: Section[] = [
   {
     id: 'hero',
     title: 'Abertura',
-    note: 'O primeira tela, com o vídeo de fundo e o teu nome.',
+    note: 'A primeira tela, com o vídeo de fundo e o seu nome.',
     fields: [
       { k: 'text', path: 'hero.top', label: 'Canto superior' },
       { k: 'text', path: 'hero.kicker', label: 'Linha acima do nome' },
@@ -104,7 +104,7 @@ export const SECTIONS: Section[] = [
   {
     id: 'session',
     title: 'A sessão',
-    note: 'As tomadas que passam enquanto se rola a página.',
+    note: 'As tomadas que passam enquanto a página rola.',
     fields: [
       { k: 'text', path: 'session.label', label: 'Etiqueta' },
       ...heading('session', 'produções'),
@@ -142,7 +142,7 @@ export const SECTIONS: Section[] = [
   {
     id: 'photos',
     title: 'Fotos UGC',
-    note: 'O carrossel de fotografias.',
+    note: 'O carrossel de fotos.',
     fields: [
       ...chapter('photos', 'fotos'),
       {
@@ -265,7 +265,7 @@ export const SECTIONS: Section[] = [
   {
     id: 'footer',
     title: 'Rodapé',
-    note: 'O fecho da página e o convite para falar contigo.',
+    note: 'O fecho da página e o convite para falar com você.',
     fields: [
       { k: 'text', path: 'footer.eyebrow', label: 'Etiqueta' },
       ...heading('footer', 'fecho'),
@@ -319,13 +319,13 @@ export const SECTIONS: Section[] = [
   {
     id: 'meta',
     title: 'Google e redes',
-    note: 'O que aparece nos resultados de pesquisa e ao partilhar a ligação.',
+    note: 'O que aparece nos resultados de busca e ao compartilhar o link.',
     fields: [
       { k: 'text', path: 'meta.title', label: 'Título da página' },
       { k: 'area', path: 'meta.description', label: 'Descrição da página' },
-      { k: 'text', path: 'meta.ogTitle', label: 'Título ao partilhar' },
-      { k: 'area', path: 'meta.ogDescription', label: 'Descrição ao partilhar' },
-      { k: 'image', path: 'meta.ogImage', label: 'Imagem ao partilhar' },
+      { k: 'text', path: 'meta.ogTitle', label: 'Título ao compartilhar' },
+      { k: 'area', path: 'meta.ogDescription', label: 'Descrição ao compartilhar' },
+      { k: 'image', path: 'meta.ogImage', label: 'Imagem ao compartilhar' },
     ],
   },
 ];
