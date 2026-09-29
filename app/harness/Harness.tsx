@@ -27,7 +27,7 @@ import type { FeedAuditView, StoryAuditView } from '@/modules/content-brain/perf
 import { auditPiece, feedSummary, type FeedPieceInput } from '@/modules/content-brain/feed-audit';
 import { sequenceMetrics } from '@/modules/content-brain/stories';
 import { accountSeries, buildAudit, compareAccountWindows, periodRange, type AccountDay } from '@/modules/content-brain/audit';
-import type { AuditScreen } from '@/modules/content-brain/audit-service';
+import type { AuditScreen, EvidencePack } from '@/modules/content-brain/audit-service';
 import WeekPane, { type Proposal, type WeekData } from '@/components/dashboard/os/content-brain/WeekPane';
 import MapPane from '@/components/dashboard/os/content-brain/MapPane';
 import ProductionPane from '@/components/dashboard/os/content-brain/ProductionPane';
@@ -445,12 +445,12 @@ const MAPA = ['ugc_income', 'experiences', 'home'].map((slug) => {
 });
 
 const PACK_CARROSSEL = parsePack('carousel', {
-  cover: 'Fui a um sítio que toda a gente recomenda. Saí a pensar noutra coisa.',
+  cover: 'Fui a um lugar que todo mundo recomenda. Saí pensando em outra coisa.',
   slides: [
     { index: 0, copy: 'A reserva foi a parte mais fácil do dia.', composition: 'Capa com título grande, foto de fundo.' },
-    { index: 1, copy: 'Chegámos às 20h. Ninguém nos olhou durante quatro minutos.', composition: 'Foto cheia, texto em baixo.' },
+    { index: 1, copy: 'Chegamos às 20h. Ninguém olhou pra gente durante quatro minutos.', composition: 'Foto cheia, texto embaixo.' },
     { index: 2, copy: 'A comida estava boa. O que ficou não foi a comida.', composition: 'Duas fotos, corte ao meio.' },
-    { index: 3, copy: 'Serviço é a parte que ninguém fotografa.', composition: 'Só texto, respiro à volta.' },
+    { index: 3, copy: 'Serviço é a parte que ninguém fotografa.', composition: 'Só texto, respiro em volta.' },
   ],
   templateKey: null,
   typography: 'Título na fonte de display, corpo na de texto.',
@@ -589,6 +589,25 @@ function auditoriaFixture(vaziaAud: boolean): AuditScreen {
   return tela;
 }
 
+/** A prova resolvida, para a gaveta de evidências poder ser vista aberta na
+ *  bancada. Na aplicação isto chega da base ao abrir; aqui não há sessão. */
+const PROVA: EvidencePack = {
+  statement: '',
+  because: '',
+  sample: '',
+  pieces: [
+    { mediaId: 'm1', title: 'O cenário que eu compliquei', publishedAt: dia(-9), permalink: null, mediaProductType: 'REELS' },
+    { mediaId: 'm2', title: 'Uma coisa não tem nada a ver com a outra', publishedAt: dia(-16), permalink: null, mediaProductType: 'REELS' },
+    { mediaId: 'm3', title: 'Sete bichos e uma câmera', publishedAt: dia(-23), permalink: null, mediaProductType: 'REELS' },
+    { mediaId: 'm4', title: 'O primeiro take estava melhor', publishedAt: dia(-30), permalink: null, mediaProductType: 'REELS' },
+  ],
+  learnings: [
+    { id: 'l1', statement: 'Terminar com uma pergunta trouxe mais histórias pessoais.', ladderState: 'signal', sampleSize: 2 },
+  ],
+  experiments: [],
+  sequences: [],
+};
+
 export default function Harness({ modo }: { modo?: string }) {
 
   // O Conteúdo inteiro, com as cinco abas reais — é assim que a Carol o vê.
@@ -700,6 +719,7 @@ export default function Harness({ modo }: { modo?: string }) {
             audit: (
               <Audit
                 screen={auditoriaFixture(false)}
+                benchPack={PROVA}
                 explore={<p className="osNote">(o detalhe peça a peça vive na cena «inteligencia»)</p>}
               />
             ),
@@ -1105,7 +1125,7 @@ export default function Harness({ modo }: { modo?: string }) {
           <h1>Conteúdo</h1>
           <span className="dashState">{vaziaAud ? 'sem histórico ainda' : '18 conteúdos medidos'}</span>
         </div>
-        <Audit screen={tela} explore={<p className="osNote">(o detalhe peça a peça vive na cena «inteligencia»)</p>} />
+        <Audit screen={tela} benchPack={PROVA} explore={<p className="osNote">(o detalhe peça a peça vive na cena «inteligencia»)</p>} />
       </>
     );
   }

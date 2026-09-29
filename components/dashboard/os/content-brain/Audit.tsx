@@ -10,7 +10,7 @@ import {
   type AuditPeriod,
 } from '@/modules/content-brain/audit';
 import { OUTCOME_LABEL } from '@/modules/content-brain/experiments';
-import type { AuditScreen } from '@/modules/content-brain/audit-service';
+import type { AuditScreen, EvidencePack } from '@/modules/content-brain/audit-service';
 import { createTestFrom, respondToRecommendationAction } from '@/app/dashboard/content-audit-actions';
 import AuditChart from './AuditChart';
 import EvidenceDrawer from './EvidenceDrawer';
@@ -37,7 +37,16 @@ const BUCKET_ORDER: AuditBucket[] = ['improved', 'worsened', 'learned', 'attenti
 const HORA = (iso: string) =>
   new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Lisbon' });
 
-export default function Audit({ screen, explore }: { screen: AuditScreen; explore: React.ReactNode }) {
+export default function Audit({
+  screen,
+  explore,
+  benchPack = null,
+}: {
+  screen: AuditScreen;
+  explore: React.ReactNode;
+  /** Só a bancada preenche isto (ver `EvidenceDrawer.initialPack`). */
+  benchPack?: EvidencePack | null;
+}) {
   const { health, run, nextTest, recommendations, experiments, evolution, movements, range, period } = screen;
   const conclusoes = run?.conclusions ?? [];
   const porBalde = BUCKET_ORDER.map((b) => [b, conclusoes.filter((c) => c.bucket === b)] as const).filter(([, l]) => l.length);
@@ -97,7 +106,7 @@ export default function Audit({ screen, explore }: { screen: AuditScreen; explor
                 <h3>{BUCKET_LABEL[bucket]}</h3>
                 <ul className="auConclusions">
                   {lista.map((c) => (
-                    <Conclusion key={c.key} c={c} />
+                    <Conclusion key={c.key} c={c} benchPack={benchPack} />
                   ))}
                 </ul>
               </div>
@@ -135,6 +144,7 @@ export default function Audit({ screen, explore }: { screen: AuditScreen; explor
             because={nextTest.because}
             sample={`${nextTest.sampleSize}`}
             evidence={nextTest.evidence}
+            initialPack={benchPack}
           />
           <RecommendationActions rec={nextTest} primary />
         </section>
@@ -152,7 +162,7 @@ export default function Audit({ screen, explore }: { screen: AuditScreen; explor
                   <p className="osNote">
                     {r.sampleSize} {r.sampleSize === 1 ? 'conteúdo' : 'conteúdos'}
                   </p>
-                  <EvidenceDrawer statement={r.statement} because={r.because} evidence={r.evidence} />
+                  <EvidenceDrawer statement={r.statement} because={r.because} evidence={r.evidence} initialPack={benchPack} />
                   <RecommendationActions rec={r} />
                 </div>
               </div>
@@ -243,7 +253,7 @@ function periodoEmFrase(period: AuditPeriod, label: string): string {
   return `nos últimos ${label}`;
 }
 
-function Conclusion({ c }: { c: AuditConclusion }) {
+function Conclusion({ c, benchPack }: { c: AuditConclusion; benchPack: EvidencePack | null }) {
   return (
     <li data-confidence={c.confidence} data-bucket={c.bucket}>
       <p>{c.text}</p>
@@ -251,7 +261,7 @@ function Conclusion({ c }: { c: AuditConclusion }) {
         {c.sample}
         {c.comparator ? ` · comparado com ${c.comparator}` : ''}
       </span>
-      <EvidenceDrawer statement={c.text} sample={c.sample} evidence={c.evidence} />
+      <EvidenceDrawer statement={c.text} sample={c.sample} evidence={c.evidence} initialPack={benchPack} />
     </li>
   );
 }

@@ -40,13 +40,19 @@ export default function EvidenceDrawer({
   because,
   sample,
   evidence,
+  initialPack = null,
 }: {
   statement: string;
   because?: string;
   sample?: string;
   evidence: Evidence;
+  /** Prova já resolvida. Na aplicação vem sempre vazia — a gaveta busca ao
+   *  abrir, para não carregar seis listas que ninguém pediu. A bancada
+   *  preenche-a porque lá não há sessão: a ação de servidor redirecionaria
+   *  para o login e a tela aberta não teria como ser mostrada a ninguém. */
+  initialPack?: EvidencePack | null;
 }) {
-  const [pack, setPack] = useState<EvidencePack | null>(null);
+  const [pack, setPack] = useState<EvidencePack | null>(initialPack);
   const [erro, setErro] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
