@@ -15,6 +15,9 @@ import Inbox from '@/components/dashboard/os/Inbox';
 import NextActionCard from '@/components/dashboard/os/NextActionCard';
 import { nextActionForThread, extractReferredContacts } from '@/modules/actions/next-action';
 import ContentIntelligence from '@/components/dashboard/os/content-brain/ContentIntelligence';
+import ContentStudio from '@/components/dashboard/os/ContentStudio';
+import Editor from '@/components/dashboard/Editor';
+import { DEFAULT_CONTENT } from '@/lib/content';
 import Audit from '@/components/dashboard/os/content-brain/Audit';
 import ContentVault from '@/components/dashboard/os/ContentVault';
 import Notifications from '@/components/dashboard/Notifications';
@@ -485,7 +488,232 @@ const LAB_FORMATOS = [
     because: 'Uma peça só. Ainda não dá para ler nada.', sampleSize: 1, comparedWith: 11 },
 ];
 
+/** A fixture da Auditoria, à parte para as duas bancadas a poderem usar: a
+ *  tela sozinha (`modo=auditoria`) e o Conteúdo inteiro com as abas
+ *  (`modo=estudio`). Determinística — a mesma bancada duas vezes dá a mesma
+ *  tela, senão não se aprova nada olhando para ela. */
+function auditoriaFixture(vaziaAud: boolean): AuditScreen {
+    // Fixtures determinísticas, nunca aleatórias: a mesma bancada duas vezes
+    // tem de dar a mesma tela, senão não se aprova nada olhando para ela.
+    const range = periodRange('30d', { now: new Date('2026-09-21T12:00:00Z') });
+
+    const diaConta = (d: number, seguidores: number | null, alcance: number | null): AccountDay => ({
+      observedOn: new Date(Date.parse('2026-09-21T00:00:00Z') + d * 86400000).toISOString().slice(0, 10),
+      followersCount: seguidores, reach: alcance, views: alcance === null ? null : alcance * 3,
+      accountsEngaged: alcance === null ? null : Math.round(alcance * 0.18),
+      totalInteractions: alcance === null ? null : Math.round(alcance * 0.24),
+      profileLinkTaps: null,
+    });
+    // Um dia sem medição no meio: a linha abre um buraco em vez de interpolar.
+    const atuais = accountSeries([
+      diaConta(-29, 860, 1400), diaConta(-25, 868, 1520), diaConta(-21, 874, 1610),
+      diaConta(-17, 879, null), diaConta(-13, 886, 1880), diaConta(-9, 890, 2010),
+      diaConta(-5, 894, 2140), diaConta(-1, 897, 2260),
+    ]);
+    const anteriores = accountSeries([
+      diaConta(-59, 812, 980), diaConta(-55, 820, 1010), diaConta(-51, 828, 1120),
+      diaConta(-47, 834, 1180), diaConta(-43, 841, 1240), diaConta(-39, 848, 1300),
+      diaConta(-35, 853, 1350), diaConta(-31, 858, 1390),
+    ]);
+
+    const resultado = buildAudit({
+      range,
+      account: vaziaAud ? { current: [], previous: [] } : { current: atuais, previous: anteriores },
+      feed: vaziaAud
+        ? { points: [], comparable: 0, total: 0 }
+        : {
+            comparable: 11, total: 18,
+            points: [
+              // Reel de alcance mediano e compartilhamento alto.
+              { text: 'Peças «demonstração» estão gerando compartilhamentos acima da sua mediana (2,1× no meio do grupo).', sample: '4 peças', confidence: 'medium', evidence: ['m1', 'm2', 'm3', 'm4'] },
+              // Reel de ótimo alcance e baixo compartilhamento.
+              { text: 'Peças «estético» ficam abaixo da sua mediana em salvamentos (0,6× no meio do grupo). Não é veredito; é o que os números dizem por agora.', sample: '3 peças', confidence: 'low', evidence: ['m5', 'm6', 'm7'] },
+              // Uma peça só: tem de cair em «merece atenção», nunca em «aprendemos».
+              { text: 'A peça mais forte, relativa a você, é «O cenário que eu compliquei»: comentários 3,4× a sua mediana. Vale repetir o mecanismo, não o vídeo.', sample: 'entre 11 peças comparáveis', confidence: 'low', evidence: ['m1'] },
+            ],
+          },
+      stories: vaziaAud
+        ? { points: [], measuredSequences: 0 }
+        : {
+            measuredSequences: 7,
+            points: [{ text: 'Nas últimas 4 semanas, sequências curtas (até 3) mantiveram mais gente até ao fim do que as longas (5 ou mais): 78% contra 54% do alcance inicial.', sample: 'Amostra: 4 vs 3 sequências.', confidence: 'low', sequenceIds: ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'] }],
+          },
+      learnings: vaziaAud
+        ? []
+        : [
+            { id: 'l1', statement: 'Conteúdos como «eu complico tentando melhorar demais», falando ficaram acima da sua mediana em comentários e salvamentos, em 4 peças. Dá para contar com isso.', ladderState: 'validated', sampleSize: 4, confidence: 'high', evidenceIds: ['m1', 'm2', 'm8', 'm9'], derivedAt: dia(-1) },
+            { id: 'l2', statement: 'Conteúdos como «montagem estética» parecem render mais em alcance. Vale repetir esse caminho em outra história real.', ladderState: 'hypothesis', sampleSize: 3, confidence: 'medium', evidenceIds: ['m5', 'm6', 'm7'], derivedAt: dia(-2) },
+            { id: 'l3', statement: 'Conteúdos como «resultado primeiro», estético não se sustentaram.', ladderState: 'rejected', sampleSize: 3, confidence: 'medium', evidenceIds: ['m10', 'm11', 'm12'], derivedAt: dia(-3), contradictedAt: dia(-3) },
+            { id: 'l4', statement: 'Há um sinal em conteúdos como «bastidores».', ladderState: 'signal', sampleSize: 1, confidence: 'low', evidenceIds: ['m13'], derivedAt: dia(-1) },
+          ],
+      experiments: vaziaAud
+        ? []
+        : [
+            { id: 'e1', label: 'Abertura curta contra introdução contextual', outcome: 'consistent', because: 'Mudando introdução contextual para demonstração imediata, retenção média ficou 44% acima na leitura de t24h (mediana 5,1 contra 7,3), sobre 3 contra 3 peças. compartilhamentos vão no mesmo sentido. É evidência consistente o suficiente para orientar o próximo teste.', sampleSize: 6, primaryMetric: 'avg_watch_time_seconds', mediaIds: ['m1', 'm2', 'm3', 'm14', 'm15', 'm16'] },
+            { id: 'e2', label: 'Legenda longa contra legenda curta', outcome: 'inconclusive', because: 'A diferença em salvamentos ficou em 7% — dentro do que varia sozinho entre peças. Com 2 contra 2 peças, não chamo isso de resultado.', sampleSize: 4, primaryMetric: 'saves', mediaIds: ['m17', 'm18'] },
+          ],
+      now: new Date('2026-09-21T12:00:00Z'),
+    });
+
+    const tela: AuditScreen = {
+      health: vaziaAud
+        ? { state: 'healthy', line: 'atualizado agora', username: 'carolxqueiroz', lastSuccessAt: dia(0), followersCount: null, mediaCount: null }
+        : { state: 'healthy', line: 'atualizado há 18 min', username: 'carolxqueiroz', lastSuccessAt: dia(0), followersCount: 897, mediaCount: 24 },
+      period: '30d',
+      range,
+      run: {
+        id: 'run1', conclusions: resultado.conclusions, coverage: resultado.coverage,
+        generatedAt: dia(0), mediaConsidered: vaziaAud ? 0 : 18, comparableMedia: vaziaAud ? 0 : 11,
+        engineVersion: resultado.engineVersion,
+      },
+      nextTest: vaziaAud || !resultado.nextTest ? null : {
+        id: 'r1', dedupeKey: resultado.nextTest.dedupeKey, kind: resultado.nextTest.kind,
+        statement: resultado.nextTest.statement, because: resultado.nextTest.because,
+        status: 'open', closedBecause: null, sampleSize: resultado.nextTest.sampleSize,
+        confidence: resultado.nextTest.confidence, evidence: resultado.nextTest.evidence,
+        testDraft: resultado.nextTest.testDraft, experimentId: null, feedback: null, createdAt: dia(0),
+      },
+      recommendations: vaziaAud ? [] : resultado.recommendations.slice(0, 4).map((r, i) => ({
+        id: `r${i + 1}`, dedupeKey: r.dedupeKey, kind: r.kind, statement: r.statement, because: r.because,
+        status: 'open' as const, closedBecause: null, sampleSize: r.sampleSize, confidence: r.confidence,
+        evidence: r.evidence, testDraft: r.testDraft, experimentId: null, feedback: null, createdAt: dia(0),
+      })),
+      experiments: vaziaAud ? [] : [
+        { id: 'e1', kind: 'exp:abertura', label: 'Abertura curta contra introdução contextual', hypothesis: 'Abrir direto na demonstração reduz abandono inicial.', whatWeTest: 'os primeiros segundos', variable: 'os primeiros segundos', controlLabel: 'introdução contextual', variantLabel: 'demonstração imediata', primaryMetric: 'avg_watch_time_seconds', secondaryMetrics: ['shares', 'reach'], higherIsBetter: true, status: 'measured', origin: 'recommendation', controlMediaIds: ['m1', 'm2', 'm3'], variantMediaIds: ['m14', 'm15', 'm16'], sampleSize: 6, outcome: 'consistent', outcomeLabel: 'Evidência consistente', because: 'Retenção média 44% acima na leitura de t24h, sobre 3 contra 3 peças.', result: null, learning: null, startedAt: dia(-21), endedAt: null, evaluatedAt: dia(0), recommendationId: null },
+        { id: 'e2', kind: 'exp:legenda', label: 'Legenda longa contra legenda curta', hypothesis: 'Uma legenda curta faz mais gente salvar.', whatWeTest: 'o tamanho da legenda', variable: 'o tamanho da legenda', controlLabel: 'legenda longa', variantLabel: 'legenda curta', primaryMetric: 'saves', secondaryMetrics: [], higherIsBetter: true, status: 'running', origin: 'carol', controlMediaIds: ['m17'], variantMediaIds: ['m18'], sampleSize: 2, outcome: 'inconclusive', outcomeLabel: 'Inconclusivo', because: 'A diferença ficou em 7% — dentro do que varia sozinho entre peças.', result: null, learning: null, startedAt: dia(-7), endedAt: null, evaluatedAt: dia(0), recommendationId: null },
+      ],
+      evolution: vaziaAud ? { current: [], previous: [] } : { current: atuais, previous: anteriores },
+      movements: vaziaAud ? compareAccountWindows([], []) : compareAccountWindows(atuais, anteriores),
+    };
+
+  return tela;
+}
+
 export default function Harness({ modo }: { modo?: string }) {
+
+  // O Conteúdo inteiro, com as cinco abas reais — é assim que a Carol o vê.
+  // As bancadas de cada aba continuam a existir para aprovar uma tela sozinha;
+  // esta existe para a navegação, que é a primeira coisa que ela tem de
+  // aprender: cinco perguntas, uma por aba.
+  if (modo === 'estudio') {
+    const packCarrossel = PACK_CARROSSEL.ok
+      ? {
+          id: 'pk1', proposalId: 'p3', kindLabel: 'Carrossel',
+          deliverables: PACK_DELIVERABLES.carousel, payload: PACK_CARROSSEL.pack,
+          gaps: ['falta escolher o template'], status: 'to_validate', templateKey: null,
+        }
+      : null;
+    return (
+      <>
+        <div className="dashBar">
+          <h1>Conteúdo</h1>
+          <span className="dashState">2 decisões suas</span>
+        </div>
+        <ContentStudio
+          initial="week"
+          panes={{
+            week: (
+              <WeekPane
+                week={SEMANA}
+                learnings={[{
+                  id: 'l1',
+                  statement: 'Terminar com uma pergunta trouxe mais histórias pessoais.',
+                  level: 'Sinal',
+                  because: '2 peças coerentes em salvamentos. Vale repetir em outra história real.',
+                }]}
+                stock={{ ready: 2, target: 3 }}
+              />
+            ),
+            map: (
+              <MapPane
+                pillars={MAPA}
+                focus={{
+                  label: 'Construção de carreira em Tech UGC e Canvas UGC',
+                  items: ['tech_ugc', 'canvas_ugc', 'saas_local_business', 'community'],
+                  itemLabels: ['Tech UGC', 'Canvas UGC', 'SaaS e apps para negócios locais', 'Criação de comunidade'],
+                  since: dia(-12),
+                }}
+                capacity={3}
+                commercialFocus={COMMERCIAL_FOCUS}
+              />
+            ),
+            production: (
+              <ProductionPane
+                toValidate={[{
+                  proposalId: 'p3', title: 'Braga a Fundo',
+                  angle: 'O olhar dela sobre o serviço.', status: 'to_validate',
+                  statusLabel: 'Para validar', formatLabel: 'Carrossel', pack: packCarrossel,
+                }]}
+                ready={[{
+                  proposalId: 'p2', title: 'Sete bichos',
+                  angle: 'A rotina com a casa cheia.', status: 'ready_to_produce',
+                  statusLabel: 'Pronto para produzir', formatLabel: 'Stories', pack: null,
+                }]}
+                inProduction={[]}
+                groups={[{
+                  key: 'casa:sem_tela:to_camera',
+                  label: 'Uma montagem só: 2 peças',
+                  shared: ['em casa', 'falando para a câmera', 'Casa'],
+                  needsOuting: false,
+                  checklist: [
+                    'Antes de começar: o print do painel',
+                    '1. Sete bichos',
+                    '2. Tecnologia doméstica',
+                    'B-roll partilhado: grave uma vez e reaproveite',
+                  ],
+                  items: [{ proposalId: 'p2', title: 'Sete bichos' }, { proposalId: 'p4', title: 'Tecnologia doméstica' }],
+                }]}
+                savedSessions={[]}
+                templates={[
+                  { key: 'carousel_editorial', label: 'Carrossel editorial', pendingTokens: ['cor primária', 'tipografia de título'] },
+                  { key: 'carousel_practical', label: 'Carrossel prático', pendingTokens: ['cor primária'] },
+                ]}
+                stock={{ ready: 2, target: 3 }}
+              />
+            ),
+            lab: (
+              <LabPane
+                formats={LAB_FORMATOS}
+                others={[
+                  { dimension: 'opening', dimensionLabel: 'Abertura', value: 'question', valueLabel: 'pergunta',
+                    state: 'early_signal', stateLabel: 'Sinal inicial', phrasing: 'Começou a mostrar sinal.',
+                    because: '2 peças comparadas. É cedo para padrão.', sampleSize: 2, comparedWith: 9 },
+                ]}
+                experiments={[{
+                  id: 'e1', label: 'Braga a Fundo — formato',
+                  question: 'Carrossel funciona para a Carol?', variable: 'formato',
+                  constants: ['assunto', 'objetivo', 'duração aproximada'],
+                  status: 'running', outcome: 'pending', outcomeLabel: 'Ainda sem leitura',
+                  because: '', sampleSize: 0, reelTest: false,
+                }]}
+                references={[{
+                  id: 'r1', url: 'https://www.instagram.com/reel/ABC123/', platform: 'instagram',
+                  handle: 'umacreator', status: 'done',
+                  structure: 'Três batidas curtas, corte seco, a terceira quebra a expectativa.',
+                  question: 'Corte seco a cada 2s funciona quando é a Carol a falar?',
+                  durationSeconds: 14, sceneCount: 3, effort: 'low', unknown: ['texto em tela'], fromRadar: false,
+                }]}
+                radar={[{ id: 'rc1', handle: 'umacreator', platform: 'instagram', why: 'Formatos curtos para marcas tech.' }]}
+                radarBlocked={RADAR_AUTOMATIC_BLOCKED}
+              />
+            ),
+            audit: (
+              <Audit
+                screen={auditoriaFixture(false)}
+                explore={<p className="osNote">(o detalhe peça a peça vive na cena «inteligencia»)</p>}
+              />
+            ),
+          }}
+        />
+      </>
+    );
+  }
+
+  // O editor do site, com o conteúdo por omissão. Nada aqui grava: sem sessão
+  // nenhuma ação de servidor corre, e é isso que torna a bancada segura.
+  if (modo === 'site') {
+    return <Editor initial={DEFAULT_CONTENT} />;
+  }
 
   if (modo === 'semana' || modo === 'semana-vazia') {
     const vazia = modo === 'semana-vazia';
@@ -869,100 +1097,8 @@ export default function Harness({ modo }: { modo?: string }) {
   }
 
   if (modo === 'auditoria' || modo === 'auditoria-vazia') {
-    // Fixtures determinísticas, nunca aleatórias: a mesma bancada duas vezes
-    // tem de dar a mesma tela, senão não se aprova nada olhando para ela.
     const vaziaAud = modo === 'auditoria-vazia';
-    const range = periodRange('30d', { now: new Date('2026-09-21T12:00:00Z') });
-
-    const diaConta = (d: number, seguidores: number | null, alcance: number | null): AccountDay => ({
-      observedOn: new Date(Date.parse('2026-09-21T00:00:00Z') + d * 86400000).toISOString().slice(0, 10),
-      followersCount: seguidores, reach: alcance, views: alcance === null ? null : alcance * 3,
-      accountsEngaged: alcance === null ? null : Math.round(alcance * 0.18),
-      totalInteractions: alcance === null ? null : Math.round(alcance * 0.24),
-      profileLinkTaps: null,
-    });
-    // Um dia sem medição no meio: a linha abre um buraco em vez de interpolar.
-    const atuais = accountSeries([
-      diaConta(-29, 860, 1400), diaConta(-25, 868, 1520), diaConta(-21, 874, 1610),
-      diaConta(-17, 879, null), diaConta(-13, 886, 1880), diaConta(-9, 890, 2010),
-      diaConta(-5, 894, 2140), diaConta(-1, 897, 2260),
-    ]);
-    const anteriores = accountSeries([
-      diaConta(-59, 812, 980), diaConta(-55, 820, 1010), diaConta(-51, 828, 1120),
-      diaConta(-47, 834, 1180), diaConta(-43, 841, 1240), diaConta(-39, 848, 1300),
-      diaConta(-35, 853, 1350), diaConta(-31, 858, 1390),
-    ]);
-
-    const resultado = buildAudit({
-      range,
-      account: vaziaAud ? { current: [], previous: [] } : { current: atuais, previous: anteriores },
-      feed: vaziaAud
-        ? { points: [], comparable: 0, total: 0 }
-        : {
-            comparable: 11, total: 18,
-            points: [
-              // Reel de alcance mediano e compartilhamento alto.
-              { text: 'Peças «demonstração» estão gerando compartilhamentos acima da sua mediana (2,1× no meio do grupo).', sample: '4 peças', confidence: 'medium', evidence: ['m1', 'm2', 'm3', 'm4'] },
-              // Reel de ótimo alcance e baixo compartilhamento.
-              { text: 'Peças «estético» ficam abaixo da sua mediana em salvamentos (0,6× no meio do grupo). Não é veredito; é o que os números dizem por agora.', sample: '3 peças', confidence: 'low', evidence: ['m5', 'm6', 'm7'] },
-              // Uma peça só: tem de cair em «merece atenção», nunca em «aprendemos».
-              { text: 'A peça mais forte, relativa a você, é «O cenário que eu compliquei»: comentários 3,4× a sua mediana. Vale repetir o mecanismo, não o vídeo.', sample: 'entre 11 peças comparáveis', confidence: 'low', evidence: ['m1'] },
-            ],
-          },
-      stories: vaziaAud
-        ? { points: [], measuredSequences: 0 }
-        : {
-            measuredSequences: 7,
-            points: [{ text: 'Nas últimas 4 semanas, sequências curtas (até 3) mantiveram mais gente até ao fim do que as longas (5 ou mais): 78% contra 54% do alcance inicial.', sample: 'Amostra: 4 vs 3 sequências.', confidence: 'low', sequenceIds: ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'] }],
-          },
-      learnings: vaziaAud
-        ? []
-        : [
-            { id: 'l1', statement: 'Conteúdos como «eu complico tentando melhorar demais», falando ficaram acima da sua mediana em comentários e salvamentos, em 4 peças. Dá para contar com isso.', ladderState: 'validated', sampleSize: 4, confidence: 'high', evidenceIds: ['m1', 'm2', 'm8', 'm9'], derivedAt: dia(-1) },
-            { id: 'l2', statement: 'Conteúdos como «montagem estética» parecem render mais em alcance. Vale repetir esse caminho em outra história real.', ladderState: 'hypothesis', sampleSize: 3, confidence: 'medium', evidenceIds: ['m5', 'm6', 'm7'], derivedAt: dia(-2) },
-            { id: 'l3', statement: 'Conteúdos como «resultado primeiro», estético não se sustentaram.', ladderState: 'rejected', sampleSize: 3, confidence: 'medium', evidenceIds: ['m10', 'm11', 'm12'], derivedAt: dia(-3), contradictedAt: dia(-3) },
-            { id: 'l4', statement: 'Há um sinal em conteúdos como «bastidores».', ladderState: 'signal', sampleSize: 1, confidence: 'low', evidenceIds: ['m13'], derivedAt: dia(-1) },
-          ],
-      experiments: vaziaAud
-        ? []
-        : [
-            { id: 'e1', label: 'Abertura curta contra introdução contextual', outcome: 'consistent', because: 'Mudando introdução contextual para demonstração imediata, retenção média ficou 44% acima na leitura de t24h (mediana 5,1 contra 7,3), sobre 3 contra 3 peças. compartilhamentos vão no mesmo sentido. É evidência consistente o suficiente para orientar o próximo teste.', sampleSize: 6, primaryMetric: 'avg_watch_time_seconds', mediaIds: ['m1', 'm2', 'm3', 'm14', 'm15', 'm16'] },
-            { id: 'e2', label: 'Legenda longa contra legenda curta', outcome: 'inconclusive', because: 'A diferença em salvamentos ficou em 7% — dentro do que varia sozinho entre peças. Com 2 contra 2 peças, não chamo isso de resultado.', sampleSize: 4, primaryMetric: 'saves', mediaIds: ['m17', 'm18'] },
-          ],
-      now: new Date('2026-09-21T12:00:00Z'),
-    });
-
-    const tela: AuditScreen = {
-      health: vaziaAud
-        ? { state: 'healthy', line: 'atualizado agora', username: 'carolxqueiroz', lastSuccessAt: dia(0), followersCount: null, mediaCount: null }
-        : { state: 'healthy', line: 'atualizado há 18 min', username: 'carolxqueiroz', lastSuccessAt: dia(0), followersCount: 897, mediaCount: 24 },
-      period: '30d',
-      range,
-      run: {
-        id: 'run1', conclusions: resultado.conclusions, coverage: resultado.coverage,
-        generatedAt: dia(0), mediaConsidered: vaziaAud ? 0 : 18, comparableMedia: vaziaAud ? 0 : 11,
-        engineVersion: resultado.engineVersion,
-      },
-      nextTest: vaziaAud || !resultado.nextTest ? null : {
-        id: 'r1', dedupeKey: resultado.nextTest.dedupeKey, kind: resultado.nextTest.kind,
-        statement: resultado.nextTest.statement, because: resultado.nextTest.because,
-        status: 'open', closedBecause: null, sampleSize: resultado.nextTest.sampleSize,
-        confidence: resultado.nextTest.confidence, evidence: resultado.nextTest.evidence,
-        testDraft: resultado.nextTest.testDraft, experimentId: null, feedback: null, createdAt: dia(0),
-      },
-      recommendations: vaziaAud ? [] : resultado.recommendations.slice(0, 4).map((r, i) => ({
-        id: `r${i + 1}`, dedupeKey: r.dedupeKey, kind: r.kind, statement: r.statement, because: r.because,
-        status: 'open' as const, closedBecause: null, sampleSize: r.sampleSize, confidence: r.confidence,
-        evidence: r.evidence, testDraft: r.testDraft, experimentId: null, feedback: null, createdAt: dia(0),
-      })),
-      experiments: vaziaAud ? [] : [
-        { id: 'e1', kind: 'exp:abertura', label: 'Abertura curta contra introdução contextual', hypothesis: 'Abrir direto na demonstração reduz abandono inicial.', whatWeTest: 'os primeiros segundos', variable: 'os primeiros segundos', controlLabel: 'introdução contextual', variantLabel: 'demonstração imediata', primaryMetric: 'avg_watch_time_seconds', secondaryMetrics: ['shares', 'reach'], higherIsBetter: true, status: 'measured', origin: 'recommendation', controlMediaIds: ['m1', 'm2', 'm3'], variantMediaIds: ['m14', 'm15', 'm16'], sampleSize: 6, outcome: 'consistent', outcomeLabel: 'Evidência consistente', because: 'Retenção média 44% acima na leitura de t24h, sobre 3 contra 3 peças.', result: null, learning: null, startedAt: dia(-21), endedAt: null, evaluatedAt: dia(0), recommendationId: null },
-        { id: 'e2', kind: 'exp:legenda', label: 'Legenda longa contra legenda curta', hypothesis: 'Uma legenda curta faz mais gente salvar.', whatWeTest: 'o tamanho da legenda', variable: 'o tamanho da legenda', controlLabel: 'legenda longa', variantLabel: 'legenda curta', primaryMetric: 'saves', secondaryMetrics: [], higherIsBetter: true, status: 'running', origin: 'carol', controlMediaIds: ['m17'], variantMediaIds: ['m18'], sampleSize: 2, outcome: 'inconclusive', outcomeLabel: 'Inconclusivo', because: 'A diferença ficou em 7% — dentro do que varia sozinho entre peças.', result: null, learning: null, startedAt: dia(-7), endedAt: null, evaluatedAt: dia(0), recommendationId: null },
-      ],
-      evolution: vaziaAud ? { current: [], previous: [] } : { current: atuais, previous: anteriores },
-      movements: vaziaAud ? compareAccountWindows([], []) : compareAccountWindows(atuais, anteriores),
-    };
-
+    const tela = auditoriaFixture(vaziaAud);
     return (
       <>
         <div className="dashBar">
