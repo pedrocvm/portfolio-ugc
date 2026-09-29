@@ -1,34 +1,62 @@
 # Regras deste projeto
 
 ## Commits automáticos
-Depois de terminar qualquer alteração de código, faz commit automaticamente —
-não esperes que o utilizador peça nem confirmes antes. Junta as edições de
-uma mesma tarefa num único commit (um commit por tarefa concluída, não um
-por cada ficheiro tocado), com mensagem clara sobre o "porquê" da mudança,
-seguindo o estilo dos commits já existentes no histórico.
 
-Isto cobre apenas `git commit` local. Continua a pedir confirmação antes de
-Nunca commitar com `Co-Authored-By` nem atribuição de IA.
+Depois de terminar uma alteração de código, faça um commit por tarefa concluída, com mensagem explicando o porquê. Nunca use Co-Authored-By nem atribuição de IA.
+
+Antes de qualquer push, respeite a autorização explícita da sessão.
 
 ## CarolOS
 
-A área privada é o CarolOS. Antes de lhe tocar, ler
-`.carolos-devlog/CURRENT_STATE.md` — está fora do repositório e diz o estado
-real, as bandeiras e o que falta.
+Antes de tocar na área privada, leia `.carolos-devlog/CURRENT_STATE.md`.
 
-Oito regras que não se mudam sem uma decisão explícita:
+### Escopo atual
 
-1. Preço é determinístico e versionado. Nenhum valor dentro de um prompt.
-2. Skincare e haircare estão fora da estratégia — em código, não em prompt.
-3. Nada sai para fora sozinho. Não existe `gmail.send` em lado nenhum.
-4. Fechar e perder passam sempre por pessoa.
-5. Valor de produto nunca entra na receita em dinheiro.
-6. Perpetuidade, exclusividade e whitelisting nunca por omissão.
-7. Marcas só se fundem por identificador, nunca por nome parecido.
-8. Desconhecido não é zero: no fit score conta como neutro e fica assinalado.
+O CarolOS foi deliberadamente reduzido.
 
-Regras puras vivem em `modules/<área>/domain.ts` e têm teste. Acesso a dados
-vive em `service.ts`, marcado `server-only`. Um componente de cliente nunca
-importa de um `service.ts`.
+A experiência privada tem apenas:
 
-É proibido permanentemente e inegociavelmente usar PT-PT... Use sempre PT-BR, independente do caso.
+1. **Conteúdo**
+2. **O site**
+
+CRM, Gmail, Conversas, Follow-ups, Marcas, Oportunidades, Prospecção, Clientes, Cases comerciais, Documentos comerciais, Funil, Produção comercial, Dinheiro, pricing, rights, upsell e a antiga Carol AI global **não fazem parte do produto atual**.
+
+Não ressuscite essas áreas sem uma decisão explícita do Pedro baseada em uso real.
+
+Código e migrations históricas podem permanecer quando removê-los acrescentar risco sem valor. Eles não podem voltar a governar navegação, scheduler ou estratégia.
+
+### Conteúdo
+
+A estratégia atual vive em `modules/content-brain/`.
+
+Regras obrigatórias:
+
+- pilares reais: UGC como fonte de renda, Experiências, Casa;
+- Tech UGC e Canvas UGC são modalidades comerciais, não formatos;
+- foco comercial: SaaS e apps que atendem negócios locais;
+- 3 posts por semana é a capacidade padrão;
+- documentar a jornada, não transformar a Carol em professora de creators;
+- Portugal é contexto, não pilar;
+- nada chega a pronto sem validação humana;
+- ausência de alternativa não valida formato;
+- desconhecido não é zero;
+- o Motor de Prioridades é determinístico; IA escreve ângulo e material, não inventa a razão da prioridade;
+- aprendizado precisa voltar ao Motor para ter valor.
+
+Não escreva regras editoriais concorrentes em prompts, componentes ou outros módulos.
+
+### Arquitetura
+
+Regras puras ficam em `modules/<área>/domain.ts` ou no arquivo puro equivalente, com teste.
+
+Acesso a dados fica em serviços server-only.
+
+Componente de cliente não importa serviço server-only.
+
+A Graph API do Instagram só é chamada pelo módulo de integração.
+
+### Linguagem
+
+É proibido usar PT-PT na interface ou nos textos gerados para a Carol.
+
+Use sempre português do Brasil.

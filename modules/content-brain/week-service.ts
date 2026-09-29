@@ -178,50 +178,35 @@ async function publishedWindow(c: StrategyClient, limit: number): Promise<Publis
   });
 }
 
-/** Matéria-prima real: histórias confirmadas ainda sem peça, e os candidatos
- *  abertos que nasceram de emails, entregas e marcos. O motor não inventa
- *  acontecimento; quando existe um, prefere-o. */
+/** Matéria-prima real confirmada pela Carol.
+ *
+ * O CRM saiu do produto. Respostas de marca, mudanças de etapa e outros
+ * eventos comerciais antigos não podem mais virar pauta por trás dela.
+ * Quando houver uma história pessoal confirmada, o motor pode preferi-la;
+ * quando não houver, trabalha com o Mapa Editorial e deixa a Carol validar o
+ * ângulo antes de qualquer roteiro existir. */
 async function realEvents(c: StrategyClient): Promise<RealEvent[]> {
-  const [{ data: stories }, { data: candidates }, { data: topics }] = await Promise.all([
+  const [{ data: stories }, { data: topics }] = await Promise.all([
     c.from('creator_story')
       .select('id, title, summary, occurred_at, captured_at, fact_status, topic_id, pillar_slug, status')
       .eq('fact_status', 'confirmed')
       .in('status', ['confirmed', 'mapped', 'structured', 'ready_to_record'])
       .order('captured_at', { ascending: false })
       .limit(20),
-    c.from('content_story_candidate')
-      .select('id, fact, occurred_at, source, brand_name')
-      .eq('status', 'open')
-      .order('occurred_at', { ascending: false })
-      .limit(20),
     c.from('content_topic').select('id, slug, pillar_slug'),
   ]);
 
   const byId = new Map((topics ?? []).map((t) => [t.id, t]));
 
-  const deStories: RealEvent[] = (stories ?? []).map((s) => ({
+  return (stories ?? []).map((s) => ({
     id: s.id,
-    kind: 'story',
+    kind: 'story' as const,
     fact: s.summary?.trim() || s.title,
     occurredAt: s.occurred_at ?? s.captured_at,
     topicSlug: s.topic_id ? byId.get(s.topic_id)?.slug ?? null : null,
     pillar: isPillar(s.pillar_slug) ? s.pillar_slug : null,
     confirmed: true,
   }));
-
-  // Um candidato é um facto observado pelo sistema — uma marca respondeu, uma
-  // entrega fechou. Ainda não foi confirmado por ela, e o motor sabe disso.
-  const deCandidatos: RealEvent[] = (candidates ?? []).map((k) => ({
-    id: k.id,
-    kind: 'candidate',
-    fact: k.fact,
-    occurredAt: k.occurred_at,
-    topicSlug: k.source === 'brand_reply' || k.source === 'opportunity_stage' ? 'brand_experiences' : null,
-    pillar: 'ugc_income',
-    confirmed: false,
-  }));
-
-  return [...deStories, ...deCandidatos];
 }
 
 /** Só o que está ativo e pesa. Um aprendizado rejeitado ou despromovido não
