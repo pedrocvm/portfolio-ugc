@@ -41,7 +41,7 @@ function failuresOf(result: JobResult): string[] {
   return out;
 }
 
-export async function runJob(job: JobName): Promise<JobResult> {
+export async function runJob(job: JobName, _opts: { manual?: boolean } = {}): Promise<JobResult> {
   const result = await execute(job);
   await record(job, result);
   return result;
@@ -191,7 +191,7 @@ async function execute(job: JobName): Promise<JobResult> {
   }
 }
 
-export async function runAllJobs(): Promise<JobResult[]> {
+export async function runAllJobs(opts: { manual?: boolean } = {}): Promise<JobResult[]> {
   const order: JobName[] = [
     'instagram-token',
     'instagram-sync',
@@ -202,6 +202,6 @@ export async function runAllJobs(): Promise<JobResult[]> {
   ];
 
   const results: JobResult[] = [];
-  for (const job of order) results.push(await runJob(job));
+  for (const job of order) results.push(await runJob(job, opts));
   return results;
 }
