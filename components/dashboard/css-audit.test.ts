@@ -29,7 +29,7 @@ test('os botões flutuantes vivem numa pilha e não se posicionam sozinhos', () 
     assert.doesNotMatch(bloco(css, sel), /position: fixed/, `${sel} não pode ser fixed por conta própria`);
   }
   assert.match(bloco(css, '.fabStack'), /position: fixed/);
-  assert.match(ler('app/dashboard/(app)/layout.tsx'), /<div className="fabStack" id="fabStack">/);
+  assert.match(ler('app/dashboard/(app)/layout.tsx'), /<div className="fabStack" id="fabStack"\s*\/?>/);
   assert.match(ler('components/dashboard/Editor.tsx'), /createPortal\(verOSite, pilha\)/);
 });
 
