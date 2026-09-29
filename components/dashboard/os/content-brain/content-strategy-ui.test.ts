@@ -36,7 +36,7 @@ test('cinco destinos, e a homepage é a Semana', () => {
 });
 
 test('a Semana abre em propostas, não em calendário nem em gráficos', () => {
-  assert.match(PAGE, /week: \(/);
+  assert.match(PAGE, /week:\s*semana\s*\?\s*\(/);
   assert.match(WEEK, /<h2>Propostas<\/h2>/);
   // Nenhum gráfico na homepage do Conteúdo.
   assert.doesNotMatch(WEEK, /AuditChart|<svg|osBars/);
