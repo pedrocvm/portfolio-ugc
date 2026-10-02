@@ -11,9 +11,15 @@ import { supabaseServer } from '@/lib/supabase/server';
 
 export type Result = { ok?: true; error?: string };
 
+function safeNext(value: string) {
+  if (!value.startsWith('/') || value.startsWith('//')) return '/dashboard';
+  return value;
+}
+
 export async function signIn(_prev: Result, form: FormData): Promise<Result> {
   const id = String(form.get('id') ?? '').trim();
   const password = String(form.get('password') ?? '');
+  const destination = safeNext(String(form.get('next') ?? '/dashboard'));
   if (!id || !password) return { error: 'Falta o usuário ou a senha.' };
 
   const email = id.includes('@')
@@ -25,7 +31,7 @@ export async function signIn(_prev: Result, form: FormData): Promise<Result> {
   const supabase = await supabaseServer();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: 'Usuário ou senha incorretos.' };
-  redirect('/dashboard');
+  redirect(destination);
 }
 
 export async function signOut() {
