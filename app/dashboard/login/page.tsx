@@ -9,15 +9,27 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function LoginPage() {
-  if (await currentEditor()) redirect('/dashboard');
+function safeNext(value?: string) {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/dashboard';
+  return value;
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const destination = safeNext(next);
+
+  if (await currentEditor()) redirect(destination);
 
   return (
     <div className="login">
       <div className="loginBox">
         <h1>Entrar</h1>
         <p className="sub">O site continua mostrando o que já está publicado.</p>
-        <LoginForm />
+        <LoginForm next={destination} />
         <Link className="loginBack" href="/">
           ← Voltar ao site
         </Link>
