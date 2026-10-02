@@ -3,11 +3,12 @@
 import { useActionState } from 'react';
 import { signIn, type Result } from '@/app/dashboard/actions';
 
-export default function LoginForm() {
+export default function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<Result, FormData>(signIn, {});
 
   return (
     <form action={action}>
+      <input type="hidden" name="next" value={next ?? '/dashboard'} />
       <div className="fld">
         <label>
           Usuário
