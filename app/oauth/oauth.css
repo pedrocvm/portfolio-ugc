@@ -1,0 +1,128 @@
+.oauthShell {
+  --marfim: #f4efe7;
+  --champagne: #d8c5a5;
+  --taupe: #a99482;
+  --cereja: #7a1526;
+  --oliva: #6b6947;
+  --dourado: #a68b5b;
+
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: var(--marfim);
+  color: var(--oliva);
+  font-family: var(--oauth-sans), Arial, sans-serif;
+}
+
+.oauthCard {
+  width: min(620px, 100%);
+  padding: clamp(28px, 6vw, 54px);
+  border: 1px solid var(--champagne);
+  background: color-mix(in srgb, white 54%, var(--marfim));
+  box-shadow: 0 22px 70px rgba(122, 21, 38, 0.08);
+}
+
+.oauthEyebrow {
+  margin: 0 0 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--cereja);
+}
+
+.oauthCard h1 {
+  margin: 0;
+  max-width: 12ch;
+  font-family: var(--oauth-serif), Georgia, serif;
+  font-size: clamp(38px, 8vw, 64px);
+  font-weight: 600;
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+  color: var(--cereja);
+}
+
+.oauthIntro {
+  max-width: 52ch;
+  margin: 20px 0 28px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.oauthRequest {
+  margin: 0 0 26px;
+  padding: 20px 0;
+  border-top: 1px solid var(--champagne);
+  border-bottom: 1px solid var(--champagne);
+}
+
+.oauthRequest dt {
+  margin-top: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cereja);
+}
+
+.oauthRequest dt:first-child {
+  margin-top: 0;
+}
+
+.oauthRequest dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.oauthScopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oauthScopes li {
+  padding: 5px 9px;
+  border: 1px solid var(--champagne);
+  background: color-mix(in srgb, var(--champagne) 24%, transparent);
+  font-size: 12px;
+}
+
+.oauthActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.oauthActions button {
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid var(--cereja);
+  font-family: var(--oauth-sans), Arial, sans-serif;
+  font-weight: 600;
+}
+
+.oauthApprove {
+  background: var(--cereja);
+  color: var(--marfim);
+}
+
+.oauthDeny {
+  background: transparent;
+  color: var(--cereja);
+}
+
+.oauthError {
+  color: var(--cereja);
+}
+
+.oauthFoot {
+  margin: 22px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--taupe);
+}
