@@ -9,6 +9,10 @@
   --admin-oliva: #6B6947;
   --admin-dourado: #A68B5B;
 
+  --sans: var(--font-admin-sans), Arial, sans-serif;
+  --disp: var(--font-admin-sans), Arial, sans-serif;
+  --serif: var(--font-admin-serif), Georgia, serif;
+
   --papel: var(--admin-marfin);
   --areia: color-mix(in srgb, var(--admin-champagne) 36%, var(--admin-marfin));
   --areia2: var(--admin-champagne);
