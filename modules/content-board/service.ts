@@ -1,7 +1,15 @@
 import 'server-only';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabaseServer } from '@/lib/supabase/server';
 import type { ContentBoardItem, ContentPillar, ContentStage } from './domain';
+
+// A migration entra junto com este módulo. O arquivo gerado de tipos é regenerado
+// depois que a migration estiver aplicada no projeto remoto.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ContentDb = SupabaseClient<any>;
+
+const contentDb = async () => (await supabaseServer()) as unknown as ContentDb;
 
 const SELECT =
   'id, pillar, format, subject, script, scheduled_for, stage, position, created_at, updated_at';
@@ -36,7 +44,7 @@ export async function listContentBoard(input: {
   from: string;
   to: string;
 }): Promise<ContentBoardItem[]> {
-  const db = await supabaseServer();
+  const db = await contentDb();
   const { data, error } = await db
     .from('content_board_item')
     .select(SELECT)
@@ -59,7 +67,7 @@ export async function saveContentBoardItem(input: {
   scheduledFor: string;
   stage: ContentStage;
 }): Promise<{ ok: true; item: ContentBoardItem } | { ok: false; error: string }> {
-  const db = await supabaseServer();
+  const db = await contentDb();
 
   const row = {
     pillar: input.pillar,
@@ -112,7 +120,7 @@ export async function moveContentBoardItem(input: {
   id: string;
   stage: ContentStage;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-  const db = await supabaseServer();
+  const db = await contentDb();
 
   const { data: current, error: currentError } = await db
     .from('content_board_item')
@@ -149,7 +157,7 @@ export async function moveContentBoardItem(input: {
 export async function deleteContentBoardItem(
   id: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const db = await supabaseServer();
+  const db = await contentDb();
   const { error } = await db.from('content_board_item').delete().eq('id', id);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
