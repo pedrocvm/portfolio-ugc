@@ -1,12 +1,9 @@
-export const PILLAR_KEYS = ['ugc_income', 'braga', 'a_fundo', 'personal'] as const;
-export type ContentPillar = (typeof PILLAR_KEYS)[number];
-
-export const CONTENT_PILLARS: readonly { value: ContentPillar; label: string }[] = [
-  { value: 'ugc_income', label: 'UGC como fonte de renda' },
-  { value: 'braga', label: 'Braga' },
-  { value: 'a_fundo', label: 'A fundo' },
-  { value: 'personal', label: 'Casa, rotina e pessoal' },
-] as const;
+export type ContentPillar = {
+  id: string;
+  name: string;
+  position: number;
+  active: boolean;
+};
 
 export const STAGE_KEYS = ['idea', 'script', 'recording', 'editing', 'ready', 'published'] as const;
 export type ContentStage = (typeof STAGE_KEYS)[number];
@@ -26,7 +23,8 @@ export const CONTENT_STAGES: readonly {
 
 export type ContentBoardItem = {
   id: string;
-  pillar: ContentPillar;
+  pillarId: string;
+  pillarName: string;
   format: string;
   subject: string;
   script: string;
@@ -36,9 +34,6 @@ export type ContentBoardItem = {
   createdAt: string;
   updatedAt: string;
 };
-
-export const pillarLabel = (pillar: ContentPillar) =>
-  CONTENT_PILLARS.find((item) => item.value === pillar)?.label ?? pillar;
 
 export const stageLabel = (stage: ContentStage) =>
   CONTENT_STAGES.find((item) => item.value === stage)?.label ?? stage;

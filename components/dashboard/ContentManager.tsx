@@ -1,19 +1,18 @@
 'use client';
 
-import Link from 'next/link';
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  addContentPillar,
+  editContentPillar,
   moveContentCard,
   removeContentCard,
   saveContentCard,
 } from '@/app/dashboard/content-manager-actions';
 import { useBoardDrag } from '@/components/dashboard/useBoardDrag';
 import {
-  CONTENT_PILLARS,
   CONTENT_STAGES,
   STAGE_KEYS,
-  pillarLabel,
   stageLabel,
   type ContentBoardItem,
   type ContentPillar,
@@ -21,6 +20,8 @@ import {
 } from '@/modules/content-board/domain';
 
 type View = 'week' | 'day';
+
+const PILLAR_ACCENTS = ['#7A1526', '#6B6947', '#A68B5B', '#A99482'] as const;
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -56,17 +57,26 @@ const scriptPreview = (script: string) => {
   return clean.length > 150 ? `${clean.slice(0, 150)}…` : clean;
 };
 
-function href(view: View, date: string) {
-  return `/dashboard/content?view=${view}&date=${date}`;
+const href = (view: View, date: string) =>
+  `/dashboard/content?view=${view}&date=${date}`;
+
+function pillarAccent(pillarId: string, pillars: ContentPillar[]) {
+  const index = Math.max(
+    0,
+    pillars.findIndex((pillar) => pillar.id === pillarId),
+  );
+  return PILLAR_ACCENTS[index % PILLAR_ACCENTS.length];
 }
 
 function ContentCard({
   item,
+  accent,
   compact = false,
   onOpen,
   drag,
 }: {
   item: ContentBoardItem;
+  accent: string;
   compact?: boolean;
   onOpen: () => void;
   drag?: ReturnType<typeof useBoardDrag>;
@@ -74,12 +84,12 @@ function ContentCard({
   return (
     <article
       className="cmCard"
-      data-pillar={item.pillar}
       data-compact={compact || undefined}
+      style={{ '--pillar-accent': accent } as React.CSSProperties}
     >
       <button className="cmCardBody" type="button" onClick={onOpen}>
         <span className="cmCardMeta">
-          <span>{pillarLabel(item.pillar)}</span>
+          <span>{item.pillarName}</span>
           {item.format ? <span>{item.format}</span> : <span>Formato por definir</span>}
         </span>
         <strong>{item.subject}</strong>
@@ -109,15 +119,17 @@ function ContentCard({
 function Editor({
   item,
   date,
+  pillars,
   onClose,
   onSaved,
 }: {
   item: ContentBoardItem | null;
   date: string;
+  pillars: ContentPillar[];
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [pillar, setPillar] = useState<ContentPillar>(item?.pillar ?? 'ugc_income');
+  const [pillarId, setPillarId] = useState(item?.pillarId || pillars[0]?.id || '');
   const [format, setFormat] = useState(item?.format ?? '');
   const [subject, setSubject] = useState(item?.subject ?? '');
   const [script, setScript] = useState(item?.script ?? '');
@@ -131,7 +143,7 @@ function Editor({
     startTransition(() => {
       void saveContentCard({
         id: item?.id,
-        pillar,
+        pillarId,
         format,
         subject,
         script,
@@ -183,10 +195,10 @@ function Editor({
         <div className="cmForm">
           <label>
             <span>Pilar</span>
-            <select value={pillar} onChange={(event) => setPillar(event.target.value as ContentPillar)}>
-              {CONTENT_PILLARS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+            <select value={pillarId} onChange={(event) => setPillarId(event.target.value)}>
+              {pillars.map((pillar) => (
+                <option key={pillar.id} value={pillar.id}>
+                  {pillar.name}
                 </option>
               ))}
             </select>
@@ -256,7 +268,12 @@ function Editor({
             <button type="button" className="cmGhostBtn" onClick={onClose}>
               Cancelar
             </button>
-            <button type="button" className="cmPrimary" disabled={pending || !subject.trim()} onClick={save}>
+            <button
+              type="button"
+              className="cmPrimary"
+              disabled={pending || !subject.trim() || !pillarId}
+              onClick={save}
+            >
               {pending ? 'Salvando…' : 'Salvar'}
             </button>
           </div>
@@ -266,26 +283,172 @@ function Editor({
   );
 }
 
+function PillarRow({
+  pillar,
+  onChanged,
+}: {
+  pillar: ContentPillar;
+  onChanged: (pillar: ContentPillar) => void;
+}) {
+  const [name, setName] = useState(pillar.name);
+  const [error, setError] = useState('');
+  const [pending, startTransition] = useTransition();
+  const changed = name.trim() !== pillar.name;
+
+
+  const save = () => {
+    if (!changed) return;
+    setError('');
+    startTransition(() => {
+      void editContentPillar({ id: pillar.id, name }).then((result) => {
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        onChanged(result.pillar);
+      });
+    });
+  };
+
+  return (
+    <div className="cmPillarRow">
+      <span
+        className="cmPillarDot"
+        style={{ '--pillar-dot': PILLAR_ACCENTS[pillar.position % PILLAR_ACCENTS.length] } as React.CSSProperties}
+        aria-hidden="true"
+      />
+      <input
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') save();
+        }}
+        aria-label={`Nome do pilar ${pillar.name}`}
+      />
+      <button
+        type="button"
+        className="cmMiniBtn"
+        disabled={!changed || pending || !name.trim()}
+        onClick={save}
+      >
+        {pending ? 'Salvando…' : 'Salvar'}
+      </button>
+      {error ? <p className="cmPillarError">{error}</p> : null}
+    </div>
+  );
+}
+
+function PillarManager({
+  pillars,
+  onClose,
+  onChanged,
+}: {
+  pillars: ContentPillar[];
+  onClose: () => void;
+  onChanged: (pillar: ContentPillar) => void;
+}) {
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [pending, startTransition] = useTransition();
+
+  const add = () => {
+    if (!name.trim()) return;
+    setError('');
+    startTransition(() => {
+      void addContentPillar(name).then((result) => {
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        setName('');
+        onChanged(result.pillar);
+      });
+    });
+  };
+
+  return (
+    <div className="cmOverlay" role="presentation" onMouseDown={onClose}>
+      <section
+        className="cmEditor cmPillarManager"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Gerir pilares"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header className="cmEditorHead">
+          <div>
+            <span className="cmEyebrow">Estrutura editorial</span>
+            <h2>Pilares</h2>
+            <p className="cmEditorIntro">
+              Os quatro pilares iniciais continuam aqui, mas a lista agora pode ser gerida neste espaço. Novos pilares
+              passam a aparecer imediatamente no formulário de conteúdo.
+            </p>
+          </div>
+          <button type="button" className="cmClose" aria-label="Fechar" onClick={onClose}>
+            ×
+          </button>
+        </header>
+
+        <div className="cmPillarAdd">
+          <label>
+            <span>Novo pilar</span>
+            <div>
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') add();
+                }}
+                placeholder="Ex. Bastidores de criação"
+                autoFocus
+              />
+              <button className="cmPrimary" type="button" disabled={pending || !name.trim()} onClick={add}>
+                {pending ? 'Adicionando…' : 'Adicionar'}
+              </button>
+            </div>
+          </label>
+          {error ? <p className="cmError">{error}</p> : null}
+        </div>
+
+        <div className="cmPillarList">
+          <span className="cmPillarListLabel">Pilares atuais</span>
+          {pillars.map((pillar) => (
+            <PillarRow key={`${pillar.id}:${pillar.name}`} pillar={pillar} onChanged={onChanged} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function ContentManager({
   items,
+  pillars,
   view,
   selectedDate,
 }: {
   items: ContentBoardItem[];
+  pillars: ContentPillar[];
   view: View;
   selectedDate: string;
 }) {
   const router = useRouter();
+  const [activeView, setActiveView] = useState<View>(view);
+  const [activeDate, setActiveDate] = useState(selectedDate);
+  const [localPillars, setLocalPillars] = useState(pillars);
   const [editing, setEditing] = useState<ContentBoardItem | null | undefined>(undefined);
+  const [managingPillars, setManagingPillars] = useState(false);
   const [editorDate, setEditorDate] = useState(selectedDate);
   const [moveError, setMoveError] = useState('');
   const [moving, startMove] = useTransition();
+  const [navigating, startNavigation] = useTransition();
   const boardRef = useRef<HTMLDivElement>(null);
 
-  const start = weekStart(selectedDate);
+  const loadedStart = weekStart(selectedDate);
+  const loadedEnd = addDays(loadedStart, 6);
   const days = useMemo(
-    () => Array.from({ length: 7 }, (_, index) => addDays(start, index)),
-    [start],
+    () => Array.from({ length: 7 }, (_, index) => addDays(loadedStart, index)),
+    [loadedStart],
   );
 
   const byDate = useMemo(() => {
@@ -298,10 +461,12 @@ export default function ContentManager({
     return map;
   }, [items]);
 
+  const dayItems = byDate.get(activeDate) ?? [];
+
   const drag = useBoardDrag(
     (id, zone) => {
       if (!STAGE_KEYS.includes(zone as ContentStage)) return;
-      const item = items.find((row) => row.id === id);
+      const item = dayItems.find((row) => row.id === id);
       if (!item || item.stage === zone) return;
 
       setMoveError('');
@@ -315,72 +480,145 @@ export default function ContentManager({
     boardRef,
   );
 
-  const openNew = (date = selectedDate) => {
+  const syncView = (nextView: View, nextDate: string) => {
+    setActiveView(nextView);
+    setActiveDate(nextDate);
+    startNavigation(() => {
+      router.replace(href(nextView, nextDate), { scroll: false });
+    });
+  };
+
+  const goToDate = (nextDate: string) => {
+    const insideLoadedWeek = nextDate >= loadedStart && nextDate <= loadedEnd;
+    if (insideLoadedWeek) {
+      syncView(activeView, nextDate);
+      return;
+    }
+
+    startNavigation(() => {
+      router.push(href(activeView, nextDate), { scroll: false });
+    });
+  };
+
+  const openNew = (date = activeDate) => {
     setEditorDate(date);
     setEditing(null);
   };
+
   const closeEditor = () => setEditing(undefined);
+
   const saved = () => {
     closeEditor();
     router.refresh();
   };
 
-  const previousDate = view === 'week' ? addDays(start, -7) : addDays(selectedDate, -1);
-  const nextDate = view === 'week' ? addDays(start, 7) : addDays(selectedDate, 1);
+  const updateLocalPillar = (next: ContentPillar) => {
+    setLocalPillars((current) => {
+      const found = current.some((pillar) => pillar.id === next.id);
+      const list = found
+        ? current.map((pillar) => (pillar.id === next.id ? next : pillar))
+        : [...current, next];
+      return [...list].sort((a, b) => a.position - b.position);
+    });
+  };
+
+  const previousDate =
+    activeView === 'week' ? addDays(loadedStart, -7) : addDays(activeDate, -1);
+  const nextDate =
+    activeView === 'week' ? addDays(loadedStart, 7) : addDays(activeDate, 1);
+  const today = toIso(new Date());
 
   return (
-    <div className="cm">
+    <div className="cm" data-navigating={navigating || undefined}>
+      <div className="cmNavProgress" aria-hidden="true" />
+
       <header className="cmTop">
         <div>
           <span className="cmEyebrow">Gerenciador de conteúdo</span>
-          <h1>{view === 'week' ? 'Semana editorial' : formatDay(selectedDate, { weekday: 'long', day: 'numeric', month: 'long' })}</h1>
+          <h1>
+            {activeView === 'week'
+              ? 'Semana editorial'
+              : formatDay(activeDate, { weekday: 'long', day: 'numeric', month: 'long' })}
+          </h1>
         </div>
 
-        <button type="button" className="cmPrimary" onClick={() => openNew()}>
-          Novo conteúdo
-        </button>
+        <div className="cmTopActions">
+          <button type="button" className="cmGhostBtn" onClick={() => setManagingPillars(true)}>
+            Pilares
+          </button>
+          <button type="button" className="cmPrimary" onClick={() => openNew()}>
+            Novo conteúdo
+          </button>
+        </div>
       </header>
 
       <div className="cmToolbar">
         <div className="cmViewSwitch" aria-label="Visualização">
-          <Link href={href('week', selectedDate)} aria-current={view === 'week' ? 'page' : undefined}>
+          <button
+            type="button"
+            data-active={activeView === 'week' || undefined}
+            aria-pressed={activeView === 'week'}
+            onClick={() => syncView('week', activeDate)}
+          >
             Semana
-          </Link>
-          <Link href={href('day', selectedDate)} aria-current={view === 'day' ? 'page' : undefined}>
+          </button>
+          <button
+            type="button"
+            data-active={activeView === 'day' || undefined}
+            aria-pressed={activeView === 'day'}
+            onClick={() => syncView('day', activeDate)}
+          >
             Dia
-          </Link>
+          </button>
         </div>
 
         <div className="cmDateNav">
-          <Link href={href(view, previousDate)} aria-label="Anterior">‹</Link>
-          <Link className="cmToday" href={href(view, toIso(new Date()))}>Hoje</Link>
-          <Link href={href(view, nextDate)} aria-label="Próximo">›</Link>
+          <button type="button" aria-label="Anterior" disabled={navigating} onClick={() => goToDate(previousDate)}>
+            ‹
+          </button>
+          <button type="button" className="cmToday" disabled={navigating} onClick={() => goToDate(today)}>
+            Hoje
+          </button>
+          <button type="button" aria-label="Próximo" disabled={navigating} onClick={() => goToDate(nextDate)}>
+            ›
+          </button>
         </div>
       </div>
 
-      {view === 'week' ? (
+      {navigating ? (
+        <p className="cmLoadingText" role="status">
+          Atualizando…
+        </p>
+      ) : null}
+
+      {activeView === 'week' ? (
         <div className="cmCalendar">
           {days.map((day) => {
-            const dayItems = byDate.get(day) ?? [];
-            const isSelected = day === selectedDate;
+            const dayRows = byDate.get(day) ?? [];
+            const isSelected = day === activeDate;
             return (
               <section className="cmDay" key={day} data-selected={isSelected || undefined}>
-                <Link className="cmDayHead" href={href('day', day)}>
+                <button
+                  type="button"
+                  className="cmDayHead"
+                  onClick={() => syncView('day', day)}
+                >
                   <span>{formatDay(day, { weekday: 'short' })}</span>
                   <strong>{formatDay(day, { day: '2-digit' })}</strong>
-                </Link>
+                </button>
 
                 <div className="cmDayCards">
-                  {dayItems.map((item) => (
+                  {dayRows.map((item) => (
                     <ContentCard
                       key={item.id}
                       item={item}
+                      accent={pillarAccent(item.pillarId, localPillars)}
                       compact
                       onOpen={() => setEditing(item)}
                     />
                   ))}
 
-                  {!dayItems.length ? (
+                  {!dayRows.length ? (
                     <button className="cmEmptyDay" type="button" onClick={() => openNew(day)}>
                       + adicionar
                     </button>
@@ -395,7 +633,7 @@ export default function ContentManager({
           {moveError ? <p className="cmError">{moveError}</p> : null}
           <div className="cmBoard" ref={boardRef} data-moving={moving || undefined}>
             {CONTENT_STAGES.map((column) => {
-              const rows = items.filter((item) => item.stage === column.value);
+              const rows = dayItems.filter((item) => item.stage === column.value);
               return (
                 <section
                   className="cmColumn"
@@ -416,6 +654,7 @@ export default function ContentManager({
                       <ContentCard
                         key={item.id}
                         item={item}
+                        accent={pillarAccent(item.pillarId, localPillars)}
                         onOpen={() => setEditing(item)}
                         drag={drag}
                       />
@@ -426,18 +665,25 @@ export default function ContentManager({
               );
             })}
           </div>
-
-
         </>
       )}
 
       {editing !== undefined ? (
         <Editor
-          key={editing?.id ?? `new-${selectedDate}`}
+          key={editing?.id ?? `new-${editorDate}-${localPillars.length}`}
           item={editing}
           date={editing?.scheduledFor ?? editorDate}
+          pillars={localPillars}
           onClose={closeEditor}
           onSaved={saved}
+        />
+      ) : null}
+
+      {managingPillars ? (
+        <PillarManager
+          pillars={localPillars}
+          onClose={() => setManagingPillars(false)}
+          onChanged={updateLocalPillar}
         />
       ) : null}
     </div>

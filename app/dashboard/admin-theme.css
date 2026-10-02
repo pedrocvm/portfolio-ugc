@@ -1,0 +1,479 @@
+/* Identidade administrativa da Carol.
+   Escopo deliberadamente restrito a /dashboard. O site público mantém o tema próprio. */
+
+.dash {
+  --admin-marfin: #F4EFE7;
+  --admin-champagne: #D8C5A5;
+  --admin-taupe: #A99482;
+  --admin-cereja: #7A1526;
+  --admin-oliva: #6B6947;
+  --admin-dourado: #A68B5B;
+
+  --sans: var(--font-admin-sans), Arial, sans-serif;
+  --disp: var(--font-admin-sans), Arial, sans-serif;
+  --serif: var(--font-admin-serif), Georgia, serif;
+
+  --papel: var(--admin-marfin);
+  --areia: color-mix(in srgb, var(--admin-champagne) 36%, var(--admin-marfin));
+  --areia2: var(--admin-champagne);
+  --pedra-clara: color-mix(in srgb, var(--admin-taupe) 54%, var(--admin-marfin));
+  --pedra: var(--admin-taupe);
+  --pedra-escura: color-mix(in srgb, var(--admin-taupe) 82%, var(--admin-oliva));
+  --umbra-clara: color-mix(in srgb, var(--admin-cereja) 72%, var(--admin-marfin));
+  --umbra: var(--admin-cereja);
+  --tinta: var(--admin-cereja);
+  --tinta2: var(--admin-oliva);
+  --tinta3: var(--admin-taupe);
+  --grafite: var(--admin-oliva);
+  --ferro: var(--admin-marfin);
+  --ferro2: color-mix(in srgb, var(--admin-champagne) 48%, var(--admin-marfin));
+  --jade-claro: color-mix(in srgb, var(--admin-oliva) 35%, var(--admin-marfin));
+  --jade: var(--admin-oliva);
+  --jade-escuro: var(--admin-oliva);
+  --jadeLeve: color-mix(in srgb, var(--admin-oliva) 9%, var(--admin-marfin));
+  --alerta: var(--admin-cereja);
+  --alertaLeve: color-mix(in srgb, var(--admin-cereja) 8%, var(--admin-marfin));
+  --realce: var(--admin-cereja);
+  --realceLeve: color-mix(in srgb, var(--admin-cereja) 8%, var(--admin-marfin));
+
+  min-height: 100dvh;
+  background: var(--admin-marfin);
+  color: var(--admin-oliva);
+  font-family: var(--font-admin-sans), Arial, sans-serif;
+}
+
+.dash h1,
+.dash h2,
+.dash h3 {
+  font-family: var(--font-admin-serif), Georgia, serif;
+  font-variation-settings: normal;
+  font-weight: 600;
+  color: var(--admin-cereja);
+  letter-spacing: -0.025em;
+}
+
+.dash :is(
+  button,
+  input,
+  textarea,
+  select,
+  .fld > label,
+  .fld > .lb,
+  .btn,
+  .chip,
+  .pill,
+  .dashState,
+  .secBar a,
+  .rail a,
+  .sideOut
+) {
+  font-family: var(--font-admin-sans), Arial, sans-serif;
+  font-variation-settings: normal;
+}
+
+.dash .said {
+  font-family: var(--font-admin-sans), Arial, sans-serif;
+  font-style: normal;
+  color: var(--admin-oliva);
+}
+
+.dash .shell,
+.dash .sheet {
+  background: var(--admin-marfin);
+}
+
+.dash .side {
+  background: var(--admin-marfin);
+  color: var(--admin-cereja);
+  border-right: 1px solid var(--admin-champagne);
+  box-shadow: 8px 0 32px rgba(122, 21, 38, 0.035);
+}
+
+.dash .side .logoName {
+  color: var(--admin-cereja);
+  font-family: var(--font-admin-serif), Georgia, serif;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 0.9;
+}
+
+.dash .logoName .logoLine {
+  overflow: visible;
+  padding: 0;
+  margin: 0;
+}
+
+.dash .logoName .l2 {
+  margin-left: 0.18em;
+}
+
+.dash .logoName .ch {
+  clip-path: none;
+  animation: none;
+}
+
+.dash .logoName .nib {
+  display: none;
+}
+
+.dash .rail {
+  margin-top: 10px;
+}
+
+.dash .rail a {
+  color: var(--admin-oliva);
+  border-left: 2px solid transparent;
+  transition:
+    color var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease);
+}
+
+.dash .rail a:hover {
+  color: var(--admin-cereja);
+  background: color-mix(in srgb, var(--admin-champagne) 22%, transparent);
+}
+
+.dash .rail a[aria-current='page'] {
+  color: var(--admin-cereja);
+  background: color-mix(in srgb, var(--admin-champagne) 35%, var(--admin-marfin));
+  border-left-color: var(--admin-cereja);
+}
+
+.dash .sideOut {
+  color: var(--admin-oliva);
+}
+
+.dash .sideOut:hover {
+  color: var(--admin-cereja);
+  border-bottom-color: var(--admin-cereja);
+}
+
+.dash .sideToggle {
+  color: var(--admin-oliva);
+}
+
+.dash .sideToggle:hover {
+  color: var(--admin-cereja);
+  background: color-mix(in srgb, var(--admin-champagne) 26%, transparent);
+}
+
+.dash .secBar {
+  background: color-mix(in srgb, var(--admin-marfin) 96%, transparent);
+  border-bottom-color: var(--admin-champagne);
+}
+
+.dash .secBar a {
+  color: var(--admin-oliva);
+}
+
+.dash .secBar a:hover,
+.dash .secBar a[aria-current='page'] {
+  color: var(--admin-cereja);
+}
+
+.dash .secBar a::after {
+  background: var(--admin-cereja);
+}
+
+.dash .secMoreBox {
+  background: var(--admin-marfin);
+  border-color: var(--admin-champagne);
+  box-shadow: 0 14px 34px rgba(122, 21, 38, 0.08);
+}
+
+.dash .tabbar {
+  background: var(--admin-marfin);
+  border-top-color: var(--admin-champagne);
+  box-shadow: 0 -8px 26px rgba(122, 21, 38, 0.05);
+}
+
+.dash .tabbar :is(a, button) {
+  color: var(--admin-oliva);
+}
+
+.dash .tabbar a[aria-current='page'] {
+  color: var(--admin-cereja);
+}
+
+.dash :is(input, textarea, select) {
+  border-color: var(--admin-champagne);
+  background: color-mix(in srgb, white 72%, var(--admin-marfin));
+  color: var(--admin-oliva);
+}
+
+.dash :is(input, textarea, select):focus {
+  border-color: var(--admin-cereja);
+  outline-color: var(--admin-cereja);
+}
+
+.dash :is(.btn, .osGo, .pvFab) {
+  border-color: var(--admin-cereja);
+}
+
+.dash .btn:not(.secondary),
+.dash .osGo {
+  background: var(--admin-cereja);
+  color: var(--admin-marfin);
+}
+
+.dash :is(.card, .osRow, .impBox, .nba, .doc, .moreBox) {
+  border-color: var(--admin-champagne);
+}
+
+.dash .cm {
+  color: var(--admin-oliva);
+}
+
+.dash .cmEyebrow {
+  color: var(--admin-cereja);
+}
+
+.dash .cmEyebrow::after {
+  content: '';
+  display: inline-block;
+  width: 34px;
+  height: 1px;
+  margin-left: 10px;
+  vertical-align: middle;
+  background: var(--admin-dourado);
+}
+
+.dash .cmPrimary {
+  border-color: var(--admin-cereja);
+  background: var(--admin-cereja);
+  color: var(--admin-marfin);
+}
+
+.dash .cmPrimary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--admin-cereja) 88%, black);
+}
+
+.dash .cmGhostBtn,
+.dash .cmMiniBtn {
+  border-color: var(--admin-champagne);
+  color: var(--admin-oliva);
+  background: transparent;
+}
+
+.dash .cmGhostBtn:hover,
+.dash .cmMiniBtn:hover:not(:disabled) {
+  border-color: var(--admin-oliva);
+  background: color-mix(in srgb, var(--admin-oliva) 7%, transparent);
+}
+
+.dash .cmToolbar {
+  border-bottom-color: var(--admin-champagne);
+}
+
+.dash .cmViewSwitch {
+  background: color-mix(in srgb, var(--admin-champagne) 30%, var(--admin-marfin));
+  border-color: var(--admin-champagne);
+}
+
+.dash .cmViewSwitch button {
+  color: var(--admin-oliva);
+}
+
+.dash .cmViewSwitch button[data-active] {
+  background: var(--admin-marfin);
+  color: var(--admin-cereja);
+  box-shadow: inset 0 -2px 0 var(--admin-cereja);
+}
+
+.dash .cmDateNav button {
+  color: var(--admin-oliva);
+}
+
+.dash .cmDateNav button:hover:not(:disabled) {
+  color: var(--admin-cereja);
+  border-color: var(--admin-champagne);
+}
+
+.dash .cmCalendar {
+  border-color: var(--admin-champagne);
+}
+
+.dash .cmDay {
+  border-color: var(--admin-champagne);
+  background: color-mix(in srgb, var(--admin-champagne) 11%, var(--admin-marfin));
+}
+
+.dash .cmDay[data-selected] {
+  background: var(--admin-marfin);
+}
+
+.dash .cmDayHead {
+  border-bottom-color: var(--admin-champagne);
+}
+
+.dash .cmDayHead span {
+  color: var(--admin-oliva);
+}
+
+.dash .cmDayHead strong {
+  color: var(--admin-cereja);
+  font-family: var(--font-admin-serif), Georgia, serif;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.dash .cmCard {
+  background: color-mix(in srgb, white 68%, var(--admin-marfin));
+  border-color: var(--admin-champagne);
+  box-shadow: 0 7px 22px rgba(122, 21, 38, 0.045);
+}
+
+.dash .cmCard:hover {
+  border-color: var(--admin-taupe);
+  box-shadow: 0 12px 30px rgba(122, 21, 38, 0.075);
+}
+
+.dash .cmCard strong {
+  color: var(--admin-cereja);
+}
+
+.dash .cmCard p,
+.dash .cmCardMeta span,
+.dash .cmColumnHead p,
+.dash .cmColumnEmpty,
+.dash .cmLoadingText,
+.dash .cmEditorIntro {
+  color: var(--admin-oliva);
+}
+
+.dash .cmCardStage {
+  color: var(--admin-cereja);
+}
+
+.dash .cmColumn {
+  background: color-mix(in srgb, var(--admin-champagne) 15%, var(--admin-marfin));
+  border-color: var(--admin-champagne);
+}
+
+.dash .cmColumn[data-over] {
+  background: color-mix(in srgb, var(--admin-oliva) 8%, var(--admin-marfin));
+  border-color: var(--admin-oliva);
+}
+
+.dash .cmColumnHead {
+  border-bottom-color: var(--admin-champagne);
+}
+
+.dash .cmColumnHead > span {
+  border-color: var(--admin-champagne);
+  color: var(--admin-cereja);
+}
+
+.dash .cmOverlay {
+  background: rgba(107, 105, 71, 0.28);
+  backdrop-filter: blur(6px);
+}
+
+.dash .cmEditor {
+  background: var(--admin-marfin);
+  box-shadow: -28px 0 70px rgba(122, 21, 38, 0.12);
+}
+
+.dash .cmEditorHead,
+.dash .cmEditorActions,
+.dash .cmPillarAdd,
+.dash .cmPillarRow {
+  border-color: var(--admin-champagne);
+}
+
+.dash .cmForm input,
+.dash .cmForm select,
+.dash .cmForm textarea,
+.dash .cmPillarAdd input,
+.dash .cmPillarRow input {
+  background: color-mix(in srgb, white 72%, var(--admin-marfin));
+  border-color: var(--admin-champagne);
+  color: var(--admin-oliva);
+}
+
+.dash .cmForm :is(input, select, textarea):focus,
+.dash .cmPillarAdd input:focus,
+.dash .cmPillarRow input:focus {
+  border-color: var(--admin-cereja);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--admin-cereja) 10%, transparent);
+}
+
+.dash .cmForm label > span,
+.dash .cmPillarAdd label > span,
+.dash .cmPillarListLabel {
+  color: var(--admin-cereja);
+}
+
+.dash .cmNavProgress {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--admin-cereja),
+    var(--admin-dourado),
+    transparent
+  );
+}
+
+.dash .routeLoad {
+  color: var(--admin-cereja);
+}
+
+@media (max-width: 959px) {
+  .dash .side {
+    border-right: 0;
+    border-bottom: 1px solid var(--admin-champagne);
+  }
+}
+
+
+.adminRouteLoading {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  min-height: min(62vh, 560px);
+  gap: 12px;
+  color: var(--admin-cereja);
+}
+
+.adminRouteLoading > span {
+  font-family: var(--font-admin-sans), Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+}
+
+.adminRouteLoading > div {
+  position: relative;
+  width: min(320px, 72vw);
+  height: 1px;
+  overflow: hidden;
+  background: var(--admin-champagne);
+}
+
+.adminRouteLoading > div i {
+  position: absolute;
+  inset: 0;
+  width: 46%;
+  background: linear-gradient(90deg, var(--admin-cereja), var(--admin-dourado));
+  animation: adminLoad 0.9s ease-in-out infinite alternate;
+}
+
+.adminRouteLoading p {
+  margin: 0;
+  font-family: var(--font-admin-serif), Georgia, serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+@keyframes adminLoad {
+  from { transform: translateX(-18%); }
+  to { transform: translateX(135%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adminRouteLoading > div i {
+    animation: none;
+    width: 100%;
+  }
+}
