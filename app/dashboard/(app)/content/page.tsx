@@ -68,6 +68,7 @@ export default async function ContentPage({
 
   return (
     <ContentManager
+      key={`${view}:${selectedDate}`}
       items={items}
       pillars={pillars}
       view={view}
