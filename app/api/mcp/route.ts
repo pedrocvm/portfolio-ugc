@@ -17,7 +17,7 @@ import {
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
-const OAUTH_SCOPES = ['openid', 'email', 'profile'];
+const OAUTH_SCOPES = ['email', 'profile'];
 const SECURITY = [{ type: 'oauth2' as const, scopes: OAUTH_SCOPES }];
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD.');
