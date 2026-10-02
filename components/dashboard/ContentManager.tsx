@@ -432,7 +432,7 @@ export default function ContentManager({
           {held ? (
             <div
               className="cmDragGhost"
-              ref={drag.ghost}
+              ref={drag.ghostRef}
               style={{ width: Math.max(held.w, 260), height: Math.max(held.h, 120) }}
               aria-hidden="true"
             >
