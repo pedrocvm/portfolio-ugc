@@ -92,26 +92,34 @@ const handler = createMcpHandler((server) => {
       title: 'Conta conectada',
       description: 'Mostra qual conta do CarolOS está ligada a esta conexão.',
       inputSchema: z.object({}),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
       },
-      _meta: { 'openai/profile': true },
+      outputSchema: z.object({
+        id: z.string(),
+        name: z.string().optional(),
+        email: z.string().email().optional(),
+      }),
+      _meta: {
+        securitySchemes: SECURITY,
+        'openai/profile': true,
+      },
     },
     async (_input, ctx) => {
       try {
         const identity = await identityFromContext(ctx);
-        return ok(
-          {
-            id: identity.appUser.id,
-            name: identity.appUser.displayName,
-            email: identity.appUser.email,
-          },
-          `Conectado ao CarolOS como ${identity.appUser.displayName}.`,
-        );
+        const profile = {
+          id: identity.appUser.id,
+          name: identity.appUser.displayName,
+          email: identity.appUser.email,
+        };
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify(profile) }],
+          structuredContent: profile,
+        };
       } catch (error) {
         return fail(error);
       }
@@ -125,13 +133,13 @@ const handler = createMcpHandler((server) => {
       description:
         'Lê os pilares atuais e as etapas disponíveis do Kanban antes de criar ou organizar conteúdo.',
       inputSchema: z.object({}),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
       },
+      _meta: { securitySchemes: SECURITY },
     },
     async (_input, ctx) => {
       try {
@@ -170,13 +178,13 @@ const handler = createMcpHandler((server) => {
         pillar_id: z.string().uuid().optional(),
         limit: z.number().int().min(1).max(250).optional(),
       }),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
       },
+      _meta: { securitySchemes: SECURITY },
     },
     async ({ from, to, stage, pillar_id, limit }, ctx) => {
       try {
@@ -202,13 +210,13 @@ const handler = createMcpHandler((server) => {
       title: 'Ler conteúdo',
       description: 'Lê um card completo, incluindo pilar, formato, assunto, roteiro, data e etapa.',
       inputSchema: z.object({ id: z.string().uuid() }),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
       },
+      _meta: { securitySchemes: SECURITY },
     },
     async ({ id }, ctx) => {
       try {
@@ -235,13 +243,13 @@ const handler = createMcpHandler((server) => {
         scheduled_for: dateSchema,
         stage: stageSchema.optional(),
       }),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: false,
         openWorldHint: false,
       },
+      _meta: { securitySchemes: SECURITY },
     },
     async ({ pillar_id, format, subject, script, scheduled_for, stage }, ctx) => {
       try {
@@ -276,13 +284,13 @@ const handler = createMcpHandler((server) => {
         scheduled_for: dateSchema.optional(),
         stage: stageSchema.optional(),
       }),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
       },
+      _meta: { securitySchemes: SECURITY },
     },
     async ({ id, pillar_id, format, subject, script, scheduled_for, stage }, ctx) => {
       try {
@@ -313,13 +321,13 @@ const handler = createMcpHandler((server) => {
         stage: stageSchema,
         scheduled_for: dateSchema.optional(),
       }),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
       },
+      _meta: { securitySchemes: SECURITY },
     },
     async ({ id, stage, scheduled_for }, ctx) => {
       try {
@@ -341,13 +349,13 @@ const handler = createMcpHandler((server) => {
       title: 'Excluir conteúdo',
       description: 'Exclui definitivamente um card do gerenciador de conteúdo.',
       inputSchema: z.object({ id: z.string().uuid() }),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: false,
         destructiveHint: true,
         idempotentHint: true,
         openWorldHint: false,
       },
+      _meta: { securitySchemes: SECURITY },
     },
     async ({ id }, ctx) => {
       try {
@@ -366,13 +374,13 @@ const handler = createMcpHandler((server) => {
       title: 'Criar pilar',
       description: 'Adiciona um novo pilar editorial ao CarolOS.',
       inputSchema: z.object({ name: z.string().trim().min(1).max(80) }),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: false,
         openWorldHint: false,
       },
+      _meta: { securitySchemes: SECURITY },
     },
     async ({ name }, ctx) => {
       try {
@@ -394,13 +402,13 @@ const handler = createMcpHandler((server) => {
         id: z.string().uuid(),
         name: z.string().trim().min(1).max(80),
       }),
-      securitySchemes: SECURITY,
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
       },
+      _meta: { securitySchemes: SECURITY },
     },
     async ({ id, name }, ctx) => {
       try {
