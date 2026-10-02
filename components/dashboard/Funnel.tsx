@@ -148,7 +148,7 @@ export default function Funnel({ brands }: { brands: Brand[] }) {
       {drag.held && heldBrand ? (
         <div
           className="fnGhost"
-          ref={drag.ghost}
+          ref={drag.ghostRef}
           style={{ width: drag.held.w, height: drag.held.h }}
           aria-hidden="true"
         >
