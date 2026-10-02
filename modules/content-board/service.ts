@@ -4,19 +4,25 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabaseServer } from '@/lib/supabase/server';
 import type { ContentBoardItem, ContentPillar, ContentStage } from './domain';
 
-// A migration entra junto com este módulo. O arquivo gerado de tipos é regenerado
-// depois que a migration estiver aplicada no projeto remoto.
+// A tabela de pilares foi adicionada depois do último snapshot de tipos.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ContentDb = SupabaseClient<any>;
 
 const contentDb = async () => (await supabaseServer()) as unknown as ContentDb;
 
-const SELECT =
-  'id, pillar, format, subject, script, scheduled_for, stage, position, created_at, updated_at';
+const ITEM_SELECT =
+  'id, pillar_id, format, subject, script, scheduled_for, stage, position, created_at, updated_at, pillar:content_pillar(id, name, position, active)';
+
+type RawPillar = {
+  id: string;
+  name: string;
+  position: number;
+  active: boolean;
+};
 
 type RawContentBoardItem = {
   id: string;
-  pillar: ContentPillar;
+  pillar_id: string | null;
   format: string;
   subject: string;
   script: string;
@@ -25,11 +31,13 @@ type RawContentBoardItem = {
   position: number;
   created_at: string;
   updated_at: string;
+  pillar: RawPillar | null;
 };
 
 const toItem = (row: RawContentBoardItem): ContentBoardItem => ({
   id: row.id,
-  pillar: row.pillar,
+  pillarId: row.pillar_id ?? '',
+  pillarName: row.pillar?.name ?? 'Pilar não definido',
   format: row.format,
   subject: row.subject,
   script: row.script,
@@ -40,6 +48,70 @@ const toItem = (row: RawContentBoardItem): ContentBoardItem => ({
   updatedAt: row.updated_at,
 });
 
+export async function listContentPillars(): Promise<ContentPillar[]> {
+  const db = await contentDb();
+  const { data, error } = await db
+    .from('content_pillar')
+    .select('id, name, position, active')
+    .eq('active', true)
+    .order('position')
+    .order('created_at');
+
+  if (error) throw new Error(`Falha ao ler os pilares: ${error.message}`);
+  return (data ?? []) as ContentPillar[];
+}
+
+export async function createContentPillar(
+  name: string,
+): Promise<{ ok: true; pillar: ContentPillar } | { ok: false; error: string }> {
+  const db = await contentDb();
+
+  const { data: last } = await db
+    .from('content_pillar')
+    .select('position')
+    .order('position', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const { data, error } = await db
+    .from('content_pillar')
+    .insert({
+      name: name.trim(),
+      position: (last?.position ?? -1) + 1,
+      active: true,
+      updated_at: new Date().toISOString(),
+    })
+    .select('id, name, position, active')
+    .maybeSingle();
+
+  if (error || !data) {
+    if (error?.code === '23505') return { ok: false, error: 'Já existe um pilar com esse nome.' };
+    return { ok: false, error: error?.message ?? 'Não foi possível adicionar o pilar.' };
+  }
+
+  return { ok: true, pillar: data as ContentPillar };
+}
+
+export async function renameContentPillar(
+  id: string,
+  name: string,
+): Promise<{ ok: true; pillar: ContentPillar } | { ok: false; error: string }> {
+  const db = await contentDb();
+  const { data, error } = await db
+    .from('content_pillar')
+    .update({ name: name.trim(), updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('id, name, position, active')
+    .maybeSingle();
+
+  if (error || !data) {
+    if (error?.code === '23505') return { ok: false, error: 'Já existe um pilar com esse nome.' };
+    return { ok: false, error: error?.message ?? 'Não foi possível renomear o pilar.' };
+  }
+
+  return { ok: true, pillar: data as ContentPillar };
+}
+
 export async function listContentBoard(input: {
   from: string;
   to: string;
@@ -47,7 +119,7 @@ export async function listContentBoard(input: {
   const db = await contentDb();
   const { data, error } = await db
     .from('content_board_item')
-    .select(SELECT)
+    .select(ITEM_SELECT)
     .gte('scheduled_for', input.from)
     .lte('scheduled_for', input.to)
     .order('scheduled_for')
@@ -60,7 +132,7 @@ export async function listContentBoard(input: {
 
 export async function saveContentBoardItem(input: {
   id?: string;
-  pillar: ContentPillar;
+  pillarId: string;
   format: string;
   subject: string;
   script: string;
@@ -70,7 +142,7 @@ export async function saveContentBoardItem(input: {
   const db = await contentDb();
 
   const row = {
-    pillar: input.pillar,
+    pillar_id: input.pillarId,
     format: input.format.trim(),
     subject: input.subject.trim(),
     script: input.script,
@@ -84,7 +156,7 @@ export async function saveContentBoardItem(input: {
       .from('content_board_item')
       .update(row)
       .eq('id', input.id)
-      .select(SELECT)
+      .select(ITEM_SELECT)
       .maybeSingle();
 
     if (error || !data) {
@@ -106,7 +178,7 @@ export async function saveContentBoardItem(input: {
   const { data, error } = await db
     .from('content_board_item')
     .insert({ ...row, position: (last?.position ?? -1) + 1 })
-    .select(SELECT)
+    .select(ITEM_SELECT)
     .maybeSingle();
 
   if (error || !data) {
