@@ -277,6 +277,7 @@ export default function ContentManager({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<ContentBoardItem | null | undefined>(undefined);
+  const [editorDate, setEditorDate] = useState(selectedDate);
   const [moveError, setMoveError] = useState('');
   const [moving, startMove] = useTransition();
   const boardRef = useRef<HTMLDivElement>(null);
@@ -317,7 +318,10 @@ export default function ContentManager({
   const held = drag.held;
   const heldItem = held ? items.find((item) => item.id === held.id) ?? null : null;
 
-  const openNew = () => setEditing(null);
+  const openNew = (date = selectedDate) => {
+    setEditorDate(date);
+    setEditing(null);
+  };
   const closeEditor = () => setEditing(undefined);
   const saved = () => {
     closeEditor();
@@ -335,7 +339,7 @@ export default function ContentManager({
           <h1>{view === 'week' ? 'Semana editorial' : formatDay(selectedDate, { weekday: 'long', day: 'numeric', month: 'long' })}</h1>
         </div>
 
-        <button type="button" className="cmPrimary" onClick={openNew}>
+        <button type="button" className="cmPrimary" onClick={() => openNew()}>
           Novo conteúdo
         </button>
       </header>
@@ -380,10 +384,7 @@ export default function ContentManager({
                   ))}
 
                   {!dayItems.length ? (
-                    <button className="cmEmptyDay" type="button" onClick={() => {
-                      router.push(href('week', day));
-                      setEditing(null);
-                    }}>
+                    <button className="cmEmptyDay" type="button" onClick={() => openNew(day)}>
                       + adicionar
                     </button>
                   ) : null}
@@ -446,7 +447,7 @@ export default function ContentManager({
         <Editor
           key={editing?.id ?? `new-${selectedDate}`}
           item={editing}
-          date={selectedDate}
+          date={editing?.scheduledFor ?? editorDate}
           onClose={closeEditor}
           onSaved={saved}
         />
