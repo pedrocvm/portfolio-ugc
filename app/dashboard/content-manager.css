@@ -1,1 +1,583 @@
-/* Content manager styles. */
+/* Gerenciador editorial manual. */
+
+.cm { padding: 34px 0 0; }
+
+.cmTop,
+.cmToolbar,
+.cmEditorHead,
+.cmEditorActions,
+.cmColumnHead,
+.cmCardMeta {
+  display: flex;
+  align-items: center;
+}
+
+.cmTop {
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 28px;
+}
+
+.cmTop h1 {
+  margin-top: 4px;
+  font-size: clamp(34px, 5vw, 62px);
+  letter-spacing: -0.045em;
+}
+
+.cmEyebrow {
+  display: block;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  font-weight: 560;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+
+.cmPrimary,
+.cmGhostBtn,
+.cmDelete,
+.cmClose,
+.cmDateNav a,
+.cmViewSwitch a,
+.cmEmptyDay,
+.cmGrip {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+}
+
+.cmPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--tinta);
+  background: var(--tinta);
+  color: var(--papel);
+  text-decoration: none;
+  transition: transform var(--t-instant) var(--ease), background var(--t-fast) var(--ease);
+}
+
+.cmPrimary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--ferro);
+}
+
+.cmPrimary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.cmToolbar {
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--areia2);
+}
+
+.cmViewSwitch {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  background: var(--areia);
+  border: 1px solid var(--areia2);
+}
+
+.cmViewSwitch a {
+  min-width: 88px;
+  padding: 8px 14px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: var(--tinta3);
+}
+
+.cmViewSwitch a[aria-current='page'] {
+  background: var(--papel);
+  color: var(--tinta);
+  box-shadow: 0 1px 0 rgba(25, 23, 20, 0.06);
+}
+
+.cmDateNav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cmDateNav a {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid transparent;
+  color: var(--tinta2);
+  text-decoration: none;
+  font-size: 24px;
+}
+
+.cmDateNav a:hover {
+  border-color: var(--areia2);
+  color: var(--tinta);
+}
+
+.cmDateNav .cmToday {
+  min-width: auto;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.cmCalendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  min-width: 1080px;
+  border-top: 1px solid var(--areia2);
+  border-left: 1px solid var(--areia2);
+}
+
+.cm:has(.cmCalendar) {
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.cmDay {
+  min-height: 520px;
+  border-right: 1px solid var(--areia2);
+  border-bottom: 1px solid var(--areia2);
+  background: color-mix(in srgb, var(--papel) 94%, var(--areia));
+}
+
+.cmDay[data-selected] { background: var(--papel); }
+
+.cmDayHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 70px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--areia2);
+  text-decoration: none;
+}
+
+.cmDayHead span {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+
+.cmDayHead strong {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.cmDayCards {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 10px;
+}
+
+.cmCard {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--areia2);
+  box-shadow: 0 4px 18px rgba(25, 23, 20, 0.035);
+  transition: transform var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+
+.cmCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--umbra);
+}
+
+.cmCard[data-pillar='braga']::before { background: var(--jade-escuro); }
+.cmCard[data-pillar='a_fundo']::before { background: var(--tinta); }
+.cmCard[data-pillar='personal']::before { background: var(--pedra); }
+
+.cmCard:hover {
+  transform: translateY(-1px);
+  border-color: var(--pedra-clara);
+  box-shadow: 0 10px 26px rgba(25, 23, 20, 0.065);
+}
+
+.cmCardBody {
+  display: block;
+  width: 100%;
+  padding: 15px 42px 14px 16px;
+  text-align: left;
+  color: var(--tinta);
+}
+
+.cmCard[data-compact] .cmCardBody { padding: 11px 12px 12px 14px; }
+
+.cmCardMeta {
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  margin-bottom: 7px;
+}
+
+.cmCardMeta span {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--tinta3);
+}
+
+.cmCardMeta span + span::before {
+  content: '·';
+  margin-right: 8px;
+  color: var(--pedra);
+}
+
+.cmCard strong {
+  display: block;
+  font-family: var(--disp);
+  font-variation-settings: var(--wide);
+  font-size: 17px;
+  font-weight: 560;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+}
+
+.cmCard[data-compact] strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.cmCard p {
+  margin: 9px 0 12px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--tinta2);
+}
+
+.cmCardStage {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 11px;
+  color: var(--umbra);
+}
+
+.cmGrip {
+  position: absolute;
+  top: 10px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  width: 32px;
+  height: 36px;
+  color: var(--pedra);
+  cursor: grab;
+  touch-action: none;
+}
+
+.cmGrip:active { cursor: grabbing; }
+
+.cmGrip i {
+  display: block;
+  width: 13px;
+  height: 1px;
+  background: currentColor;
+}
+
+.cmEmptyDay {
+  min-height: 50px;
+  border: 1px dashed var(--areia2);
+  color: var(--tinta3);
+  font-size: 12px;
+}
+
+.cmEmptyDay:hover {
+  color: var(--tinta);
+  border-color: var(--pedra);
+}
+
+.cmBoard {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(270px, 310px);
+  gap: 12px;
+  min-height: 580px;
+  padding: 2px 2px 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+}
+
+.cmBoard[data-moving] { opacity: 0.84; }
+
+.cmColumn {
+  display: flex;
+  flex-direction: column;
+  min-height: 560px;
+  padding: 0 10px 12px;
+  background: color-mix(in srgb, var(--areia) 52%, transparent);
+  border: 1px solid var(--areia2);
+  scroll-snap-align: start;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.cmColumn[data-over] {
+  background: var(--realceLeve);
+  border-color: var(--umbra);
+}
+
+.cmColumnHead {
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 96px;
+  padding: 15px 4px 12px;
+  border-bottom: 1px solid var(--areia2);
+}
+
+.cmColumnHead h2 { font-size: 22px; }
+
+.cmColumnHead p {
+  max-width: 28ch;
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--tinta3);
+}
+
+.cmColumnHead > span {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 7px;
+  border: 1px solid var(--areia2);
+  border-radius: 999px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+}
+
+.cmColumnCards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  padding-top: 10px;
+}
+
+.cmColumnEmpty {
+  margin: 4px 0 0;
+  padding: 18px 10px;
+  border: 1px dashed var(--areia2);
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--tinta3);
+}
+
+.cmDragGhost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  max-width: 310px;
+  padding: 18px;
+  pointer-events: none;
+  background: var(--papel);
+  border: 1px solid var(--umbra);
+  box-shadow: 0 18px 50px rgba(25, 23, 20, 0.18);
+  font-family: var(--disp);
+  font-size: 16px;
+  transform: translate3d(-1000px, -1000px, 0);
+}
+
+.cmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  justify-items: end;
+  background: rgba(25, 23, 20, 0.46);
+  backdrop-filter: blur(5px);
+}
+
+.cmEditor {
+  width: min(680px, 100%);
+  height: 100dvh;
+  overflow-y: auto;
+  padding: 28px clamp(20px, 4vw, 42px) 32px;
+  background: var(--papel);
+  box-shadow: -24px 0 70px rgba(25, 23, 20, 0.18);
+  animation: cmSlide var(--t-normal) var(--exp) both;
+}
+
+@keyframes cmSlide {
+  from {
+    transform: translateX(28px);
+    opacity: 0;
+  }
+}
+
+.cmEditorHead {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--areia2);
+}
+
+.cmEditorHead h2 {
+  margin-top: 5px;
+  font-size: clamp(30px, 5vw, 48px);
+}
+
+.cmClose {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  font-size: 30px;
+  font-weight: 300;
+  color: var(--tinta2);
+}
+
+.cmForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.cmForm label { min-width: 0; }
+
+.cmForm label > span {
+  display: block;
+  margin-bottom: 7px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  font-weight: 560;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+
+.cmForm input,
+.cmForm select,
+.cmForm textarea {
+  width: 100%;
+  border: 1px solid var(--areia2);
+  background: #fff;
+  color: var(--tinta);
+  outline: none;
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+
+.cmForm input,
+.cmForm select {
+  min-height: 46px;
+  padding: 0 12px;
+}
+
+.cmForm textarea {
+  min-height: 330px;
+  padding: 13px 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.cmForm input:focus,
+.cmForm select:focus,
+.cmForm textarea:focus {
+  border-color: var(--umbra);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--umbra) 10%, transparent);
+}
+
+.cmWide { grid-column: 1 / -1; }
+
+.cmEditorActions {
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--areia2);
+}
+
+.cmEditorActions > div {
+  display: flex;
+  gap: 8px;
+}
+
+.cmGhostBtn,
+.cmDelete {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--areia2);
+  background: transparent;
+}
+
+.cmDelete {
+  border-color: transparent;
+  color: var(--alerta);
+}
+
+.cmDelete:hover { background: var(--alertaLeve); }
+
+.cmError {
+  margin: 14px 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--alerta);
+  background: var(--alertaLeve);
+  color: var(--alerta);
+  font-size: 14px;
+}
+
+@media (max-width: 959px) {
+  .cm { padding-top: 24px; }
+  .cmTop { align-items: flex-end; }
+  .cmTop h1 { font-size: clamp(32px, 9vw, 48px); }
+  .cmCalendar { min-width: 980px; }
+  .cmBoard {
+    grid-auto-columns: minmax(82vw, 340px);
+    min-height: 520px;
+  }
+  .cmEditor { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 620px) {
+  .cmTop {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .cmTop .cmPrimary { align-self: flex-start; }
+  .cmToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .cmDateNav { justify-content: space-between; }
+  .cmForm { grid-template-columns: 1fr; }
+  .cmWide { grid-column: auto; }
+  .cmEditor { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmEditor { animation: none; }
+}
