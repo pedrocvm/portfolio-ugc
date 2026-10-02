@@ -39,8 +39,8 @@
 .cmGhostBtn,
 .cmDelete,
 .cmClose,
-.cmDateNav a,
-.cmViewSwitch a,
+.cmDateNav button,
+.cmViewSwitch button,
 .cmEmptyDay,
 .cmGrip {
   font-family: var(--disp);
@@ -86,7 +86,7 @@
   border: 1px solid var(--areia2);
 }
 
-.cmViewSwitch a {
+.cmViewSwitch button {
   min-width: 88px;
   padding: 8px 14px;
   text-align: center;
@@ -95,7 +95,7 @@
   color: var(--tinta3);
 }
 
-.cmViewSwitch a[aria-current='page'] {
+.cmViewSwitch button[data-active] {
   background: var(--papel);
   color: var(--tinta);
   box-shadow: 0 1px 0 rgba(25, 23, 20, 0.06);
@@ -107,7 +107,7 @@
   gap: 4px;
 }
 
-.cmDateNav a {
+.cmDateNav button {
   display: grid;
   place-items: center;
   min-width: 40px;
@@ -118,7 +118,7 @@
   font-size: 24px;
 }
 
-.cmDateNav a:hover {
+.cmDateNav button:hover {
   border-color: var(--areia2);
   color: var(--tinta);
 }
@@ -200,12 +200,8 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 3px;
-  background: var(--umbra);
+  background: var(--pillar-accent, var(--umbra));
 }
-
-.cmCard[data-pillar='braga']::before { background: var(--jade-escuro); }
-.cmCard[data-pillar='a_fundo']::before { background: var(--tinta); }
-.cmCard[data-pillar='personal']::before { background: var(--pedra); }
 
 .cmCard:hover {
   transform: translateY(-1px);
@@ -580,4 +576,193 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cmEditor { animation: none; }
+}
+
+
+.cmTopActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cmNavProgress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-toast);
+  width: 100%;
+  height: 2px;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, var(--umbra), transparent);
+  transform: translateX(-100%);
+}
+
+.cm[data-navigating] .cmNavProgress {
+  opacity: 1;
+  animation: cmProgress 1s ease-in-out infinite;
+}
+
+@keyframes cmProgress {
+  0% { transform: translateX(-100%); }
+  55% { transform: translateX(20%); }
+  100% { transform: translateX(100%); }
+}
+
+.cmLoadingText {
+  margin: -8px 0 12px;
+  font-size: 12px;
+  color: var(--tinta3);
+}
+
+.cmViewSwitch button,
+.cmDateNav button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cmViewSwitch button:focus-visible,
+.cmDateNav button:focus-visible,
+.cmDayHead:focus-visible {
+  outline: 2px solid var(--umbra);
+  outline-offset: 2px;
+}
+
+.cmDateNav button:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.cmDayHead {
+  width: 100%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.cmEditorIntro {
+  max-width: 48ch;
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--tinta2);
+}
+
+.cmPillarManager {
+  width: min(620px, 100%);
+}
+
+.cmPillarAdd {
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--areia2);
+}
+
+.cmPillarAdd label > span,
+.cmPillarListLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  font-weight: 560;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+
+.cmPillarAdd label > div {
+  display: flex;
+  gap: 8px;
+}
+
+.cmPillarAdd input,
+.cmPillarRow input {
+  min-width: 0;
+  min-height: 46px;
+  border: 1px solid var(--areia2);
+  background: #fff;
+  padding: 0 12px;
+  outline: none;
+}
+
+.cmPillarAdd input {
+  flex: 1;
+}
+
+.cmPillarAdd input:focus,
+.cmPillarRow input:focus {
+  border-color: var(--umbra);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--umbra) 10%, transparent);
+}
+
+.cmPillarList {
+  padding-top: 24px;
+}
+
+.cmPillarRow {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--areia2);
+}
+
+.cmPillarDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--pillar-dot, var(--umbra));
+}
+
+.cmMiniBtn {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--areia2);
+  background: transparent;
+  font-family: var(--disp);
+  font-size: 13px;
+}
+
+.cmMiniBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.cmPillarError {
+  grid-column: 2 / -1;
+  margin: 0;
+  font-size: 12px;
+  color: var(--alerta);
+}
+
+@media (max-width: 620px) {
+  .cmTopActions {
+    width: 100%;
+  }
+
+  .cmTopActions > * {
+    flex: 1;
+  }
+
+  .cmPillarAdd label > div {
+    flex-direction: column;
+  }
+
+  .cmPillarRow {
+    grid-template-columns: 12px minmax(0, 1fr);
+  }
+
+  .cmPillarRow .cmMiniBtn {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cm[data-navigating] .cmNavProgress {
+    animation: none;
+    transform: none;
+  }
 }
