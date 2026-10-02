@@ -380,7 +380,7 @@ function PillarManager({
             <span className="cmEyebrow">Estrutura editorial</span>
             <h2>Pilares</h2>
             <p className="cmEditorIntro">
-              Os quatro pilares iniciais continuam aqui, mas a lista agora é tua. Novos pilares
+              Os quatro pilares iniciais continuam aqui, mas a lista agora pode ser gerida neste espaço. Novos pilares
               passam a aparecer imediatamente no formulário de conteúdo.
             </p>
           </div>
