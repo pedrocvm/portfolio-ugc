@@ -315,9 +315,6 @@ export default function ContentManager({
     boardRef,
   );
 
-  const held = drag.held;
-  const heldItem = held ? items.find((item) => item.id === held.id) ?? null : null;
-
   const openNew = (date = selectedDate) => {
     setEditorDate(date);
     setEditing(null);
@@ -430,16 +427,7 @@ export default function ContentManager({
             })}
           </div>
 
-          {held ? (
-            <div
-              className="cmDragGhost"
-              ref={drag.ghostRef}
-              style={{ width: Math.max(held.w, 260), height: Math.max(held.h, 120) }}
-              aria-hidden="true"
-            >
-              {heldItem?.subject ?? 'Conteúdo'}
-            </div>
-          ) : null}
+
         </>
       )}
 
