@@ -1,5 +1,5 @@
 import './dashboard.css';
-import './content-brain.css';
+import './content-manager.css';
 
 export default function DashboardLayout({
   children,

@@ -21,6 +21,9 @@ export function useBoardDrag(
   const [zone, setZone] = useState<string | null>(null);
 
   const ghost = useRef<HTMLDivElement>(null);
+  const ghostRef = useCallback((node: HTMLDivElement | null) => {
+    ghost.current = node;
+  }, []);
   const pos = useRef({ x: 0, y: 0 });
   const grip = useRef({ dx: 0, dy: 0 });
   const timer = useRef<number | null>(null);
@@ -130,5 +133,5 @@ export function useBoardDrag(
     [held, onDrop, stop],
   );
 
-  return { held, zone, ghost, onPointerDown, onPointerMove, onPointerUp, cancel: stop };
+  return { held, zone, ghostRef, onPointerDown, onPointerMove, onPointerUp, cancel: stop };
 }
