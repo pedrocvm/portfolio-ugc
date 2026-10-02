@@ -1,9 +1,9 @@
-import Spinner from '@/components/dashboard/Spinner';
-
 export default function Loading() {
   return (
-    <div className="routeLoad">
-      <Spinner label="A abrir" />
+    <div className="adminRouteLoading" role="status" aria-live="polite">
+      <span>CAROL / ÁREA PRIVADA</span>
+      <div aria-hidden="true"><i /></div>
+      <p>A carregar…</p>
     </div>
   );
 }
