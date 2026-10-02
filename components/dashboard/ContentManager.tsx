@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   addContentPillar,
@@ -295,7 +295,6 @@ function PillarRow({
   const [pending, startTransition] = useTransition();
   const changed = name.trim() !== pillar.name;
 
-  useEffect(() => setName(pillar.name), [pillar.name]);
 
   const save = () => {
     if (!changed) return;
@@ -414,7 +413,7 @@ function PillarManager({
         <div className="cmPillarList">
           <span className="cmPillarListLabel">Pilares atuais</span>
           {pillars.map((pillar) => (
-            <PillarRow key={pillar.id} pillar={pillar} onChanged={onChanged} />
+            <PillarRow key={`${pillar.id}:${pillar.name}`} pillar={pillar} onChanged={onChanged} />
           ))}
         </div>
       </section>
@@ -444,13 +443,6 @@ export default function ContentManager({
   const [moving, startMove] = useTransition();
   const [navigating, startNavigation] = useTransition();
   const boardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setActiveView(view);
-    setActiveDate(selectedDate);
-  }, [view, selectedDate]);
-
-  useEffect(() => setLocalPillars(pillars), [pillars]);
 
   const loadedStart = weekStart(selectedDate);
   const loadedEnd = addDays(loadedStart, 6);
