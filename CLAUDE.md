@@ -31,7 +31,8 @@ A estratégia atual vive em `modules/content-brain/`.
 
 Regras obrigatórias:
 
-- pilares reais: UGC como fonte de renda, Experiências, Casa;
+- temas centrais são dados em `content_pillar`; iniciais UGC como fonte de renda, Braga a fundo, Casa e rotina, Sobre mim;
+- classificação atual de referências usa Tema central, Assunto, Zona e Formato; Z1 Atração, Z2 Retenção, Z3 Conexão, Z4 Comunidade;
 - Tech UGC e Canvas UGC são modalidades comerciais, não formatos;
 - foco comercial: SaaS e apps que atendem negócios locais;
 - 3 posts por semana é a capacidade padrão;
@@ -44,6 +45,10 @@ Regras obrigatórias:
 - aprendizado precisa voltar ao Motor para ter valor.
 
 Não escreva regras editoriais concorrentes em prompts, componentes ou outros módulos.
+
+O contexto atual para aplicação de referências vive em `modules/content-brain/saved-reference-context.ts`, combinado com os temas ativos, conteúdo recente e a rotina editável do CMS. Os prompts antigos de três pilares são históricos e não governam esse fluxo.
+
+Referências são uma subárea de Conteúdo. O conector de Salvos usa sincronização periódica não oficial; Supabase Realtime atualiza a interface depois da ingestão. Nunca afirmar sincronização instantânea da origem nem conexão ativa sem heartbeat. A sessão Instagram fica apenas no conector local. A conversão em conteúdo exige revisão da Carol e cria somente a etapa `idea`.
 
 ### Arquitetura
 

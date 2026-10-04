@@ -22,6 +22,8 @@ jobs:
       # corre à parte: uma chamada a um modelo por commit seria cara, lenta e
       # instável o suficiente para tornar o CI numa moeda ao ar.
       - run: npm run test
+      # Contratos e recuperação do conector, sem login nem acesso ao Instagram.
+      - run: python3 -m unittest discover -s tools/instagram-saves-bridge -p 'test_*.py'
       # o build avalia lib/supabase/config.ts, que exige as variáveis. Aqui não
       # se fala com a base: os valores só têm de existir e ser válidos.
       - run: npm run build

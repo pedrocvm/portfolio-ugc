@@ -22,4 +22,9 @@ pnpm-workspace.yaml
 
 # originais dos vídeos antes de serem reencodados; ficam só nesta máquina
 .media-backup/
+
+# CLI state and local Python connector runtime
 supabase/.temp/
+__pycache__/
+*.pyc
+.venv/

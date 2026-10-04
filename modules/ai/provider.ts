@@ -109,7 +109,7 @@ function gemini(apiKey: string): Provider {
   return {
     id: 'gemini',
 
-    async structured({ model, system, user, jsonSchema, maxTokens, images }) {
+    async structured({ model, system, user, jsonSchema, maxTokens, images, signal }) {
       const res = await ai.models.generateContent({
         model,
         contents: [
@@ -123,6 +123,7 @@ function gemini(apiKey: string): Provider {
         ],
         config: {
           systemInstruction: system,
+          abortSignal: signal,
           maxOutputTokens: maxTokens,
           responseMimeType: 'application/json',
           responseSchema: toGeminiSchema(jsonSchema) as never,

@@ -1,6 +1,6 @@
 # portfolio-ugc · CarolOS
 
-Uma aplicação, duas superfícies:
+Uma aplicação, duas superfícies
 
 - **carolqueiroz.pt**, o portfólio público da Carol;
 - **CarolOS**, a área privada de estratégia e produção de conteúdo.
@@ -11,46 +11,36 @@ Next.js App Router + TypeScript + Supabase, com deploy na Vercel.
 
 O CarolOS foi reduzido de propósito.
 
-A Carol não usava o CRM, inbox, prospecção, funil, dinheiro, pricing, direitos ou a operação comercial que existia antes. Essas superfícies saíram do produto. O que continua é o que ela realmente usa ou decidiu usar agora:
+A Carol não usava o CRM, inbox, prospecção, funil, dinheiro, pricing, direitos ou a operação comercial que existia antes. Essas superfícies saíram do produto. O que continua é o que ela realmente usa ou decidiu usar agora.
 
-- **Conteúdo**: Semana, Mapa, Produção, Laboratório e Auditoria;
-- **O site**: editor, biblioteca de mídia e links do portfólio público.
+- **Conteúdo** com calendário semanal, Kanban diário e referências salvas;
+- **O site** com editor, biblioteca de mídia e links do portfólio público.
 
 Não reintroduza uma área antiga só porque o código histórico ainda existe. Uma feature volta apenas depois de existir uso real para ela.
 
 ## Conteúdo
 
-A fonte de verdade funcional é a estratégia de conteúdo consolidada em 28/09/2026.
+O gerenciador atual usa `content_board_item` e temas centrais gerenciáveis em `content_pillar`. A Carol pode adicionar temas sem novo deploy.
 
-O fluxo é:
+Os quatro temas iniciais são UGC como fonte de renda, Braga a fundo, Casa e rotina e Sobre mim. Cada aplicação de referência define **Tema central, Assunto, Zona e Formato** antes do refinamento do gancho e do roteiro.
 
-```
-Mapa editorial
-  → Motor de Prioridades
-  → três propostas da semana
-  → validação da Carol
-  → Production Pack
-  → validação do material
-  → produção
-  → publicação
-  → Instagram / métricas
-  → aprendizado
-  → próxima semana
-```
+As zonas são Z1 Atração, Z2 Retenção, Z3 Conexão e Z4 Comunidade. Elas descrevem a função do conteúdo no perfil pessoal. Tech UGC e Canvas UGC são modalidades comerciais, com foco em SaaS e aplicativos para negócios locais.
 
-Cinco dimensões permanecem separadas:
+Referências analisadas permanecem na área de referências. A Carol revisa a proposta, escolhe a data e cria um rascunho na etapa Ideia. A importação não publica nem preenche o calendário automaticamente.
 
-- **pilar**: UGC como fonte de renda, Experiências, Casa;
-- **objetivo**: Atrair, Reter, Provar, Converter;
-- **lente**: Quem sou, Como penso, O que faço;
-- **formato**: Reel, carrossel, sequência de fotos, Stories etc.;
-- **modalidade comercial**: Tech UGC, Canvas UGC ou nenhuma.
+## Referências do Instagram
 
-Tech UGC e Canvas UGC têm o mesmo peso inicial. O foco comercial é SaaS e apps que atendem negócios locais.
+A área `/dashboard/content/references` reúne links, legendas, transcrições, leitura das imagens e aplicação prática ao contexto atual da Carol.
 
-A capacidade padrão é **3 posts por semana**. Quatro não é obrigação.
+O conector local acompanha uma coleção escolhida nos Salvos a cada cinco minutos. É uma integração não oficial e depende de um processo ligado com a sessão da própria conta. O CMS usa Supabase Realtime para exibir o material recebido e a evolução da análise. A sessão Instagram não é enviada ao CMS.
 
-Nenhuma peça chega a “pronto para produzir” sem validação humana.
+Também é possível adicionar um link e enviar a mídia diretamente pela interface. Links sem mídia ou texto suficiente continuam identificados como referências que precisam de material.
+
+A busca e os filtros consultam o histórico completo. A interface mostra 60 referências por página e mantém o item aberto enquanto a lista é atualizada.
+
+O contexto vem dos temas ativos, dos conteúdos recentes e de **Minha rotina agora**, editável pela Carol. Transcrição, legenda, texto visível e limitações permanecem separados. A leitura e a análise usam as credenciais de IA já configuradas no servidor.
+
+Consulte o [guia de instalação e operação](docs/instagram-saved-references.md) para configurar o conector. As ferramentas MCP `list_saved_references` e `get_saved_reference` permitem consultar o mesmo material pelo ChatGPT com a sessão do CarolOS.
 
 ## Desenvolvimento
 
@@ -66,10 +56,11 @@ npm run dev
 npm run typecheck
 npm run lint
 npm run test
+python3 -B -m unittest discover -s tools/instagram-saves-bridge -p 'test_*.py'
 npm run build
 ```
 
-A avaliação contra modelo real fica fora do CI:
+A avaliação contra modelo real fica fora do CI.
 
 ```bash
 npm run eval:content
@@ -85,13 +76,15 @@ app/
     site/                       editor do site público
   api/
     integrations/instagram/     OAuth, callbacks e webhook da Meta
-    jobs/[job]/                 trabalhos de conteúdo
+    references/                 ingestão autenticada e mídia privada
+    jobs/[job]/                 rotas históricas, sem reativar agendamentos
     track/                      analytics do site
 
 modules/
   content-brain/                estratégia, prioridade, produção, auditoria, aprendizado
   integrations/instagram/       único cliente da Graph API
-  jobs/                         apenas jobs ainda usados pelo Conteúdo
+  saved-references/             referências, evidência, adaptação e fila
+  jobs/                         implementação histórica de agendamentos
 
 lib/
   content-store.ts              conteúdo publicado e rascunho do site
@@ -100,36 +93,17 @@ lib/
 supabase/migrations/            histórico aditivo; migrations antigas não são apagadas
 ```
 
-## Instagram
+## Integrações históricas
 
-A integração Meta é parte estrutural do novo CarolOS.
+A integração Meta e os módulos antigos permanecem no repositório quando removê-los acrescentaria risco. Sua presença não autoriza reabrir áreas nem reativar agendamentos do produto anterior. A coleção privada de Salvos usa o conector local descrito acima.
 
-Ela alimenta:
-
-- mídia e Stories;
-- snapshots;
-- Auditoria;
-- qualidade da comunidade;
-- experimentos;
-- learning loop.
-
-Ausência de métrica continua sendo `NULL`, nunca zero.
-
-Trial Reel não é inferido pela API. Quando existir, é fato do próprio CarolOS.
+Ausência de métrica continua sendo `NULL`, nunca zero. Trial Reel não é inferido pela API.
 
 ## Trabalhos de fundo
 
-O agendador mantém apenas:
+Os agendamentos históricos foram desativados na simplificação do CarolOS. Esta alteração mantém essa decisão.
 
-- sincronização do Instagram;
-- renovação do token;
-- leitura da comunidade;
-- aprendizado;
-- auditoria;
-- montagem semanal;
-- reconciliação de disparos.
-
-O relógio continua no Supabase com `pg_cron` + `pg_net`. Não adicionar cron da Vercel em paralelo.
+Referências usam uma fila persistente. A ingestão e as consultas autenticadas do CMS acionam o processamento com `after()`, limitado a dois trabalhos simultâneos no banco. Os sinais do conector e novas visitas retomam itens pendentes. Nenhum cron adicional foi criado.
 
 ## Banco
 
@@ -137,7 +111,7 @@ Migrações são aditivas e ordenadas.
 
 Não apagar migrations antigas para “limpar” o CRM removido. Elas fazem parte da história da base e precisam continuar reproduzíveis. Código e UI podem desaparecer sem reescrever o passado do banco.
 
-Depois de aplicar `20260928001_carolos_content_strategy.sql` e as migrations posteriores, regenerar os tipos:
+Depois de aplicar novas migrations, regenerar os tipos.
 
 ```bash
 npm run db:types
@@ -147,7 +121,8 @@ npm run db:types
 
 - nenhum segredo no repositório;
 - service role somente no servidor;
-- tokens de integração nunca chegam ao browser;
+- credenciais dos provedores e sessão do Instagram não chegam ao navegador;
+- a chave restrita do conector aparece somente no momento em que é gerada;
 - a área privada exige sessão;
 - nada publica conteúdo automaticamente em nome da Carol;
 - o site público lê somente conteúdo publicado.

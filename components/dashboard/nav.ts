@@ -9,6 +9,7 @@ export type NavItem = {
   href: string;
   label: string;
   quiet?: boolean;
+  exact?: boolean;
 };
 
 export type Section = {
@@ -23,14 +24,17 @@ export const SECTIONS: readonly Section[] = [
     id: 'content',
     label: 'Conteúdo',
     href: '/dashboard/content',
-    items: [],
+    items: [
+      { href: '/dashboard/content', label: 'Calendário', exact: true },
+      { href: '/dashboard/content/references', label: 'Referências' },
+    ],
   },
   {
     id: 'site',
     label: 'O site',
     href: '/dashboard/site',
     items: [
-      { href: '/dashboard/site', label: 'Editor' },
+      { href: '/dashboard/site', label: 'Editor', exact: true },
       { href: '/dashboard/site/library', label: 'Biblioteca' },
       { href: '/dashboard/site/links', label: 'Links' },
     ],
