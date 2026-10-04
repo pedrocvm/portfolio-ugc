@@ -6,7 +6,9 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!await currentUser()) return NextResponse.json({ error: 'Entre no CarolOS para ver esse arquivo.' }, { status: 401 });
+  if (!await currentUser()) return NextResponse.json({ error: 'Entre no CarolOS para ver esse arquivo.' }, {
+    status: 401, headers: { 'Cache-Control': 'private, no-store' },
+  });
   const { id } = await context.params;
   const index = Number(new URL(request.url).searchParams.get('index') ?? '0');
   try {
