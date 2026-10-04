@@ -6,6 +6,21 @@ on:
   pull_request:
 
 jobs:
+  instagram-bridge-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/instagram-saves-bridge
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate isolated Compose configuration
+        run: docker compose config --quiet
+      - name: Build the server runtime with its real dependencies
+        run: docker compose build --build-arg CAROLOS_SOURCE_REVISION="$GITHUB_SHA"
+      - name: Verify imports and private persistent state without network
+        run: bash verify-image.sh
+
   build:
     runs-on: ubuntu-latest
     steps:

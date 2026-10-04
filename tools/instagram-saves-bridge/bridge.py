@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Opt-in local Instagram collection bridge. Never run it on the CMS server."""
+"""Opt-in Instagram collection bridge for a private computer or isolated server."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import argparse
 import contextlib
 import getpass
 import importlib.metadata
+import json
 import logging
 import os
 import random
@@ -21,12 +22,20 @@ from bridge_core import (
     normalized_origin, private_directory, process_lock, process_snapshot,
     read_private_json, short_text, utc_now, validate_username, write_private_json,
 )
+from bridge_service import (
+    IDLE_SECONDS, ServiceStopped, block_service, clear_block, daemon_lock,
+    handle_termination, health_exit_code, local_status, read_block,
+    require_unblocked, write_status,
+)
 
 
 INSTAGRAPI_VERSION = "3.0.20"
 DEFAULT_CMS = "https://carolqueiroz.pt"
 DEFAULT_STATE = Path.home() / ".local" / "share" / "carolos" / "instagram-saves"
-REPO_ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_DIRECTORY = Path(__file__).resolve().parent
+# The container retains tools/instagram-saves-bridge, but standalone installs
+# must never turn '/' into a repository root that would also reject /state.
+REPO_ROOT = SCRIPT_DIRECTORY.parents[1] if SCRIPT_DIRECTORY.name == "instagram-saves-bridge" and SCRIPT_DIRECTORY.parent.name == "tools" else SCRIPT_DIRECTORY
 MAX_IMPORTS_PER_CYCLE = 10
 
 MESSAGES = {
@@ -78,11 +87,32 @@ MESSAGES = {
     "invalid_upload_target": "O CMS não devolveu um destino de upload válido para o arquivo.",
     "unsupported_platform": "Este conector requer macOS ou Linux para proteger os arquivos e impedir execuções simultâneas.",
     "local_io_error": "Não foi possível ler ou salvar o estado local. Confira o espaço livre e as permissões.",
+    "service_blocked": "Há um bloqueio persistente. Execute status e conclua a ação indicada antes de retomar. Reiniciar o serviço não remove esse bloqueio.",
+    "resume_not_confirmed": "A retomada não foi confirmada. O serviço continua aguardando intervenção.",
+    "unexpected_error": "O conector encontrou um erro inesperado e aguarda revisão da instalação. O progresso foi preservado.",
 }
 
 
 def error_message(error: BridgeError) -> str:
-    return MESSAGES.get(error.code, "O conector interrompeu esta operação. O estado local foi preservado.")
+    message = MESSAGES.get(error.code, "O conector interrompeu esta operação. O estado local foi preservado.")
+    if server_location():
+        message = message.replace("neste computador", "neste servidor").replace("terminal local", "terminal interativo do conector")
+    return message
+
+
+def server_location() -> bool:
+    return os.environ.get("CAROLOS_BRIDGE_LOCATION", "").lower() == "server"
+
+
+def location() -> str:
+    return "neste servidor" if server_location() else "neste computador"
+
+
+def load_config(state_dir: Path) -> Config:
+    path = state_dir / "config.json"
+    if not path.exists() and not path.is_symlink():
+        raise BridgeError("setup_required")
+    return Config.load(path)
 
 
 def show_error(error: BridgeError) -> None:
@@ -233,14 +263,20 @@ def setup(state_dir: Path) -> None:
     require_terminal()
     config_path = state_dir / "config.json"
     previous = Config.load(config_path) if config_path.exists() else None
-    print("No Instagram, crie uma coleção de Salvos chamada CarolOS. No CMS, abra Referências, crie a conexão e copie o token de importação.")
-    print("Este conector usa uma integração não oficial. Ele consulta a pasta a cada cinco minutos enquanto este computador estiver ligado e pode parar se o Instagram exigir verificação ou mudar a interface.")
-    print("A senha e a sessão do Instagram ficam neste computador. Apenas as referências e suas mídias selecionadas serão enviadas ao seu CMS para análise.")
-    if prompt("Para aceitar e configurar esta integração local, digite ACEITO") != "ACEITO":
+    print("No CMS, abra Referências, crie a conexão e copie o token de importação. No Instagram, crie uma coleção de Salvos com o mesmo nome informado nessa conexão.")
+    if server_location():
+        print("Este conector usa uma integração não oficial. Ele consulta a pasta em intervalos de pelo menos cinco minutos enquanto o serviço estiver ativo no servidor e pode parar se o Instagram exigir verificação ou mudar a interface.")
+        print("A sessão do Instagram será guardada no volume privado deste servidor. A senha é usada somente no login interativo e não é salva. Apenas as referências e suas mídias selecionadas serão enviadas ao CMS para análise.")
+        consent_label = "Para autorizar esta integração e guardar a sessão neste servidor, digite ACEITO"
+    else:
+        print("Este conector usa uma integração não oficial. Ele consulta a pasta em intervalos de pelo menos cinco minutos enquanto este computador estiver ligado e pode parar se o Instagram exigir verificação ou mudar a interface.")
+        print("A sessão do Instagram fica neste computador. A senha é usada somente no login e não é salva. Apenas as referências e suas mídias selecionadas serão enviadas ao seu CMS para análise.")
+        consent_label = "Para aceitar e configurar esta integração local, digite ACEITO"
+    if prompt(consent_label) != "ACEITO":
         raise BridgeError("consent_required")
     origin = normalized_origin(prompt("Endereço HTTPS do CarolOS", previous.cms_origin if previous else DEFAULT_CMS))
     username = validate_username(prompt("Nome de usuário no Instagram", previous.username if previous else "carolxqueiroz"))
-    collection_name = prompt("Nome exato da coleção", previous.collection_name if previous else "CarolOS")
+    collection_name = prompt("Nome exato da coleção", previous.collection_name if previous else "Referências UGC")
     if not 1 <= len(collection_name) <= 100:
         raise BridgeError("invalid_local_config")
     if previous and previous.account_id and (username != previous.username or collection_name != previous.collection_name or origin != previous.cms_origin):
@@ -259,22 +295,22 @@ def setup(state_dir: Path) -> None:
         cms_token="" if environment_token else token, accepted_at=utc_now(),
     )
     config.save(config_path)
-    print("Configuração salva. Agora execute login neste computador. Nenhuma sessão do Instagram foi enviada ao CMS.")
+    print(f"Configuração salva. Agora execute login {location()}. Nenhuma sessão do Instagram foi enviada ao CMS.")
 
 
 def login(state_dir: Path, *, renew: bool = False, two_factor: bool = False) -> None:
     require_terminal()
     config_path = state_dir / "config.json"
-    config = Config.load(config_path)
+    config = load_config(state_dir)
     adapter = InstagramClient(config, state_dir / "session.json")
     use_saved = bool(adapter.client.user_id) and not renew and not two_factor
     if use_saved:
         adapter.account()  # A rejected session stops; renewal must be explicit.
-        print("Sessão local restaurada.")
+        print(f"Sessão restaurada {location()}.")
     else:
         if renew:
             print("A renovação só deve continuar depois de concluir verificações pendentes no app oficial do Instagram.")
-        password = getpass.getpass("Senha do Instagram, usada somente neste computador ")
+        password = getpass.getpass(f"Senha do Instagram, usada somente {location()} ")
         code = getpass.getpass("Código atual da autenticação de dois fatores ").strip() if two_factor else ""
         try:
             library_call(adapter.client.login, config.username, password, relogin=renew, verification_code=code)
@@ -301,7 +337,36 @@ def login(state_dir: Path, *, renew: bool = False, two_factor: bool = False) -> 
     config.collection_id = str(get_field(matches[0], "id"))
     config.save(config_path)
     adapter.save()
-    print("Conta e coleção confirmadas. Execute once para validar uma consulta ou run para manter a sincronização ativa.")
+    validate_cms_binding(config)
+    clear_block(state_dir)
+    if server_location():
+        print("Conta, coleção e autorização do CMS confirmadas. O serviço pode sincronizar com a sessão guardada neste servidor.")
+    else:
+        print("Conta, coleção e autorização do CMS confirmadas. Execute once para validar uma consulta ou run para manter a sincronização ativa.")
+
+
+def validate_cms_binding(config: Config) -> CMSClient:
+    cms = CMSClient(config.cms_origin, cms_token(config), config.storage_origin)
+    info = cms.heartbeat(synced=False)
+    if info.get("collectionName") and info["collectionName"] != config.collection_name:
+        raise BridgeError("instagram_collection_mismatch")
+    return cms
+
+
+def resume(state_dir: Path) -> None:
+    require_terminal()
+    print("Retome somente depois de resolver a causa do bloqueio. A sessão salva será validada sem fazer login automático.")
+    if prompt("Para validar a conexão e autorizar a retomada, digite RETOMAR") != "RETOMAR":
+        raise BridgeError("resume_not_confirmed")
+    config = load_config(state_dir)
+    if not config.account_id or not config.collection_id:
+        raise BridgeError("login_required")
+    validate_cms_binding(config)
+    adapter = InstagramClient(config, state_dir / "session.json")
+    adapter.validate_binding()
+    adapter.save()
+    clear_block(state_dir)
+    print("Sessão, coleção e autorização do CMS validadas. A sincronização pode ser retomada.")
 
 
 def cleanup_abandoned_transfers(state_dir: Path) -> None:
@@ -323,8 +388,9 @@ def wait_interruptibly(seconds: float) -> None:
         time.sleep(min(30, max(0, deadline - time.monotonic())))
 
 
-def synchronize(state_dir: Path, *, once: bool = False) -> int:
-    config = Config.load(state_dir / "config.json")
+def synchronize(state_dir: Path, *, once: bool = False, report=None) -> int:
+    require_unblocked(state_dir)
+    config = load_config(state_dir)
     if not config.account_id or not config.collection_id:
         raise BridgeError("login_required")
     cms = CMSClient(config.cms_origin, cms_token(config), config.storage_origin)
@@ -335,6 +401,8 @@ def synchronize(state_dir: Path, *, once: bool = False) -> int:
     try:
         while True:
             try:
+                if report:
+                    report("syncing")
                 info = cms.heartbeat(synced=False, error=MESSAGES["reference_pending_retry"] if state.has_failed_pending() else None)
                 if info.get("collectionName") and info["collectionName"] != config.collection_name:
                     raise BridgeError("instagram_collection_mismatch")
@@ -364,48 +432,198 @@ def synchronize(state_dir: Path, *, once: bool = False) -> int:
                 if deferred_error is None and state.has_failed_pending():
                     deferred_error = BridgeError("reference_pending_retry", temporary=True)
                 cms.heartbeat(synced=True, error=error_message(deferred_error) if deferred_error else None)
-                print(f"Consulta concluída. {new_count} novas na fila, {completed} confirmadas no CMS, {skipped} já removidas e {pending} pendentes neste computador.", flush=True)
+                print(f"Consulta concluída. {new_count} novas na fila, {completed} confirmadas no CMS, {skipped} já removidas e {pending} pendentes {location()}.", flush=True)
                 if deferred_error:
                     show_error(deferred_error)
                 failures = 0
                 if once:
                     return 1 if deferred_error else 0
+                if report:
+                    report("waiting")
                 wait_interruptibly(config.poll_seconds + random.uniform(0, 30))
             except BridgeError as error:
+                # Persist before notifying any remote service or releasing the
+                # lock. A container restart must not repeat a rejected action.
+                if not error.temporary:
+                    block_service(state_dir, error)
+                    if report:
+                        report("blocked", error.code)
                 send_failure(cms, error)
                 show_error(error)
                 if once or not error.temporary:
                     return 1
                 failures += 1
                 delay = min(3600, config.poll_seconds * (2 ** min(failures - 1, 4)))
+                if report:
+                    report("retrying", error.code)
                 wait_interruptibly(delay + random.uniform(0, 30))
     finally:
         state.close()
 
 
+def recheck_cms_pause(state_dir: Path, blocked: dict, probe: dict) -> bool:
+    """Reauthorize a CMS-only pause without creating any Instagram client.
+
+An Instagram challenge stays manual even if an unsuccessful resume also
+encounters an invalid CMS token. A restarted process always waits at least one
+full polling interval before its first CMS-only retry.
+"""
+    if blocked["code"] != "cms_connection_refused" or blocked["manual_required"]:
+        probe.clear()
+        return False
+    signature = (blocked["code"], blocked["since"], blocked["manual_required"])
+    now = time.monotonic()
+    if probe.get("signature") != signature:
+        probe.update(signature=signature, next_attempt=now + POLL_SECONDS, failures=0)
+        return False
+    if now < probe["next_attempt"]:
+        return False
+    try:
+        validate_cms_binding(load_config(state_dir))
+    except BridgeError as error:
+        if not error.temporary and error.code != "cms_connection_refused":
+            block_service(state_dir, error)
+            probe.clear()
+        else:
+            probe["failures"] += 1
+            delay = min(3600, POLL_SECONDS * (2 ** min(probe["failures"] - 1, 4)))
+            probe["next_attempt"] = time.monotonic() + delay + random.uniform(0, 30)
+        show_error(error)
+        return False
+    clear_block(state_dir)
+    probe.clear()
+    print("A conexão voltou a ser autorizada pelo CMS. A sincronização será retomada.", flush=True)
+    return True
+
+
+def serve(state_dir: Path) -> int:
+    """Keep one daemon alive; release bridge.lock while intervention is needed."""
+    probe: dict[str, Any] = {}
+    last_reason = None
+    with daemon_lock(state_dir):
+        try:
+            write_status(state_dir, "starting")
+            while True:
+                try:
+                    with process_lock(state_dir):
+                        try:
+                            blocked = read_block(state_dir)
+                            if blocked:
+                                write_status(state_dir, "blocked", blocked["code"])
+                                if last_reason != blocked["code"]:
+                                    show_error(BridgeError(blocked["code"]))
+                                    print("Serviço aguardando intervenção. A fila está preservada.", flush=True)
+                                    last_reason = blocked["code"]
+                                if recheck_cms_pause(state_dir, blocked, probe):
+                                    continue
+                            else:
+                                probe.clear()
+                                last_reason = None
+                                synchronize(state_dir, report=lambda phase, reason=None: write_status(state_dir, phase, reason))
+                        except BridgeError as error:
+                            # Errors before synchronize opens its queue, such as
+                            # missing setup, must also survive container restarts.
+                            block_service(state_dir, error)
+                            write_status(state_dir, "blocked", error.code)
+                            show_error(error)
+                        except (OSError, ValueError):
+                            block_service(state_dir, BridgeError("local_io_error"))
+                            write_status(state_dir, "blocked", "local_io_error")
+                            show_error(BridgeError("local_io_error"))
+                        except Exception:
+                            block_service(state_dir, BridgeError("unexpected_error"))
+                            write_status(state_dir, "blocked", "unexpected_error")
+                            show_error(BridgeError("unexpected_error"))
+                except BridgeError as error:
+                    if error.code != "already_running":
+                        raise
+                    # An interactive operation or legacy run already owns the
+                    # queue. Do not clean temporary transfers or start a client.
+                    write_status(state_dir, "busy", "already_running")
+                wait_interruptibly(IDLE_SECONDS)
+        finally:
+            with contextlib.suppress(BridgeError, OSError, ValueError):
+                write_status(state_dir, "stopped")
+
+
+def status(state_dir: Path, *, healthcheck: bool = False, as_json: bool = False) -> int:
+    current = local_status(state_dir)
+    code = health_exit_code(current)
+    if healthcheck:
+        # Docker reserves exit 2; the human/JSON command retains that distinction.
+        return 0 if code == 0 else 1
+    if as_json:
+        print(json.dumps(current, ensure_ascii=False, separators=(",", ":")))
+        return code
+    labels = {
+        "starting": "Serviço iniciando.", "syncing": "Serviço processando uma consulta.",
+        "waiting": "Serviço aguardando o próximo ciclo.", "retrying": "Serviço aguardando uma nova tentativa.",
+        "blocked": "Serviço aguardando intervenção.", "busy": "Há outra operação usando a fila.",
+        "stopped": "Serviço parado.",
+    }
+    print(labels[current["phase"]])
+    if current["reason"]:
+        print(error_message(BridgeError(current["reason"])))
+    print("Este status é local e não confirma uma nova consulta ao Instagram ou ao CMS.")
+    return code
+
+
+def execute_interactive_or_legacy(state_dir: Path, args) -> int:
+    with process_lock(state_dir):
+        try:
+            if args.command == "setup":
+                setup(state_dir)
+            elif args.command == "login":
+                login(state_dir, renew=args.renew, two_factor=args.two_factor)
+            elif args.command == "resume":
+                resume(state_dir)
+            else:
+                return synchronize(state_dir, once=args.command == "once")
+            return 0
+        except BridgeError as error:
+            if not error.temporary and error.code not in {
+                "already_running", "service_blocked", "interactive_required",
+                "consent_required", "resume_not_confirmed",
+            }:
+                block_service(state_dir, error)
+            raise
+        except (OSError, ValueError):
+            block_service(state_dir, BridgeError("local_io_error"))
+            raise
+        except Exception:
+            block_service(state_dir, BridgeError("unexpected_error"))
+            raise
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Sincroniza localmente uma coleção de Salvos com o CarolOS.")
+    parser = argparse.ArgumentParser(description="Sincroniza uma coleção de Salvos com o CarolOS a partir de um conector privado.")
     parser.add_argument("--state-dir", type=Path, default=DEFAULT_STATE, help="Pasta privada fora de qualquer repositório Git")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("setup", help="Autorizar a integração e configurar o CMS")
-    login_parser = commands.add_parser("login", help="Conectar a conta do Instagram somente neste computador")
+    login_parser = commands.add_parser("login", help="Conectar a conta do Instagram no ambiente escolhido")
     login_parser.add_argument("--renew", action="store_true", help="Renovar explicitamente uma sessão rejeitada após conferir o app oficial")
     login_parser.add_argument("--two-factor", action="store_true", help="Informar localmente um código legítimo da autenticação de dois fatores")
     commands.add_parser("once", help="Consultar uma vez e processar até dez referências pendentes")
     commands.add_parser("run", help="Manter consultas a cada cinco minutos enquanto este processo estiver ativo")
+    commands.add_parser("serve", help="Executar como serviço persistente e aguardar intervenção em caso de bloqueio")
+    commands.add_parser("resume", help="Validar explicitamente a sessão salva e liberar um bloqueio")
+    status_parser = commands.add_parser("status", help="Consultar somente o estado local do serviço, sem acesso à rede")
+    status_parser.add_argument("--healthcheck", action="store_true", help="Retornar apenas o código de saúde local")
+    status_parser.add_argument("--json", action="store_true", help="Exibir somente o estado operacional sem dados da conta")
     args = parser.parse_args(argv)
     try:
         if os.name != "posix":
             raise BridgeError("unsupported_platform")
         os.umask(0o077)
         state_dir = private_directory(args.state_dir, repo_root=REPO_ROOT)
-        with process_lock(state_dir):
-            if args.command == "setup":
-                setup(state_dir)
-            elif args.command == "login":
-                login(state_dir, renew=args.renew, two_factor=args.two_factor)
-            else:
-                return synchronize(state_dir, once=args.command == "once")
+        with handle_termination():
+            if args.command == "serve":
+                return serve(state_dir)
+            if args.command == "status":
+                return status(state_dir, healthcheck=args.healthcheck, as_json=args.json)
+            return execute_interactive_or_legacy(state_dir, args)
+    except ServiceStopped:
+        print("Conector parado. O progresso foi preservado.", flush=True)
         return 0
     except KeyboardInterrupt:
         print("Conector parado. O progresso local foi preservado.")
