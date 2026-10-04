@@ -609,11 +609,6 @@
   100% { transform: translateX(100%); }
 }
 
-.cmLoadingText {
-  margin: -8px 0 12px;
-  font-size: 12px;
-  color: var(--tinta3);
-}
 
 .cmViewSwitch button,
 .cmDateNav button {
@@ -764,5 +759,200 @@
   .cm[data-navigating] .cmNavProgress {
     animation: none;
     transform: none;
+  }
+}
+
+
+/* ── a próxima tarefa ───────────────────────────────────────────────── */
+
+.cmNext {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--areia2);
+  border-left: 3px solid var(--umbra);
+  background: color-mix(in srgb, var(--papel) 70%, var(--areia));
+}
+
+.cmNextMain {
+  min-width: 0;
+}
+
+.cmNextLabel {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 11px;
+  font-weight: 560;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--umbra);
+}
+
+.cmNext strong {
+  display: block;
+  font-family: var(--disp);
+  font-variation-settings: var(--wide);
+  font-size: 19px;
+  font-weight: 560;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.cmNext p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--tinta3);
+}
+
+.cmNextSide {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── etiquetas de zona e formato ────────────────────────────────────── */
+
+.cmBadges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.cmNextSide .cmBadges,
+.cmEditorHead .cmBadges {
+  margin-bottom: 0;
+}
+
+.cmEditorHead .cmBadges {
+  margin-top: 12px;
+}
+
+.cmBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 11px;
+  font-weight: 560;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.cmZone {
+  color: var(--zone-ink, var(--umbra));
+  background: color-mix(in srgb, var(--zone-ink, var(--umbra)) 13%, transparent);
+  border-color: color-mix(in srgb, var(--zone-ink, var(--umbra)) 34%, transparent);
+}
+
+.cmZone[data-zone='z1'] { --zone-ink: #7A1526; }
+.cmZone[data-zone='z2'] { --zone-ink: #A1702A; }
+.cmZone[data-zone='z3'] { --zone-ink: #3F5166; }
+.cmZone[data-zone='z4'] { --zone-ink: #4C6B4A; }
+
+.cmFormat,
+.cmStageBadge {
+  color: var(--tinta2);
+  border-color: var(--areia2);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ── troca de vista e espera ────────────────────────────────────────── */
+
+.cmView {
+  animation: cmViewIn var(--t-fast) var(--ease) both;
+}
+
+.cmView[data-waiting] {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity var(--t-fast) var(--ease);
+}
+
+@keyframes cmViewIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.cmDateNav .spin {
+  margin-right: 4px;
+}
+
+/* ── abas do editor ─────────────────────────────────────────────────── */
+
+.cmTabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--areia2);
+}
+
+.cmTabs button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--tinta3);
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.cmTabs button:hover {
+  color: var(--tinta);
+}
+
+.cmTabs button[data-active] {
+  color: var(--tinta);
+  border-bottom-color: var(--umbra);
+}
+
+.cmTabs button:focus-visible {
+  outline: 2px solid var(--umbra);
+  outline-offset: -2px;
+}
+
+.cmForm {
+  animation: cmViewIn var(--t-fast) var(--ease) both;
+}
+
+.cmForm textarea.cmShortArea {
+  min-height: 96px;
+}
+
+@media (max-width: 620px) {
+  .cmNext {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cmNextSide {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmView,
+  .cmForm {
+    animation: none;
   }
 }

@@ -1,6 +1,10 @@
 import ContentManager from '@/components/dashboard/ContentManager';
 import { requireUser } from '@/lib/auth';
-import { listContentBoard, listContentPillars } from '@/modules/content-board/service';
+import {
+  listContentBoard,
+  listContentPillars,
+  nextContentItem,
+} from '@/modules/content-board/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,24 +57,27 @@ export default async function ContentPage({
   await requireUser();
   const params = await searchParams;
 
+  const today = todayInLisbon();
   const view: View = params.view === 'day' ? 'day' : 'week';
-  const selectedDate = params.date && DATE.test(params.date) ? params.date : todayInLisbon();
+  const selectedDate = params.date && DATE.test(params.date) ? params.date : today;
 
   // A semana inteira vem numa leitura só. Assim Semana ↔ Dia troca no cliente
   // sem esperar uma nova consulta apenas para mudar a forma de visualizar.
   const from = startOfWeek(selectedDate);
   const to = addDays(from, 6);
 
-  const [items, pillars] = await Promise.all([
+  const [items, pillars, nextItem] = await Promise.all([
     listContentBoard({ from, to }),
     listContentPillars(),
+    nextContentItem(today),
   ]);
 
   return (
     <ContentManager
-      key={`${view}:${selectedDate}`}
+      key={from}
       items={items}
       pillars={pillars}
+      nextItem={nextItem}
       view={view}
       selectedDate={selectedDate}
     />

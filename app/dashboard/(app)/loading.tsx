@@ -3,7 +3,7 @@ export default function Loading() {
     <div className="adminRouteLoading" role="status" aria-live="polite">
       <span>CAROL / ÁREA PRIVADA</span>
       <div aria-hidden="true"><i /></div>
-      <p>A carregar…</p>
+      <p>Carregando…</p>
     </div>
   );
 }

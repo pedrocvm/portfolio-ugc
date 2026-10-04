@@ -82,15 +82,23 @@
   background: var(--admin-marfin);
 }
 
+/* Dois planos, não um. Grafite quente na barra e marfim na tela: bege sobre
+   bege não separava a navegação do trabalho, e era isso que fazia a tela
+   inteira parecer uma superfície só.
+   Neutro de propósito — com a barra colorida, o cereja da marca deixava de ser
+   o único acento e passava a competir com ela. */
 .dash .side {
-  background: var(--admin-marfin);
-  color: var(--admin-cereja);
-  border-right: 1px solid var(--admin-champagne);
-  box-shadow: 8px 0 32px rgba(122, 21, 38, 0.035);
+  --admin-grafite: #221E1B;
+  --admin-side-ink: color-mix(in srgb, var(--admin-marfin) 92%, var(--admin-champagne));
+
+  background: var(--admin-grafite);
+  color: var(--admin-side-ink);
+  border-right: 1px solid #16130F;
+  box-shadow: 10px 0 38px rgba(18, 15, 12, 0.18);
 }
 
 .dash .side .logoName {
-  color: var(--admin-cereja);
+  color: var(--admin-side-ink);
   font-family: var(--font-admin-serif), Georgia, serif;
   font-size: 30px;
   font-weight: 600;
@@ -121,7 +129,7 @@
 }
 
 .dash .rail a {
-  color: var(--admin-oliva);
+  color: color-mix(in srgb, var(--admin-marfin) 68%, transparent);
   border-left: 2px solid transparent;
   transition:
     color var(--t-fast) var(--ease),
@@ -130,32 +138,36 @@
 }
 
 .dash .rail a:hover {
-  color: var(--admin-cereja);
-  background: color-mix(in srgb, var(--admin-champagne) 22%, transparent);
+  color: var(--admin-marfin);
+  background: color-mix(in srgb, var(--admin-marfin) 10%, transparent);
 }
 
 .dash .rail a[aria-current='page'] {
   color: var(--admin-cereja);
-  background: color-mix(in srgb, var(--admin-champagne) 35%, var(--admin-marfin));
-  border-left-color: var(--admin-cereja);
+  background: var(--admin-marfin);
+  border-left-color: var(--admin-dourado);
+}
+
+.dash .railUtil {
+  border-top-color: color-mix(in srgb, var(--admin-marfin) 16%, transparent);
 }
 
 .dash .sideOut {
-  color: var(--admin-oliva);
+  color: color-mix(in srgb, var(--admin-marfin) 66%, transparent);
 }
 
 .dash .sideOut:hover {
-  color: var(--admin-cereja);
-  border-bottom-color: var(--admin-cereja);
+  color: var(--admin-marfin);
+  border-bottom-color: color-mix(in srgb, var(--admin-marfin) 55%, transparent);
 }
 
 .dash .sideToggle {
-  color: var(--admin-oliva);
+  color: color-mix(in srgb, var(--admin-marfin) 70%, transparent);
 }
 
 .dash .sideToggle:hover {
-  color: var(--admin-cereja);
-  background: color-mix(in srgb, var(--admin-champagne) 26%, transparent);
+  color: var(--admin-marfin);
+  background: color-mix(in srgb, var(--admin-marfin) 12%, transparent);
 }
 
 .dash .secBar {
@@ -422,7 +434,7 @@
 @media (max-width: 959px) {
   .dash .side {
     border-right: 0;
-    border-bottom: 1px solid var(--admin-champagne);
+    border-bottom: 1px solid #16130F;
   }
 }
 
@@ -476,4 +488,49 @@
     animation: none;
     width: 100%;
   }
+}
+
+
+/* A tela ganha um fundo levemente mais quente do que o cartão: três planos —
+   barra escura, tela em areia, cartão em branco quebrado. */
+.dash .sheet {
+  background: color-mix(in srgb, var(--admin-champagne) 13%, var(--admin-marfin));
+}
+
+.dash .cmNext {
+  background: var(--admin-marfin);
+  border-color: var(--admin-champagne);
+  border-left-color: var(--admin-cereja);
+}
+
+.dash .cmNextLabel {
+  color: var(--admin-cereja);
+}
+
+.dash .cmNext strong {
+  color: var(--admin-cereja);
+}
+
+.dash .cmNext p {
+  color: var(--admin-oliva);
+}
+
+.dash .cmFormat,
+.dash .cmStageBadge {
+  color: var(--admin-oliva);
+  border-color: var(--admin-champagne);
+  background: color-mix(in srgb, var(--admin-champagne) 18%, transparent);
+}
+
+.dash .cmTabs {
+  border-bottom-color: var(--admin-champagne);
+}
+
+.dash .cmTabs button {
+  color: var(--admin-oliva);
+}
+
+.dash .cmTabs button[data-active] {
+  color: var(--admin-cereja);
+  border-bottom-color: var(--admin-cereja);
 }
