@@ -49,7 +49,7 @@ export const CONTENT_ZONES: readonly {
   { value: 'z1', code: 'Z1', label: 'Atração' },
   { value: 'z2', code: 'Z2', label: 'Retenção' },
   { value: 'z3', code: 'Z3', label: 'Conexão' },
-  { value: 'z4', code: 'Z4', label: 'Conversão' },
+  { value: 'z4', code: 'Z4', label: 'Comunidade' },
 ] as const;
 
 export const zoneCode = (zone: ContentZone) =>
@@ -164,9 +164,19 @@ export function parseScript(text: string): ScriptDoc {
   };
 
   let current: BlockKey = 'body';
+  let firstContentLine = true;
 
   for (const line of text.split('\n')) {
     const flat = flatten(line);
+
+    // A RPC de Referências abre o documento com "Zona Z1". Só esse
+    // prefixo é metadado; uma linha igual dentro do roteiro continua texto.
+    const referenceZone = firstContentLine && flat.match(/^ZONA\s+(Z[1-4])$/);
+    if (flat) firstContentLine = false;
+    if (referenceZone) {
+      doc.zone = zoneFrom(referenceZone[1]);
+      continue;
+    }
 
     const inline = INLINE_HEADS.find((entry) => flat.startsWith(`${entry.head}:`));
     if (inline) {

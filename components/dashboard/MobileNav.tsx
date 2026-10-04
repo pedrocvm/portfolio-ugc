@@ -95,7 +95,7 @@ export default function MobileNav({
                     <Link
                       key={m.href}
                       href={m.href}
-                      aria-current={isCurrent(path, m.href) ? 'page' : undefined}
+                      aria-current={(m.exact ? path === m.href : isCurrent(path, m.href)) ? 'page' : undefined}
                       onClick={close}
                     >
                       {m.label}

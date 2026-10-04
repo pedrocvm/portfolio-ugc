@@ -146,6 +146,16 @@ test('texto sem título nenhum é roteiro, não desaparece', () => {
   assert.equal(serializeScript(doc), 'Só uma nota solta.\nE outra linha.');
 });
 
+test('a zona só vira metadado no prefixo usado pela RPC de Referências', () => {
+  const body = 'Uma fala da Carol.\nZona Z1\nZona Z8';
+  const doc = parseScript(`\nZona Z3\n\n${body}`);
+  assert.equal(doc.zone, 'z3');
+  assert.equal(doc.body, body);
+  assert.deepEqual(parseScript(serializeScript(doc)), doc);
+  assert.equal(parseScript('Zona Z8').body, 'Zona Z8');
+  assert.equal(parseScript('Zona Z1 aparece nesta frase.').zone, '');
+});
+
 test('uma linha perdida antes dos títulos continua no roteiro', () => {
   const doc = parseScript(['Lembrete da Carol.', 'ZONA: Z3 — Conexão', 'ROTEIRO', 'Cena 1.'].join('\n'));
   assert.equal(doc.zone, 'z3');

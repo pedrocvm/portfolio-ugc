@@ -2,17 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { isCurrent, sectionFor } from './nav';
+import { isCurrent, sectionFor, type NavItem } from './nav';
 
-/** A barra da seção. Só existe quando há para onde ir dentro dela.
- *
- *  É aqui que vivem as sub-áreas que saíram do carril. As de operação ficam à
- *  vista; as que são base de conhecimento — marcas, clientes, documentos —
- *  ficam atrás do «mais», porque consultam-se de vez em quando e não competem
- *  com o que há para fazer agora.
- *
- *  O Hoje não tem barra nenhuma: não há sub-áreas, e uma barra com um item só
- *  é uma linha a dizer onde já se está. */
+/** Navegação interna das duas áreas atuais do CarolOS. */
 export default function SectionNav() {
   const path = usePathname();
   const section = sectionFor(path);
@@ -20,9 +12,8 @@ export default function SectionNav() {
 
   const loud = section.items.filter((i) => !i.quiet);
   const quiet = section.items.filter((i) => i.quiet);
-  // Uma sub-área silenciosa aberta tem de se ver: senão a barra não diz onde se
-  // está, e o «mais» fechado esconde a única pista.
-  const openQuiet = quiet.find((i) => isCurrent(path, i.href));
+  const current = (item: NavItem) => item.exact ? path === item.href : isCurrent(path, item.href);
+  const openQuiet = quiet.find(current);
 
   return (
     <nav className="secBar" aria-label={section.label}>
@@ -31,7 +22,7 @@ export default function SectionNav() {
           <Link
             key={i.href}
             href={i.href}
-            aria-current={isCurrent(path, i.href) ? 'page' : undefined}
+            aria-current={current(i) ? 'page' : undefined}
           >
             {i.label}
           </Link>
@@ -52,7 +43,7 @@ export default function SectionNav() {
               <Link
                 key={i.href}
                 href={i.href}
-                aria-current={isCurrent(path, i.href) ? 'page' : undefined}
+                aria-current={current(i) ? 'page' : undefined}
               >
                 {i.label}
               </Link>

@@ -1,0 +1,4 @@
+# Verified against the primary PyPI release pages on 2026-10-04.
+# Install only inside a virtual environment. Never install globally on the CMS.
+instagrapi==3.0.20
+requests==2.34.2

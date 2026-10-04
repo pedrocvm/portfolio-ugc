@@ -2,6 +2,7 @@ import { Cormorant_Garamond, DM_Sans } from 'next/font/google';
 import './dashboard.css';
 import './content-manager.css';
 import './admin-theme.css';
+import './saved-references.css';
 
 const adminSerif = Cormorant_Garamond({
   subsets: ['latin'],
