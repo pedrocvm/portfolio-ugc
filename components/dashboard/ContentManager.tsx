@@ -9,14 +9,23 @@ import {
   removeContentCard,
   saveContentCard,
 } from '@/app/dashboard/content-manager-actions';
+import Spinner from '@/components/dashboard/Spinner';
 import { useBoardDrag } from '@/components/dashboard/useBoardDrag';
 import {
   CONTENT_STAGES,
+  CONTENT_ZONES,
+  EMPTY_SCRIPT,
   STAGE_KEYS,
+  parseScript,
+  serializeScript,
   stageLabel,
+  zoneCode,
+  zoneLabel,
   type ContentBoardItem,
   type ContentPillar,
   type ContentStage,
+  type ContentZone,
+  type ScriptDoc,
 } from '@/modules/content-board/domain';
 
 type View = 'week' | 'day';
@@ -47,15 +56,16 @@ const weekStart = (value: string) => {
 };
 
 const formatDay = (value: string, options?: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat('pt-PT', options ?? { weekday: 'short', day: '2-digit' }).format(
+  new Intl.DateTimeFormat('pt-BR', options ?? { weekday: 'short', day: '2-digit' }).format(
     fromIso(value),
   );
 
-const scriptPreview = (script: string) => {
-  const clean = script.replace(/\s+/g, ' ').trim();
-  if (!clean) return 'Roteiro ainda não escrito';
-  return clean.length > 150 ? `${clean.slice(0, 150)}…` : clean;
-};
+/** «segunda», não «seg.» nem «segunda-feira».
+ *
+ *  O cabeçalho da semana tem largura para o nome inteiro, e o «-feira» é a
+ *  única parte dele que nunca distingue um dia do outro. */
+const weekdayName = (value: string) =>
+  formatDay(value, { weekday: 'long' }).replace('-feira', '');
 
 const href = (view: View, date: string) =>
   `/dashboard/content?view=${view}&date=${date}`;
@@ -67,6 +77,37 @@ function pillarAccent(pillarId: string, pillars: ContentPillar[]) {
   );
   return PILLAR_ACCENTS[index % PILLAR_ACCENTS.length];
 }
+
+/** A zona é uma cor, não uma frase. No cartão cabe o código; o nome por
+ *  extenso fica no title, que é onde ele é lido sem roubar espaço ao assunto. */
+function ZoneBadge({ zone }: { zone: ContentZone }) {
+  return (
+    <span className="cmBadge cmZone" data-zone={zone} title={`${zoneCode(zone)} — ${zoneLabel(zone)}`}>
+      {zoneCode(zone)}
+    </span>
+  );
+}
+
+function Badges({ zone, format }: { zone: ContentZone | ''; format: string }) {
+  if (!zone && !format.trim()) return null;
+
+  return (
+    <span className="cmBadges">
+      {zone ? <ZoneBadge zone={zone} /> : null}
+      {format.trim() ? <span className="cmBadge cmFormat">{format.trim()}</span> : null}
+    </span>
+  );
+}
+
+/** O resumo do cartão é a ideia, não o começo do arquivo.
+ *
+ *  Antes era o roteiro em bruto, e com os cabeçalhos lá dentro o cartão abria
+ *  sempre com «SÉRIE: …» em vez de dizer do que a peça trata. */
+const cardPreview = (doc: ScriptDoc) => {
+  const text = (doc.idea || doc.body).replace(/\s+/g, ' ').trim();
+  if (!text) return 'Roteiro ainda não escrito';
+  return text.length > 150 ? `${text.slice(0, 150)}…` : text;
+};
 
 function ContentCard({
   item,
@@ -81,6 +122,8 @@ function ContentCard({
   onOpen: () => void;
   drag?: ReturnType<typeof useBoardDrag>;
 }) {
+  const doc = useMemo(() => parseScript(item.script), [item.script]);
+
   return (
     <article
       className="cmCard"
@@ -88,12 +131,12 @@ function ContentCard({
       style={{ '--pillar-accent': accent } as React.CSSProperties}
     >
       <button className="cmCardBody" type="button" onClick={onOpen}>
+        <Badges zone={doc.zone} format={item.format} />
         <span className="cmCardMeta">
           <span>{item.pillarName}</span>
-          {item.format ? <span>{item.format}</span> : <span>Formato por definir</span>}
         </span>
         <strong>{item.subject}</strong>
-        {!compact ? <p>{scriptPreview(item.script)}</p> : null}
+        {!compact ? <p>{cardPreview(doc)}</p> : null}
         <span className="cmCardStage">{stageLabel(item.stage)}</span>
       </button>
 
@@ -116,6 +159,43 @@ function ContentCard({
   );
 }
 
+function NextTaskBanner({
+  item,
+  today,
+  onOpen,
+}: {
+  item: ContentBoardItem;
+  today: string;
+  onOpen: () => void;
+}) {
+  const doc = useMemo(() => parseScript(item.script), [item.script]);
+  const quando =
+    item.scheduledFor === today
+      ? 'Hoje'
+      : item.scheduledFor === addDays(today, 1)
+        ? 'Amanhã'
+        : formatDay(item.scheduledFor, { weekday: 'long', day: 'numeric', month: 'long' });
+
+  return (
+    <section className="cmNext" aria-label="Próxima tarefa">
+      <div className="cmNextMain">
+        <span className="cmNextLabel">Próxima tarefa · {quando}</span>
+        <strong>{item.subject}</strong>
+        <p>
+          {item.pillarName} · {stageLabel(item.stage)}
+        </p>
+      </div>
+
+      <div className="cmNextSide">
+        <Badges zone={doc.zone} format={item.format} />
+        <button type="button" className="cmGhostBtn" onClick={onOpen}>
+          Ver detalhes
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function Editor({
   item,
   date,
@@ -129,16 +209,29 @@ function Editor({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const [tab, setTab] = useState<'piece' | 'script'>('piece');
   const [pillarId, setPillarId] = useState(item?.pillarId || pillars[0]?.id || '');
   const [format, setFormat] = useState(item?.format ?? '');
   const [subject, setSubject] = useState(item?.subject ?? '');
-  const [script, setScript] = useState(item?.script ?? '');
+  const [doc, setDoc] = useState<ScriptDoc>(() =>
+    item ? parseScript(item.script) : EMPTY_SCRIPT,
+  );
   const [scheduledFor, setScheduledFor] = useState(item?.scheduledFor ?? date);
   const [stage, setStage] = useState<ContentStage>(item?.stage ?? 'idea');
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
 
+  const patch = (next: Partial<ScriptDoc>) => setDoc((current) => ({ ...current, ...next }));
+
   const save = () => {
+    // O assunto vive noutra aba. Recusar sem dizer onde está o campo é o botão
+    // desligado sem motivo visível que esta troca de aba evita.
+    if (!subject.trim()) {
+      setTab('piece');
+      setError('Informe o assunto.');
+      return;
+    }
+
     setError('');
     startTransition(() => {
       void saveContentCard({
@@ -146,7 +239,7 @@ function Editor({
         pillarId,
         format,
         subject,
-        script,
+        script: serializeScript(doc),
         scheduledFor,
         stage,
       }).then((result) => {
@@ -186,73 +279,171 @@ function Editor({
           <div>
             <span className="cmEyebrow">{item ? 'Editar conteúdo' : 'Novo conteúdo'}</span>
             <h2>{item?.subject || 'Planejar peça'}</h2>
+            <span className="cmBadges">
+              {doc.zone ? <ZoneBadge zone={doc.zone} /> : null}
+              {format.trim() ? <span className="cmBadge cmFormat">{format.trim()}</span> : null}
+              <span className="cmBadge cmStageBadge">{stageLabel(stage)}</span>
+            </span>
           </div>
           <button type="button" className="cmClose" aria-label="Fechar" onClick={onClose}>
             ×
           </button>
         </header>
 
-        <div className="cmForm">
-          <label>
-            <span>Pilar</span>
-            <select value={pillarId} onChange={(event) => setPillarId(event.target.value)}>
-              {pillars.map((pillar) => (
-                <option key={pillar.id} value={pillar.id}>
-                  {pillar.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            <span>Formato</span>
-            <input
-              value={format}
-              onChange={(event) => setFormat(event.target.value)}
-              placeholder="Reel, carrossel, story..."
-            />
-          </label>
-
-          <label className="cmWide">
-            <span>Assunto</span>
-            <input
-              value={subject}
-              onChange={(event) => setSubject(event.target.value)}
-              placeholder="Sobre o que este conteúdo vai falar"
-              autoFocus
-            />
-          </label>
-
-          <label className="cmWide">
-            <span>Roteiro</span>
-            <textarea
-              value={script}
-              onChange={(event) => setScript(event.target.value)}
-              placeholder="A Carol escreve o roteiro aqui."
-              rows={14}
-            />
-          </label>
-
-          <label>
-            <span>Data</span>
-            <input
-              type="date"
-              value={scheduledFor}
-              onChange={(event) => setScheduledFor(event.target.value)}
-            />
-          </label>
-
-          <label>
-            <span>Etapa</span>
-            <select value={stage} onChange={(event) => setStage(event.target.value as ContentStage)}>
-              {CONTENT_STAGES.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="cmTabs" role="tablist" aria-label="Partes do conteúdo">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'piece'}
+            data-active={tab === 'piece' || undefined}
+            onClick={() => setTab('piece')}
+          >
+            Peça
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'script'}
+            data-active={tab === 'script' || undefined}
+            onClick={() => setTab('script')}
+          >
+            Roteiro
+          </button>
         </div>
+
+        {tab === 'piece' ? (
+          <div className="cmForm" key="piece">
+            <label>
+              <span>Pilar</span>
+              <select value={pillarId} onChange={(event) => setPillarId(event.target.value)}>
+                {pillars.map((pillar) => (
+                  <option key={pillar.id} value={pillar.id}>
+                    {pillar.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Formato</span>
+              <input
+                value={format}
+                onChange={(event) => setFormat(event.target.value)}
+                placeholder="Reel, carrossel, story..."
+              />
+            </label>
+
+            <label className="cmWide">
+              <span>Assunto</span>
+              <input
+                value={subject}
+                onChange={(event) => setSubject(event.target.value)}
+                placeholder="Sobre o que este conteúdo vai falar"
+                autoFocus
+              />
+            </label>
+
+            <label>
+              <span>Data</span>
+              <input
+                type="date"
+                value={scheduledFor}
+                onChange={(event) => setScheduledFor(event.target.value)}
+              />
+            </label>
+
+            <label>
+              <span>Etapa</span>
+              <select
+                value={stage}
+                onChange={(event) => setStage(event.target.value as ContentStage)}
+              >
+                {CONTENT_STAGES.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : (
+          <div className="cmForm" key="script">
+            <label>
+              <span>Zona</span>
+              <select
+                value={doc.zone}
+                onChange={(event) => patch({ zone: event.target.value as ContentZone | '' })}
+              >
+                <option value="">Sem zona</option>
+                {CONTENT_ZONES.map((zone) => (
+                  <option key={zone.value} value={zone.value}>
+                    {zone.code} — {zone.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Número na série</span>
+              <input
+                value={doc.seriesNumber}
+                onChange={(event) => patch({ seriesNumber: event.target.value })}
+                inputMode="numeric"
+                placeholder="01"
+              />
+            </label>
+
+            <label className="cmWide">
+              <span>Série</span>
+              <input
+                value={doc.series}
+                onChange={(event) => patch({ series: event.target.value })}
+                placeholder="Transformando UGC em fonte de renda"
+              />
+            </label>
+
+            <label className="cmWide">
+              <span>Pergunta da peça</span>
+              <input
+                value={doc.question}
+                onChange={(event) => patch({ question: event.target.value })}
+                placeholder="A pergunta que este conteúdo responde"
+              />
+            </label>
+
+            <label className="cmWide">
+              <span>Ideia</span>
+              <textarea
+                className="cmShortArea"
+                value={doc.idea}
+                onChange={(event) => patch({ idea: event.target.value })}
+                placeholder="O que este conteúdo mostra"
+                rows={3}
+              />
+            </label>
+
+            <label className="cmWide">
+              <span>Ângulo</span>
+              <textarea
+                className="cmShortArea"
+                value={doc.angle}
+                onChange={(event) => patch({ angle: event.target.value })}
+                placeholder="Por que esta peça é contada assim"
+                rows={3}
+              />
+            </label>
+
+            <label className="cmWide">
+              <span>Roteiro</span>
+              <textarea
+                value={doc.body}
+                onChange={(event) => patch({ body: event.target.value })}
+                placeholder="Só o roteiro: as falas e as cenas."
+                rows={14}
+              />
+            </label>
+          </div>
+        )}
 
         {error ? <p className="cmError">{error}</p> : null}
 
@@ -271,7 +462,7 @@ function Editor({
             <button
               type="button"
               className="cmPrimary"
-              disabled={pending || !subject.trim() || !pillarId}
+              disabled={pending || !pillarId}
               onClick={save}
             >
               {pending ? 'Salvando…' : 'Salvar'}
@@ -424,11 +615,13 @@ function PillarManager({
 export default function ContentManager({
   items,
   pillars,
+  nextItem,
   view,
   selectedDate,
 }: {
   items: ContentBoardItem[];
   pillars: ContentPillar[];
+  nextItem: ContentBoardItem | null;
   view: View;
   selectedDate: string;
 }) {
@@ -440,8 +633,12 @@ export default function ContentManager({
   const [managingPillars, setManagingPillars] = useState(false);
   const [editorDate, setEditorDate] = useState(selectedDate);
   const [moveError, setMoveError] = useState('');
+  // Só a troca de semana espera o servidor. Semana ↔ Dia e um dia da mesma
+  // semana já estão carregados, e mostrar barra de progresso neles era a parte
+  // que piscava sem haver nada para esperar.
+  const [loadingWeek, setLoadingWeek] = useState(false);
   const [moving, startMove] = useTransition();
-  const [navigating, startNavigation] = useTransition();
+  const [, startNavigation] = useTransition();
   const boardRef = useRef<HTMLDivElement>(null);
 
   const loadedStart = weekStart(selectedDate);
@@ -495,6 +692,9 @@ export default function ContentManager({
       return;
     }
 
+    // `loadingWeek` não precisa voltar a falso: a semana nova remonta o
+    // gerenciador inteiro, e o estado nasce limpo com ela.
+    setLoadingWeek(true);
     startNavigation(() => {
       router.push(href(activeView, nextDate), { scroll: false });
     });
@@ -529,7 +729,7 @@ export default function ContentManager({
   const today = toIso(new Date());
 
   return (
-    <div className="cm" data-navigating={navigating || undefined}>
+    <div className="cm" data-navigating={loadingWeek || undefined}>
       <div className="cmNavProgress" aria-hidden="true" />
 
       <header className="cmTop">
@@ -552,6 +752,10 @@ export default function ContentManager({
         </div>
       </header>
 
+      {nextItem ? (
+        <NextTaskBanner item={nextItem} today={today} onOpen={() => setEditing(nextItem)} />
+      ) : null}
+
       <div className="cmToolbar">
         <div className="cmViewSwitch" aria-label="Visualização">
           <button
@@ -573,100 +777,97 @@ export default function ContentManager({
         </div>
 
         <div className="cmDateNav">
-          <button type="button" aria-label="Anterior" disabled={navigating} onClick={() => goToDate(previousDate)}>
+          {loadingWeek ? <Spinner label="Carregando a semana" /> : null}
+          <button type="button" aria-label="Anterior" disabled={loadingWeek} onClick={() => goToDate(previousDate)}>
             ‹
           </button>
-          <button type="button" className="cmToday" disabled={navigating} onClick={() => goToDate(today)}>
+          <button type="button" className="cmToday" disabled={loadingWeek} onClick={() => goToDate(today)}>
             Hoje
           </button>
-          <button type="button" aria-label="Próximo" disabled={navigating} onClick={() => goToDate(nextDate)}>
+          <button type="button" aria-label="Próximo" disabled={loadingWeek} onClick={() => goToDate(nextDate)}>
             ›
           </button>
         </div>
       </div>
 
-      {navigating ? (
-        <p className="cmLoadingText" role="status">
-          Atualizando…
-        </p>
-      ) : null}
-
-      {activeView === 'week' ? (
-        <div className="cmCalendar">
-          {days.map((day) => {
-            const dayRows = byDate.get(day) ?? [];
-            const isSelected = day === activeDate;
-            return (
-              <section className="cmDay" key={day} data-selected={isSelected || undefined}>
-                <button
-                  type="button"
-                  className="cmDayHead"
-                  onClick={() => syncView('day', day)}
-                >
-                  <span>{formatDay(day, { weekday: 'short' })}</span>
-                  <strong>{formatDay(day, { day: '2-digit' })}</strong>
-                </button>
-
-                <div className="cmDayCards">
-                  {dayRows.map((item) => (
-                    <ContentCard
-                      key={item.id}
-                      item={item}
-                      accent={pillarAccent(item.pillarId, localPillars)}
-                      compact
-                      onOpen={() => setEditing(item)}
-                    />
-                  ))}
-
-                  {!dayRows.length ? (
-                    <button className="cmEmptyDay" type="button" onClick={() => openNew(day)}>
-                      + adicionar
-                    </button>
-                  ) : null}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      ) : (
-        <>
-          {moveError ? <p className="cmError">{moveError}</p> : null}
-          <div className="cmBoard" ref={boardRef} data-moving={moving || undefined}>
-            {CONTENT_STAGES.map((column) => {
-              const rows = dayItems.filter((item) => item.stage === column.value);
+      <div className="cmView" key={activeView} data-waiting={loadingWeek || undefined}>
+        {activeView === 'week' ? (
+          <div className="cmCalendar">
+            {days.map((day) => {
+              const dayRows = byDate.get(day) ?? [];
+              const isSelected = day === activeDate;
               return (
-                <section
-                  className="cmColumn"
-                  key={column.value}
-                  data-zone={column.value}
-                  data-over={drag.zone === column.value || undefined}
-                >
-                  <header className="cmColumnHead">
-                    <div>
-                      <h2>{column.label}</h2>
-                      <p>{column.description}</p>
-                    </div>
-                    <span>{rows.length}</span>
-                  </header>
+                <section className="cmDay" key={day} data-selected={isSelected || undefined}>
+                  <button
+                    type="button"
+                    className="cmDayHead"
+                    onClick={() => syncView('day', day)}
+                  >
+                    <span>{weekdayName(day)}</span>
+                    <strong>{formatDay(day, { day: '2-digit' })}</strong>
+                  </button>
 
-                  <div className="cmColumnCards">
-                    {rows.map((item) => (
+                  <div className="cmDayCards">
+                    {dayRows.map((item) => (
                       <ContentCard
                         key={item.id}
                         item={item}
                         accent={pillarAccent(item.pillarId, localPillars)}
+                        compact
                         onOpen={() => setEditing(item)}
-                        drag={drag}
                       />
                     ))}
-                    {!rows.length ? <p className="cmColumnEmpty">Solte um card aqui</p> : null}
+
+                    {!dayRows.length ? (
+                      <button className="cmEmptyDay" type="button" onClick={() => openNew(day)}>
+                        + adicionar
+                      </button>
+                    ) : null}
                   </div>
                 </section>
               );
             })}
           </div>
-        </>
-      )}
+        ) : (
+          <>
+            {moveError ? <p className="cmError">{moveError}</p> : null}
+            <div className="cmBoard" ref={boardRef} data-moving={moving || undefined}>
+              {CONTENT_STAGES.map((column) => {
+                const rows = dayItems.filter((item) => item.stage === column.value);
+                return (
+                  <section
+                    className="cmColumn"
+                    key={column.value}
+                    data-zone={column.value}
+                    data-over={drag.zone === column.value || undefined}
+                  >
+                    <header className="cmColumnHead">
+                      <div>
+                        <h2>{column.label}</h2>
+                        <p>{column.description}</p>
+                      </div>
+                      <span>{rows.length}</span>
+                    </header>
+
+                    <div className="cmColumnCards">
+                      {rows.map((item) => (
+                        <ContentCard
+                          key={item.id}
+                          item={item}
+                          accent={pillarAccent(item.pillarId, localPillars)}
+                          onOpen={() => setEditing(item)}
+                          drag={drag}
+                        />
+                      ))}
+                      {!rows.length ? <p className="cmColumnEmpty">Solte um card aqui</p> : null}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
 
       {editing !== undefined ? (
         <Editor

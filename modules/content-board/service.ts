@@ -234,3 +234,24 @@ export async function deleteContentBoardItem(
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
+
+/** A próxima peça que ainda pede trabalho.
+ *
+ *  Não é a primeira da semana carregada: o banner do topo precisa saber o que
+ *  vem a seguir mesmo quando a Carol está olhando outra semana. */
+export async function nextContentItem(from: string): Promise<ContentBoardItem | null> {
+  const db = await contentDb();
+  const { data, error } = await db
+    .from('content_board_item')
+    .select(ITEM_SELECT)
+    .gte('scheduled_for', from)
+    .neq('stage', 'published')
+    .order('scheduled_for')
+    .order('position')
+    .order('created_at')
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw new Error(`Falha ao ler a próxima tarefa: ${error.message}`);
+  return data ? toItem(data as unknown as RawContentBoardItem) : null;
+}
