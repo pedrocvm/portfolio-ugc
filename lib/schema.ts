@@ -46,7 +46,7 @@ export const SECTIONS: Section[] = [
       { k: 'text', path: 'hero.top', label: 'Canto superior' },
       { k: 'text', path: 'hero.kicker', label: 'Linha acima do nome' },
       { k: 'text', path: 'hero.firstName', label: 'Primeiro nome' },
-      { k: 'text', path: 'hero.lastName', label: 'sobrenome' },
+      { k: 'text', path: 'hero.lastName', label: 'Sobrenome' },
       { k: 'text', path: 'hero.scroll', label: 'Indicação para rolar' },
       {
         k: 'image',
@@ -82,7 +82,7 @@ export const SECTIONS: Section[] = [
           {
             k: 'list',
             path: 'reel',
-            label: 'registros deste nicho',
+            label: 'Registros deste nicho',
             title: 'Registro',
             hint: 'Sem registros, a gaveta mostra uma seleção automática das fotos do site.',
             blank: { src: '' },

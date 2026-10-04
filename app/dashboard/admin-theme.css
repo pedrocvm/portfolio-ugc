@@ -25,15 +25,19 @@
   --tinta2: var(--admin-oliva);
   --tinta3: var(--admin-taupe);
   --grafite: var(--admin-oliva);
-  --ferro: var(--admin-marfin);
-  --ferro2: color-mix(in srgb, var(--admin-champagne) 48%, var(--admin-marfin));
+  /* `--ferro` é a superfície escura do tema base: é dela que o botão cheio e o
+     botão flutuante tiram o fundo. Apontada ao marfim, «Ver o site» ficava
+     marfim sobre marfim — ilegível — e todo o botão de texto precisava de ser
+     repintado à mão por cima. A cor cheia desta área é a cereja. */
+  --ferro: var(--admin-cereja);
+  --ferro2: color-mix(in srgb, var(--admin-cereja) 86%, black);
   --jade-claro: color-mix(in srgb, var(--admin-oliva) 35%, var(--admin-marfin));
   --jade: var(--admin-oliva);
   --jade-escuro: var(--admin-oliva);
   --jadeLeve: color-mix(in srgb, var(--admin-oliva) 9%, var(--admin-marfin));
   --alerta: var(--admin-cereja);
   --alertaLeve: color-mix(in srgb, var(--admin-cereja) 8%, var(--admin-marfin));
-  --realce: var(--admin-cereja);
+  --realce: color-mix(in srgb, var(--admin-cereja) 78%, black);
   --realceLeve: color-mix(in srgb, var(--admin-cereja) 8%, var(--admin-marfin));
 
   min-height: 100dvh;
@@ -217,16 +221,6 @@
 .dash :is(input, textarea, select):focus {
   border-color: var(--admin-cereja);
   outline-color: var(--admin-cereja);
-}
-
-.dash :is(.btn, .osGo, .pvFab) {
-  border-color: var(--admin-cereja);
-}
-
-.dash .btn:not(.secondary),
-.dash .osGo {
-  background: var(--admin-cereja);
-  color: var(--admin-marfin);
 }
 
 .dash :is(.card, .osRow, .impBox, .nba, .doc, .moreBox) {
@@ -491,14 +485,10 @@
 }
 
 
-/* A tela ganha um fundo levemente mais quente do que o cartão: três planos —
-   barra escura, tela em areia, cartão em branco quebrado. */
-.dash .sheet {
-  background: color-mix(in srgb, var(--admin-champagne) 13%, var(--admin-marfin));
-}
-
+/* Com a tela em marfim, o banner precisa da sua própria superfície para não
+   ler como um pedaço solto do fundo. */
 .dash .cmNext {
-  background: var(--admin-marfin);
+  background: color-mix(in srgb, var(--admin-champagne) 15%, var(--admin-marfin));
   border-color: var(--admin-champagne);
   border-left-color: var(--admin-cereja);
 }
@@ -563,4 +553,20 @@
 .dash .cmSwitchMini button[data-active] {
   background: var(--admin-marfin);
   color: var(--admin-cereja);
+}
+
+/* O índice da margem tinha um cinza escrito à mão, de fora da paleta. */
+.dash .secIndex a {
+  color: var(--admin-oliva);
+}
+
+.dash .secIndex a:hover,
+.dash .secIndex a[aria-current] {
+  color: var(--admin-cereja);
+}
+
+/* `#8d8478` sobre champanhe era texto cinzento num botão bege. */
+.dash .btn.solid:disabled {
+  background: color-mix(in srgb, var(--admin-champagne) 55%, var(--admin-marfin));
+  color: color-mix(in srgb, var(--admin-taupe) 80%, black);
 }

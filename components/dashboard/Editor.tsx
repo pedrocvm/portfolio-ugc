@@ -199,7 +199,7 @@ export default function Editor({ initial }: { initial: Content }) {
           onClick={save}
           disabled={pending || !dirty}
         >
-          salvar
+          Salvar
         </button>
         <button
           type="button"
