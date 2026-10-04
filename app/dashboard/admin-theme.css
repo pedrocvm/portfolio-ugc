@@ -534,3 +534,33 @@
   color: var(--admin-cereja);
   border-bottom-color: var(--admin-cereja);
 }
+
+.dash .cmRead {
+  background: color-mix(in srgb, white 76%, var(--admin-marfin));
+  border-color: var(--admin-champagne);
+}
+
+.dash .cmSpeech {
+  color: var(--admin-cereja);
+}
+
+.dash .cmNote,
+.dash .cmReadEmpty {
+  color: var(--admin-oliva);
+}
+
+.dash .cmDirection {
+  --direcao: var(--admin-dourado);
+  color: color-mix(in srgb, var(--admin-dourado) 72%, #2A1E0B);
+  border-left-color: var(--admin-dourado);
+  background: color-mix(in srgb, var(--admin-dourado) 15%, transparent);
+}
+
+.dash .cmForm .cmFieldLabel {
+  color: var(--admin-cereja);
+}
+
+.dash .cmSwitchMini button[data-active] {
+  background: var(--admin-marfin);
+  color: var(--admin-cereja);
+}

@@ -17,6 +17,7 @@ import {
   EMPTY_SCRIPT,
   STAGE_KEYS,
   parseScript,
+  scriptLines,
   serializeScript,
   stageLabel,
   zoneCode,
@@ -196,6 +197,95 @@ function NextTaskBanner({
   );
 }
 
+/** Um campo é sempre rótulo em cima, controle embaixo. Com dezasseis deles no
+ *  editor, escrever o `<label>` à mão em cada um era onde a marcação começava
+ *  a divergir sozinha. */
+function Field({
+  label,
+  wide = true,
+  children,
+}: {
+  label: string;
+  wide?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className={wide ? 'cmWide' : undefined}>
+      <span>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function Area({
+  label,
+  value,
+  onChange,
+  placeholder,
+  rows = 3,
+  wide = true,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  rows?: number;
+  wide?: boolean;
+}) {
+  return (
+    <Field label={label} wide={wide}>
+      <textarea
+        className="cmShortArea"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+      />
+    </Field>
+  );
+}
+
+/** O roteiro lido para gravar.
+ *
+ *  A direção entre colchetes deixa de ser texto igual ao resto: ela diz o que
+ *  fazer com a câmera, não o que falar, e lida de longe com o telemóvel na
+ *  mão as duas coisas precisam de se distinguir sem ser preciso ler. */
+function ScriptRead({ body }: { body: string }) {
+  const lines = useMemo(() => scriptLines(body), [body]);
+
+  if (!lines.length) {
+    return <p className="cmReadEmpty">O roteiro ainda não foi escrito.</p>;
+  }
+
+  return (
+    <div className="cmRead">
+      {lines.map((line, index) => {
+        if (line.kind === 'direction') {
+          return (
+            <p className="cmDirection" key={index}>
+              {line.text}
+            </p>
+          );
+        }
+        return (
+          <p className={line.kind === 'speech' ? 'cmSpeech' : 'cmNote'} key={index}>
+            {line.text}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+const EDITOR_TABS = [
+  { value: 'piece', label: 'Peça' },
+  { value: 'strategy', label: 'Estratégia' },
+  { value: 'script', label: 'Roteiro' },
+  { value: 'shoot', label: 'Gravação' },
+] as const;
+
+type EditorTab = (typeof EDITOR_TABS)[number]['value'];
+
 function Editor({
   item,
   date,
@@ -209,13 +299,16 @@ function Editor({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [tab, setTab] = useState<'piece' | 'script'>('piece');
+  const [tab, setTab] = useState<EditorTab>('piece');
   const [pillarId, setPillarId] = useState(item?.pillarId || pillars[0]?.id || '');
   const [format, setFormat] = useState(item?.format ?? '');
   const [subject, setSubject] = useState(item?.subject ?? '');
   const [doc, setDoc] = useState<ScriptDoc>(() =>
     item ? parseScript(item.script) : EMPTY_SCRIPT,
   );
+  // Quem abre uma peça que já tem roteiro quase sempre vai gravá-la, não
+  // reescrevê-la. Quem abre uma vazia só pode escrever.
+  const [reading, setReading] = useState(() => Boolean(doc.body.trim()));
   const [scheduledFor, setScheduledFor] = useState(item?.scheduledFor ?? date);
   const [stage, setStage] = useState<ContentStage>(item?.stage ?? 'idea');
   const [error, setError] = useState('');
@@ -291,30 +384,23 @@ function Editor({
         </header>
 
         <div className="cmTabs" role="tablist" aria-label="Partes do conteúdo">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'piece'}
-            data-active={tab === 'piece' || undefined}
-            onClick={() => setTab('piece')}
-          >
-            Peça
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'script'}
-            data-active={tab === 'script' || undefined}
-            onClick={() => setTab('script')}
-          >
-            Roteiro
-          </button>
+          {EDITOR_TABS.map((entry) => (
+            <button
+              key={entry.value}
+              type="button"
+              role="tab"
+              aria-selected={tab === entry.value}
+              data-active={tab === entry.value || undefined}
+              onClick={() => setTab(entry.value)}
+            >
+              {entry.label}
+            </button>
+          ))}
         </div>
 
         {tab === 'piece' ? (
           <div className="cmForm" key="piece">
-            <label>
-              <span>Pilar</span>
+            <Field label="Pilar" wide={false}>
               <select value={pillarId} onChange={(event) => setPillarId(event.target.value)}>
                 {pillars.map((pillar) => (
                   <option key={pillar.id} value={pillar.id}>
@@ -322,38 +408,36 @@ function Editor({
                   </option>
                 ))}
               </select>
-            </label>
+            </Field>
 
-            <label>
-              <span>Formato</span>
+            <Field label="Formato" wide={false}>
               <input
                 value={format}
                 onChange={(event) => setFormat(event.target.value)}
                 placeholder="Reel, carrossel, story..."
               />
-            </label>
+            </Field>
 
-            <label className="cmWide">
-              <span>Assunto</span>
-              <input
+            <Field label="Assunto">
+              <textarea
+                className="cmSubjectArea"
                 value={subject}
                 onChange={(event) => setSubject(event.target.value)}
                 placeholder="Sobre o que este conteúdo vai falar"
+                rows={3}
                 autoFocus
               />
-            </label>
+            </Field>
 
-            <label>
-              <span>Data</span>
+            <Field label="Data" wide={false}>
               <input
                 type="date"
                 value={scheduledFor}
                 onChange={(event) => setScheduledFor(event.target.value)}
               />
-            </label>
+            </Field>
 
-            <label>
-              <span>Etapa</span>
+            <Field label="Etapa" wide={false}>
               <select
                 value={stage}
                 onChange={(event) => setStage(event.target.value as ContentStage)}
@@ -364,12 +448,13 @@ function Editor({
                   </option>
                 ))}
               </select>
-            </label>
+            </Field>
           </div>
-        ) : (
-          <div className="cmForm" key="script">
-            <label>
-              <span>Zona</span>
+        ) : null}
+
+        {tab === 'strategy' ? (
+          <div className="cmForm" key="strategy">
+            <Field label="Zona" wide={false}>
               <select
                 value={doc.zone}
                 onChange={(event) => patch({ zone: event.target.value as ContentZone | '' })}
@@ -381,69 +466,153 @@ function Editor({
                   </option>
                 ))}
               </select>
-            </label>
+            </Field>
 
-            <label>
-              <span>Número na série</span>
+            <Field label="Número na série" wide={false}>
               <input
                 value={doc.seriesNumber}
                 onChange={(event) => patch({ seriesNumber: event.target.value })}
                 inputMode="numeric"
                 placeholder="01"
               />
-            </label>
+            </Field>
 
-            <label className="cmWide">
-              <span>Série</span>
+            <Field label="Série">
               <input
                 value={doc.series}
                 onChange={(event) => patch({ series: event.target.value })}
                 placeholder="Transformando UGC em fonte de renda"
               />
-            </label>
+            </Field>
 
-            <label className="cmWide">
-              <span>Pergunta da peça</span>
+            <Field label="Pergunta da peça">
               <input
                 value={doc.question}
                 onChange={(event) => patch({ question: event.target.value })}
                 placeholder="A pergunta que este conteúdo responde"
               />
-            </label>
+            </Field>
 
-            <label className="cmWide">
-              <span>Ideia</span>
-              <textarea
-                className="cmShortArea"
-                value={doc.idea}
-                onChange={(event) => patch({ idea: event.target.value })}
-                placeholder="O que este conteúdo mostra"
-                rows={3}
-              />
-            </label>
+            <Area
+              label="Ideia"
+              value={doc.idea}
+              onChange={(idea) => patch({ idea })}
+              placeholder="O que este conteúdo mostra"
+            />
 
-            <label className="cmWide">
-              <span>Ângulo</span>
-              <textarea
-                className="cmShortArea"
-                value={doc.angle}
-                onChange={(event) => patch({ angle: event.target.value })}
-                placeholder="Por que esta peça é contada assim"
-                rows={3}
-              />
-            </label>
+            <Area
+              label="Ângulo"
+              value={doc.angle}
+              onChange={(angle) => patch({ angle })}
+              placeholder="Por que esta peça é contada assim"
+            />
 
-            <label className="cmWide">
-              <span>Roteiro</span>
-              <textarea
-                value={doc.body}
-                onChange={(event) => patch({ body: event.target.value })}
-                placeholder="Só o roteiro: as falas e as cenas."
-                rows={14}
-              />
-            </label>
+            <Area
+              label="Promessa"
+              value={doc.promise}
+              onChange={(promise) => patch({ promise })}
+              placeholder="O que quem assiste leva daqui"
+            />
+
+            <Area
+              label="Gate final"
+              value={doc.gate}
+              onChange={(gate) => patch({ gate })}
+              placeholder="O que precisa estar verdadeiro para esta peça poder sair"
+            />
           </div>
-        )}
+        ) : null}
+
+        {tab === 'script' ? (
+          <div className="cmForm" key="script">
+            <Area
+              label="Gancho"
+              value={doc.hook}
+              onChange={(hook) => patch({ hook })}
+              placeholder="A primeira frase, dita como ela diria"
+              rows={2}
+            />
+
+            <Area
+              label="Estrutura"
+              value={doc.structure}
+              onChange={(structure) => patch({ structure })}
+              placeholder="Mudança → dúvida → descoberta → decisão"
+              rows={2}
+            />
+
+            <div className="cmWide cmScriptField">
+              <div className="cmScriptHead">
+                <span className="cmFieldLabel">Roteiro</span>
+                <div className="cmViewSwitch cmSwitchMini">
+                  <button
+                    type="button"
+                    data-active={!reading || undefined}
+                    aria-pressed={!reading}
+                    onClick={() => setReading(false)}
+                  >
+                    Escrever
+                  </button>
+                  <button
+                    type="button"
+                    data-active={reading || undefined}
+                    aria-pressed={reading}
+                    onClick={() => setReading(true)}
+                  >
+                    Gravar
+                  </button>
+                </div>
+              </div>
+
+              {reading ? (
+                <ScriptRead body={doc.body} />
+              ) : (
+                <textarea
+                  value={doc.body}
+                  onChange={(event) => patch({ body: event.target.value })}
+                  placeholder={'[direção entre colchetes]\n“fala entre aspas”'}
+                  aria-label="Roteiro"
+                  rows={16}
+                />
+              )}
+            </div>
+          </div>
+        ) : null}
+
+        {tab === 'shoot' ? (
+          <div className="cmForm" key="shoot">
+            <Area
+              label="Execução"
+              value={doc.execution}
+              onChange={(execution) => patch({ execution })}
+              placeholder="Como gravar: enquadramento, B-roll, o que evitar"
+            />
+
+            <Area
+              label="Texto na tela"
+              value={doc.screenText}
+              onChange={(screenText) => patch({ screenText })}
+              placeholder="O que aparece escrito por cima"
+              rows={2}
+            />
+
+            <Area
+              label="Capa"
+              value={doc.cover}
+              onChange={(cover) => patch({ cover })}
+              placeholder="A frase da capa"
+              rows={2}
+            />
+
+            <Field label="Duração estimada" wide={false}>
+              <input
+                value={doc.duration}
+                onChange={(event) => patch({ duration: event.target.value })}
+                placeholder="40–50 segundos"
+              />
+            </Field>
+          </div>
+        ) : null}
 
         {error ? <p className="cmError">{error}</p> : null}
 

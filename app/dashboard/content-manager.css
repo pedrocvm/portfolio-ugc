@@ -413,6 +413,11 @@
   justify-items: end;
   background: rgba(25, 23, 20, 0.46);
   backdrop-filter: blur(5px);
+  animation: cmFade var(--t-normal) var(--ease) both;
+}
+
+@keyframes cmFade {
+  from { opacity: 0; }
 }
 
 .cmEditor {
@@ -422,12 +427,12 @@
   padding: 28px clamp(20px, 4vw, 42px) 32px;
   background: var(--papel);
   box-shadow: -24px 0 70px rgba(25, 23, 20, 0.18);
-  animation: cmSlide var(--t-normal) var(--exp) both;
+  animation: cmSlide var(--t-slow) var(--exp) both;
 }
 
 @keyframes cmSlide {
   from {
-    transform: translateX(28px);
+    transform: translateX(40px);
     opacity: 0;
   }
 }
@@ -441,9 +446,16 @@
   border-bottom: 1px solid var(--areia2);
 }
 
+/* O assunto é longo por natureza e o título não é o conteúdo: deixá-lo com
+   cinco linhas empurrava o roteiro para fora do ecrã antes de ela ler nada. */
 .cmEditorHead h2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   margin-top: 5px;
-  font-size: clamp(30px, 5vw, 48px);
+  font-size: clamp(26px, 3.4vw, 34px);
+  line-height: 1.12;
 }
 
 .cmClose {
@@ -873,19 +885,19 @@
 /* ── troca de vista e espera ────────────────────────────────────────── */
 
 .cmView {
-  animation: cmViewIn var(--t-fast) var(--ease) both;
+  animation: cmViewIn var(--t-slow) var(--exp) both;
 }
 
 .cmView[data-waiting] {
-  opacity: 0.45;
+  opacity: 0.4;
   pointer-events: none;
-  transition: opacity var(--t-fast) var(--ease);
+  transition: opacity var(--t-normal) var(--ease);
 }
 
 @keyframes cmViewIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(10px);
   }
 }
 
@@ -931,11 +943,20 @@
 }
 
 .cmForm {
-  animation: cmViewIn var(--t-fast) var(--ease) both;
+  animation: cmViewIn var(--t-slow) var(--exp) both;
 }
 
 .cmForm textarea.cmShortArea {
-  min-height: 96px;
+  min-height: 92px;
+}
+
+.cmForm textarea.cmSubjectArea {
+  min-height: 78px;
+  font-family: var(--disp);
+  font-variation-settings: var(--wide);
+  font-size: 17px;
+  line-height: 1.35;
+  resize: vertical;
 }
 
 @media (max-width: 620px) {
@@ -953,6 +974,127 @@
 @media (prefers-reduced-motion: reduce) {
   .cmView,
   .cmForm {
+    animation: none;
+  }
+}
+
+
+/* ── o roteiro lido para gravar ─────────────────────────────────────── */
+
+.cmScriptField {
+  display: flex;
+  flex-direction: column;
+}
+
+.cmScriptHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.cmForm .cmFieldLabel {
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 12px;
+  font-weight: 560;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta3);
+}
+
+.cmSwitchMini button {
+  min-width: 0;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.cmViewSwitch button {
+  transition: color var(--t-normal) var(--ease), background var(--t-normal) var(--ease);
+}
+
+.cmRead {
+  min-height: 330px;
+  padding: 22px 24px 26px;
+  border: 1px solid var(--areia2);
+  background: #fff;
+  animation: cmViewIn var(--t-normal) var(--exp) both;
+}
+
+.cmReadEmpty {
+  margin: 0;
+  padding: 40px 10px;
+  border: 1px dashed var(--areia2);
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--tinta3);
+}
+
+/* A fala é o que ela lê com o telemóvel na mão: corpo grande e linha larga. */
+.cmSpeech {
+  margin: 0 0 18px;
+  font-family: var(--serif);
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--tinta);
+}
+
+/* A direção não se lê em voz alta. Cor própria, caixa própria, e o par de
+   colchetes deixa de ser preciso para a distinguir. */
+.cmDirection {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 6px 12px 6px 10px;
+  border-left: 3px solid var(--direcao, #A1702A);
+  background: color-mix(in srgb, var(--direcao, #A1702A) 11%, transparent);
+  color: var(--direcao, #A1702A);
+  font-family: var(--disp);
+  font-variation-settings: var(--narrow);
+  font-size: 13px;
+  font-weight: 560;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+
+.cmDirection::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.cmNote {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--tinta2);
+}
+
+.cmRead > :last-child {
+  margin-bottom: 0;
+}
+
+/* A direção vem sempre colada à fala que ela comanda. */
+.cmDirection + .cmSpeech,
+.cmDirection + .cmNote {
+  margin-top: -4px;
+}
+
+.cmSpeech + .cmDirection,
+.cmNote + .cmDirection {
+  margin-top: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmOverlay,
+  .cmRead {
     animation: none;
   }
 }
