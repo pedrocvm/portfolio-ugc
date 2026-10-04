@@ -32,7 +32,7 @@ Referências analisadas permanecem na área de referências. A Carol revisa a pr
 
 A área `/dashboard/content/references` reúne links, legendas, transcrições, leitura das imagens e aplicação prática ao contexto atual da Carol.
 
-O conector local acompanha uma coleção escolhida nos Salvos a cada cinco minutos. É uma integração não oficial e depende de um processo ligado com a sessão da própria conta. O CMS usa Supabase Realtime para exibir o material recebido e a evolução da análise. A sessão Instagram não é enviada ao CMS.
+O conector acompanha uma coleção escolhida nos Salvos em ciclos com intervalo mínimo de cinco minutos. Pode operar continuamente em um servidor autorizado, com Docker, reinício automático e estado privado persistente. A execução em um computador continua disponível como alternativa. A integração é não oficial e depende de uma sessão válida da própria conta. O CMS usa Supabase Realtime para exibir o material recebido e a evolução da análise. A sessão Instagram fica no dispositivo ou servidor do conector e não é enviada ao CMS.
 
 Também é possível adicionar um link e enviar a mídia diretamente pela interface. Links sem mídia ou texto suficiente continuam identificados como referências que precisam de material.
 
@@ -95,7 +95,7 @@ supabase/migrations/            histórico aditivo; migrations antigas não são
 
 ## Integrações históricas
 
-A integração Meta e os módulos antigos permanecem no repositório quando removê-los acrescentaria risco. Sua presença não autoriza reabrir áreas nem reativar agendamentos do produto anterior. A coleção privada de Salvos usa o conector local descrito acima.
+A integração Meta e os módulos antigos permanecem no repositório quando removê-los acrescentaria risco. Sua presença não autoriza reabrir áreas nem reativar agendamentos do produto anterior. A coleção privada de Salvos usa o conector isolado descrito acima.
 
 Ausência de métrica continua sendo `NULL`, nunca zero. Trial Reel não é inferido pela API.
 

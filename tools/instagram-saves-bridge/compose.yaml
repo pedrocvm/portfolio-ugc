@@ -1,0 +1,43 @@
+name: carolos-instagram-saves
+
+services:
+  instagram-saves:
+    image: carolos-instagram-saves:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+    stop_grace_period: 30s
+    environment:
+      CAROLOS_BRIDGE_LOCATION: server
+    volumes:
+      - instagram-state:/state
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=32m,mode=1777
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "python", "bridge.py", "--state-dir", "/state", "status", "--healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 45s
+      retries: 3
+
+# This named volume belongs only to this Compose project. Never use down -v
+# during updates; it contains the session, import token and pending queue.
+volumes:
+  instagram-state:

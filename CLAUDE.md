@@ -48,7 +48,7 @@ Não escreva regras editoriais concorrentes em prompts, componentes ou outros m�
 
 O contexto atual para aplicação de referências vive em `modules/content-brain/saved-reference-context.ts`, combinado com os temas ativos, conteúdo recente e a rotina editável do CMS. Os prompts antigos de três pilares são históricos e não governam esse fluxo.
 
-Referências são uma subárea de Conteúdo. O conector de Salvos usa sincronização periódica não oficial; Supabase Realtime atualiza a interface depois da ingestão. Nunca afirmar sincronização instantânea da origem nem conexão ativa sem heartbeat. A sessão Instagram fica apenas no conector local. A conversão em conteúdo exige revisão da Carol e cria somente a etapa `idea`.
+Referências são uma subárea de Conteúdo. O conector de Salvos usa sincronização periódica não oficial; Supabase Realtime atualiza a interface depois da ingestão. Nunca afirmar sincronização instantânea da origem nem conexão ativa sem heartbeat. A sessão Instagram fica apenas no dispositivo ou servidor autorizado que executa o conector, sem chegar ao CMS ou à Vercel. A conversão em conteúdo exige revisão da Carol e cria somente a etapa `idea`.
 
 ### Arquitetura
 
