@@ -199,7 +199,18 @@ class FakeInstagram:
         self.account_info = Mock(return_value={"pk": "123", "username": "carol"})
         self.collections = Mock(return_value=[{"id": "456", "name": "CarolOS"}])
         self.collection_medias_v1_chunk = Mock(return_value=([saved_media()], "next-cursor"))
-        self.get_settings = Mock(return_value={"authorization_data": {"ds_user_id": "123"}, "password": "never-save-this"})
+        self.get_settings = Mock(return_value={
+            "uuids": {
+                "phone_id": "phone-authenticated", "uuid": "uuid-authenticated",
+                "client_session_id": "client-authenticated", "advertising_id": "ad-authenticated",
+                "android_device_id": "android-authenticated", "request_id": "request-authenticated",
+                "tray_session_id": "tray-authenticated",
+            },
+            "device_settings": {"manufacturer": "Google", "model": "Pixel Authenticated"},
+            "user_agent": "Instagram authenticated test profile",
+            "authorization_data": {"ds_user_id": "123"},
+            "password": "never-save-this",
+        })
 
     def set_settings(self, settings):
         self.events.append("restore")
