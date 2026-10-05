@@ -194,15 +194,32 @@ class FakeInstagram:
         self.username = ""
         self.password = ""
         self.events = []
+        self.restored_settings = None
         self.login = Mock()
         self.account_info = Mock(return_value={"pk": "123", "username": "carol"})
         self.collections = Mock(return_value=[{"id": "456", "name": "CarolOS"}])
         self.collection_medias_v1_chunk = Mock(return_value=([saved_media()], "next-cursor"))
-        self.get_settings = Mock(return_value={"authorization_data": {"ds_user_id": "123"}, "password": "never-save-this"})
+        self.get_settings = Mock(return_value={
+            "uuids": {
+                "phone_id": "phone-stable", "uuid": "uuid-stable",
+                "client_session_id": "client-stable", "advertising_id": "ad-stable",
+                "android_device_id": "android-stable", "request_id": "request-stable",
+                "tray_session_id": "tray-stable",
+            },
+            "device_settings": {"manufacturer": "Google", "model": "Pixel Stable"},
+            "user_agent": "Instagram stable test profile",
+            "country": "PT", "country_code": 351, "locale": "pt_PT",
+            "timezone_offset": 3600, "timezone_name": "Europe/Lisbon",
+            "authorization_data": {"ds_user_id": "123"},
+            "cookies": {"sessionid": "never-save-this-cookie"},
+            "password": "never-save-this",
+        })
 
     def set_settings(self, settings):
         self.events.append("restore")
-        self.user_id = settings["authorization_data"]["ds_user_id"]
+        self.restored_settings = settings
+        authorization = settings.get("authorization_data") or {}
+        self.user_id = authorization.get("ds_user_id")
 
 
 class CLITests(LocalTestCase):
@@ -253,6 +270,38 @@ class CLITests(LocalTestCase):
         self.assertNotIn("never-save-this", path.read_text())
         with self.assertRaisesRegex(BridgeError, "instagram_action_required"):
             fake.challenge_resolve({"challenge": "do-not-solve"})
+
+    def test_failed_login_attempts_reuse_one_private_device_profile(self):
+        config = local_config()
+        module = types.ModuleType("instagrapi")
+        first = FakeInstagram()
+        second = FakeInstagram()
+        module.Client = Mock(side_effect=[first, second])
+        session_path = self.directory / "session.json"
+        device_path = self.directory / "device.json"
+
+        with patch("bridge.importlib.metadata.version", return_value=bridge.INSTAGRAPI_VERSION), patch.dict(sys.modules, {"instagrapi": module}):
+            bridge.InstagramClient(config, session_path)
+            self.assertFalse(session_path.exists())
+            self.assertTrue(device_path.exists())
+            saved = read_private_json(device_path)
+            self.assertEqual(saved["username"], "carol")
+            self.assertEqual(saved["settings"]["uuids"]["android_device_id"], "android-stable")
+            self.assertEqual(saved["settings"]["device_settings"]["model"], "Pixel Stable")
+            self.assertNotIn("authorization_data", saved["settings"])
+            self.assertNotIn("cookies", saved["settings"])
+            self.assertNotIn("password", device_path.read_text())
+            self.assertNotIn("never-save-this", device_path.read_text())
+            self.assertEqual(stat.S_IMODE(device_path.stat().st_mode), 0o600)
+
+            bridge.InstagramClient(config, session_path)
+
+        self.assertEqual(second.events, ["restore"])
+        self.assertEqual(second.restored_settings["uuids"]["uuid"], "uuid-stable")
+        self.assertEqual(second.restored_settings["device_settings"]["manufacturer"], "Google")
+        self.assertIsNone(second.user_id)
+        first.login.assert_not_called()
+        second.login.assert_not_called()
 
     def test_saved_session_cannot_bind_another_account(self):
         fake = FakeInstagram()
