@@ -199,21 +199,7 @@ class FakeInstagram:
         self.account_info = Mock(return_value={"pk": "123", "username": "carol"})
         self.collections = Mock(return_value=[{"id": "456", "name": "CarolOS"}])
         self.collection_medias_v1_chunk = Mock(return_value=([saved_media()], "next-cursor"))
-        self.get_settings = Mock(return_value={
-            "uuids": {
-                "phone_id": "phone-stable", "uuid": "uuid-stable",
-                "client_session_id": "client-stable", "advertising_id": "ad-stable",
-                "android_device_id": "android-stable", "request_id": "request-stable",
-                "tray_session_id": "tray-stable",
-            },
-            "device_settings": {"manufacturer": "Google", "model": "Pixel Stable"},
-            "user_agent": "Instagram stable test profile",
-            "country": "PT", "country_code": 351, "locale": "pt_PT",
-            "timezone_offset": 3600, "timezone_name": "Europe/Lisbon",
-            "authorization_data": {"ds_user_id": "123"},
-            "cookies": {"sessionid": "never-save-this-cookie"},
-            "password": "never-save-this",
-        })
+        self.get_settings = Mock(return_value={"authorization_data": {"ds_user_id": "123"}, "password": "never-save-this"})
 
     def set_settings(self, settings):
         self.events.append("restore")
@@ -275,6 +261,21 @@ class CLITests(LocalTestCase):
         config = local_config()
         module = types.ModuleType("instagrapi")
         first = FakeInstagram()
+        first.get_settings.return_value = {
+            "uuids": {
+                "phone_id": "phone-stable", "uuid": "uuid-stable",
+                "client_session_id": "client-stable", "advertising_id": "ad-stable",
+                "android_device_id": "android-stable", "request_id": "request-stable",
+                "tray_session_id": "tray-stable",
+            },
+            "device_settings": {"manufacturer": "Google", "model": "Pixel Stable"},
+            "user_agent": "Instagram stable test profile",
+            "country": "PT", "country_code": 351, "locale": "pt_PT",
+            "timezone_offset": 3600, "timezone_name": "Europe/Lisbon",
+            "authorization_data": {"ds_user_id": "123"},
+            "cookies": {"sessionid": "never-save-this-cookie"},
+            "password": "never-save-this",
+        }
         second = FakeInstagram()
         module.Client = Mock(side_effect=[first, second])
         session_path = self.directory / "session.json"
