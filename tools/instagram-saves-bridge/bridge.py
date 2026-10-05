@@ -38,6 +38,19 @@ SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIRECTORY.parents[1] if SCRIPT_DIRECTORY.name == "instagram-saves-bridge" and SCRIPT_DIRECTORY.parent.name == "tools" else SCRIPT_DIRECTORY
 MAX_IMPORTS_PER_CYCLE = 10
 
+# A failed password login must not look like a brand-new Android device on the
+# next attempt. Only stable, non-authentication client identity is preserved
+# before the first successful session exists.
+DEVICE_SETTING_KEYS = (
+    "uuids", "device_settings", "user_agent", "country", "country_code",
+    "locale", "timezone_offset", "timezone_name", "push_disabled",
+    "request_timeout", "public_request_retries_count",
+    "public_request_retries_timeout", "session_retry_total",
+    "session_retry_backoff_factor", "session_retry_statuses",
+    "public_transport", "private_transport", "public_transport_impersonate",
+    "tls_verify",
+)
+
 MESSAGES = {
     "setup_required": "Execute setup neste computador antes de continuar.",
     "login_required": "Execute login neste computador para conectar a conta do Instagram.",
@@ -45,7 +58,7 @@ MESSAGES = {
     "dependency_version": "O ambiente virtual usa outra versão do instagrapi. Instale requirements.txt para continuar.",
     "instagram_action_required": "O Instagram exige uma ação da titular. O conector parou. Abra o app oficial, resolva a verificação e só depois execute login --renew neste computador.",
     "instagram_two_factor_required": "O Instagram pediu autenticação de dois fatores. Confira a conta no app oficial e execute login --two-factor para informar localmente um código legítimo. Não desative a proteção.",
-    "instagram_rate_limited": "O Instagram limitou as consultas. O conector vai aguardar antes de tentar novamente.",
+    "instagram_rate_limited": "O Instagram limitou esta tentativa. Não repita a ação agora; aguarde antes de tentar novamente.",
     "instagram_temporarily_unavailable": "O Instagram está temporariamente indisponível. O progresso foi preservado.",
     "instagram_client_incompatible": "O formato retornado pelo Instagram mudou. O conector parou sem avançar a fila. É preciso revisar a versão da integração.",
     "instagram_cursor_stalled": "A paginação do Instagram não avançou. O conector preservou o ponto de retomada.",
@@ -106,6 +119,16 @@ def server_location() -> bool:
 
 def location() -> str:
     return "neste servidor" if server_location() else "neste computador"
+
+
+def stable_device_settings(settings: dict[str, Any]) -> dict[str, Any]:
+    """Keep a stable client identity without persisting login/session material."""
+    if not isinstance(settings, dict):
+        raise BridgeError("invalid_local_config")
+    profile = {key: settings[key] for key in DEVICE_SETTING_KEYS if key in settings}
+    if not isinstance(profile.get("uuids"), dict) or not isinstance(profile.get("device_settings"), dict):
+        raise BridgeError("invalid_local_config")
+    return profile
 
 
 def load_config(state_dir: Path) -> Config:
@@ -177,6 +200,7 @@ class InstagramClient:
             self.client = Client(request_timeout=2)
         self.config = config
         self.session_path = session_path
+        self.device_path = session_path.with_name("device.json")
 
         def rethrow(_client, error):
             raise error
@@ -201,6 +225,16 @@ class InstagramClient:
             if not isinstance(saved.get("settings"), dict):
                 raise BridgeError("instagram_session_missing")
             library_call(self.client.set_settings, saved["settings"])
+        elif self.device_path.exists():
+            saved = read_private_json(self.device_path)
+            if saved.get("username") != config.username or not isinstance(saved.get("settings"), dict):
+                raise BridgeError("instagram_account_mismatch")
+            library_call(self.client.set_settings, saved["settings"])
+        else:
+            profile = stable_device_settings(library_call(self.client.get_settings))
+            write_private_json(self.device_path, {
+                "version": 1, "username": config.username, "settings": profile,
+            })
         self.client.username = config.username
         # An expired daemon session must stop. The password exists only inside
         # the explicit local login command and is never persisted.
@@ -234,6 +268,10 @@ class InstagramClient:
         # dump_settings normally excludes credentials; do not persist a password
         # even if a later library version changes its settings representation.
         settings.pop("password", None)
+        write_private_json(self.device_path, {
+            "version": 1, "username": self.config.username,
+            "settings": stable_device_settings(settings),
+        })
         write_private_json(self.session_path, {
             "version": 1, "username": self.config.username,
             "account_id": self.config.account_id, "settings": settings,
